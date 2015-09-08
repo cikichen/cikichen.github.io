@@ -190,10 +190,10 @@
 </nav>
       <div class="body-wrap">
   
-    <article id="post-RecyclerView使用教程" class="article article-type-post" itemscope itemprop="blogPost">
+    <article id="post-RecyclerView基础教程" class="article article-type-post" itemscope itemprop="blogPost">
   
     <div class="article-meta">
-      <a href="/archives/RecyclerView使用教程/" class="article-date">
+      <a href="/archives/RecyclerView基础教程/" class="article-date">
   	<time datetime="2015-08-14T10:30:38.000Z" itemprop="datePublished">2015-08-14</time>
 </a>
     </div>
@@ -207,7 +207,7 @@
         
   
     <h1 itemprop="name">
-      <a class="article-title" href="/archives/RecyclerView使用教程/">RecyclerView使用教程</a>
+      <a class="article-title" href="/archives/RecyclerView基础教程/">RecyclerView 基础教程</a>
     </h1>
   
 
@@ -217,27 +217,32 @@
     <div class="article-entry" itemprop="articleBody">
       
         <blockquote>
-<p>RecyclerView&#x662F;&#x4ECE;support-v7&#x5E93;&#x5F00;&#x59CB;&#x5F15;&#x5165;&#x7684;&#xFF0C;&#x7528;&#x4E8E;&#x53D6;&#x4EE3; ListView &#x3002;<br>&#x76F8;&#x6BD4;&#x4E8E; <code>ListView</code> &#xFF0C; RecyclerView&#x66F4;&#x52A0;&#x7075;&#x6D3B;&#x3001;&#x9AD8;&#x6548;&#x4EE5;&#x53CA;&#x53EF;&#x6269;&#x5C55;&#x6027;&#x3002;</p>
+<p>RecyclerView是从support-v7库开始引入的，用于取代 ListView 。<br>相比于 <code>ListView</code>， RecyclerView更加灵活、高效和无限的可扩展性。</p>
 </blockquote>
-<h2 id="&#x73AF;&#x5883;&#x51C6;&#x5907;">&#x73AF;&#x5883;&#x51C6;&#x5907;</h2><ul>
+<!-- toc -->
+<ul>
+<li><a href="#环境准备">环境准备</a></li>
+<li><a href="#简单的 ListView 列表">简单的 ListView 列表</a><ul>
+<li><a href="#RecyclerView.Adapter">RecyclerView.Adapter</a></li>
+<li><a href="#onCreateViewHolder">onCreateViewHolder</a></li>
+<li><a href="#onBindViewHolder">onBindViewHolder</a></li>
+<li><a href="#LayoutManager">LayoutManager</a></li>
+<li><a href="#onItemClickListener">onItemClickListener</a></li>
+</ul>
+</li>
+</ul>
+<!-- tocstop -->
+<h2 id="环境准备">环境准备</h2><ul>
 <li>Windows/Mac</li>
 <li>Android Studio 1.4</li>
 <li>Android SDK</li>
-<li>&#x79D1;&#x5B66;&#x4E0A;&#x7F51;(&#x5F00;&#x53D1;&#x4EBA;&#x5458;&#x5FC5;&#x5907;)</li>
+<li>科学上网(开发人员必备)</li>
 </ul>
-<p>&#x9996;&#x5148;&#xFF0C;&#x6211;&#x4EEC;&#x9700;&#x8981;&#x5F15;&#x5165;&#x4F9D;&#x8D56;&#x5E93;&#xFF1A;</p>
-<figure class="highlight gradle"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">compile</span> <span class="string">&apos;com.android.support:appcompat-v7:22.2.1&apos;</span></span><br><span class="line"><span class="keyword">compile</span> <span class="string">&apos;com.android.support:recyclerview-v7:22.2.1&apos;</span></span><br></pre></td></tr></table></figure>
-<h2 id="&#x7B80;&#x5355;&#x7684; ListView &#x5217;&#x8868;">&#x7B80;&#x5355;&#x7684; ListView &#x5217;&#x8868;</h2><p>&#x6211;&#x4EEC;&#x9996;&#x5148;&#x6765;&#x5B9E;&#x73B0;&#x4E00;&#x4E2A;&#x7B80;&#x5355;&#x7684; listview &#x5217;&#x8868;&#x6548;&#x679C;&#xFF1A;</p>
+<p>首先，我们需要引入依赖库：</p>
+<figure class="highlight gradle"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">compile</span> <span class="string">'com.android.support:appcompat-v7:22.2.1'</span></span><br><span class="line"><span class="keyword">compile</span> <span class="string">'com.android.support:recyclerview-v7:22.2.1'</span></span><br></pre></td></tr></table></figure>
+<h2 id="简单的_ListView_列表">简单的 ListView 列表</h2><p>我们首先来实现一个简单的 listview 列表效果：</p>
 <p><img src="http://ww3.sinaimg.cn/mw690/62b0904dgw1ev6v1syxboj20u01hc78j.jpg" alt=""></p>
-<p>&#x56E0;&#x4E3A;&#x6B64;&#x5904;&#x7528;&#x5230;&#x4E86; design &#x5E93;&#x7684;&#x65B0;&#x63A7;&#x4EF6;<code>CardView</code>&#xFF0C;&#x6240;&#x4EE5;&#x6211;&#x4EEC;&#x8FD8;&#x9700;&#x8981;&#x52A0;&#x5165;&#x5982;&#x4E0B;&#x4F9D;&#x8D56;&#x5E93;&#xFF1A;</p>
-<figure class="highlight gradle"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">compile</span> <span class="string">&apos;com.android.support:cardview-v7:22.2.1&apos;</span></span><br></pre></td></tr></table></figure>
-<p>&#x9996;&#x5148;&#x521B;&#x5EFA;&#x4E00;&#x4E2A; RecyclerView &#x7684;&#x65B0;&#x9879;&#x76EE;&#xFF0C;&#x4FEE;&#x6539;&#x6211;&#x4EEC;&#x7684; <code>activity_main.xml</code> &#x4EE3;&#x7801;&#x5982;&#x4E0B;&#xFF1A;</p>
-<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="pi">&lt;?xml version=&quot;1.0&quot; encoding=&quot;utf-8&quot;?&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="title">FrameLayout</span></span><br><span class="line">    <span class="attribute">android:id</span>=<span class="value">&quot;@+id/drawer_layout&quot;</span></span><br><span class="line">    <span class="attribute">xmlns:android</span>=<span class="value">&quot;http://schemas.android.com/apk/res/android&quot;</span></span><br><span class="line">    <span class="attribute">xmlns:app</span>=<span class="value">&quot;http://schemas.android.com/apk/res-auto&quot;</span></span><br><span class="line">    <span class="attribute">android:layout_width</span>=<span class="value">&quot;match_parent&quot;</span></span><br><span class="line">    <span class="attribute">android:layout_height</span>=<span class="value">&quot;match_parent&quot;</span></span><br><span class="line">    <span class="attribute">android:fitsSystemWindows</span>=<span class="value">&quot;true&quot;</span>&gt;</span></span><br><span class="line"></span><br><span class="line">        <span class="tag">&lt;<span class="title">android.support.v7.widget.RecyclerView</span></span><br><span class="line">            <span class="attribute">android:id</span>=<span class="value">&quot;@+id/rc_content&quot;</span></span><br><span class="line">            <span class="attribute">android:layout_width</span>=<span class="value">&quot;match_parent&quot;</span></span><br><span class="line">            <span class="attribute">android:layout_height</span>=<span class="value">&quot;match_parent&quot;</span></span><br><span class="line">            <span class="attribute">app:layout_behavior</span>=<span class="value">&quot;@string/appbar_scrolling_view_behavior&quot;</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;/<span class="title">android.support.v7.widget.RecyclerView</span>&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;/<span class="title">FrameLayout</span>&gt;</span></span><br></pre></td></tr></table></figure>
-<p><code>RecyclerView</code> &#x7684;&#x9002;&#x914D;&#x5668;&#x5B9E;&#x73B0;&#x4E0E;&#x4EE5;&#x5F80;&#x7684; ListView &#x4E0D;&#x540C;&#xFF0C;&#x9700;&#x8981;&#x7EE7;&#x627F;&#x5B83;&#x81EA;&#x8EAB;&#x7279;&#x6709;&#x7684;<code>RecyclerView.Adapter</code>&#x3002;</p>
-
-        <hr>
-        <img src="http://ww4.sinaimg.cn/large/62b0904dgw1eupnx0r8voj2076076gm3.jpg"/><br>
-<p>本站文章除特别标明均为原创，转载请注明：<a href="/" target="_blank" rel="external">IT驿站</a> | <a href="" target="_blank" rel="external">RecyclerView使用教程</a><br>本站原创文章版权许可采用<a href="http://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank" rel="external">知识共享署名-非商业使用-禁止演绎 (by-nc-nd)</a></p>
+<p>因为此处用到了 design 库的新控件<code>CardView</code>，所以我们还需要加入如下依赖库：</p>
       
     </div>
     
@@ -254,6 +259,10 @@
 	</div>
 
 
+      
+        <p class="article-more-link">
+          <a  href="/archives/RecyclerView基础教程/#more">more >></a>
+        </p>
       
       <div class="clearfix"></div>
     </div>
