@@ -2,138 +2,100 @@
 <html>
 <head>
   <meta charset="utf-8">
-  
-  <title>PE文件与虚拟内存之间的映射(一) | IT驿站</title>
+  <title>PE文件与虚拟内存之间的映射(一)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="theme-color" content="#4f6b79">
-  <meta name="msapplication-TileColor" content="#4f6b79"/>
+  <meta name="theme-color" content="#00796b">
+  <meta name="msapplication-TileColor" content="#4E8071"/>
   
   
-  <meta name="description" content="&amp;#x5173;&amp;#x4E8E;PE&amp;#x6587;&amp;#x4EF6;&amp;#xFF0C;&amp;#x7F51;&amp;#x4E0A;&amp;#x6709;&amp;#x5F88;&amp;#x591A;&amp;#x8D44;&amp;#x6599;&amp;#xFF0C;&amp;#x6211;&amp;#x4EEC;&amp;#x521D;&amp;#x5B66;&amp;#x8005;&amp;#x57FA;&amp;#x672C;&amp;#x90FD;&amp;#x5F88;&amp;#x96BE;&amp;#x5F04;&amp;#x660">
-<meta name="keywords" content="PE结构">
-<meta property="og:type" content="article">
-<meta property="og:title" content="PE文件与虚拟内存之间的映射(一)">
-<meta property="og:url" content="http://www.ithome.me/archives/PE文件与虚拟内存之间的映射-一/index.html">
-<meta property="og:site_name" content="IT驿站">
-<meta property="og:description" content="&amp;#x5173;&amp;#x4E8E;PE&amp;#x6587;&amp;#x4EF6;&amp;#xFF0C;&amp;#x7F51;&amp;#x4E0A;&amp;#x6709;&amp;#x5F88;&amp;#x591A;&amp;#x8D44;&amp;#x6599;&amp;#xFF0C;&amp;#x6211;&amp;#x4EEC;&amp;#x521D;&amp;#x5B66;&amp;#x8005;&amp;#x57FA;&amp;#x672C;&amp;#x90FD;&amp;#x5F88;&amp;#x96BE;&amp;#x5F04;&amp;#x660">
-<meta property="og:locale" content="zh-CN">
-<meta property="og:image" content="http://www.ithome.me/wp-content/uploads/2013/03/6e061d950f8e24357af48056-300x248.jpg">
-<meta property="og:updated_time" content="2015-07-28T08:33:49.000Z">
-<meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="PE文件与虚拟内存之间的映射(一)">
-<meta name="twitter:description" content="&amp;#x5173;&amp;#x4E8E;PE&amp;#x6587;&amp;#x4EF6;&amp;#xFF0C;&amp;#x7F51;&amp;#x4E0A;&amp;#x6709;&amp;#x5F88;&amp;#x591A;&amp;#x8D44;&amp;#x6599;&amp;#xFF0C;&amp;#x6211;&amp;#x4EEC;&amp;#x521D;&amp;#x5B66;&amp;#x8005;&amp;#x57FA;&amp;#x672C;&amp;#x90FD;&amp;#x5F88;&amp;#x96BE;&amp;#x5F04;&amp;#x660">
-<meta name="twitter:image" content="http://www.ithome.me/wp-content/uploads/2013/03/6e061d950f8e24357af48056-300x248.jpg">
   
   
-    <link rel="icon" href="/favicon.png">
-  
-  
-    <link rel="stylesheet" href="/css/style.css" type="text/css"> 
-  
-
+  <link rel="stylesheet" href="/css/style.css" type="text/css"> 
 </head>
 
+
 <body>
+
   <div id="container" class="container">
     <div class="left-col">
     <div class="intrude-less">
-	<header id="header" class="inner">
-		<a href="/" class="profilepic">
-			
-			<img lazy-src="https://avatars2.githubusercontent.com/u/1478821?v=3&amp;s=140" class="js-avatar">
-			
-		</a>
-		
-		<p class="header-subtitle">分享有助于提升</p>
-		
-        <nav class="header-menu">
-            <ul>
-                
-                    <li><a href="/">主页</a></li>
-                
-                    <li><a href="/archives">所有文章</a></li>
-                
-                    <li><a href="/categories/移动开发">移动开发</a></li>
-                
-                    <li><a href="/about-me">关于我</a></li>
-                
-            </ul>
-        </nav>
-	</header>				
+  <header id="header" class="inner">
+    <a href="/" class="profilepic">
+      <img src="https://avatars2.githubusercontent.com/u/1478821?v=3&amp;s=140" class="block-select js-avatar" style="width: 100%;height: 100%;opacity: 1;">
+	</a>
+	<p class="header-subtitle">分享有助于提升</p>
+    <nav class="header-menu">
+      <ul>
+        <li><a href="/">主页</a></li><li><a href="/archives">所有文章</a></li><li><a href="/categories/移动开发">移动开发</a></li><li><a href="/about-me">关于我</a></li>
+      </ul>
+    </nav>
+  </header>				
 </div>
 
 
     </div>
     <div class="mid-col">
       <nav id="mobile-nav">
-	<div class="intrude-less">
-		<header id="header" class="inner">
-			<a href="/" class="profilepic">
-                
-			        <img lazy-src="https://avatars2.githubusercontent.com/u/1478821?v=3&amp;s=140" class="js-avatar">
-			    
-			</a>
-			<!-- <hgroup>
-			  <h1 class="header-author">Simon.Chen</h1>
-			</hgroup>-->
-			
-			<p class="header-subtitle">分享有助于提升</p>
-			
-			<nav class="header-menu">
-				<ul>
-				
-					<li><a href="/">主页</a></li>
-		        
-					<li><a href="/archives">所有文章</a></li>
-		        
-					<li><a href="/categories/移动开发">移动开发</a></li>
-		        
-					<li><a href="/about-me">关于我</a></li>
-		        
-		        <div class="clearfix"></div>
-				</ul>
-			</nav>
-		</header>				
-	</div>
+  <div class="intrude-less">
+    <header id="header" class="inner">
+      <a href="/" class="profilepic">
+        <img src="https://avatars2.githubusercontent.com/u/1478821?v=3&amp;s=140" class="block-select js-avatar" style="width: 100%;height: 100%;opacity: 1;">
+	  </a>
+	  <p class="header-subtitle">分享有助于提升</p>
+	  <nav class="header-menu">
+	    <ul>
+        <li><a href="/">主页</a></li><li><a href="/archives">所有文章</a></li><li><a href="/categories/移动开发">移动开发</a></li><li><a href="/about-me">关于我</a></li><div class="clearfix"></div>
+		</ul>
+	  </nav>
+	</header>				
+  </div>
 </nav>
 
-      <div class="body-wrap"><article id="post-PE文件与虚拟内存之间的映射-一" class="article article-type-post" itemscope itemprop="blogPost">
-  
+      <div class="body-wrap">
+<article id="post-PE文件与虚拟内存之间的映射-一" class="article article-type-post" itemscope itemprop="blogPost">
+
+   
+    
     <div class="article-meta">
-      <a href="/archives/PE文件与虚拟内存之间的映射-一/" class="article-date">
+      
+<div class="article-date">
 <span class="datetime-published-tag"> 2013-03-05 </span>
-</a>
+</div>
+
 
     </div>
+    
+    
   
-  <div class="article-inner">
+  <div class="article-inner block-select">
+  
     
     
       <header class="article-header">
         
+           
   
     <h1 class="article-title" itemprop="name">
       PE文件与虚拟内存之间的映射(一)
     </h1>
   
 
+        
       </header>
       
       <div class="article-info article-info-post">
-        <!-- 
-	<div class="article-category tagcloud">
-	<a class="article-category-link" href="/categories/软件调试/">软件调试</a>
-	</div>
-
- -->
         
-	<div class="article-tag tagcloud">
+	<div class="article-tag tagcloud block-select">
 		<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/PE结构/">PE结构</a></li></ul>
 	</div>
 
-        <div class="clearfix"></div>
+
+        
+             <div class="clearfix"></div>
+        
       </div>
       
+    
     
     <div class="article-entry" itemprop="articleBody">
       
@@ -143,9 +105,10 @@
 <p>(3)<strong>&#x865A;&#x62DF;&#x5185;&#x5B58;&#x5730;&#x5740;(Virtual Address,VA):</strong>&#x5C31;&#x662F;&#x6240;&#x8C13;&#x7684;VA&#xFF0C;&#x662F;PE&#x6587;&#x4EF6;&#x4E2D;&#x7684;&#x6307;&#x4EE4;&#x88AB;&#x88C5;&#x5165;&#x5185;&#x5B58;&#x540E;&#x7684;&#x5730;&#x5740;</p>
 <p>(4)<strong>&#x76F8;&#x5BF9;&#x865A;&#x62DF;&#x5730;&#x5740;(Relative Virtual Address,RVA):</strong>&#x662F;&#x865A;&#x62DF;&#x5185;&#x5B58;&#x5730;&#x5740;&#x76F8;&#x5BF9;&#x4E8E;&#x88C5;&#x8F7D;&#x5730;&#x5740;&#x7684;&#x504F;&#x79FB;&#x91CF;&#x3002;</p>
 <p>&#x865A;&#x62DF;&#x5185;&#x5B58;&#x5730;&#x5740;&#x3001;&#x6620;&#x5C04;&#x57FA;&#x5740;&#x3001;&#x76F8;&#x5BF9;&#x865A;&#x62DF;&#x5185;&#x5B58;&#x5730;&#x5740;&#x4E09;&#x8005;&#x4E4B;&#x95F4;&#x7684;&#x5173;&#x7CFB;&#x662F;&#xFF1A;<br><strong>&#x865A;&#x62DF;&#x5185;&#x5B58;&#x5730;&#x5740; = &#x6620;&#x5C04;&#x57FA;&#x5740;(&#x88C5;&#x8F7D;&#x5730;&#x5740;) + &#x76F8;&#x5BF9;&#x865A;&#x62DF;&#x5730;&#x5740;</strong><br><strong> VA=Image Base+RVA;</strong></p>
-<p>&#x4ECE;&#x7F51;&#x4E0A;&#x76D7;&#x4E86;&#x5F20;&#x56FE;&#xFF1A;&#x5173;&#x7CFB;&#x5982;&#x4E0B;<br><a href="http://www.ithome.me/wp-content/uploads/2013/03/6e061d950f8e24357af48056.jpg" target="_blank" rel="external"><img src="http://www.ithome.me/wp-content/uploads/2013/03/6e061d950f8e24357af48056-300x248.jpg" alt="PE&#x6587;&#x4EF6;&#x7ED3;&#x6784;"></a></p>
+<p>&#x4ECE;&#x7F51;&#x4E0A;&#x76D7;&#x4E86;&#x5F20;&#x56FE;&#xFF1A;&#x5173;&#x7CFB;&#x5982;&#x4E0B;<br><a href="http://www.ithome.me/wp-content/uploads/2013/03/6e061d950f8e24357af48056.jpg"><img src="http://www.ithome.me/wp-content/uploads/2013/03/6e061d950f8e24357af48056-300x248.jpg" alt="PE&#x6587;&#x4EF6;&#x7ED3;&#x6784;"></a></p>
 <p>&#x4ECA;&#x5929;&#x5148;&#x5230;&#x8FD9;&#x91CC;&#xFF0C;&#x4E0B;&#x6B21;&#x7EE7;&#x7EED;&#x3002;</p>
 
+      
       
       
         <div class="post-copyright">
@@ -159,7 +122,7 @@
   </div>
   
     
-<nav id="article-nav">
+<nav id="article-nav" class="block-select">
   
     <a href="/archives/eclipse下导入android源码/" id="article-nav-newer" class="article-nav-link-wrap">
       <strong class="article-nav-caption">&lt;</strong>
@@ -187,43 +150,25 @@
 
 
 </div>
-      <footer id="footer">
+      <footer id="footer" class="block-select">
   <div class="outer">
     <div id="footer-info">
-    	<div class="footer-left">
-    		&copy; 2018
-            
-                 Simon.Chen
-            
-    	</div>
+      <div class="footer-left">&copy; 2015-2018
+        Simon.Chen
+      </div>
     </div>
   </div>
 </footer>
 
     </div>
     <script>
-	var ThemeXConfig = {
-		fancybox: false,
-		mathjax: false,
-		animate: true,
-		isHome: false,
-		isPost: true,
-		isArchive: false,
-		isTag: false,
-		isCategory: false,
-		open_in_new: true,
-     CDN_PATH: '' 
-	}
+	var ThemeXConfig = {fancybox: false,mathjax: false,animate: false,isHome: false,isPost: true,isArchive: false,isTag: false,isCategory: false,open_in_new: true, CDN_PATH: '' }
 </script>
 
 
-
-
     <script src="/js/jquery-1.9.1.min.js"></script>
-    <script src="/js/common.js"></script>
+    <script src="/js/base.js"></script>
     <script src="/js/jquery.lazyload.min.js"></script>
-
-
 
 
 

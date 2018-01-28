@@ -88,10 +88,6 @@ define([], function(){
 			
 		}, false);
 
-		//点击展示和隐藏
-		/*ctn.addEventListener("touchend", function(){
-			show();
-		}, false);*/
 
 		var $right = document.getElementsByClassName("viewer-box-r")[0];
 		var touchStartTime;
@@ -111,25 +107,6 @@ define([], function(){
 		//滚动样式
 		var $overlay = $("#mobile-nav .overlay");
 		var $header = $(".js-mobile-header");
-		/*window.onscroll = function(){
-		    var scrollTop = document.documentElement.scrollTop + document.body.scrollTop;
-		    if(scrollTop >= 69){
-		    	$overlay.addClass("fixed").addClass("nav-shadow");
-		    }else{
-		    	$overlay.removeClass("fixed").removeClass("nav-shadow");
-		    }
-		    if(scrollTop >= 160){
-		    	$header.removeClass("hide").addClass("fixed");
-		    }else{
-		    	$header.addClass("hide").removeClass("fixed");
-		    }
-		};*/
-		/*
-         * 实现有错误
-        $header[0].addEventListener("touchstart", function(){
-			$('html, body').animate({scrollTop:0}, 'slow');
-		}, false);
-        */
 	};
 
 	var resetTags = function(){

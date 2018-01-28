@@ -100,12 +100,10 @@ require([], function (){
 		}
 		
 	}
-
 	//是否新窗口打开链接
 	if(ThemeXConfig.open_in_new == true){
 		$(".article a[href]").attr("target", "_blank")
 	}
-
     //折叠评论
     $("#fold-comments").click(function(){
 		$(".comments-main").slideDown(500), $("#fold-comments").hide()
