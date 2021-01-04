@@ -1,0 +1,1 @@
+(window.webpackJsonp=window.webpackJsonp||[]).push([[213],{726:function(t,e,n){"use strict";n.r(e);var s=n(3),r=Object(s.a)({},(function(){var t=this.$createElement,e=this._self._c||t;return e("ContentSlotsDistributor",{attrs:{"slot-key":this.$parent.slotKey}},[e("p",[this._v("TeamViewer,远程控制软件，可以实现上班遥控家里的电脑，实现上班挂游戏的功能")])])}),[],!1,null,null,null);e.default=r.exports}}]);
