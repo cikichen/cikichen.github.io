@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+  <meta http-equiv="content-type" content="text/html;charset=utf-8">
+  <meta http-equiv="X-UA-Compatible" content="chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noodp"/>
+  
+  
+  
+  
+  
+  <link rel="prev" href="https://www.ithome.me/post/2013/03/04/%E8%BD%AC%E4%B8%89%E5%A4%A7uml%E5%BB%BA%E6%A8%A1%E5%B7%A5%E5%85%B7visiorational-rosepowerdesign%E7%9A%84%E5%8C%BA%E5%88%AB/" />
+  <link rel="next" href="https://www.ithome.me/post/2013/03/19/%E8%B0%83%E7%94%A8android%E7%B3%BB%E7%BB%9F%E8%87%AA%E5%B8%A6%E5%9B%BE%E6%A0%87%E8%BD%AC%E8%BD%BD/" />
+  <link rel="canonical" href="https://www.ithome.me/post/2013/03/05/pe%E6%96%87%E4%BB%B6%E4%B8%8E%E8%99%9A%E6%8B%9F%E5%86%85%E5%AD%98%E4%B9%8B%E9%97%B4%E7%9A%84%E6%98%A0%E5%B0%84%E4%B8%80/" />
+  <link rel='shortcut icon' type='image/x-icon' href='/favicon.ico' />
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+  <link rel="manifest" href="/site.webmanifest">
+  <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
+  <meta name="msapplication-TileColor" content="#da532c">
+  <meta name="theme-color" content="#ffffff">
+  <title>
+       
+       
+           PE文件与虚拟内存之间的映射(一) | Creator
+       
+  </title>
+  <meta name="title" content="PE文件与虚拟内存之间的映射(一) | Creator">
+    
+  
+  <link rel="stylesheet" href="/font/iconfont.css">
+  <link rel="stylesheet" href="/css/main.min.css">
+
+
+  <meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="PE文件与虚拟内存之间的映射(一)"/>
+<meta name="twitter:description" content="关于PE文件，网上有很多资料，我们初学者基本都很难弄明白，被那些名词弄得头昏。我这里也还是要先说明下这些名词的概念。
+(1)**文件偏移地址(Offset)：**数据在PE文件中的地址。所谓的PE文件，就是我们的Exe文件或者DLL文件，这个文件偏移地址就是它在文件中的地址，就是它在这个文件在磁盘上存放时相对于文件开头的偏移。
+(2)装载地址(Image Base)，也就是所谓的内存基址: PE纹状装载到内存时的基地址。默认情况下，EXE文件在内存中的基地址是0x00400000,DLL文件是0x10000000。这些位置是可以通过修改编译选项更改的。
+(3)**虚拟内存地址(Virtual Address,VA):**就是所谓的VA，是PE文件中的指令被装入内存后的地址
+(4)**相对虚拟地址(Relative Virtual Address,RVA):**是虚拟内存地址相对于装载地址的偏移量。
+虚拟内存地址、映射基址、相对虚拟内存地址三者之间的关系是： 虚拟内存地址 = 映射基址(装载地址) &#43; 相对虚拟地址 ** VA=Image Base&#43;RVA;**
+从网上盗了张图：关系如下 
+今天先到这里，下次继续。"/>
+
+  <script type="application/ld+json">
+{
+  "@context": "http://schema.org",
+  "@type": "BlogPosting",
+  "headline": "PE文件与虚拟内存之间的映射(一)",
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https:\/\/www.ithome.me\/post\/2013\/03\/05\/pe%E6%96%87%E4%BB%B6%E4%B8%8E%E8%99%9A%E6%8B%9F%E5%86%85%E5%AD%98%E4%B9%8B%E9%97%B4%E7%9A%84%E6%98%A0%E5%B0%84%E4%B8%80\/"
+  },
+  "image": {
+    "@type": "ImageObject",
+    "url": "https:\/\/www.ithome.me\/cover.png",
+    "width":  800 ,
+    "height":  600 
+  },
+  "genre": "posts",
+  "keywords": "PE结构",
+  "wordcount":  21 ,
+  "url": "https:\/\/www.ithome.me\/post\/2013\/03\/05\/pe%E6%96%87%E4%BB%B6%E4%B8%8E%E8%99%9A%E6%8B%9F%E5%86%85%E5%AD%98%E4%B9%8B%E9%97%B4%E7%9A%84%E6%98%A0%E5%B0%84%E4%B8%80\/",
+  "datePublished": "2013-03-05T23:50:35\u002b08:00",
+  "dateModified": "2013-03-05T23:50:35\u002b08:00",
+  "license": "©{year}, All Rights Reserved. Simon Chen",
+  "publisher": {
+    "@type": "Organization",
+    "name": "SimonChen",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https:\/\/www.ithome.me\/logo.png",
+      "width":  127 ,
+      "height":  40 
+    }
+  },
+  "author": {
+    "@type": "Person",
+    "name": "SimonChen"
+  },
+  "description": ""
+}
+</script>
+</head>
+
+  
+             
+  
+
+
+
+  <body class="">
+    <div class="wrapper">
+        <nav class="navbar">
+    <div class="container">
+        <div class="navbar-header header-logo">
+        	<a href="https://www.ithome.me/">Creator</a>
+        </div>
+        <div class="menu navbar-right">
+                
+                
+                <a class="menu-item" href="/posts/" title="">文章</a>
+                
+                <a class="menu-item" href="/categories/" title="">分类</a>
+                
+                <a class="menu-item" href="/tags/" title="">标签</a>
+                
+                <a class="menu-item" href="/about-me/" title="">关于</a>
+                
+                <a href="javascript:void(0);" class="theme-switch"><i class="iconfont icon-sun"></i></a>&nbsp;
+        </div>
+    </div>
+</nav>
+<nav class="navbar-mobile" id="nav-mobile" style="display: none">
+     <div class="container">
+        <div class="navbar-header">
+            <div>  <a href="javascript:void(0);" class="theme-switch"><i class="iconfont icon-sun"></i></a>&nbsp;<a href="https://www.ithome.me/">Creator</a></div>
+            <div class="menu-toggle">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+     
+          <div class="menu" id="mobile-menu">
+                
+                
+                <a class="menu-item" href="/posts/" title="">文章</a>
+                
+                <a class="menu-item" href="/categories/" title="">分类</a>
+                
+                <a class="menu-item" href="/tags/" title="">标签</a>
+                
+                <a class="menu-item" href="/about-me/" title="">关于</a>
+                
+        </div>
+    </div>
+</nav>
+
+    	 <main class="main">
+          <div class="container">
+      		
+<article class="post-warp">
+    <header class="post-header">
+        <h1 class="post-title">PE文件与虚拟内存之间的映射(一)</h1>
+        <div class="post-meta">
+            Written by <a href="https://www.ithome.me/" rel="author">Simon Chen</a> with ♥ 
+                <span class="post-time">
+                    on <time datetime=2013-03-05 >5 March 2013</time>
+                </span>
+                in
+                
+                <i class="iconfont icon-timer"></i>
+                1 min
+        </div>
+    </header>
+    <div class="post-content">
+        
+
+        
+            
+        
+
+        
+        
+     
+          
+          
+          
+
+          
+          
+          
+
+          <p>关于PE文件，网上有很多资料，我们初学者基本都很难弄明白，被那些名词弄得头昏。我这里也还是要先说明下这些名词的概念。</p>
+<p>(1)**文件偏移地址(Offset)：**数据在PE文件中的地址。所谓的PE文件，就是我们的Exe文件或者DLL文件，这个文件偏移地址就是它在文件中的地址，就是它在这个文件在磁盘上存放时相对于文件开头的偏移。</p>
+<p>(2)<strong>装载地址(Image Base)，也就是所谓的内存基址</strong>: PE纹状装载到内存时的基地址。默认情况下，EXE文件在内存中的基地址是0x00400000,DLL文件是0x10000000。这些位置是可以通过修改编译选项更改的。</p>
+<p>(3)**虚拟内存地址(Virtual Address,VA):**就是所谓的VA，是PE文件中的指令被装入内存后的地址</p>
+<p>(4)**相对虚拟地址(Relative Virtual Address,RVA):**是虚拟内存地址相对于装载地址的偏移量。</p>
+<p>虚拟内存地址、映射基址、相对虚拟内存地址三者之间的关系是：
+<strong>虚拟内存地址 = 映射基址(装载地址) + 相对虚拟地址</strong>
+** VA=Image Base+RVA;**</p>
+<p>从网上盗了张图：关系如下
+<a href="http://www.ithome.me/wp-content/uploads/2013/03/6e061d950f8e24357af48056.jpg"><figure><img src="/images/ring.svg" data-sizes="auto" data-src="http://www.ithome.me/wp-content/uploads/2013/03/6e061d950f8e24357af48056-300x248.jpg" alt="PE文件结构" class="lazyload"><figcaption class="image-caption">PE文件结构</figcaption></figure></a></p>
+<p>今天先到这里，下次继续。</p>
+
+    </div>
+
+    <div class="post-copyright">
+             
+            <p class="copyright-item">
+                <span>Author:</span>
+                <span>Simon Chen </span>
+                </p>
+            
+           
+            <p class="copyright-item">
+                    <span>Words:</span>
+                   <span>21</span>
+            </p>
+            
+            <p class="copyright-item">
+                
+                <span>Share:</span>
+                <span>
+
+      
+        <a href="//twitter.com/share?url=https%3a%2f%2fwww.ithome.me%2fpost%2f2013%2f03%2f05%2fpe%25E6%2596%2587%25E4%25BB%25B6%25E4%25B8%258E%25E8%2599%259A%25E6%258B%259F%25E5%2586%2585%25E5%25AD%2598%25E4%25B9%258B%25E9%2597%25B4%25E7%259A%2584%25E6%2598%25A0%25E5%25B0%2584%25E4%25B8%2580%2f&amp;text=PE%e6%96%87%e4%bb%b6%e4%b8%8e%e8%99%9a%e6%8b%9f%e5%86%85%e5%ad%98%e4%b9%8b%e9%97%b4%e7%9a%84%e6%98%a0%e5%b0%84%28%e4%b8%80%29&amp;via=https%3a%2f%2ftwitter.com%2fChenCiki" target="_blank" title="Share on Twitter">
+          <i class="iconfont icon-twitter"></i>
+        </a>
+        
+      
+      
+      
+      
+      
+      
+        <a href="//www.linkedin.com/shareArticle?url=https%3a%2f%2fwww.ithome.me%2fpost%2f2013%2f03%2f05%2fpe%25E6%2596%2587%25E4%25BB%25B6%25E4%25B8%258E%25E8%2599%259A%25E6%258B%259F%25E5%2586%2585%25E5%25AD%2598%25E4%25B9%258B%25E9%2597%25B4%25E7%259A%2584%25E6%2598%25A0%25E5%25B0%2584%25E4%25B8%2580%2f&amp;title=PE%e6%96%87%e4%bb%b6%e4%b8%8e%e8%99%9a%e6%8b%9f%e5%86%85%e5%ad%98%e4%b9%8b%e9%97%b4%e7%9a%84%e6%98%a0%e5%b0%84%28%e4%b8%80%29" target="_blank" title="Share on LinkedIn">
+          <i class="iconfont icon-linkedin"></i>
+        </a>
+        
+      
+      
+        
+      
+        
+      
+
+          
+
+          
+
+          
+        <a href="//www.douban.com/recommend/?url=https%3a%2f%2fwww.ithome.me%2fpost%2f2013%2f03%2f05%2fpe%25E6%2596%2587%25E4%25BB%25B6%25E4%25B8%258E%25E8%2599%259A%25E6%258B%259F%25E5%2586%2585%25E5%25AD%2598%25E4%25B9%258B%25E9%2597%25B4%25E7%259A%2584%25E6%2598%25A0%25E5%25B0%2584%25E4%25B8%2580%2f&amp;title=PE%e6%96%87%e4%bb%b6%e4%b8%8e%e8%99%9a%e6%8b%9f%e5%86%85%e5%ad%98%e4%b9%8b%e9%97%b4%e7%9a%84%e6%98%a0%e5%b0%84%28%e4%b8%80%29" target="_blank" title="Share on Douban ">
+            <i class="iconfont icon-douban"></i>
+          </a>
+          
+
+          
+        <a href="//service.weibo.com/share/share.php?url=https%3a%2f%2fwww.ithome.me%2fpost%2f2013%2f03%2f05%2fpe%25E6%2596%2587%25E4%25BB%25B6%25E4%25B8%258E%25E8%2599%259A%25E6%258B%259F%25E5%2586%2585%25E5%25AD%2598%25E4%25B9%258B%25E9%2597%25B4%25E7%259A%2584%25E6%2598%25A0%25E5%25B0%2584%25E4%25B8%2580%2f&amp;appkey=&amp;title=PE%e6%96%87%e4%bb%b6%e4%b8%8e%e8%99%9a%e6%8b%9f%e5%86%85%e5%ad%98%e4%b9%8b%e9%97%b4%e7%9a%84%e6%98%a0%e5%b0%84%28%e4%b8%80%29" target="_blank" title="Share on Douban ">
+            <i class="iconfont icon-weibo"></i>
+          </a>
+          
+</span>
+                
+            </p>
+
+             
+            <p class="copyright-item">
+                Released under <a rel="license external nofollow noopener noreffer" href="https://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank">CC BY-NC-ND 4.0</a>
+            </p>
+            
+    </div>
+
+  
+    <div class="post-tags">
+        
+            <section>
+            <i class="iconfont icon-icon-tag"></i>Tag: 
+            
+            <span class="tag"><a href="https://www.ithome.me/tags/pe%E7%BB%93%E6%9E%84/">
+                    #PE结构</a></span>
+            
+            </section>
+        
+        <section>
+                <a href="javascript:window.history.back();">Back</a></span> · 
+                <span><a href="https://www.ithome.me/">Home</a></span>
+        </section>
+    </div>
+
+    <div class="post-nav">
+        
+        <a href="https://www.ithome.me/post/2013/03/04/%E8%BD%AC%E4%B8%89%E5%A4%A7uml%E5%BB%BA%E6%A8%A1%E5%B7%A5%E5%85%B7visiorational-rosepowerdesign%E7%9A%84%E5%8C%BA%E5%88%AB/" class="prev" rel="prev" title="[转]三大UML建模工具Visio、Rational Rose、PowerDesign的区别"><i class="iconfont icon-dajiantou"></i>&nbsp;[转]三大UML建模工具Visio、Rational Rose、PowerDesign的区别</a>
+         
+        
+        <a href="https://www.ithome.me/post/2013/03/19/%E8%B0%83%E7%94%A8android%E7%B3%BB%E7%BB%9F%E8%87%AA%E5%B8%A6%E5%9B%BE%E6%A0%87%E8%BD%AC%E8%BD%BD/" class="next" rel="next" title="调用android系统自带图标（转载）">调用android系统自带图标（转载）&nbsp;<i class="iconfont icon-xiaojiantou"></i></a>
+        
+    </div>
+
+    <div class="post-comment">
+          
+          <div id="gitalk-container"></div>
+      <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.css" crossorigin="anonymous">
+      <script src="https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js" crossorigin="anonymous"></script>
+      <script type="text/javascript">
+          var gitalk = new Gitalk({
+              id: '2013-03-05 00:00:00 \u002b0000 UTC',
+              title: 'PE文件与虚拟内存之间的映射(一)',
+              clientID: 'be0f52370ed1285b6c7c',
+              clientSecret: '734a7d8d0ded346ca7a3d565d57de3f8eeb2850b',
+              repo: 'gitalk',
+              owner: 'cikichen',
+              admin: ['cikichen'],
+              body: decodeURI(location.href)
+          });
+          gitalk.render('gitalk-container');
+      </script>
+      <noscript>Please enable JavaScript to view the <a href="https://github.com/gitalk/gitalk">comments powered by gitalk.</a></noscript>
+
+ 
+
+          
+    </div>
+</article>
+          </div>
+		   </main>
+      <footer class="footer">
+    <div class="copyright">
+        &copy;
+        
+        <span itemprop="copyrightYear">2011 - 2021</span>
+        
+        
+        <span class="author" itemprop="copyrightHolder"><a href="https://www.ithome.me/">Simon Chen</a>
+        </span>
+        
+
+        <span id="busuanzi_container_site_uv">您是第<span id="busuanzi_value_site_uv"></span>位访客</span>
+    </div>
+</footer>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<link crossorigin="anonymous" integrity="sha384-yziQACfvCVwLqVFLqkWBYRO3XeA4EqzfXKGwaWnenYn5XzqfJFlFdKEmvutIQdKb"
+    href="https://lib.baomitu.com/lightgallery/1.6.12/css/lightgallery.min.css" rel="stylesheet">
+
+<script src="/js/vendor_gallery.min.js" async=""></script>
+
+
+
+
+
+
+
+
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+     </div>
+  </body>
+</html>

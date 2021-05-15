@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+  <meta http-equiv="content-type" content="text/html;charset=utf-8">
+  <meta http-equiv="X-UA-Compatible" content="chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noodp"/>
+  
+  
+  
+  
+  
+  <link rel="prev" href="https://www.ithome.me/post/2019/02/13/wkwebview-%E9%82%A3%E4%BA%9B%E5%9D%91/" />
+  <link rel="next" href="https://www.ithome.me/post/2019/03/05/%E5%82%BB%E7%93%9C%E5%87%BD%E6%95%B0%E7%BC%96%E7%A8%8B/" />
+  <link rel="canonical" href="https://www.ithome.me/post/2019/02/14/wwdc2018-web%E5%AE%89%E5%85%A8%E7%AD%96%E7%95%A5-strategies-for-securing-web-content/" />
+  <link rel='shortcut icon' type='image/x-icon' href='/favicon.ico' />
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+  <link rel="manifest" href="/site.webmanifest">
+  <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
+  <meta name="msapplication-TileColor" content="#da532c">
+  <meta name="theme-color" content="#ffffff">
+  <title>
+       
+       
+           [ WWDC2018 ] - Web安全策略 Strategies for Securing Web Content | Creator
+       
+  </title>
+  <meta name="title" content="[ WWDC2018 ] - Web安全策略 Strategies for Securing Web Content | Creator">
+    
+  
+  <link rel="stylesheet" href="/font/iconfont.css">
+  <link rel="stylesheet" href="/css/main.min.css">
+
+
+  <meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="[ WWDC2018 ] - Web安全策略 Strategies for Securing Web Content"/>
+<meta name="twitter:description" content="web安全策略 web安全对iOS开发者来说重要吗？重要！APP中通常会使用很多web页面，例如广告、登录流程、闪屏，或者需要使用跨平台功能的时候。你可能在页面中仅仅一部分使用web，也可以整个页面都是webView,甚至做一个web app。因此web安全对于app来说非常重要。
+来自web的安全攻击有以下几种：
+ 跨域攻击 预测执行攻击 窗口控制攻击  本文将针对这三种攻击类型，给出安全防御措施。
+安全传输 网络传输相信大家都很熟悉了，安全的传输能够保证接收到的数据来自可信任的站点，并且在传输工程中不会被篡改。安全传输是其它安全措施的基础，采取的措施包括：
+ HTTPS和WSS（webSocket Secure） Http Strict Transport Security（HSTS）遵循HTTPS安全协议的web只能访问同样遵循HTTPS安全协议的内容，不能访问遵循HTTP不安全协议的内容。 Upgrade-Insecure-Requests 请求头中添加这一项表示web支持更加安全的升级机制，服务器可以重定向到这个站点的安全版本。 使用cookie确保安全，cookie只能被安全的传输，例如千万不要把cookie放到粘贴板上 在app的info.plist文件中 Allow Arbitrary Loads in Web Content 这个开关一定要置为 NO！  跨域封锁 web的内容可以来自任何站点，例如，webView上的一张图片可以来自任何服务器，也可以从任意服务器上加载一个脚本或iframe。需要注意的是要当心来自其它服务器的资源。跨域的保护已经有20多年的历史，并且形成了基本原则&ndash;同源策略：只有和页面来源相同的脚本才会被该页面执行。例如iframe来自不同的域名，同源策略不允许加载这个iframe。仅仅靠同源策略还是不够的，还需要采取其它的防御措施。
+1. Subresource Integrity 服务器可能会发生异常导致下发错误的资源使得web发生crash，但是开发者通常是知道所要请求哪个资源的，在脚本里面增加一个检查签名。如果签名匹配则认为是下发了正确的资源，如果不匹配仍然可以正常工作，此时尝试从页面的资源里查找或者从自己的服务器重新加载。这样做虽然降低了性能，但是提升了安全性。
+&lt;script src=&#34;https://cdn.example/framework.js&#34; integrity=&#34;sha256-8WqyJLuWKRB...oZkCnxQbWwJVw=&#34;&gt; &lt;/script&gt; window.framwork || // reload from own domain 2. Content Security Policy HTTP response： :status:200 Content-Security-Policy: default &#39;self&#39;; // No inline script-src cdn.example; frame-src social.example; frame-ancestors news.example; HTTP response的Header里面，default设置成自己，默认只能加载同源的资源；script-src和frame-src 分别指定可信任的脚本和iframe的来源；frame-ancestor设置成news."/>
+
+  <script type="application/ld+json">
+{
+  "@context": "http://schema.org",
+  "@type": "BlogPosting",
+  "headline": "[ WWDC2018 ] - Web安全策略 Strategies for Securing Web Content",
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https:\/\/www.ithome.me\/post\/2019\/02\/14\/wwdc2018-web%E5%AE%89%E5%85%A8%E7%AD%96%E7%95%A5-strategies-for-securing-web-content\/"
+  },
+  "image": {
+    "@type": "ImageObject",
+    "url": "https:\/\/www.ithome.me\/cover.png",
+    "width":  800 ,
+    "height":  600 
+  },
+  "genre": "posts",
+  "keywords": "web",
+  "wordcount":  265 ,
+  "url": "https:\/\/www.ithome.me\/post\/2019\/02\/14\/wwdc2018-web%E5%AE%89%E5%85%A8%E7%AD%96%E7%95%A5-strategies-for-securing-web-content\/",
+  "datePublished": "2019-02-14T11:45:49\u002b08:00",
+  "dateModified": "2019-02-14T11:45:49\u002b08:00",
+  "license": "©{year}, All Rights Reserved. Simon Chen",
+  "publisher": {
+    "@type": "Organization",
+    "name": "SimonChen",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https:\/\/www.ithome.me\/logo.png",
+      "width":  127 ,
+      "height":  40 
+    }
+  },
+  "author": {
+    "@type": "Person",
+    "name": "SimonChen"
+  },
+  "description": ""
+}
+</script>
+</head>
+
+  
+             
+  
+
+
+
+  <body class="">
+    <div class="wrapper">
+        <nav class="navbar">
+    <div class="container">
+        <div class="navbar-header header-logo">
+        	<a href="https://www.ithome.me/">Creator</a>
+        </div>
+        <div class="menu navbar-right">
+                
+                
+                <a class="menu-item" href="/posts/" title="">文章</a>
+                
+                <a class="menu-item" href="/categories/" title="">分类</a>
+                
+                <a class="menu-item" href="/tags/" title="">标签</a>
+                
+                <a class="menu-item" href="/about-me/" title="">关于</a>
+                
+                <a href="javascript:void(0);" class="theme-switch"><i class="iconfont icon-sun"></i></a>&nbsp;
+        </div>
+    </div>
+</nav>
+<nav class="navbar-mobile" id="nav-mobile" style="display: none">
+     <div class="container">
+        <div class="navbar-header">
+            <div>  <a href="javascript:void(0);" class="theme-switch"><i class="iconfont icon-sun"></i></a>&nbsp;<a href="https://www.ithome.me/">Creator</a></div>
+            <div class="menu-toggle">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+     
+          <div class="menu" id="mobile-menu">
+                
+                
+                <a class="menu-item" href="/posts/" title="">文章</a>
+                
+                <a class="menu-item" href="/categories/" title="">分类</a>
+                
+                <a class="menu-item" href="/tags/" title="">标签</a>
+                
+                <a class="menu-item" href="/about-me/" title="">关于</a>
+                
+        </div>
+    </div>
+</nav>
+
+    	 <main class="main">
+          <div class="container">
+      		
+<article class="post-warp">
+    <header class="post-header">
+        <h1 class="post-title">[ WWDC2018 ] - Web安全策略 Strategies for Securing Web Content</h1>
+        <div class="post-meta">
+            Written by <a href="https://www.ithome.me/" rel="author">Simon Chen</a> with ♥ 
+                <span class="post-time">
+                    on <time datetime=2019-02-14 >14 February 2019</time>
+                </span>
+                in
+                <i class="iconfont icon-folder"></i>
+                <span class="post-category">
+                        <a href="https://www.ithome.me/categories/%E7%A7%BB%E5%8A%A8%E5%BC%80%E5%8F%91/"> 移动开发 </a>
+                        
+                </span>
+                <i class="iconfont icon-timer"></i>
+                2 min
+        </div>
+    </header>
+    <div class="post-content">
+        
+
+        
+            
+        
+
+        
+        
+     
+          
+          
+          
+
+          
+          
+          
+
+          <h2 id="web安全策略">web安全策略</h2>
+<p>web安全对iOS开发者来说重要吗？重要！APP中通常会使用很多web页面，例如广告、登录流程、闪屏，或者需要使用跨平台功能的时候。你可能在页面中仅仅一部分使用web，也可以整个页面都是webView,甚至做一个web app。因此web安全对于app来说非常重要。</p>
+<p>来自web的安全攻击有以下几种：</p>
+<ul>
+<li>跨域攻击</li>
+<li>预测执行攻击</li>
+<li>窗口控制攻击</li>
+</ul>
+<p>本文将针对这三种攻击类型，给出安全防御措施。</p>
+<h3 id="安全传输">安全传输</h3>
+<p>网络传输相信大家都很熟悉了，安全的传输能够保证接收到的数据来自可信任的站点，并且在传输工程中不会被篡改。安全传输是其它安全措施的基础，采取的措施包括：</p>
+<ul>
+<li>HTTPS和WSS（webSocket Secure）</li>
+<li>Http Strict Transport Security（HSTS）遵循HTTPS安全协议的web只能访问同样遵循HTTPS安全协议的内容，不能访问遵循HTTP不安全协议的内容。</li>
+<li>Upgrade-Insecure-Requests 请求头中添加这一项表示web支持更加安全的升级机制，服务器可以重定向到这个站点的安全版本。</li>
+<li>使用cookie确保安全，cookie只能被安全的传输，例如千万不要把cookie放到粘贴板上</li>
+<li>在app的info.plist文件中
+<figure><img src="/images/ring.svg" data-sizes="auto" data-src="http://img.ibook8.club/2019-02-14-15501160253616.jpg" alt="" class="lazyload"><figcaption class="image-caption"></figcaption></figure>
+<strong>Allow Arbitrary Loads in Web Content 这个开关一定要置为 NO！</strong></li>
+</ul>
+<h2 id="跨域封锁">跨域封锁</h2>
+<p>web的内容可以来自任何站点，例如，webView上的一张图片可以来自任何服务器，也可以从任意服务器上加载一个脚本或iframe。需要注意的是要当心来自其它服务器的资源。跨域的保护已经有20多年的历史，并且形成了基本原则&ndash;同源策略：只有和页面来源相同的脚本才会被该页面执行。例如iframe来自不同的域名，同源策略不允许加载这个iframe。仅仅靠同源策略还是不够的，还需要采取其它的防御措施。</p>
+<h3 id="1-subresource-integrity">1. Subresource Integrity</h3>
+<p>服务器可能会发生异常导致下发错误的资源使得web发生crash，但是开发者通常是知道所要请求哪个资源的，在脚本里面增加一个检查签名。如果签名匹配则认为是下发了正确的资源，如果不匹配仍然可以正常工作，此时尝试从页面的资源里查找或者从自己的服务器重新加载。这样做虽然降低了性能，但是提升了安全性。</p>
+<div class="highlight"><pre class="chroma"><code class="language-fallback" data-lang="fallback">&lt;script src=&#34;https://cdn.example/framework.js&#34;  
+ integrity=&#34;sha256-8WqyJLuWKRB...oZkCnxQbWwJVw=&#34;&gt;
+&lt;/script&gt;
+
+window.framwork || // reload from own domain  
+</code></pre></div><h3 id="2-content-security-policy">2. Content Security Policy</h3>
+<div class="highlight"><pre class="chroma"><code class="language-fallback" data-lang="fallback">HTTP response：  
+:status:200
+Content-Security-Policy:  
+    default &#39;self&#39;;  // No inline
+    script-src cdn.example;
+    frame-src social.example;
+    frame-ancestors news.example;
+</code></pre></div><p>HTTP response的Header里面，default设置成自己，默认只能加载同源的资源；script-src和frame-src 分别指定可信任的脚本和iframe的来源；frame-ancestor设置成news.example，指定只有news.example可以iframe我们的web。</p>
+<p>另外不使用inline属性的脚本也是一种防御措施，不使用inline脚本，只从文件加载脚本，这么做分离了逻辑和文件，更加安全。</p>
+<h3 id="3-httponly-cookies">3. HttpOnly cookies</h3>
+<p>HTTPOnly cookies作为一种安全措施，已经有至少15年的使用历史。在这之前script通过document.cookie这个强大的api能拿到文档的cookie，留下安全隐患。HTTPOnly cookies能够阻止这种情况，只允许HTTP请求访问cookie，禁止使用script访问cookie。它的使用方式很简单，只需要在HTTP response的Header里面加上<strong>HttpOnly</strong>这一项，如下</p>
+<div class="highlight"><pre class="chroma"><code class="language-fallback" data-lang="fallback">HTTP response：  
+:status:200
+Set-Cookie:  
+    auth = abc...123; HttpOnly;
+</code></pre></div><h3 id="4-samesite-cookies">4. SameSite cookies</h3>
+<p>在HTTP response的Header里面将SameSite cookies这一项设置为Strict，那么将不允许把cookie从一个域名发送到另一个域名。例如其他人的web里面嵌入了我们的web，如果我们的服务器HTTP response的Header里面SameSite cookies = Strict，那么其他人将无法使用他的cookie来访问我们的服务器。</p>
+<div class="highlight"><pre class="chroma"><code class="language-fallback" data-lang="fallback">HTTP response：  
+:status:200
+Set-Cookie:  
+    auth = abc...123; HttpOnly;
+    SameSite=strict
+</code></pre></div><h3 id="5-cross-origin-resource-policy">5. Cross-Origin-Resource-Policy</h3>
+<p>Cross-Origin-Resource-Policy是推出的新功能。之前web可以加载任意web中的资源，例如图片或者script。在HTTP response的Header里面将Cross-Origin-Resource-Policy这一项设置为<strong>Same</strong>，将不允许别人的web向我们的服务器请求图片或者script，但是我们自己的web可以。</p>
+<div class="highlight"><pre class="chroma"><code class="language-fallback" data-lang="fallback">HTTP response：  
+:status:200
+Cross-Origin-Resource-Policy:Same
+</code></pre></div><h3 id="6-cross-origin-window-policy">6. Cross-Origin-Window-Policy</h3>
+<p>Cross-Origin-Window-Policy也是新推出的功能。之前通过window.open这个强大的api，其他人的web可以在新窗口中打开我们域名下的web，通过一些手段可以修改我们的web，导航到攻击者指定的页面。在HTTP response的Header里面将Cross-Origin-Resource-Policy这一项设置为<strong>Deny</strong>，将阻止其他人修改我们web中的内容，当然别人仍然还是可以打开我们的web。Cross-Origin-Resource-Policy适用于希望使用post message 进行窗口间通信，但是不想让别人控制我们自己web内容的情况。</p>
+<div class="highlight"><pre class="chroma"><code class="language-fallback" data-lang="fallback">HTTP response：  
+:status:200
+Cross-Origin-Window-Policy:Deny
+</code></pre></div><h2 id="常见的web攻击及防御手段">常见的web攻击及防御手段</h2>
+<h3 id="1-cross-origin-attacks">1. Cross-Origin Attacks</h3>
+<ul>
+<li>Cross-Site Scripting</li>
+<li>Compromised CDN</li>
+<li>Cross-Site Request Forgeries</li>
+</ul>
+<h4 id="1-cross-site-scripting">1. Cross-Site Scripting</h4>
+<p>例如我们的web里面有一个文本框，用户可以输入文字，如下图。假如攻击者注入了这么一段脚本，如果没有采取防御措施，那么我们web的cookie就会被盗取。
+<figure><img src="/images/ring.svg" data-sizes="auto" data-src="http://img.ibook8.club/2019-02-14-15501162917254.jpg" alt="" class="lazyload"><figcaption class="image-caption"></figcaption></figure>
+在HTTP response的Header中添加<strong>HTTPOnly</strong>这一项，就能阻止脚本访问文档的cookie，从而防御跨域脚本攻击。 另外一种防御手段是Content-Security-Policy，如下</p>
+<div class="highlight"><pre class="chroma"><code class="language-fallback" data-lang="fallback">HTTP response：  
+:status:200
+Content-Security-Policy:  
+    default-src &#39;self&#39;;  // No inline
+</code></pre></div><p>Content-Security-Policy能保证拒绝加载外部来源的脚本，并且不使用inline属性的脚本，只从文件中加载脚本。</p>
+<h4 id="2-compromised-cdn">2. Compromised CDN</h4>
+<p>例如我们的web需要从某个外部资源装载一个framework，攻击者可能拦截这个请求，并把它重定向到自己的攻击脚本上，如下图
+<figure><img src="/images/ring.svg" data-sizes="auto" data-src="http://img.ibook8.club/2019-02-14-15501228740659.jpg" alt="" class="lazyload"><figcaption class="image-caption"></figcaption></figure>
+使用Content-Security-Policy中script-src这个属性可以指定信任的脚本来源，并且在引用资源的时候指定来源和校验签名，如下</p>
+<p>在HTTP response中：</p>
+<div class="highlight"><pre class="chroma"><code class="language-fallback" data-lang="fallback">HTTP response：  
+:status:200
+Content-Security-Policy:  
+    default-src &#39;self&#39;;  
+    script-src cdn.example;
+</code></pre></div><p>在HTML中：</p>
+<div class="highlight"><pre class="chroma"><code class="language-fallback" data-lang="fallback">&lt;script src=&#34;https://cdn.example/framework.js&#34;  
+ integrity=&#34;sha256-8WqyJLuWKRB...oZkCnxQbWwJVw=&#34;&gt;
+&lt;/script&gt;
+
+window.framwork || // reload from own domain  
+</code></pre></div><h4 id="3-cross-site-request-forgeries">3. Cross-Site Request Forgeries</h4>
+<p>攻击者可能在自己的web中嵌入我们的web，然后向我们的服务器发起一个伪造的网络请求（使用的是攻击者网站的cookie），如下图
+<figure><img src="/images/ring.svg" data-sizes="auto" data-src="http://img.ibook8.club/2019-02-14-15501230297157.jpg" alt="" class="lazyload"><figcaption class="image-caption"></figcaption></figure>
+如果采取了防御措施，将HTTP response的Header里面的SameSite设置为strict，那么就会禁止攻击者网站的cookie发动到我们的服务器上面，如下</p>
+<div class="highlight"><pre class="chroma"><code class="language-fallback" data-lang="fallback">HTTP response：  
+:status:200
+Set-Cookie:  
+    auth=abc...123; SameSite=strict
+</code></pre></div><h3 id="2-speculative-execution-attacks-spectre">2. Speculative execution attacks (Spectre)</h3>
+<p>防御措施有：</p>
+<ul>
+<li>WKWebView</li>
+<li>Content Security Policy</li>
+<li>HttpOnly cookies</li>
+<li>SameSite cookies</li>
+<li>Cross-Origin-Resource-Policy</li>
+</ul>
+<p>Speculative execution 的定义：预测执行类似于批量执行条件判断语句，例如计算机大量执行&quot;x是否会造成数组array越界&quot;这条指令，就能推测出这个数组的长度，进一步推测出这个数组在内存缓冲区中的地址边界。利用缓冲区溢出这种攻击手段，可以向web中注入攻击脚本。当x超过数组边界的时候，本来应该执行越界的error回调，但是确取出了攻击脚本并执行，造成数据泄露。显然只靠同源策略是无法防御这种攻击的，因为攻击脚本和文档处在同一个域名下，并且在同一个线程中。
+<figure><img src="/images/ring.svg" data-sizes="auto" data-src="http://img.ibook8.club/2019-02-14-15501230923884.jpg" alt="" class="lazyload"><figcaption class="image-caption"></figcaption></figure>
+防御预测执行攻击的方法是<strong>确保web内容和其他iframe（例如攻击脚本）处在不同的线程中</strong>。</p>
+<h4 id="1-wkwebview">1. WKWebView</h4>
+<p><figure><img src="/images/ring.svg" data-sizes="auto" data-src="http://img.ibook8.club/2019-02-14-15501231214048.jpg" alt="" class="lazyload"><figcaption class="image-caption"></figcaption></figure>
+以Safari app为例，WKWebView会单独分离出一个NetWork线程用于处理添加cookie等逻辑，而且每个网页处在不同的线程当中，所以evil网页是无法通过预测执行攻击手段攻击我们的页面。而且因为NetWork线程也是独立的，所以evil网页也无法通过预测执行攻击手段拿到重要数据，例如cookie。
+如果使用UIWebView，所有的web包括NetWork线程都在app的同一个线程中，所以是无法防御预测执行攻击手段的。</p>
+<h4 id="2-content-security-policy-1">2. Content security policy</h4>
+<p>Content security policy的封锁功能是处于Network线程中，和web线程是分离的，因此可以防御预测执行攻击手段。
+例如web要加载一个广告iframe，但是这个广告iframe被重定向到了一个攻击脚本，如果使用了Content security policy，如下，因为攻击脚本不在信任的frame-src里面，所以会禁止加载。还有一种情况，攻击者的web引入了我们的web，因为设置了frame-ancestors为none，所以会禁止攻击者网站引入我们的web，从而防御攻击。</p>
+<div class="highlight"><pre class="chroma"><code class="language-fallback" data-lang="fallback">HTTP response：  
+:status:200
+Content-Security-Policy:  
+    default-src &#39;self&#39;;  
+    frame-src ad.example
+                social.example
+    frame-ancestors &#39;none&#39;
+</code></pre></div><h4 id="3-httponly-cookies-和-samesite-cookies">3. HttpOnly cookies 和 SameSite cookies</h4>
+<p>HttpOnly cookies 和 SameSite cookies的封锁功能也是处于Network线程中，和web线程是分离的，因此可以防御预测执行攻击手段。<strong>HttpOnly</strong> cookies能够禁止攻击者通过脚本拿到cookie。SameSite cookies设为strict能够禁止cookie从一个域发送到另一个域。</p>
+<h4 id="4-cross-origin-resource-policy">4. Cross-Origin-Resource-Policy</h4>
+<p>Cross-Origin-Resource-Policy的封锁功能也是处于Network线程中，和web线程是分离的，因此可以防御预测执行攻击手段。Cross-Origin-Resource-Policy设置成<strong>Same</strong>能禁止攻击者的web加载我们网站的资源。</p>
+<h3 id="3-window-control-attacks">3. Window Control Attacks</h3>
+<p><strong>Cross-Origin-Window-Policy</strong>
+<figure><img src="/images/ring.svg" data-sizes="auto" data-src="http://img.ibook8.club/2019-02-14-15501232163133.jpg" alt="" class="lazyload"><figcaption class="image-caption"></figcaption></figure>
+攻击者的页面可以通过window.open这个api在新的窗口打开我们的web，攻击者趁我们不注意的时候，把我们的页面导航到钓鱼页面，然后诱导用户填写用户名和密码，这样就窃取到了用户信息。把HTTP response Header里面的Cross-Origin-Window-Policy设置为Deny，能够禁止攻击者修改我们的web，这样攻击者就无法导航到钓鱼页面。</p>
+<h2 id="总结">总结</h2>
+<h3 id="每种安全措施防御的攻击类型">每种安全措施防御的攻击类型</h3>
+<p><figure><img src="/images/ring.svg" data-sizes="auto" data-src="http://img.ibook8.club/2019-02-14-15501232432531.jpg" alt="" class="lazyload"><figcaption class="image-caption"></figcaption></figure></p>
+<h2 id="建议">建议</h2>
+<ul>
+<li>使用安全的网络传输（例如https，wss）</li>
+<li>设置Cookies为HttpOnly和其它安全选项</li>
+<li>把UIWebView升级到WKWebView</li>
+<li>测试防御措施是否生效，web是否仍然能正常工作。安全措施都具有一定的限制功能，因此测试web是否能正常工作非常重要。例如Content-Securityp-Policy的script-src白名单里少些了一个允许的域名，那么这个域名下的web就无法正常使用了。</li>
+</ul>
+<blockquote>
+<p>原文地址:https://techblog.toutiao.com/2018/06/19/untitled-44/</p>
+</blockquote>
+
+    </div>
+
+    <div class="post-copyright">
+             
+            <p class="copyright-item">
+                <span>Author:</span>
+                <span>Simon Chen </span>
+                </p>
+            
+           
+            <p class="copyright-item">
+                    <span>Words:</span>
+                   <span>265</span>
+            </p>
+            
+            <p class="copyright-item">
+                
+                <span>Share:</span>
+                <span>
+
+      
+        <a href="//twitter.com/share?url=https%3a%2f%2fwww.ithome.me%2fpost%2f2019%2f02%2f14%2fwwdc2018-web%25E5%25AE%2589%25E5%2585%25A8%25E7%25AD%2596%25E7%2595%25A5-strategies-for-securing-web-content%2f&amp;text=%5b%20WWDC2018%20%5d%20-%20Web%e5%ae%89%e5%85%a8%e7%ad%96%e7%95%a5%20Strategies%20for%20Securing%20Web%20Content&amp;via=https%3a%2f%2ftwitter.com%2fChenCiki" target="_blank" title="Share on Twitter">
+          <i class="iconfont icon-twitter"></i>
+        </a>
+        
+      
+      
+      
+      
+      
+      
+        <a href="//www.linkedin.com/shareArticle?url=https%3a%2f%2fwww.ithome.me%2fpost%2f2019%2f02%2f14%2fwwdc2018-web%25E5%25AE%2589%25E5%2585%25A8%25E7%25AD%2596%25E7%2595%25A5-strategies-for-securing-web-content%2f&amp;title=%5b%20WWDC2018%20%5d%20-%20Web%e5%ae%89%e5%85%a8%e7%ad%96%e7%95%a5%20Strategies%20for%20Securing%20Web%20Content" target="_blank" title="Share on LinkedIn">
+          <i class="iconfont icon-linkedin"></i>
+        </a>
+        
+      
+      
+        
+      
+        
+      
+
+          
+
+          
+
+          
+        <a href="//www.douban.com/recommend/?url=https%3a%2f%2fwww.ithome.me%2fpost%2f2019%2f02%2f14%2fwwdc2018-web%25E5%25AE%2589%25E5%2585%25A8%25E7%25AD%2596%25E7%2595%25A5-strategies-for-securing-web-content%2f&amp;title=%5b%20WWDC2018%20%5d%20-%20Web%e5%ae%89%e5%85%a8%e7%ad%96%e7%95%a5%20Strategies%20for%20Securing%20Web%20Content" target="_blank" title="Share on Douban ">
+            <i class="iconfont icon-douban"></i>
+          </a>
+          
+
+          
+        <a href="//service.weibo.com/share/share.php?url=https%3a%2f%2fwww.ithome.me%2fpost%2f2019%2f02%2f14%2fwwdc2018-web%25E5%25AE%2589%25E5%2585%25A8%25E7%25AD%2596%25E7%2595%25A5-strategies-for-securing-web-content%2f&amp;appkey=&amp;title=%5b%20WWDC2018%20%5d%20-%20Web%e5%ae%89%e5%85%a8%e7%ad%96%e7%95%a5%20Strategies%20for%20Securing%20Web%20Content" target="_blank" title="Share on Douban ">
+            <i class="iconfont icon-weibo"></i>
+          </a>
+          
+</span>
+                
+            </p>
+
+             
+            <p class="copyright-item">
+                Released under <a rel="license external nofollow noopener noreffer" href="https://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank">CC BY-NC-ND 4.0</a>
+            </p>
+            
+    </div>
+
+  
+    <div class="post-tags">
+        
+            <section>
+            <i class="iconfont icon-icon-tag"></i>Tag: 
+            
+            <span class="tag"><a href="https://www.ithome.me/tags/web/">
+                    #web</a></span>
+            
+            </section>
+        
+        <section>
+                <a href="javascript:window.history.back();">Back</a></span> · 
+                <span><a href="https://www.ithome.me/">Home</a></span>
+        </section>
+    </div>
+
+    <div class="post-nav">
+        
+        <a href="https://www.ithome.me/post/2019/02/13/wkwebview-%E9%82%A3%E4%BA%9B%E5%9D%91/" class="prev" rel="prev" title="WKWebView 那些坑"><i class="iconfont icon-dajiantou"></i>&nbsp;WKWebView 那些坑</a>
+         
+        
+        <a href="https://www.ithome.me/post/2019/03/05/%E5%82%BB%E7%93%9C%E5%87%BD%E6%95%B0%E7%BC%96%E7%A8%8B/" class="next" rel="next" title="傻瓜函数式编程">傻瓜函数式编程&nbsp;<i class="iconfont icon-xiaojiantou"></i></a>
+        
+    </div>
+
+    <div class="post-comment">
+          
+          <div id="gitalk-container"></div>
+      <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.css" crossorigin="anonymous">
+      <script src="https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js" crossorigin="anonymous"></script>
+      <script type="text/javascript">
+          var gitalk = new Gitalk({
+              id: '2019-02-14 00:00:00 \u002b0000 UTC',
+              title: '[ WWDC2018 ] - Web安全策略 Strategies for Securing Web Content',
+              clientID: 'be0f52370ed1285b6c7c',
+              clientSecret: '734a7d8d0ded346ca7a3d565d57de3f8eeb2850b',
+              repo: 'gitalk',
+              owner: 'cikichen',
+              admin: ['cikichen'],
+              body: decodeURI(location.href)
+          });
+          gitalk.render('gitalk-container');
+      </script>
+      <noscript>Please enable JavaScript to view the <a href="https://github.com/gitalk/gitalk">comments powered by gitalk.</a></noscript>
+
+ 
+
+          
+    </div>
+</article>
+          </div>
+		   </main>
+      <footer class="footer">
+    <div class="copyright">
+        &copy;
+        
+        <span itemprop="copyrightYear">2011 - 2021</span>
+        
+        
+        <span class="author" itemprop="copyrightHolder"><a href="https://www.ithome.me/">Simon Chen</a>
+        </span>
+        
+
+        <span id="busuanzi_container_site_uv">您是第<span id="busuanzi_value_site_uv"></span>位访客</span>
+    </div>
+</footer>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<link crossorigin="anonymous" integrity="sha384-yziQACfvCVwLqVFLqkWBYRO3XeA4EqzfXKGwaWnenYn5XzqfJFlFdKEmvutIQdKb"
+    href="https://lib.baomitu.com/lightgallery/1.6.12/css/lightgallery.min.css" rel="stylesheet">
+
+<script src="/js/vendor_gallery.min.js" async=""></script>
+
+
+
+
+
+
+
+
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+     </div>
+  </body>
+</html>

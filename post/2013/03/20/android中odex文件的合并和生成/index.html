@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+  <meta http-equiv="content-type" content="text/html;charset=utf-8">
+  <meta http-equiv="X-UA-Compatible" content="chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noodp"/>
+  
+  
+  
+  
+  
+  <link rel="prev" href="https://www.ithome.me/post/2013/03/20/android%E5%AE%9E%E7%8E%B0%E5%8D%95%E4%B8%AA%E4%BB%BB%E5%8A%A1%E4%BE%9D%E6%AC%A1%E6%89%A7%E8%A1%8C/" />
+  <link rel="next" href="https://www.ithome.me/post/2013/03/20/adb%E5%91%BD%E4%BB%A4%E5%A4%A7%E5%85%A8/" />
+  <link rel="canonical" href="https://www.ithome.me/post/2013/03/20/android%E4%B8%ADodex%E6%96%87%E4%BB%B6%E7%9A%84%E5%90%88%E5%B9%B6%E5%92%8C%E7%94%9F%E6%88%90/" />
+  <link rel='shortcut icon' type='image/x-icon' href='/favicon.ico' />
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+  <link rel="manifest" href="/site.webmanifest">
+  <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
+  <meta name="msapplication-TileColor" content="#da532c">
+  <meta name="theme-color" content="#ffffff">
+  <title>
+       
+       
+           android中odex文件的合并和生成 | Creator
+       
+  </title>
+  <meta name="title" content="android中odex文件的合并和生成 | Creator">
+    
+  
+  <link rel="stylesheet" href="/font/iconfont.css">
+  <link rel="stylesheet" href="/css/main.min.css">
+
+
+  <meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="android中odex文件的合并和生成"/>
+<meta name="twitter:description" content="1. 下载 http://smali.googlecode.com/ 里的smali.jar和baksmali.jar两个包
+2 . 通过odex生成class文件
+java -jar baksmali-1.3.2.jar -x xxx.odex 执行完上面这行命令后，会生成一个out 文件夹里面是xxx.odex的class文件。出现问题，根据提示可以从rom的 /system/framework 目录下面找，然后放在odex的同一目录，注意的时当前CMD的路径要在当前目录
+3. 通过class生成classes.dex 文件。
+java -Xmx512M -jar smali-1.3.2.jar out -o classes.dex "/>
+
+  <script type="application/ld+json">
+{
+  "@context": "http://schema.org",
+  "@type": "BlogPosting",
+  "headline": "android中odex文件的合并和生成",
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https:\/\/www.ithome.me\/post\/2013\/03\/20\/android%E4%B8%ADodex%E6%96%87%E4%BB%B6%E7%9A%84%E5%90%88%E5%B9%B6%E5%92%8C%E7%94%9F%E6%88%90\/"
+  },
+  "image": {
+    "@type": "ImageObject",
+    "url": "https:\/\/www.ithome.me\/cover.png",
+    "width":  800 ,
+    "height":  600 
+  },
+  "genre": "posts",
+  "keywords": "android, odex",
+  "wordcount":  26 ,
+  "url": "https:\/\/www.ithome.me\/post\/2013\/03\/20\/android%E4%B8%ADodex%E6%96%87%E4%BB%B6%E7%9A%84%E5%90%88%E5%B9%B6%E5%92%8C%E7%94%9F%E6%88%90\/",
+  "datePublished": "2013-03-20T01:20:43\u002b08:00",
+  "dateModified": "2013-03-20T01:20:43\u002b08:00",
+  "license": "©{year}, All Rights Reserved. Simon Chen",
+  "publisher": {
+    "@type": "Organization",
+    "name": "SimonChen",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https:\/\/www.ithome.me\/logo.png",
+      "width":  127 ,
+      "height":  40 
+    }
+  },
+  "author": {
+    "@type": "Person",
+    "name": "SimonChen"
+  },
+  "description": ""
+}
+</script>
+</head>
+
+  
+             
+  
+
+
+
+  <body class="">
+    <div class="wrapper">
+        <nav class="navbar">
+    <div class="container">
+        <div class="navbar-header header-logo">
+        	<a href="https://www.ithome.me/">Creator</a>
+        </div>
+        <div class="menu navbar-right">
+                
+                
+                <a class="menu-item" href="/posts/" title="">文章</a>
+                
+                <a class="menu-item" href="/categories/" title="">分类</a>
+                
+                <a class="menu-item" href="/tags/" title="">标签</a>
+                
+                <a class="menu-item" href="/about-me/" title="">关于</a>
+                
+                <a href="javascript:void(0);" class="theme-switch"><i class="iconfont icon-sun"></i></a>&nbsp;
+        </div>
+    </div>
+</nav>
+<nav class="navbar-mobile" id="nav-mobile" style="display: none">
+     <div class="container">
+        <div class="navbar-header">
+            <div>  <a href="javascript:void(0);" class="theme-switch"><i class="iconfont icon-sun"></i></a>&nbsp;<a href="https://www.ithome.me/">Creator</a></div>
+            <div class="menu-toggle">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+     
+          <div class="menu" id="mobile-menu">
+                
+                
+                <a class="menu-item" href="/posts/" title="">文章</a>
+                
+                <a class="menu-item" href="/categories/" title="">分类</a>
+                
+                <a class="menu-item" href="/tags/" title="">标签</a>
+                
+                <a class="menu-item" href="/about-me/" title="">关于</a>
+                
+        </div>
+    </div>
+</nav>
+
+    	 <main class="main">
+          <div class="container">
+      		
+<article class="post-warp">
+    <header class="post-header">
+        <h1 class="post-title">android中odex文件的合并和生成</h1>
+        <div class="post-meta">
+            Written by <a href="https://www.ithome.me/" rel="author">Simon Chen</a> with ♥ 
+                <span class="post-time">
+                    on <time datetime=2013-03-20 >20 March 2013</time>
+                </span>
+                in
+                
+                <i class="iconfont icon-timer"></i>
+                1 min
+        </div>
+    </header>
+    <div class="post-content">
+        
+
+        
+
+        
+        
+     
+          
+          
+          
+
+          
+          
+          
+
+          <p>1. 下载 <a href="http://smali.googlecode.com/">http://smali.googlecode.com/</a> 里的smali.jar和baksmali.jar两个包</p>
+<p>2 . 通过odex生成class文件</p>
+<div class="highlight"><pre class="chroma"><code class="language-bash" data-lang="bash">java -jar baksmali-1.3.2.jar -x xxx.odex
+</code></pre></div><p>执行完上面这行命令后，会生成一个out 文件夹里面是xxx.odex的class文件。出现问题，根据提示可以从rom的 /system/framework 目录下面找，然后放在odex的同一目录，注意的时当前CMD的路径要在当前目录</p>
+<p>3. 通过class生成classes.dex 文件。</p>
+<div class="highlight"><pre class="chroma"><code class="language-bash" data-lang="bash">java -Xmx512M -jar smali-1.3.2.jar out -o classes.dex
+</code></pre></div>
+    </div>
+
+    <div class="post-copyright">
+             
+            <p class="copyright-item">
+                <span>Author:</span>
+                <span>Simon Chen </span>
+                </p>
+            
+           
+            <p class="copyright-item">
+                    <span>Words:</span>
+                   <span>26</span>
+            </p>
+            
+            <p class="copyright-item">
+                
+                <span>Share:</span>
+                <span>
+
+      
+        <a href="//twitter.com/share?url=https%3a%2f%2fwww.ithome.me%2fpost%2f2013%2f03%2f20%2fandroid%25E4%25B8%25ADodex%25E6%2596%2587%25E4%25BB%25B6%25E7%259A%2584%25E5%2590%2588%25E5%25B9%25B6%25E5%2592%258C%25E7%2594%259F%25E6%2588%2590%2f&amp;text=android%e4%b8%adodex%e6%96%87%e4%bb%b6%e7%9a%84%e5%90%88%e5%b9%b6%e5%92%8c%e7%94%9f%e6%88%90&amp;via=https%3a%2f%2ftwitter.com%2fChenCiki" target="_blank" title="Share on Twitter">
+          <i class="iconfont icon-twitter"></i>
+        </a>
+        
+      
+      
+      
+      
+      
+      
+        <a href="//www.linkedin.com/shareArticle?url=https%3a%2f%2fwww.ithome.me%2fpost%2f2013%2f03%2f20%2fandroid%25E4%25B8%25ADodex%25E6%2596%2587%25E4%25BB%25B6%25E7%259A%2584%25E5%2590%2588%25E5%25B9%25B6%25E5%2592%258C%25E7%2594%259F%25E6%2588%2590%2f&amp;title=android%e4%b8%adodex%e6%96%87%e4%bb%b6%e7%9a%84%e5%90%88%e5%b9%b6%e5%92%8c%e7%94%9f%e6%88%90" target="_blank" title="Share on LinkedIn">
+          <i class="iconfont icon-linkedin"></i>
+        </a>
+        
+      
+      
+        
+      
+        
+      
+
+          
+
+          
+
+          
+        <a href="//www.douban.com/recommend/?url=https%3a%2f%2fwww.ithome.me%2fpost%2f2013%2f03%2f20%2fandroid%25E4%25B8%25ADodex%25E6%2596%2587%25E4%25BB%25B6%25E7%259A%2584%25E5%2590%2588%25E5%25B9%25B6%25E5%2592%258C%25E7%2594%259F%25E6%2588%2590%2f&amp;title=android%e4%b8%adodex%e6%96%87%e4%bb%b6%e7%9a%84%e5%90%88%e5%b9%b6%e5%92%8c%e7%94%9f%e6%88%90" target="_blank" title="Share on Douban ">
+            <i class="iconfont icon-douban"></i>
+          </a>
+          
+
+          
+        <a href="//service.weibo.com/share/share.php?url=https%3a%2f%2fwww.ithome.me%2fpost%2f2013%2f03%2f20%2fandroid%25E4%25B8%25ADodex%25E6%2596%2587%25E4%25BB%25B6%25E7%259A%2584%25E5%2590%2588%25E5%25B9%25B6%25E5%2592%258C%25E7%2594%259F%25E6%2588%2590%2f&amp;appkey=&amp;title=android%e4%b8%adodex%e6%96%87%e4%bb%b6%e7%9a%84%e5%90%88%e5%b9%b6%e5%92%8c%e7%94%9f%e6%88%90" target="_blank" title="Share on Douban ">
+            <i class="iconfont icon-weibo"></i>
+          </a>
+          
+</span>
+                
+            </p>
+
+             
+            <p class="copyright-item">
+                Released under <a rel="license external nofollow noopener noreffer" href="https://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank">CC BY-NC-ND 4.0</a>
+            </p>
+            
+    </div>
+
+  
+    <div class="post-tags">
+        
+            <section>
+            <i class="iconfont icon-icon-tag"></i>Tag: 
+            
+            <span class="tag"><a href="https://www.ithome.me/tags/android/">
+                    #android</a></span>
+            
+            <span class="tag"><a href="https://www.ithome.me/tags/odex/">
+                    #odex</a></span>
+            
+            </section>
+        
+        <section>
+                <a href="javascript:window.history.back();">Back</a></span> · 
+                <span><a href="https://www.ithome.me/">Home</a></span>
+        </section>
+    </div>
+
+    <div class="post-nav">
+        
+        <a href="https://www.ithome.me/post/2013/03/20/android%E5%AE%9E%E7%8E%B0%E5%8D%95%E4%B8%AA%E4%BB%BB%E5%8A%A1%E4%BE%9D%E6%AC%A1%E6%89%A7%E8%A1%8C/" class="prev" rel="prev" title="android实现单个任务依次执行"><i class="iconfont icon-dajiantou"></i>&nbsp;android实现单个任务依次执行</a>
+         
+        
+        <a href="https://www.ithome.me/post/2013/03/20/adb%E5%91%BD%E4%BB%A4%E5%A4%A7%E5%85%A8/" class="next" rel="next" title="adb命令大全">adb命令大全&nbsp;<i class="iconfont icon-xiaojiantou"></i></a>
+        
+    </div>
+
+    <div class="post-comment">
+          
+          <div id="gitalk-container"></div>
+      <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.css" crossorigin="anonymous">
+      <script src="https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js" crossorigin="anonymous"></script>
+      <script type="text/javascript">
+          var gitalk = new Gitalk({
+              id: '2013-03-20 00:00:00 \u002b0000 UTC',
+              title: 'android中odex文件的合并和生成',
+              clientID: 'be0f52370ed1285b6c7c',
+              clientSecret: '734a7d8d0ded346ca7a3d565d57de3f8eeb2850b',
+              repo: 'gitalk',
+              owner: 'cikichen',
+              admin: ['cikichen'],
+              body: decodeURI(location.href)
+          });
+          gitalk.render('gitalk-container');
+      </script>
+      <noscript>Please enable JavaScript to view the <a href="https://github.com/gitalk/gitalk">comments powered by gitalk.</a></noscript>
+
+ 
+
+          
+    </div>
+</article>
+          </div>
+		   </main>
+      <footer class="footer">
+    <div class="copyright">
+        &copy;
+        
+        <span itemprop="copyrightYear">2011 - 2021</span>
+        
+        
+        <span class="author" itemprop="copyrightHolder"><a href="https://www.ithome.me/">Simon Chen</a>
+        </span>
+        
+
+        <span id="busuanzi_container_site_uv">您是第<span id="busuanzi_value_site_uv"></span>位访客</span>
+    </div>
+</footer>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<script src="/js/vendor_no_gallery.min.js" async=""></script>
+
+
+
+
+
+
+
+
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+     </div>
+  </body>
+</html>

@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+  <meta http-equiv="content-type" content="text/html;charset=utf-8">
+  <meta http-equiv="X-UA-Compatible" content="chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noodp"/>
+  
+  
+  
+  
+  
+  <link rel="prev" href="https://www.ithome.me/post/2013/08/01/c-%E4%B8%ADconst%E7%94%A8%E6%B3%95%E8%AF%A6%E8%A7%A3/" />
+  <link rel="next" href="https://www.ithome.me/post/2013/08/12/android-sdk%E6%9B%B4%E6%96%B0%E7%BC%93%E6%85%A2%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88/" />
+  <link rel="canonical" href="https://www.ithome.me/post/2013/08/01/%E8%BD%ACc_c-%E4%B8%AD%E5%8F%96%E5%9C%B0%E5%9D%80%E7%AC%A6%E7%9A%84%E8%AF%AD%E4%B9%89/" />
+  <link rel='shortcut icon' type='image/x-icon' href='/favicon.ico' />
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+  <link rel="manifest" href="/site.webmanifest">
+  <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
+  <meta name="msapplication-TileColor" content="#da532c">
+  <meta name="theme-color" content="#ffffff">
+  <title>
+       
+       
+           [转]C/C&#43;&#43;中取地址符&amp;的语义 | Creator
+       
+  </title>
+  <meta name="title" content="[转]C/C&#43;&#43;中取地址符&amp;的语义 | Creator">
+    
+  
+  <link rel="stylesheet" href="/font/iconfont.css">
+  <link rel="stylesheet" href="/css/main.min.css">
+
+
+  <meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="[转]C/C&#43;&#43;中取地址符&amp;的语义"/>
+<meta name="twitter:description" content="在C语言中，&amp;符号大家一定很熟悉吧。
+它除了可以作为按位运算“与”之外还有更常用的功能——取变量地址。
+我们首先看下面一个简单的例子：
+上面代码中，指针p指向变量a的地址。在C/C&#43;&#43;中，每个变量都有其相应的地址，通过在变量标识符前加&amp;符号即可获得变量的地址。
+那么我们这么写可以吗？int *p = &amp;0x01000;
+这显然不行。因为对于一个数值常量，它是没有地址的。而变量之所以有地址就是因为要有一个存储单元对变量进行标识（当然，变量也可以直接映射到某个寄存器）。
+我们再看下面的代码：
+上面代码又是怎么回事呢？
+先前已经调查过变量a的地址——0x0012ff60，那么这里的指针p实际上也是指向变量a的地址。
+首先，将0x0012ff60作为int*，这时它与&amp;a是等价的。
+然后*(int*)0x0012ff60表示取变量a的内容。
+最后，&amp;(int)0x0012ff60表示再脱去*(int*)0x0012ff60的解引用，相当于又变为(int*)&amp;a。
+因此，这里的&amp;与第一个例子中的&amp;是不同的语义。这里的&amp;不是取地址，因为一个*(int*)0x0012ff60不是变量，它是没有地址的。每一个变量标识符在编译期间，编译器会为它们创建一个符号表，其中存放着变量标识符相应的各种属性，如类型、地址标识等。地址标识在连接后即可确定逻辑地址值。简而言之，&amp;作为取地址操作，当且仅当&amp;后面跟着的是变量或函数标识符。所以这里的&amp;表示脱去解引用。
+由此我们可以得出：&amp;作为取地址操作时，其行为结果是在编译时就被确定的；而*，解引用操作（或取内容）操作，其行为结果只能在运行时才可被确定。
+再看下面的例子，加深印象：
+不过，&amp;符号不象解引用*能用多次，它只能放在变量标识符或一次解引用前。下面举一个例子
+由于经过一次&amp;来脱去解引用之后，当前表达式就不为左值。而&amp;必须放在一个左值前，因为只有左值才能确保引用是有效的，呵呵。
+在C&#43;&#43;中，&amp;还可以表示引用，这个就不多说了。
+本文来自CSDN博客，出处：http://blog.csdn.net/zenny_chen/archive/2008/06/04/2512056.aspx"/>
+
+  <script type="application/ld+json">
+{
+  "@context": "http://schema.org",
+  "@type": "BlogPosting",
+  "headline": "[转]C\/C\u002b\u002b中取地址符\u0026的语义",
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https:\/\/www.ithome.me\/post\/2013\/08\/01\/%E8%BD%ACc_c-%E4%B8%AD%E5%8F%96%E5%9C%B0%E5%9D%80%E7%AC%A6%E7%9A%84%E8%AF%AD%E4%B9%89\/"
+  },
+  "image": {
+    "@type": "ImageObject",
+    "url": "https:\/\/www.ithome.me\/cover.png",
+    "width":  800 ,
+    "height":  600 
+  },
+  "genre": "posts",
+  
+  "wordcount":  22 ,
+  "url": "https:\/\/www.ithome.me\/post\/2013\/08\/01\/%E8%BD%ACc_c-%E4%B8%AD%E5%8F%96%E5%9C%B0%E5%9D%80%E7%AC%A6%E7%9A%84%E8%AF%AD%E4%B9%89\/",
+  "datePublished": "2013-08-01T16:41:57\u002b08:00",
+  "dateModified": "2013-08-01T16:41:57\u002b08:00",
+  "license": "©{year}, All Rights Reserved. Simon Chen",
+  "publisher": {
+    "@type": "Organization",
+    "name": "SimonChen",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https:\/\/www.ithome.me\/logo.png",
+      "width":  127 ,
+      "height":  40 
+    }
+  },
+  "author": {
+    "@type": "Person",
+    "name": "SimonChen"
+  },
+  "description": ""
+}
+</script>
+</head>
+
+  
+             
+  
+
+
+
+  <body class="">
+    <div class="wrapper">
+        <nav class="navbar">
+    <div class="container">
+        <div class="navbar-header header-logo">
+        	<a href="https://www.ithome.me/">Creator</a>
+        </div>
+        <div class="menu navbar-right">
+                
+                
+                <a class="menu-item" href="/posts/" title="">文章</a>
+                
+                <a class="menu-item" href="/categories/" title="">分类</a>
+                
+                <a class="menu-item" href="/tags/" title="">标签</a>
+                
+                <a class="menu-item" href="/about-me/" title="">关于</a>
+                
+                <a href="javascript:void(0);" class="theme-switch"><i class="iconfont icon-sun"></i></a>&nbsp;
+        </div>
+    </div>
+</nav>
+<nav class="navbar-mobile" id="nav-mobile" style="display: none">
+     <div class="container">
+        <div class="navbar-header">
+            <div>  <a href="javascript:void(0);" class="theme-switch"><i class="iconfont icon-sun"></i></a>&nbsp;<a href="https://www.ithome.me/">Creator</a></div>
+            <div class="menu-toggle">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+     
+          <div class="menu" id="mobile-menu">
+                
+                
+                <a class="menu-item" href="/posts/" title="">文章</a>
+                
+                <a class="menu-item" href="/categories/" title="">分类</a>
+                
+                <a class="menu-item" href="/tags/" title="">标签</a>
+                
+                <a class="menu-item" href="/about-me/" title="">关于</a>
+                
+        </div>
+    </div>
+</nav>
+
+    	 <main class="main">
+          <div class="container">
+      		
+<article class="post-warp">
+    <header class="post-header">
+        <h1 class="post-title">[转]C/C&#43;&#43;中取地址符&amp;的语义</h1>
+        <div class="post-meta">
+            Written by <a href="https://www.ithome.me/" rel="author">Simon Chen</a> with ♥ 
+                <span class="post-time">
+                    on <time datetime=2013-08-01 >1 August 2013</time>
+                </span>
+                in
+                
+                <i class="iconfont icon-timer"></i>
+                1 min
+        </div>
+    </header>
+    <div class="post-content">
+        
+
+        
+
+        
+        
+     
+          
+          
+          
+
+          
+          
+          
+
+          <p>在C语言中，&amp;符号大家一定很熟悉吧。</p>
+<p>它除了可以作为按位运算“与”之外还有更常用的功能——取变量地址。</p>
+<p>我们首先看下面一个简单的例子：</p>
+<!-- raw HTML omitted -->
+<!-- raw HTML omitted -->
+<p>上面代码中，指针p指向变量a的地址。在C/C++中，每个变量都有其相应的地址，通过在变量标识符前加&amp;符号即可获得变量的地址。</p>
+<p>那么我们这么写可以吗？int *p = &amp;0x01000;</p>
+<p>这显然不行。因为对于一个数值常量，它是没有地址的。而变量之所以有地址就是因为要有一个存储单元对变量进行标识（当然，变量也可以直接映射到某个寄存器）。</p>
+<p>我们再看下面的代码：</p>
+<!-- raw HTML omitted -->
+<!-- raw HTML omitted -->
+<p>上面代码又是怎么回事呢？</p>
+<p>先前已经调查过变量a的地址——0x0012ff60，那么这里的指针p实际上也是指向变量a的地址。</p>
+<p>首先，将0x0012ff60作为int*，这时它与&amp;a是等价的。</p>
+<p>然后*(int*)0x0012ff60表示取变量a的内容。</p>
+<p>最后，&amp;<em>(int</em>)0x0012ff60表示再脱去*(int*)0x0012ff60的解引用，相当于又变为(int*)&amp;a。</p>
+<p>因此，这里的&amp;与第一个例子中的&amp;是不同的语义。这里的&amp;不是取地址，因为一个*(int*)0x0012ff60不是变量，它是没有地址的。每一个变量标识符在编译期间，编译器会为它们创建一个符号表，其中存放着变量标识符相应的各种属性，如类型、地址标识等。地址标识在连接后即可确定逻辑地址值。简而言之，&amp;作为取地址操作，当且仅当&amp;后面跟着的是变量或函数标识符。所以这里的&amp;表示脱去解引用。</p>
+<p>由此我们可以得出：&amp;作为取地址操作时，其行为结果是在编译时就被确定的；而*，解引用操作（或取内容）操作，其行为结果只能在运行时才可被确定。</p>
+<p>再看下面的例子，加深印象：</p>
+<!-- raw HTML omitted -->
+<!-- raw HTML omitted -->
+<p>不过，&amp;符号不象解引用*能用多次，它只能放在变量标识符或一次解引用前。下面举一个例子</p>
+<!-- raw HTML omitted -->
+<!-- raw HTML omitted -->
+<p>由于经过一次&amp;来脱去解引用之后，当前表达式就不为左值。而&amp;必须放在一个左值前，因为只有左值才能确保引用是有效的，呵呵。</p>
+<p>在C++中，&amp;还可以表示引用，这个就不多说了。</p>
+<!-- raw HTML omitted -->
+<!-- raw HTML omitted -->
+<p>本文来自CSDN博客，出处：http://blog.csdn.net/zenny_chen/archive/2008/06/04/2512056.aspx</p>
+
+    </div>
+
+    <div class="post-copyright">
+             
+            <p class="copyright-item">
+                <span>Author:</span>
+                <span>Simon Chen </span>
+                </p>
+            
+           
+            <p class="copyright-item">
+                    <span>Words:</span>
+                   <span>22</span>
+            </p>
+            
+            <p class="copyright-item">
+                
+                <span>Share:</span>
+                <span>
+
+      
+        <a href="//twitter.com/share?url=https%3a%2f%2fwww.ithome.me%2fpost%2f2013%2f08%2f01%2f%25E8%25BD%25ACc_c-%25E4%25B8%25AD%25E5%258F%2596%25E5%259C%25B0%25E5%259D%2580%25E7%25AC%25A6%25E7%259A%2584%25E8%25AF%25AD%25E4%25B9%2589%2f&amp;text=%5b%e8%bd%ac%5dC%2fC%2b%2b%e4%b8%ad%e5%8f%96%e5%9c%b0%e5%9d%80%e7%ac%a6%26%e7%9a%84%e8%af%ad%e4%b9%89&amp;via=https%3a%2f%2ftwitter.com%2fChenCiki" target="_blank" title="Share on Twitter">
+          <i class="iconfont icon-twitter"></i>
+        </a>
+        
+      
+      
+      
+      
+      
+      
+        <a href="//www.linkedin.com/shareArticle?url=https%3a%2f%2fwww.ithome.me%2fpost%2f2013%2f08%2f01%2f%25E8%25BD%25ACc_c-%25E4%25B8%25AD%25E5%258F%2596%25E5%259C%25B0%25E5%259D%2580%25E7%25AC%25A6%25E7%259A%2584%25E8%25AF%25AD%25E4%25B9%2589%2f&amp;title=%5b%e8%bd%ac%5dC%2fC%2b%2b%e4%b8%ad%e5%8f%96%e5%9c%b0%e5%9d%80%e7%ac%a6%26%e7%9a%84%e8%af%ad%e4%b9%89" target="_blank" title="Share on LinkedIn">
+          <i class="iconfont icon-linkedin"></i>
+        </a>
+        
+      
+      
+        
+      
+        
+      
+
+          
+
+          
+
+          
+        <a href="//www.douban.com/recommend/?url=https%3a%2f%2fwww.ithome.me%2fpost%2f2013%2f08%2f01%2f%25E8%25BD%25ACc_c-%25E4%25B8%25AD%25E5%258F%2596%25E5%259C%25B0%25E5%259D%2580%25E7%25AC%25A6%25E7%259A%2584%25E8%25AF%25AD%25E4%25B9%2589%2f&amp;title=%5b%e8%bd%ac%5dC%2fC%2b%2b%e4%b8%ad%e5%8f%96%e5%9c%b0%e5%9d%80%e7%ac%a6%26%e7%9a%84%e8%af%ad%e4%b9%89" target="_blank" title="Share on Douban ">
+            <i class="iconfont icon-douban"></i>
+          </a>
+          
+
+          
+        <a href="//service.weibo.com/share/share.php?url=https%3a%2f%2fwww.ithome.me%2fpost%2f2013%2f08%2f01%2f%25E8%25BD%25ACc_c-%25E4%25B8%25AD%25E5%258F%2596%25E5%259C%25B0%25E5%259D%2580%25E7%25AC%25A6%25E7%259A%2584%25E8%25AF%25AD%25E4%25B9%2589%2f&amp;appkey=&amp;title=%5b%e8%bd%ac%5dC%2fC%2b%2b%e4%b8%ad%e5%8f%96%e5%9c%b0%e5%9d%80%e7%ac%a6%26%e7%9a%84%e8%af%ad%e4%b9%89" target="_blank" title="Share on Douban ">
+            <i class="iconfont icon-weibo"></i>
+          </a>
+          
+</span>
+                
+            </p>
+
+             
+            <p class="copyright-item">
+                Released under <a rel="license external nofollow noopener noreffer" href="https://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank">CC BY-NC-ND 4.0</a>
+            </p>
+            
+    </div>
+
+  
+    <div class="post-tags">
+        
+        <section>
+                <a href="javascript:window.history.back();">Back</a></span> · 
+                <span><a href="https://www.ithome.me/">Home</a></span>
+        </section>
+    </div>
+
+    <div class="post-nav">
+        
+        <a href="https://www.ithome.me/post/2013/08/01/c-%E4%B8%ADconst%E7%94%A8%E6%B3%95%E8%AF%A6%E8%A7%A3/" class="prev" rel="prev" title="C&#43;&#43;中const用法详解"><i class="iconfont icon-dajiantou"></i>&nbsp;C&#43;&#43;中const用法详解</a>
+         
+        
+        <a href="https://www.ithome.me/post/2013/08/12/android-sdk%E6%9B%B4%E6%96%B0%E7%BC%93%E6%85%A2%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88/" class="next" rel="next" title="Android SDK更新缓慢解决方案">Android SDK更新缓慢解决方案&nbsp;<i class="iconfont icon-xiaojiantou"></i></a>
+        
+    </div>
+
+    <div class="post-comment">
+          
+          <div id="gitalk-container"></div>
+      <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.css" crossorigin="anonymous">
+      <script src="https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js" crossorigin="anonymous"></script>
+      <script type="text/javascript">
+          var gitalk = new Gitalk({
+              id: '2013-08-01 00:00:00 \u002b0000 UTC',
+              title: '[转]C\/C\u002b\u002b中取地址符\u0026的语义',
+              clientID: 'be0f52370ed1285b6c7c',
+              clientSecret: '734a7d8d0ded346ca7a3d565d57de3f8eeb2850b',
+              repo: 'gitalk',
+              owner: 'cikichen',
+              admin: ['cikichen'],
+              body: decodeURI(location.href)
+          });
+          gitalk.render('gitalk-container');
+      </script>
+      <noscript>Please enable JavaScript to view the <a href="https://github.com/gitalk/gitalk">comments powered by gitalk.</a></noscript>
+
+ 
+
+          
+    </div>
+</article>
+          </div>
+		   </main>
+      <footer class="footer">
+    <div class="copyright">
+        &copy;
+        
+        <span itemprop="copyrightYear">2011 - 2021</span>
+        
+        
+        <span class="author" itemprop="copyrightHolder"><a href="https://www.ithome.me/">Simon Chen</a>
+        </span>
+        
+
+        <span id="busuanzi_container_site_uv">您是第<span id="busuanzi_value_site_uv"></span>位访客</span>
+    </div>
+</footer>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<script src="/js/vendor_no_gallery.min.js" async=""></script>
+
+
+
+
+
+
+
+
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+     </div>
+  </body>
+</html>

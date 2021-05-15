@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+  <meta http-equiv="content-type" content="text/html;charset=utf-8">
+  <meta http-equiv="X-UA-Compatible" content="chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noodp"/>
+  
+  
+  
+  
+  
+  <link rel="prev" href="https://www.ithome.me/post/2016/07/22/android%E6%B5%81%E8%A1%8C%E6%9E%B6%E6%9E%84%E5%88%86%E4%BA%AB%E4%B8%8E%E8%A7%A3%E6%9E%90/" />
+  <link rel="next" href="https://www.ithome.me/post/2018/07/16/flutter%E5%BC%80%E5%8F%91-%E7%8E%AF%E5%A2%83%E9%85%8D%E7%BD%AE/" />
+  <link rel="canonical" href="https://www.ithome.me/post/2017/10/26/android%E7%83%AD%E6%9B%B4%E6%96%B0%E6%8A%80%E6%9C%AF%E6%80%BB%E7%BB%93/" />
+  <link rel='shortcut icon' type='image/x-icon' href='/favicon.ico' />
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+  <link rel="manifest" href="/site.webmanifest">
+  <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
+  <meta name="msapplication-TileColor" content="#da532c">
+  <meta name="theme-color" content="#ffffff">
+  <title>
+       
+       
+           Android热更新技术总结 | Creator
+       
+  </title>
+  <meta name="title" content="Android热更新技术总结 | Creator">
+    
+  
+  <link rel="stylesheet" href="/font/iconfont.css">
+  <link rel="stylesheet" href="/css/main.min.css">
+
+
+  <meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="Android热更新技术总结"/>
+<meta name="twitter:description" content="当前市面的热补丁方案有很多，其中比较出名的有阿里的HotFix、美团的Robust、微信的Tinker以及QZone的超级补丁方案。
+1、热修复技术的优势？  无需重新发版，实时高效热修复 用户无感知修复，无需下载新的应用，代价小 远程调试     平台 阿里百川HotFix(Sophix) AndFix Tinker Qzone Robust     即时生效 yes yes no no yes   性能损耗 较小 较小 较大 较大 较小   侵入式打包 无侵入式打包 无侵入式打包 依赖侵入式打包 依赖侵入式打包 依赖侵入式打包   Rom体积 较小 较小 较大 较小 较小   接入复杂度 傻瓜式接入 比较简单 复杂 比较简单 复杂   补丁包大小 较小 较小 较小 较大 一般   全平台支持 yes yes yes yes yes   类替换 yes yes yes yes no   so替换 yes no yes no no   资源替换 yes no yes yes no   成功率 ?"/>
+
+  <script type="application/ld+json">
+{
+  "@context": "http://schema.org",
+  "@type": "BlogPosting",
+  "headline": "Android热更新技术总结",
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https:\/\/www.ithome.me\/post\/2017\/10\/26\/android%E7%83%AD%E6%9B%B4%E6%96%B0%E6%8A%80%E6%9C%AF%E6%80%BB%E7%BB%93\/"
+  },
+  "image": {
+    "@type": "ImageObject",
+    "url": "https:\/\/www.ithome.me\/cover.png",
+    "width":  800 ,
+    "height":  600 
+  },
+  "genre": "posts",
+  "keywords": "Android, 移动开发, 热更新",
+  "wordcount":  283 ,
+  "url": "https:\/\/www.ithome.me\/post\/2017\/10\/26\/android%E7%83%AD%E6%9B%B4%E6%96%B0%E6%8A%80%E6%9C%AF%E6%80%BB%E7%BB%93\/",
+  "datePublished": "2017-10-26T12:53:40\u002b08:00",
+  "dateModified": "2017-10-26T12:53:40\u002b08:00",
+  "license": "©{year}, All Rights Reserved. Simon Chen",
+  "publisher": {
+    "@type": "Organization",
+    "name": "SimonChen",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https:\/\/www.ithome.me\/logo.png",
+      "width":  127 ,
+      "height":  40 
+    }
+  },
+  "author": {
+    "@type": "Person",
+    "name": "SimonChen"
+  },
+  "description": ""
+}
+</script>
+</head>
+
+  
+             
+  
+
+
+
+  <body class="">
+    <div class="wrapper">
+        <nav class="navbar">
+    <div class="container">
+        <div class="navbar-header header-logo">
+        	<a href="https://www.ithome.me/">Creator</a>
+        </div>
+        <div class="menu navbar-right">
+                
+                
+                <a class="menu-item" href="/posts/" title="">文章</a>
+                
+                <a class="menu-item" href="/categories/" title="">分类</a>
+                
+                <a class="menu-item" href="/tags/" title="">标签</a>
+                
+                <a class="menu-item" href="/about-me/" title="">关于</a>
+                
+                <a href="javascript:void(0);" class="theme-switch"><i class="iconfont icon-sun"></i></a>&nbsp;
+        </div>
+    </div>
+</nav>
+<nav class="navbar-mobile" id="nav-mobile" style="display: none">
+     <div class="container">
+        <div class="navbar-header">
+            <div>  <a href="javascript:void(0);" class="theme-switch"><i class="iconfont icon-sun"></i></a>&nbsp;<a href="https://www.ithome.me/">Creator</a></div>
+            <div class="menu-toggle">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+     
+          <div class="menu" id="mobile-menu">
+                
+                
+                <a class="menu-item" href="/posts/" title="">文章</a>
+                
+                <a class="menu-item" href="/categories/" title="">分类</a>
+                
+                <a class="menu-item" href="/tags/" title="">标签</a>
+                
+                <a class="menu-item" href="/about-me/" title="">关于</a>
+                
+        </div>
+    </div>
+</nav>
+
+    	 <main class="main">
+          <div class="container">
+      		
+<article class="post-warp">
+    <header class="post-header">
+        <h1 class="post-title">Android热更新技术总结</h1>
+        <div class="post-meta">
+            Written by <a href="https://www.ithome.me/" rel="author">Simon Chen</a> with ♥ 
+                <span class="post-time">
+                    on <time datetime=2017-10-26 >26 October 2017</time>
+                </span>
+                in
+                <i class="iconfont icon-folder"></i>
+                <span class="post-category">
+                        <a href="https://www.ithome.me/categories/%E7%A7%BB%E5%8A%A8%E5%BC%80%E5%8F%91/"> 移动开发 </a>
+                        
+                </span>
+                <i class="iconfont icon-timer"></i>
+                2 min
+        </div>
+    </header>
+    <div class="post-content">
+        
+
+        
+            
+        
+
+        
+        
+     
+          
+          
+          
+
+          
+          
+          
+
+          <p>当前市面的热补丁方案有很多，其中比较出名的有阿里的HotFix、美团的Robust、微信的Tinker以及QZone的超级补丁方案。</p>
+<h2 id="1热修复技术的优势">1、热修复技术的优势？</h2>
+<ul>
+<li>无需重新发版，实时高效热修复</li>
+<li>用户无感知修复，无需下载新的应用，代价小</li>
+<li>远程调试</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>平台</th>
+<th>阿里百川HotFix(Sophix)</th>
+<th>AndFix</th>
+<th>Tinker</th>
+<th>Qzone</th>
+<th>Robust</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>即时生效</td>
+<td>yes</td>
+<td>yes</td>
+<td>no</td>
+<td>no</td>
+<td>yes</td>
+</tr>
+<tr>
+<td>性能损耗</td>
+<td>较小</td>
+<td>较小</td>
+<td>较大</td>
+<td>较大</td>
+<td>较小</td>
+</tr>
+<tr>
+<td>侵入式打包</td>
+<td>无侵入式打包</td>
+<td>无侵入式打包</td>
+<td>依赖侵入式打包</td>
+<td>依赖侵入式打包</td>
+<td>依赖侵入式打包</td>
+</tr>
+<tr>
+<td>Rom体积</td>
+<td>较小</td>
+<td>较小</td>
+<td>较大</td>
+<td>较小</td>
+<td>较小</td>
+</tr>
+<tr>
+<td>接入复杂度</td>
+<td>傻瓜式接入</td>
+<td>比较简单</td>
+<td>复杂</td>
+<td>比较简单</td>
+<td>复杂</td>
+</tr>
+<tr>
+<td>补丁包大小</td>
+<td>较小</td>
+<td>较小</td>
+<td>较小</td>
+<td>较大</td>
+<td>一般</td>
+</tr>
+<tr>
+<td>全平台支持</td>
+<td>yes</td>
+<td>yes</td>
+<td>yes</td>
+<td>yes</td>
+<td>yes</td>
+</tr>
+<tr>
+<td>类替换</td>
+<td>yes</td>
+<td>yes</td>
+<td>yes</td>
+<td>yes</td>
+<td>no</td>
+</tr>
+<tr>
+<td>so替换</td>
+<td>yes</td>
+<td>no</td>
+<td>yes</td>
+<td>no</td>
+<td>no</td>
+</tr>
+<tr>
+<td>资源替换</td>
+<td>yes</td>
+<td>no</td>
+<td>yes</td>
+<td>yes</td>
+<td>no</td>
+</tr>
+<tr>
+<td>成功率</td>
+<td>?</td>
+<td>一般</td>
+<td>较高（95.6%）</td>
+<td>较高</td>
+<td>最高（99.9%）</td>
+</tr>
+</tbody>
+</table>
+<p>可以看到阿里的Sophix有很大优势，阿里系在热修复领域有很多积累，我们可以看下阿里系的热修复技术发展路径，一张表格来说明一下各个版本热修复的差别：</p>
+<table>
+<thead>
+<tr>
+<th>方案对比</th>
+<th>Andfix开源版本</th>
+<th>阿里Hotfix 1.X</th>
+<th>阿里Hotfix 最新版 (Sophix)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>方法替换</td>
+<td>支持，除部分情况[0]</td>
+<td>支持，除部分情况</td>
+<td>全部支持</td>
+</tr>
+<tr>
+<td>方法增加减少</td>
+<td>不支持</td>
+<td>不支持</td>
+<td>以冷启动方式支持[1]</td>
+</tr>
+<tr>
+<td>方法反射调用</td>
+<td>只支持静态方法</td>
+<td>只支持静态方法</td>
+<td>以冷启动方式支持</td>
+</tr>
+<tr>
+<td>即时生效</td>
+<td>支持</td>
+<td>支持</td>
+<td>视情况支持[2]</td>
+</tr>
+<tr>
+<td>多DEX</td>
+<td>不支持</td>
+<td>支持</td>
+<td>支持</td>
+</tr>
+<tr>
+<td>资源更新</td>
+<td>不支持</td>
+<td>不支持</td>
+<td>支持</td>
+</tr>
+<tr>
+<td>so库更新</td>
+<td>不支持</td>
+<td>不支持</td>
+<td>支持</td>
+</tr>
+<tr>
+<td>Android版本</td>
+<td>支持2.3~7.0</td>
+<td>支持2.3~6.0</td>
+<td>全部支持包含7.0以上</td>
+</tr>
+<tr>
+<td>已有机型</td>
+<td>大部分支持[3]</td>
+<td>大部分支持</td>
+<td>全部支持</td>
+</tr>
+<tr>
+<td>安全机制</td>
+<td>无</td>
+<td>加密传输及签名校验</td>
+<td>加密传输及签名校验</td>
+</tr>
+<tr>
+<td>性能损耗</td>
+<td>低，几乎无损耗</td>
+<td>低，几乎无损耗</td>
+<td>低，仅冷启动情况下有些损耗</td>
+</tr>
+<tr>
+<td>生成补丁</td>
+<td>繁琐，命令行操作</td>
+<td>繁琐，命令行操作</td>
+<td>便捷，图形化界面</td>
+</tr>
+<tr>
+<td>补丁大小</td>
+<td>不大，仅变动的类</td>
+<td>小，仅变动的方法</td>
+<td>不大，仅变动的资源和代码[4]</td>
+</tr>
+<tr>
+<td>服务端支持</td>
+<td>无</td>
+<td>支持服务端控制[5]</td>
+<td>支持服务端控制</td>
+</tr>
+</tbody>
+</table>
+<p>说明：
+[0] 部分情况指的是构造方法、参数数目大于8或者参数包括long,double,float基本类型的方法。
+[1] 冷启动方式，指的是需要重启app在下次启动时才能生效。
+[2] 对于Andfix及Hotfix 1.X能够支持的代码变动情况，都能做到即时生效。而对于其他代码变动较大的情况，会走冷启动方式，此时就无法做到即时生效。
+[3] Hotfix 1.X已经支持绝大部分主流手机，只是在X86设备以及修改了虚拟机底层结构的ROM上不支持。
+[4] 由于支持了资源和库，如果有这些方面的更新，就会导致的补丁变大一些，这个是很正常的。并且由于只包含差异的部分，所以补丁已经是最大程度的小了。
+[5] 提供服务端的补丁发布和停发、版本控制和灰度功能，存储开发者上传的补丁包。</p>
+<p>Sophix目前最新版本3.0，收费服务。</p>
+<!-- raw HTML omitted -->
+<h2 id="2主流方案原理分析">2、主流方案原理分析</h2>
+<h4 id="robust"><strong>Robust</strong></h4>
+<p><strong>原理</strong> ：Robust插件对每个产品代码的每个函数都在编译打包阶段自动的插入了一段代码，插入过程对业务开发是完全透明。</p>
+<p>Robust为每个class增加了个类型为ChangeQuickRedirect的静态成员，而在每个方法前都插入了使用changeQuickRedirect相关的逻辑，当 changeQuickRedirect不为null时，可能会执行到accessDispatch从而替换掉之前老的逻辑，达到fix的目的。</p>
+<p>如State.java的getIndex函数：</p>
+<div class="highlight"><pre class="chroma"><code class="language-fallback" data-lang="fallback">public longgetIndex(){
+
+    **return** 100;
+
+}
+</code></pre></div><p>被处理成如下的实现：</p>
+<div class="highlight"><pre class="chroma"><code class="language-fallback" data-lang="fallback">public static ChangeQuickRedirectchangeQuickRedirect;
+
+    public longgetIndex(){
+
+        if (changeQuickRedirect!= null){
+
+            //PatchProxy中封装了获取当前className和methodName的逻辑，并在其内部最终调用了changeQuickRedirect的对应函数
+
+            if (PatchProxy.isSupport(new Object[0], this ,changeQuickRedirect, false)){
+
+                return ((Long)PatchProxy.accessDispatch(new Object[0], this ,changeQuickRedirect, false)).longValue();
+
+            }
+
+        }
+
+        return 100L;
+
+ }
+</code></pre></div><p><strong>简述</strong> ：客户端拿到含有PatchesInfoImpl.java和StatePatch.java的patch.dex后，用DexClassLoader加载patch.dex，反射拿到PatchesInfoImpl.java这个class。拿到后，创建这个class的一个对象。然后通过这个对象的getPatchedClassesInfo函数，知道需要patch的class为xxx，再反射得到当前运行环境中的xxx class，将其中的changeQuickRedirect字段赋值为用patch.dex中的StatePatch.java这个class new出来的对象。这就是打patch的主要过程。通过原理分析，其实Robust只是在正常的使用DexClassLoader，所以可以说这套框架是没有兼容性问题的。</p>
+<p><img src="" alt=""></p>
+<h4 id="andfix"><strong>AndFix</strong></h4>
+<p><strong>原理</strong> ：AndFix的原理是在加载补丁文件后，通过Native层使用指针替换的方式将老方法Method对象的方法指针替换成补丁包中新方法的，从而达到修复bug的目的。由于它并没有整体替换class, 而field在class中的相对地址在class加载时已确定，所以AndFix无法支持新增或者删除filed的情况(通过替换init与clinit值可以修改field的数值)。</p>
+<p><img src="" alt=""></p>
+<p>优点：即时生效，无性能损耗，无侵入。缺点：不能新增字段以及修改&lt;init&gt;方法，不能修改资源，兼容性可能有问题。</p>
+<p><strong>简述</strong> ：AndFix采用native hook的方式，这套方案直接使用dalvik_replaceMethod替换class中方法的实现。</p>
+<p>我们看下主要的几个natvie方法</p>
+<div class="highlight"><pre class="chroma"><code class="language-fallback" data-lang="fallback">public class AndFix {
+
+    //运行时装载libdvm.so动态库，用于获取内部函数1、dvmThreadSelf()：查询当前的线程，2、dvmDecodeIndirectRef()：根据当前线程获得ClassObject对象
+
+    private static native booleansetup(booleanisArt,intapilevel);
+
+    //让private、protected的方法和字段可被动态库看见并识别。原因在于动态库会忽略非public属性的字段和方法。
+
+    private static native voidsetFieldFlag(Fieldfield);
+
+    //指针替换
+
+    private static native voidreplaceMethod(Methoddest,Methodsrc);
+
+}
+</code></pre></div><p>这个几个方法对应的操作</p>
+<p><img src="" alt=""></p>
+<p>重点分析下replaceMethod 方法，这此之前，我们需要穿插一个知识点。</p>
+<p><strong>Android 中的Dalvik和ART是什么，有啥区别？</strong></p>
+<blockquote>
+<p>Android Runtime（缩写为ART），是一种在Android操作系统上的运行环境，由Google公司研发，并在2013年作为Android 4.4系统中的一项测试功能正式对外发布，在Android 5.0及后续Android版本中作为正式的运行时库取代了以往的Dalvik虚拟机。ART能够把应用程序的字节码转换为机器码，是Android所使用的一种新的虚拟机。它与Dalvik的主要不同在于：Dalvik采用的是JIT技术，而ART采用Ahead-of-time（AOT）技术。ART同时也改善了性能、垃圾回收（Garbage Collection）、应用程序除错以及性能分析。
+JIT最早在 <a href="https://zh.wikipedia.org/wiki/Android_2.2"><strong>Android 2.2</strong></a> <strong>系统中引进到Dalvik虚拟机中，在应用程序启动时，JIT通过进行连续的</strong> <a href="https://zh.wikipedia.org/wiki/%E6%80%A7%E8%83%BD%E5%88%86%E6%9E%90"><strong>性能分析</strong></a> 来优化程序代码的执行，在程序运行的过程中，Dalvik虚拟机在不断的进行将字节码编译成机器码的工作。与Dalvik虚拟机不同的是，ART引入了AOT这种预编译技术，在应用程序安装的过程中，ART就已经将所有的字节码重新编译成了机器码。应用程序运行过程中无需进行实时的编译工作，只需要进行直接调用。因此，ART极大的提高了应用程序的运行效率，同时也减少了手机的电量消耗，提高了移动设备的续航能力，在垃圾回收等机制上也有了较大的提升。</p>
+</blockquote>
+<p>通过源码结构，我们可以看出AndFix针对不同的运行环境做了不同的处理。</p>
+<p><img src="" alt=""></p>
+<p>dalvik_replaceMethod方法实现:</p>
+<div class="highlight"><pre class="chroma"><code class="language-fallback" data-lang="fallback">externvoid\_\_attribute\_\_((visibility(&amp;quot;hidden&amp;quot;)))dalvik\_replaceMethod(
+
+    JNIEnv\*env,jobjectsrc,jobjectdest){
+
+        _//找到被替换的类_
+
+        jobjectclazz=env-&amp;gt;CallObjectMethod(dest,jClassMethod);
+
+       _//通过类找到类的对象_
+
+        ClassObject\*clz=(ClassObject\*)dvmDecodeIndirectRef\_fnPtr(
+
+                        dvmThreadSelf\_fnPtr(),clazz);
+
+       _//将类的状态初始化_
+
+        clz-&amp;gt;status=CLASS\_INITIALIZED;
+
+       _//找到新方法的指针_
+
+        Method\*meth=(Method\*)env-&amp;gt;FromReflectedMethod(src);
+
+       _//找到需要修复的旧方法指针_
+
+        Method\*target=(Method\*)env-&amp;gt;FromReflectedMethod(dest);
+
+        LOGD(&amp;quot;dalvikMethod: %s&amp;quot;,meth-&amp;gt;name);
+
+_//        meth-&amp;gt;clazz = target-&amp;gt;clazz;_
+
+       _//访问属性替换为public_
+
+        meth-&amp;gt;accessFlags|=ACC\_PUBLIC;
+
+        meth-&amp;gt;methodIndex=target-&amp;gt;methodIndex;
+
+        meth-&amp;gt;jniArgInfo=target-&amp;gt;jniArgInfo;
+
+        meth-&amp;gt;registersSize=target-&amp;gt;registersSize;
+
+        meth-&amp;gt;outsSize=target-&amp;gt;outsSize;
+
+        meth-&amp;gt;insSize=target-&amp;gt;insSize;
+
+       _//方法指针替换_
+
+        meth-&amp;gt;prototype=target-&amp;gt;prototype;
+
+        meth-&amp;gt;insns=target-&amp;gt;insns;
+
+        meth-&amp;gt;nativeFunc=target-&amp;gt;nativeFunc;
+
+}
+</code></pre></div><p>ART的具体实现不同，但基本流程一致。</p>
+<h2 id="-qzone"># QZone</h2>
+<p><strong>原理</strong> ：QZone方案并没有开源。</p>
+
+    </div>
+
+    <div class="post-copyright">
+             
+            <p class="copyright-item">
+                <span>Author:</span>
+                <span>Simon Chen </span>
+                </p>
+            
+           
+            <p class="copyright-item">
+                    <span>Words:</span>
+                   <span>283</span>
+            </p>
+            
+            <p class="copyright-item">
+                
+                <span>Share:</span>
+                <span>
+
+      
+        <a href="//twitter.com/share?url=https%3a%2f%2fwww.ithome.me%2fpost%2f2017%2f10%2f26%2fandroid%25E7%2583%25AD%25E6%259B%25B4%25E6%2596%25B0%25E6%258A%2580%25E6%259C%25AF%25E6%2580%25BB%25E7%25BB%2593%2f&amp;text=Android%e7%83%ad%e6%9b%b4%e6%96%b0%e6%8a%80%e6%9c%af%e6%80%bb%e7%bb%93&amp;via=https%3a%2f%2ftwitter.com%2fChenCiki" target="_blank" title="Share on Twitter">
+          <i class="iconfont icon-twitter"></i>
+        </a>
+        
+      
+      
+      
+      
+      
+      
+        <a href="//www.linkedin.com/shareArticle?url=https%3a%2f%2fwww.ithome.me%2fpost%2f2017%2f10%2f26%2fandroid%25E7%2583%25AD%25E6%259B%25B4%25E6%2596%25B0%25E6%258A%2580%25E6%259C%25AF%25E6%2580%25BB%25E7%25BB%2593%2f&amp;title=Android%e7%83%ad%e6%9b%b4%e6%96%b0%e6%8a%80%e6%9c%af%e6%80%bb%e7%bb%93" target="_blank" title="Share on LinkedIn">
+          <i class="iconfont icon-linkedin"></i>
+        </a>
+        
+      
+      
+        
+      
+        
+      
+
+          
+
+          
+
+          
+        <a href="//www.douban.com/recommend/?url=https%3a%2f%2fwww.ithome.me%2fpost%2f2017%2f10%2f26%2fandroid%25E7%2583%25AD%25E6%259B%25B4%25E6%2596%25B0%25E6%258A%2580%25E6%259C%25AF%25E6%2580%25BB%25E7%25BB%2593%2f&amp;title=Android%e7%83%ad%e6%9b%b4%e6%96%b0%e6%8a%80%e6%9c%af%e6%80%bb%e7%bb%93" target="_blank" title="Share on Douban ">
+            <i class="iconfont icon-douban"></i>
+          </a>
+          
+
+          
+        <a href="//service.weibo.com/share/share.php?url=https%3a%2f%2fwww.ithome.me%2fpost%2f2017%2f10%2f26%2fandroid%25E7%2583%25AD%25E6%259B%25B4%25E6%2596%25B0%25E6%258A%2580%25E6%259C%25AF%25E6%2580%25BB%25E7%25BB%2593%2f&amp;appkey=&amp;title=Android%e7%83%ad%e6%9b%b4%e6%96%b0%e6%8a%80%e6%9c%af%e6%80%bb%e7%bb%93" target="_blank" title="Share on Douban ">
+            <i class="iconfont icon-weibo"></i>
+          </a>
+          
+</span>
+                
+            </p>
+
+             
+            <p class="copyright-item">
+                Released under <a rel="license external nofollow noopener noreffer" href="https://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank">CC BY-NC-ND 4.0</a>
+            </p>
+            
+    </div>
+
+  
+    <div class="post-tags">
+        
+            <section>
+            <i class="iconfont icon-icon-tag"></i>Tag: 
+            
+            <span class="tag"><a href="https://www.ithome.me/tags/android/">
+                    #Android</a></span>
+            
+            <span class="tag"><a href="https://www.ithome.me/tags/%E7%A7%BB%E5%8A%A8%E5%BC%80%E5%8F%91/">
+                    #移动开发</a></span>
+            
+            <span class="tag"><a href="https://www.ithome.me/tags/%E7%83%AD%E6%9B%B4%E6%96%B0/">
+                    #热更新</a></span>
+            
+            </section>
+        
+        <section>
+                <a href="javascript:window.history.back();">Back</a></span> · 
+                <span><a href="https://www.ithome.me/">Home</a></span>
+        </section>
+    </div>
+
+    <div class="post-nav">
+        
+        <a href="https://www.ithome.me/post/2016/07/22/android%E6%B5%81%E8%A1%8C%E6%9E%B6%E6%9E%84%E5%88%86%E4%BA%AB%E4%B8%8E%E8%A7%A3%E6%9E%90/" class="prev" rel="prev" title="Android流行架构分享与解析"><i class="iconfont icon-dajiantou"></i>&nbsp;Android流行架构分享与解析</a>
+         
+        
+        <a href="https://www.ithome.me/post/2018/07/16/flutter%E5%BC%80%E5%8F%91-%E7%8E%AF%E5%A2%83%E9%85%8D%E7%BD%AE/" class="next" rel="next" title="flutter开发系列之一--环境配置">flutter开发系列之一--环境配置&nbsp;<i class="iconfont icon-xiaojiantou"></i></a>
+        
+    </div>
+
+    <div class="post-comment">
+          
+          <div id="gitalk-container"></div>
+      <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.css" crossorigin="anonymous">
+      <script src="https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js" crossorigin="anonymous"></script>
+      <script type="text/javascript">
+          var gitalk = new Gitalk({
+              id: '2017-10-26 00:00:00 \u002b0000 UTC',
+              title: 'Android热更新技术总结',
+              clientID: 'be0f52370ed1285b6c7c',
+              clientSecret: '734a7d8d0ded346ca7a3d565d57de3f8eeb2850b',
+              repo: 'gitalk',
+              owner: 'cikichen',
+              admin: ['cikichen'],
+              body: decodeURI(location.href)
+          });
+          gitalk.render('gitalk-container');
+      </script>
+      <noscript>Please enable JavaScript to view the <a href="https://github.com/gitalk/gitalk">comments powered by gitalk.</a></noscript>
+
+ 
+
+          
+    </div>
+</article>
+          </div>
+		   </main>
+      <footer class="footer">
+    <div class="copyright">
+        &copy;
+        
+        <span itemprop="copyrightYear">2011 - 2021</span>
+        
+        
+        <span class="author" itemprop="copyrightHolder"><a href="https://www.ithome.me/">Simon Chen</a>
+        </span>
+        
+
+        <span id="busuanzi_container_site_uv">您是第<span id="busuanzi_value_site_uv"></span>位访客</span>
+    </div>
+</footer>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<link crossorigin="anonymous" integrity="sha384-yziQACfvCVwLqVFLqkWBYRO3XeA4EqzfXKGwaWnenYn5XzqfJFlFdKEmvutIQdKb"
+    href="https://lib.baomitu.com/lightgallery/1.6.12/css/lightgallery.min.css" rel="stylesheet">
+
+<script src="/js/vendor_gallery.min.js" async=""></script>
+
+
+
+
+
+
+
+
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+     </div>
+  </body>
+</html>

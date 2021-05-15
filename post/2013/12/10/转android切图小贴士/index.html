@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+  <meta http-equiv="content-type" content="text/html;charset=utf-8">
+  <meta http-equiv="X-UA-Compatible" content="chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noodp"/>
+  
+  
+  
+  
+  
+  <link rel="prev" href="https://www.ithome.me/post/2013/11/25/%E8%BD%AC%E5%8F%B2%E4%B8%8A%E6%9C%80%E5%BC%BA%E5%A5%B3%E7%A8%8B%E5%BA%8F%E5%91%98%E6%88%96%E5%B0%86%E8%B7%B3%E6%A7%BD%E5%88%B0%E9%A1%BD%E7%9A%AE%E7%8B%97-%E9%85%B7%E7%88%B1ps4/" />
+  <link rel="next" href="https://www.ithome.me/post/2013/12/12/win7%E4%B8%8Bcocos2d-x%E6%9C%80%E6%96%B0%E7%89%88%E7%8E%AF%E5%A2%83%E6%90%AD%E5%BB%BA/" />
+  <link rel="canonical" href="https://www.ithome.me/post/2013/12/10/%E8%BD%ACandroid%E5%88%87%E5%9B%BE%E5%B0%8F%E8%B4%B4%E5%A3%AB/" />
+  <link rel='shortcut icon' type='image/x-icon' href='/favicon.ico' />
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+  <link rel="manifest" href="/site.webmanifest">
+  <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
+  <meta name="msapplication-TileColor" content="#da532c">
+  <meta name="theme-color" content="#ffffff">
+  <title>
+       
+       
+           [转]Android切图小贴士 | Creator
+       
+  </title>
+  <meta name="title" content="[转]Android切图小贴士 | Creator">
+    
+  
+  <link rel="stylesheet" href="/font/iconfont.css">
+  <link rel="stylesheet" href="/css/main.min.css">
+
+
+  <meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="[转]Android切图小贴士"/>
+<meta name="twitter:description" content="用户手中看到的产品界面，并非设计师呕心沥血创作的效果图，而是一个个单独的切图经由开发同学技术实现。切图作为设计师与开发者之间的桥梁，它的作用很关键，合适的切图、精准的位置可以最大限度的还原效果图的设计，精妙的切图更会有事半功倍的效果哦！
+我们经常会做一个俗称“点九”的切图，什么是“点九”呢？“点九”是Android平台处理图片的一种特殊的形式，由于文件的扩展名为：“.9.png”，所以被称为“点九”。“点九”也是由于Android平台多种分辨率需适配的需求下，发展出来的一种独特的技术。它可以将图片横向和纵向随意进行拉伸，而保留像素精细度、渐变质感和圆角的原大小，实现多分辨率下的完美显示效果，同时减少不必要的图片资源，可谓切图利器。
+“点九”的制作工具为“draw9patch”，具体制作步骤这里不多讲了，插播小贴士第一条：舍弃这个制作工具吧，减少繁琐的步骤，不要再每张图片都拖到工具里画啦！直接用ps＋铅笔就可以画哦。
+“点九”的学问当然很大，但Android切图不仅需要清楚“点九”的方法，还有其他各种小技巧。下面为大家分享我在工作中总结的几个关于切图的心得。
+(一)站在开发的角度来切图 了解技术实现方式，就像了解一位开发同学，更多的了解，会让工作更加顺畅。 如为下图按钮做“点九”图，一部分同学可能会这样做： 这是一张高度不变左右拉伸的“点九”图片，内容显示区域为整个按钮范围。按钮效果图上看，文字是垂直居中显示的，开发同学拿到这张“点九”图片，就会在代码里写上center的属性，此属性就是设定让文字在按钮的垂直居中位置。说到这，有没有察觉出问题呢？先让我们看一下实现出来的效果怎么样。 拥有像素眼的设计师们，立刻会察觉文字偏下了。然后找开发同学调整文字的位置，“把文字向上n个像素吧，没有居中”等等，这是很经常发生的对话，开发同学会增加代码微调文字的位置以达到效果图效果。事情圆满解决了吗？不然。其实是我们错了。
+当我们了解开发同学实现方法后，我们可以试试用逆推法验证这张“点九”图片是否还有进一步精确的可能。
+如上图，设计效果图中红色区域是文字排版区域，是理想化的位置，1和2的高度是相等的；而实现效果图中3和4的高度是相等的。问题出现了！在我们画点九的时候，把投影的高度也画进去了，所以视觉上文字就偏下了。
+我们通常的画法应该是：1. 在高度不拉伸的情况下，在空白区域点一像素的点。 这是与开发同学之间约定俗成的习惯，凭着默契就知道此按钮高度不进行拉伸，而且就是被拉伸了，拉伸的是空白区域，视觉上也不会造成影响。
+对比如图所示： 2. 内容显示区域的高度要避开投影区域，这样可以保证文字视觉的居中。 “点九”图片的内容显示区域，我喜欢称为内容排版区域。在切图的过程中，还会发现不同的情景，要时刻想着你要的结果，通过对此区域的仔细处理，可以更好的为图片上所承载的内容做排版。这样开发同学只要通过一些简单的属性设定，就可以实现效果图上精确的布局。同时减少不必要的开发，精简代码，提高产品的性能，积少成多，带给用户更好的体验感受。
+(二)选择更优的切图方式 当我们遇到异形或较为复杂的切图时，往往需要抛开固有的思维程式，去找到更适合的切图方式。举例如为下图浮层切图的时候，我们还可以用我们的利器“点九”么？ 首先分析一下此浮层的几个特点：一是半透明渐变有厚度又有投影的效果；二是有三角异形，而且位置不固定。在切图的时候先走了一下小弯路，用固有思维把浮层分成了上下两个部分，下面方形做成“点九”，上面三角形单独一个切图，用拼接的方式去实现。这是符合开发同学的原子拆分设计模式的，把会变化的部分取出并封装起来，让其他部分不受到影响。所以开发同学很快做好了实现，但效果不尽人意。我们其实可以预想得到，因为有投影效果上下拼接一定有重叠，这样拼接处就会有一条明显的线。
+那怎么办呢？经过设计师的进一步思考，终于找到了一种更适合的切图方式： 左右分割成两个“点九”图片，这样即能保证连接处的效果，又能灵活三角指向的位置。思考好如何切图的同时也要跟技术同学沟通能否实现，衡量实现的成本。最后值得高兴的是，实现出来的效果­跟设计效果图没有任何出入。
+(三)尽可能的减小资源的大小 切图的时候尽可能减小资源的大小，为产品安装包瘦身。
+1.“点九”图片拉伸1个像素与拉伸10个像素效果上是没有区别的，所以尽量缩小图片的尺寸。 (在上面的例子当中，为了保持看得清楚，没有缩小到最小情况，在实际工作中可以稍加注意。)
+2.当我们遇到有纹理的背景或有纹理的按钮时，切图原则为：找到纹理的规律，用最小的切图去平铺，可以想象中图案叠加的原理。 第一种纹理背景，如输入法多媒体中随写输入的界面，不同的信纸，我们就用了尽可能最小的切图去平铺而实现的。如下图： 这是我们输入法中信纸的切图，遵循用最小切图的原则，按照不同纹理的规律调整到最小的切图，所以可以看出不同纹理的切图尺寸是不一样的。
+第二种有纹理的按钮，我们一般会这样处理： 我们的目标是把按钮分成三段，保留左右圆角部分，找到中间纹理可复用平铺的部分，同事确保中间纹理可以与左右两张图无缝连接，这样按钮的长度就变成可控的了，可以适用于不同的场景。
+首先找到纹理的规律，这里的斜线纹理只需切宽为3px的图即可；然后用纹理图片去尝试左右圆角部分，连接到圆角部分的纹理就成功咯。遇到其他类型纹理切图时，思路是可以复用的。
+3.适当压缩图片质量，在单色或没有过多效果时可存储为png8位或索引模式。 这里就不做举例了。
+小结 设计师在提供设计规范后愁苦实现效果不尽如人意的同时，可以尽可能的利用一些切图手段，帮助你的设计达到零差别的呈现，同时也帮助开发同学减少了很多不必要的开发负担，对于产品本身也有提高运行速度等很多不言而喻的好处。让设计师同学与我们亲爱的开发同学成为更贴心更默契的合作伙伴吧！
+以上为工作中关于Android切图的一点小经验，如有错误或不足的地方请大家指正，同时欢迎大家分享更多的切图经验与技巧。
+转载请注明出自”百度MUX”"/>
+
+  <script type="application/ld+json">
+{
+  "@context": "http://schema.org",
+  "@type": "BlogPosting",
+  "headline": "[转]Android切图小贴士",
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https:\/\/www.ithome.me\/post\/2013\/12\/10\/%E8%BD%ACandroid%E5%88%87%E5%9B%BE%E5%B0%8F%E8%B4%B4%E5%A3%AB\/"
+  },
+  "image": {
+    "@type": "ImageObject",
+    "url": "https:\/\/www.ithome.me\/cover.png",
+    "width":  800 ,
+    "height":  600 
+  },
+  "genre": "posts",
+  "keywords": "android, 9patch, 切图",
+  "wordcount":  39 ,
+  "url": "https:\/\/www.ithome.me\/post\/2013\/12\/10\/%E8%BD%ACandroid%E5%88%87%E5%9B%BE%E5%B0%8F%E8%B4%B4%E5%A3%AB\/",
+  "datePublished": "2013-12-10T11:24:22\u002b08:00",
+  "dateModified": "2013-12-10T11:24:22\u002b08:00",
+  "license": "©{year}, All Rights Reserved. Simon Chen",
+  "publisher": {
+    "@type": "Organization",
+    "name": "SimonChen",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https:\/\/www.ithome.me\/logo.png",
+      "width":  127 ,
+      "height":  40 
+    }
+  },
+  "author": {
+    "@type": "Person",
+    "name": "SimonChen"
+  },
+  "description": ""
+}
+</script>
+</head>
+
+  
+             
+  
+
+
+
+  <body class="">
+    <div class="wrapper">
+        <nav class="navbar">
+    <div class="container">
+        <div class="navbar-header header-logo">
+        	<a href="https://www.ithome.me/">Creator</a>
+        </div>
+        <div class="menu navbar-right">
+                
+                
+                <a class="menu-item" href="/posts/" title="">文章</a>
+                
+                <a class="menu-item" href="/categories/" title="">分类</a>
+                
+                <a class="menu-item" href="/tags/" title="">标签</a>
+                
+                <a class="menu-item" href="/about-me/" title="">关于</a>
+                
+                <a href="javascript:void(0);" class="theme-switch"><i class="iconfont icon-sun"></i></a>&nbsp;
+        </div>
+    </div>
+</nav>
+<nav class="navbar-mobile" id="nav-mobile" style="display: none">
+     <div class="container">
+        <div class="navbar-header">
+            <div>  <a href="javascript:void(0);" class="theme-switch"><i class="iconfont icon-sun"></i></a>&nbsp;<a href="https://www.ithome.me/">Creator</a></div>
+            <div class="menu-toggle">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+     
+          <div class="menu" id="mobile-menu">
+                
+                
+                <a class="menu-item" href="/posts/" title="">文章</a>
+                
+                <a class="menu-item" href="/categories/" title="">分类</a>
+                
+                <a class="menu-item" href="/tags/" title="">标签</a>
+                
+                <a class="menu-item" href="/about-me/" title="">关于</a>
+                
+        </div>
+    </div>
+</nav>
+
+    	 <main class="main">
+          <div class="container">
+      		
+<article class="post-warp">
+    <header class="post-header">
+        <h1 class="post-title">[转]Android切图小贴士</h1>
+        <div class="post-meta">
+            Written by <a href="https://www.ithome.me/" rel="author">Simon Chen</a> with ♥ 
+                <span class="post-time">
+                    on <time datetime=2013-12-10 >10 December 2013</time>
+                </span>
+                in
+                
+                <i class="iconfont icon-timer"></i>
+                1 min
+        </div>
+    </header>
+    <div class="post-content">
+        
+
+        
+            
+        
+
+        
+        
+     
+          
+          
+          
+
+          
+          
+          
+
+          <p>用户手中看到的产品界面，并非设计师呕心沥血创作的效果图，而是一个个单独的切图经由开发同学技术实现。切图作为设计师与开发者之间的桥梁，它的作用很关键，合适的切图、精准的位置可以最大限度的还原效果图的设计，精妙的切图更会有事半功倍的效果哦！</p>
+<p>我们经常会做一个俗称“点九”的切图，什么是“点九”呢？“点九”是Android平台处理图片的一种特殊的形式，由于文件的扩展名为：“.9.png”，所以被称为“点九”。“点九”也是由于Android平台多种分辨率需适配的需求下，发展出来的一种独特的技术。它可以将图片横向和纵向随意进行拉伸，而保留像素精细度、渐变质感和圆角的原大小，实现多分辨率下的完美显示效果，同时减少不必要的图片资源，可谓切图利器。</p>
+<p>“点九”的制作工具为“draw9patch”，具体制作步骤这里不多讲了，插播小贴士第一条：舍弃这个制作工具吧，减少繁琐的步骤，不要再每张图片都拖到工具里画啦！直接用ps＋铅笔就可以画哦。</p>
+<p>“点九”的学问当然很大，但Android切图不仅需要清楚“点九”的方法，还有其他各种小技巧。下面为大家分享我在工作中总结的几个关于切图的心得。</p>
+<h2 id="一站在开发的角度来切图">(一)站在开发的角度来切图</h2>
+<p>了解技术实现方式，就像了解一位开发同学，更多的了解，会让工作更加顺畅。
+如为下图按钮做“点九”图，一部分同学可能会这样做：
+<figure><img src="/images/ring.svg" data-sizes="auto" data-src="http://mux.baidu.com/img2/1/02.png" alt="" class="lazyload"><figcaption class="image-caption"></figcaption></figure></p>
+<p>这是一张高度不变左右拉伸的“点九”图片，内容显示区域为整个按钮范围。按钮效果图上看，文字是垂直居中显示的，开发同学拿到这张“点九”图片，就会在代码里写上center的属性，此属性就是设定让文字在按钮的垂直居中位置。说到这，有没有察觉出问题呢？先让我们看一下实现出来的效果怎么样。
+<figure><img src="/images/ring.svg" data-sizes="auto" data-src="http://mux.baidu.com/img2/1/03.png" alt="" class="lazyload"><figcaption class="image-caption"></figcaption></figure></p>
+<p>拥有像素眼的设计师们，立刻会察觉文字偏下了。然后找开发同学调整文字的位置，“把文字向上n个像素吧，没有居中”等等，这是很经常发生的对话，开发同学会增加代码微调文字的位置以达到效果图效果。事情圆满解决了吗？不然。其实是我们错了。</p>
+<p>当我们了解开发同学实现方法后，我们可以试试用逆推法验证这张“点九”图片是否还有进一步精确的可能。</p>
+<p><figure><img src="/images/ring.svg" data-sizes="auto" data-src="http://mux.baidu.com/img2/1/04.png" alt="" class="lazyload"><figcaption class="image-caption"></figcaption></figure>
+如上图，设计效果图中红色区域是文字排版区域，是理想化的位置，1和2的高度是相等的；而实现效果图中3和4的高度是相等的。问题出现了！在我们画点九的时候，把投影的高度也画进去了，所以视觉上文字就偏下了。</p>
+<p>我们通常的画法应该是：<figure><img src="/images/ring.svg" data-sizes="auto" data-src="http://mux.baidu.com/img2/1/05.png" alt="" class="lazyload"><figcaption class="image-caption"></figcaption></figure></p>
+<h3 id="1-在高度不拉伸的情况下在空白区域点一像素的点"><strong>1. 在高度不拉伸的情况下，在空白区域点一像素的点。</strong></h3>
+<p>这是与开发同学之间约定俗成的习惯，凭着默契就知道此按钮高度不进行拉伸，而且就是被拉伸了，拉伸的是空白区域，视觉上也不会造成影响。</p>
+<p>对比如图所示：
+<figure><img src="/images/ring.svg" data-sizes="auto" data-src="http://mux.baidu.com/img2/1/06.png" alt="" class="lazyload"><figcaption class="image-caption"></figcaption></figure></p>
+<h3 id="2-内容显示区域的高度要避开投影区域这样可以保证文字视觉的居中"><strong>2. 内容显示区域的高度要避开投影区域，这样可以保证文字视觉的居中。</strong></h3>
+<p>“点九”图片的内容显示区域，我喜欢称为内容排版区域。在切图的过程中，还会发现不同的情景，要时刻想着你要的结果，通过对此区域的仔细处理，可以更好的为图片上所承载的内容做排版。这样开发同学只要通过一些简单的属性设定，就可以实现效果图上精确的布局。同时减少不必要的开发，精简代码，提高产品的性能，积少成多，带给用户更好的体验感受。</p>
+<h2 id="二选择更优的切图方式">(二)选择更优的切图方式</h2>
+<p>当我们遇到异形或较为复杂的切图时，往往需要抛开固有的思维程式，去找到更适合的切图方式。举例如为下图浮层切图的时候，我们还可以用我们的利器“点九”么？
+<figure><img src="/images/ring.svg" data-sizes="auto" data-src="http://mux.baidu.com/img2/1/07.png" alt="" class="lazyload"><figcaption class="image-caption"></figcaption></figure></p>
+<p>首先分析一下此浮层的几个特点：一是半透明渐变有厚度又有投影的效果；二是有三角异形，而且位置不固定。在切图的时候先走了一下小弯路，用固有思维把浮层分成了上下两个部分，下面方形做成“点九”，上面三角形单独一个切图，用拼接的方式去实现。这是符合开发同学的原子拆分设计模式的，把会变化的部分取出并封装起来，让其他部分不受到影响。所以开发同学很快做好了实现，但效果不尽人意。我们其实可以预想得到，因为有投影效果上下拼接一定有重叠，这样拼接处就会有一条明显的线。</p>
+<p>那怎么办呢？经过设计师的进一步思考，终于找到了一种更适合的切图方式：
+<figure><img src="/images/ring.svg" data-sizes="auto" data-src="http://mux.baidu.com/img2/1/08.png" alt="" class="lazyload"><figcaption class="image-caption"></figcaption></figure></p>
+<p>左右分割成两个“点九”图片，这样即能保证连接处的效果，又能灵活三角指向的位置。思考好如何切图的同时也要跟技术同学沟通能否实现，衡量实现的成本。最后值得高兴的是，实现出来的效果­跟设计效果图没有任何出入。</p>
+<h2 id="三尽可能的减小资源的大小">(三)尽可能的减小资源的大小</h2>
+<p>切图的时候尽可能减小资源的大小，为产品安装包瘦身。</p>
+<h3 id="1点九图片拉伸1个像素与拉伸10个像素效果上是没有区别的所以尽量缩小图片的尺寸"><strong>1.“点九”图片拉伸1个像素与拉伸10个像素效果上是没有区别的，所以尽量缩小图片的尺寸。</strong></h3>
+<p>(在上面的例子当中，为了保持看得清楚，没有缩小到最小情况，在实际工作中可以稍加注意。)</p>
+<h3 id="2当我们遇到有纹理的背景或有纹理的按钮时切图原则为找到纹理的规律用最小的切图去平铺可以想象中图案叠加的原理"><strong>2.当我们遇到有纹理的背景或有纹理的按钮时，切图原则为：找到纹理的规律，用最小的切图去平铺，可以想象中图案叠加的原理。</strong></h3>
+<p>第一种纹理背景，如输入法多媒体中随写输入的界面，不同的信纸，我们就用了尽可能最小的切图去平铺而实现的。如下图：
+<figure><img src="/images/ring.svg" data-sizes="auto" data-src="http://mux.baidu.com/img2/1/09.png" alt="" class="lazyload"><figcaption class="image-caption"></figcaption></figure></p>
+<p>这是我们输入法中信纸的切图，遵循用最小切图的原则，按照不同纹理的规律调整到最小的切图，所以可以看出不同纹理的切图尺寸是不一样的。</p>
+<p>第二种有纹理的按钮，我们一般会这样处理：
+<figure><img src="/images/ring.svg" data-sizes="auto" data-src="http://mux.baidu.com/img2/1/10.png" alt="" class="lazyload"><figcaption class="image-caption"></figcaption></figure></p>
+<p>我们的目标是把按钮分成三段，保留左右圆角部分，找到中间纹理可复用平铺的部分，同事确保中间纹理可以与左右两张图无缝连接，这样按钮的长度就变成可控的了，可以适用于不同的场景。</p>
+<p>首先找到纹理的规律，这里的斜线纹理只需切宽为3px的图即可；然后用纹理图片去尝试左右圆角部分，连接到圆角部分的纹理就成功咯。遇到其他类型纹理切图时，思路是可以复用的。</p>
+<h3 id="3适当压缩图片质量在单色或没有过多效果时可存储为png8位或索引模式"><strong>3.适当压缩图片质量，在单色或没有过多效果时可存储为png8位或索引模式。</strong></h3>
+<p>这里就不做举例了。</p>
+<h2 id="小结">小结</h2>
+<p>设计师在提供设计规范后愁苦实现效果不尽如人意的同时，可以尽可能的利用一些切图手段，帮助你的设计达到零差别的呈现，同时也帮助开发同学减少了很多不必要的开发负担，对于产品本身也有提高运行速度等很多不言而喻的好处。让设计师同学与我们亲爱的开发同学成为更贴心更默契的合作伙伴吧！</p>
+<p>以上为工作中关于Android切图的一点小经验，如有错误或不足的地方请大家指正，同时欢迎大家分享更多的切图经验与技巧。</p>
+<p>转载请注明出自”百度MUX”</p>
+
+    </div>
+
+    <div class="post-copyright">
+             
+            <p class="copyright-item">
+                <span>Author:</span>
+                <span>Simon Chen </span>
+                </p>
+            
+           
+            <p class="copyright-item">
+                    <span>Words:</span>
+                   <span>39</span>
+            </p>
+            
+            <p class="copyright-item">
+                
+                <span>Share:</span>
+                <span>
+
+      
+        <a href="//twitter.com/share?url=https%3a%2f%2fwww.ithome.me%2fpost%2f2013%2f12%2f10%2f%25E8%25BD%25ACandroid%25E5%2588%2587%25E5%259B%25BE%25E5%25B0%258F%25E8%25B4%25B4%25E5%25A3%25AB%2f&amp;text=%5b%e8%bd%ac%5dAndroid%e5%88%87%e5%9b%be%e5%b0%8f%e8%b4%b4%e5%a3%ab&amp;via=https%3a%2f%2ftwitter.com%2fChenCiki" target="_blank" title="Share on Twitter">
+          <i class="iconfont icon-twitter"></i>
+        </a>
+        
+      
+      
+      
+      
+      
+      
+        <a href="//www.linkedin.com/shareArticle?url=https%3a%2f%2fwww.ithome.me%2fpost%2f2013%2f12%2f10%2f%25E8%25BD%25ACandroid%25E5%2588%2587%25E5%259B%25BE%25E5%25B0%258F%25E8%25B4%25B4%25E5%25A3%25AB%2f&amp;title=%5b%e8%bd%ac%5dAndroid%e5%88%87%e5%9b%be%e5%b0%8f%e8%b4%b4%e5%a3%ab" target="_blank" title="Share on LinkedIn">
+          <i class="iconfont icon-linkedin"></i>
+        </a>
+        
+      
+      
+        
+      
+        
+      
+
+          
+
+          
+
+          
+        <a href="//www.douban.com/recommend/?url=https%3a%2f%2fwww.ithome.me%2fpost%2f2013%2f12%2f10%2f%25E8%25BD%25ACandroid%25E5%2588%2587%25E5%259B%25BE%25E5%25B0%258F%25E8%25B4%25B4%25E5%25A3%25AB%2f&amp;title=%5b%e8%bd%ac%5dAndroid%e5%88%87%e5%9b%be%e5%b0%8f%e8%b4%b4%e5%a3%ab" target="_blank" title="Share on Douban ">
+            <i class="iconfont icon-douban"></i>
+          </a>
+          
+
+          
+        <a href="//service.weibo.com/share/share.php?url=https%3a%2f%2fwww.ithome.me%2fpost%2f2013%2f12%2f10%2f%25E8%25BD%25ACandroid%25E5%2588%2587%25E5%259B%25BE%25E5%25B0%258F%25E8%25B4%25B4%25E5%25A3%25AB%2f&amp;appkey=&amp;title=%5b%e8%bd%ac%5dAndroid%e5%88%87%e5%9b%be%e5%b0%8f%e8%b4%b4%e5%a3%ab" target="_blank" title="Share on Douban ">
+            <i class="iconfont icon-weibo"></i>
+          </a>
+          
+</span>
+                
+            </p>
+
+             
+            <p class="copyright-item">
+                Released under <a rel="license external nofollow noopener noreffer" href="https://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank">CC BY-NC-ND 4.0</a>
+            </p>
+            
+    </div>
+
+  
+    <div class="post-tags">
+        
+            <section>
+            <i class="iconfont icon-icon-tag"></i>Tag: 
+            
+            <span class="tag"><a href="https://www.ithome.me/tags/android/">
+                    #android</a></span>
+            
+            <span class="tag"><a href="https://www.ithome.me/tags/9patch/">
+                    #9patch</a></span>
+            
+            <span class="tag"><a href="https://www.ithome.me/tags/%E5%88%87%E5%9B%BE/">
+                    #切图</a></span>
+            
+            </section>
+        
+        <section>
+                <a href="javascript:window.history.back();">Back</a></span> · 
+                <span><a href="https://www.ithome.me/">Home</a></span>
+        </section>
+    </div>
+
+    <div class="post-nav">
+        
+        <a href="https://www.ithome.me/post/2013/11/25/%E8%BD%AC%E5%8F%B2%E4%B8%8A%E6%9C%80%E5%BC%BA%E5%A5%B3%E7%A8%8B%E5%BA%8F%E5%91%98%E6%88%96%E5%B0%86%E8%B7%B3%E6%A7%BD%E5%88%B0%E9%A1%BD%E7%9A%AE%E7%8B%97-%E9%85%B7%E7%88%B1ps4/" class="prev" rel="prev" title="[转]史上最强女程序员或将跳槽到顽皮狗 酷爱PS4"><i class="iconfont icon-dajiantou"></i>&nbsp;[转]史上最强女程序员或将跳槽到顽皮狗 酷爱PS4</a>
+         
+        
+        <a href="https://www.ithome.me/post/2013/12/12/win7%E4%B8%8Bcocos2d-x%E6%9C%80%E6%96%B0%E7%89%88%E7%8E%AF%E5%A2%83%E6%90%AD%E5%BB%BA/" class="next" rel="next" title="win7下cocos2d-x最新版环境搭建">win7下cocos2d-x最新版环境搭建&nbsp;<i class="iconfont icon-xiaojiantou"></i></a>
+        
+    </div>
+
+    <div class="post-comment">
+          
+          <div id="gitalk-container"></div>
+      <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.css" crossorigin="anonymous">
+      <script src="https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js" crossorigin="anonymous"></script>
+      <script type="text/javascript">
+          var gitalk = new Gitalk({
+              id: '2013-12-10 00:00:00 \u002b0000 UTC',
+              title: '[转]Android切图小贴士',
+              clientID: 'be0f52370ed1285b6c7c',
+              clientSecret: '734a7d8d0ded346ca7a3d565d57de3f8eeb2850b',
+              repo: 'gitalk',
+              owner: 'cikichen',
+              admin: ['cikichen'],
+              body: decodeURI(location.href)
+          });
+          gitalk.render('gitalk-container');
+      </script>
+      <noscript>Please enable JavaScript to view the <a href="https://github.com/gitalk/gitalk">comments powered by gitalk.</a></noscript>
+
+ 
+
+          
+    </div>
+</article>
+          </div>
+		   </main>
+      <footer class="footer">
+    <div class="copyright">
+        &copy;
+        
+        <span itemprop="copyrightYear">2011 - 2021</span>
+        
+        
+        <span class="author" itemprop="copyrightHolder"><a href="https://www.ithome.me/">Simon Chen</a>
+        </span>
+        
+
+        <span id="busuanzi_container_site_uv">您是第<span id="busuanzi_value_site_uv"></span>位访客</span>
+    </div>
+</footer>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<link crossorigin="anonymous" integrity="sha384-yziQACfvCVwLqVFLqkWBYRO3XeA4EqzfXKGwaWnenYn5XzqfJFlFdKEmvutIQdKb"
+    href="https://lib.baomitu.com/lightgallery/1.6.12/css/lightgallery.min.css" rel="stylesheet">
+
+<script src="/js/vendor_gallery.min.js" async=""></script>
+
+
+
+
+
+
+
+
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+     </div>
+  </body>
+</html>

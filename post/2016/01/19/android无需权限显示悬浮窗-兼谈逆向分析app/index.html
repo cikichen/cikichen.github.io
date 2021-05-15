@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+  <meta http-equiv="content-type" content="text/html;charset=utf-8">
+  <meta http-equiv="X-UA-Compatible" content="chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noodp"/>
+  
+  
+  
+  
+  
+  <link rel="prev" href="https://www.ithome.me/post/2016/01/19/git-%E4%BB%A3%E7%A0%81%E5%86%B2%E7%AA%81%E5%B8%B8%E8%A7%81%E8%A7%A3%E5%86%B3%E6%96%B9%E6%B3%95/" />
+  <link rel="next" href="https://www.ithome.me/post/2016/01/19/android-gc-%E9%82%A3%E7%82%B9%E4%BA%8B/" />
+  <link rel="canonical" href="https://www.ithome.me/post/2016/01/19/android%E6%97%A0%E9%9C%80%E6%9D%83%E9%99%90%E6%98%BE%E7%A4%BA%E6%82%AC%E6%B5%AE%E7%AA%97-%E5%85%BC%E8%B0%88%E9%80%86%E5%90%91%E5%88%86%E6%9E%90app/" />
+  <link rel='shortcut icon' type='image/x-icon' href='/favicon.ico' />
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+  <link rel="manifest" href="/site.webmanifest">
+  <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
+  <meta name="msapplication-TileColor" content="#da532c">
+  <meta name="theme-color" content="#ffffff">
+  <title>
+       
+       
+           Android无需权限显示悬浮窗, 兼谈逆向分析app | Creator
+       
+  </title>
+  <meta name="title" content="Android无需权限显示悬浮窗, 兼谈逆向分析app | Creator">
+    
+  
+  <link rel="stylesheet" href="/font/iconfont.css">
+  <link rel="stylesheet" href="/css/main.min.css">
+
+
+  <meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="Android无需权限显示悬浮窗, 兼谈逆向分析app"/>
+<meta name="twitter:description" content="android悬浮框权限"/>
+
+  <script type="application/ld+json">
+{
+  "@context": "http://schema.org",
+  "@type": "BlogPosting",
+  "headline": "Android无需权限显示悬浮窗, 兼谈逆向分析app",
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https:\/\/www.ithome.me\/post\/2016\/01\/19\/android%E6%97%A0%E9%9C%80%E6%9D%83%E9%99%90%E6%98%BE%E7%A4%BA%E6%82%AC%E6%B5%AE%E7%AA%97-%E5%85%BC%E8%B0%88%E9%80%86%E5%90%91%E5%88%86%E6%9E%90app\/"
+  },
+  "image": {
+    "@type": "ImageObject",
+    "url": "https:\/\/www.ithome.me\/cover.png",
+    "width":  800 ,
+    "height":  600 
+  },
+  "genre": "posts",
+  "keywords": "android, 悬浮框",
+  "wordcount":  226 ,
+  "url": "https:\/\/www.ithome.me\/post\/2016\/01\/19\/android%E6%97%A0%E9%9C%80%E6%9D%83%E9%99%90%E6%98%BE%E7%A4%BA%E6%82%AC%E6%B5%AE%E7%AA%97-%E5%85%BC%E8%B0%88%E9%80%86%E5%90%91%E5%88%86%E6%9E%90app\/",
+  "datePublished": "2016-01-19T11:29:46\u002b08:00",
+  "dateModified": "2016-01-19T11:29:46\u002b08:00",
+  "license": "©{year}, All Rights Reserved. Simon Chen",
+  "publisher": {
+    "@type": "Organization",
+    "name": "SimonChen",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https:\/\/www.ithome.me\/logo.png",
+      "width":  127 ,
+      "height":  40 
+    }
+  },
+  "author": {
+    "@type": "Person",
+    "name": "SimonChen"
+  },
+  "description": "android悬浮框权限"
+}
+</script>
+</head>
+
+  
+             
+  
+
+
+
+  <body class="">
+    <div class="wrapper">
+        <nav class="navbar">
+    <div class="container">
+        <div class="navbar-header header-logo">
+        	<a href="https://www.ithome.me/">Creator</a>
+        </div>
+        <div class="menu navbar-right">
+                
+                
+                <a class="menu-item" href="/posts/" title="">文章</a>
+                
+                <a class="menu-item" href="/categories/" title="">分类</a>
+                
+                <a class="menu-item" href="/tags/" title="">标签</a>
+                
+                <a class="menu-item" href="/about-me/" title="">关于</a>
+                
+                <a href="javascript:void(0);" class="theme-switch"><i class="iconfont icon-sun"></i></a>&nbsp;
+        </div>
+    </div>
+</nav>
+<nav class="navbar-mobile" id="nav-mobile" style="display: none">
+     <div class="container">
+        <div class="navbar-header">
+            <div>  <a href="javascript:void(0);" class="theme-switch"><i class="iconfont icon-sun"></i></a>&nbsp;<a href="https://www.ithome.me/">Creator</a></div>
+            <div class="menu-toggle">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+     
+          <div class="menu" id="mobile-menu">
+                
+                
+                <a class="menu-item" href="/posts/" title="">文章</a>
+                
+                <a class="menu-item" href="/categories/" title="">分类</a>
+                
+                <a class="menu-item" href="/tags/" title="">标签</a>
+                
+                <a class="menu-item" href="/about-me/" title="">关于</a>
+                
+        </div>
+    </div>
+</nav>
+
+    	 <main class="main">
+          <div class="container">
+      		
+<article class="post-warp">
+    <header class="post-header">
+        <h1 class="post-title">Android无需权限显示悬浮窗, 兼谈逆向分析app</h1>
+        <div class="post-meta">
+            Written by <a href="https://www.ithome.me/" rel="author">Simon Chen</a> with ♥ 
+                <span class="post-time">
+                    on <time datetime=2016-01-19 >19 January 2016</time>
+                </span>
+                in
+                
+                <i class="iconfont icon-timer"></i>
+                2 min
+        </div>
+    </header>
+    <div class="post-content">
+        
+
+        
+            
+        
+
+        
+        
+     
+          
+          
+          
+
+          
+          
+          
+
+          <!-- raw HTML omitted -->
+<p>如下图, 截图是在使用Chrome时截的, 但是屏幕顶部却有UC的view浮在屏幕上. 我使用的是小米, 我并没有给UC授悬浮窗权限, 所以我看到这个悬浮窗时是很震惊的.</p>
+<p><figure><img src="/images/ring.svg" data-sizes="auto" data-src="http://ww4.sinaimg.cn/large/62b0904dgw1f04v52p27dj20c80lqabw.jpg" alt="" class="lazyload"><figcaption class="image-caption"></figcaption></figure></p>
+<h3 id="悬浮窗原理">悬浮窗原理</h3>
+<p>做过悬浮窗功能的人都知道, 要想显示悬浮窗, 要有一个服务运行在后台, 通过<code>getSystemService(Context.WINDOW_SERVICE)</code>拿到WindowManager, 然后向其中addView, addView第二个参数是一个<code>WindowManager.LayoutParams</code>, WindowManager.LayoutParams中有一个成员type, 有各种值, 一般设置成TYPE_PHONE就可以悬浮在很多view的上方了, 但是调用这个方法需要申请<code>android.permission.SYSTEM_ALERT_WINDOW</code>权限, 在很多机型上, 这个权限的名字叫悬浮窗, 比如小米手机上默认是禁用这个权限的, 有些恶意app会用这个权限弹广告, 而且很难追查是哪个应用弹的. 如果这个权限被禁用, 那么结果就是悬浮窗无法展示, 比如有道词典的复制查词功能, 在小米手机上经常没用, 其实是用户没有授权, 而且应用也没有引导用户给它打开授权.</p>
+<p>那么他是怎么实现的呢？有人就进行了逆向分析。</p>
+<p>过程省略。。。直接说结论</p>
+<!-- raw HTML omitted -->
+<h3 id="验证">验证</h3>
+<p>实际测试了一下, 将type设置成TYPE_TOAST果然有奇效, 不需要<code>android.permission.SYSTEM_ALERT_WINDOW</code>权限就能显示一个悬浮窗.</p>
+<p>之前我一直以为调用了系统<code>WindowManager.addView</code>需要<code>android.permission.SYSTEM_ALERT_WINDOW</code>权限, 但实际上调用这个方法是不需要权限的, 在Android源码中有这么一段</p>
+<div class="highlight"><pre class="chroma"><code class="language-fallback" data-lang="fallback">public int checkAddPermission(WindowManager.LayoutParams attrs) {
+    int type = attrs.type;
+
+    if (type &lt; WindowManager.LayoutParams.FIRST_SYSTEM_WINDOW
+            || type &gt; WindowManager.LayoutParams.LAST_SYSTEM_WINDOW) {
+        return WindowManagerImpl.ADD_OKAY;
+    }
+    String permission = null;
+    switch (type) {
+        case TYPE_TOAST:
+            // XXX right now the app process has complete control over
+            // this...  should introduce a token to let the system
+            // monitor/control what they are doing.
+            break;
+        case TYPE_INPUT_METHOD:
+        case TYPE_WALLPAPER:
+            // The window manager will check these.
+            break;
+        case TYPE_PHONE:
+        case TYPE_PRIORITY_PHONE:
+        case TYPE_SYSTEM_ALERT:
+        case TYPE_SYSTEM_ERROR:
+        case TYPE_SYSTEM_OVERLAY:
+            permission = android.Manifest.permission.SYSTEM_ALERT_WINDOW;
+            break;
+        default:
+            permission = android.Manifest.permission.INTERNAL_SYSTEM_WINDOW;
+    }
+    if (permission != null) {
+        if (mContext.checkCallingOrSelfPermission(permission)
+                != PackageManager.PERMISSION_GRANTED) {
+            return WindowManagerImpl.ADD_PERMISSION_DENIED;
+        }
+    }
+    return WindowManagerImpl.ADD_OKAY;
+}
+</code></pre></div><p>可以猜到这个方法是往系统的WindowManager里addView的时候做权限检查用的, 那个<code>type</code>就是我们在构造<code>WindowManager.LayoutParams</code>时赋值的<code>type</code>, 可以看到, 除了<code>TYPE_TOAST</code>, 其他都是要权限的, 而且非常喜感的是, 代码中的注释还说他们现在对这种type毫无限制, 应该引入标记来限制开发者.</p>
+<h3 id="处理兼容性">处理兼容性</h3>
+<p>在这篇文章刚刚公布的时候, 就有同学反馈悬浮窗无法接收事件, 刚开始我并没有特别在意, 在廖祜秋大神做了一个demo之后, 这篇文章阅读量又涨了不少, 随即收到更多反馈事件的问题, 我今天晚上借了台MIUI V5 4.2.2实测了一下, 这台机器上UC的快速搜索功能也无法正常使用.</p>
+<p>在这个ROM上表现为:
+使用<code>TYPE_PHONE</code>这类需要权限的<code>type</code>时, 只有在app处于前台时能显示悬浮窗, 且能正常接受触摸事件. 如果在应用详情里面授悬浮窗权限, 则工作完全正常.
+(这里是MIUI V5对悬浮窗的特殊处理, 现在的ROM, 包括MIUI V6上, 如果不授权, 无法显示任何悬浮窗)
+使用<code>TYPE_TOAST</code>这个不需要权限的<code>type</code>时, <strong>悬浮窗正常显示, 但不能接受触摸事件</strong>.</p>
+<p>原因是: <code>API level &gt;= 19</code>的时候, 使用<code>TYPE_TOAST</code>, 能接受到触摸事件。其他情况使用<code>TYPE_PHONE</code>(需要权限).</p>
+<p>可能是为了规避在低版本<code>TYPE_TOAST</code>不能接受事件的问题.</p>
+<p>关于针对源代码的分析, 请看<a href="http://www.jianshu.com/p/634cd056b90c">Android悬浮窗使用TYPE_TOAST的小结</a></p>
+<h3 id="实测效果">实测效果</h3>
+<p>我之前写的一个app有悬浮窗播放功能, 支持拖动窗口和点击暂停, 关闭窗口等等, 在4.4.4上实测功能正常.</p>
+<p><figure><img src="/images/ring.svg" data-sizes="auto" data-src="http://ww1.sinaimg.cn/large/62b0904dgw1f04v643d8lg20as0j6x04.gif" alt="" class="lazyload"><figcaption class="image-caption"></figcaption></figure></p>
+<p>感谢微博上关注的大神廖祜秋, 他做了个demo, 虽然交互和UC不同, 可以参考一下实现.
+<figure><img src="/images/ring.svg" data-sizes="auto" data-src="http://ww1.sinaimg.cn/large/62b0904dgw1f04v6mky30g20di0jgn29.gif" alt="" class="lazyload"><figcaption class="image-caption"></figcaption></figure></p>
+<p>关于这个, 他也写了一篇<a href="http://www.liaohuqiu.net/cn/posts/android-windows-manager/">Android 悬浮窗的小结</a></p>
+<h3 id="其他补充">其他补充</h3>
+<p>评论区的浮海大虾同学有更多补充如下:
+<code>TYPE_TOAST</code>一直都可以显示，但是用TYPE_TOAST显示出来的在2.3上无法接收点击事件，因此还是无法随意使用，下面是我之前研究后台线程显示对话框的时候记得笔记，大家可以看看</p>
+<p>我们项目中有需求需要在后台任务中显示Dialog，项目最初的做法是用Activity模拟Dialog，一个Activity已经承载了近20种Dialog，代码混乱至极。</p>
+<p>后来我发现Dialog可以通过改变Window Type实现不依赖Activity显示，然后就很兴奋的要在使用这种方式来作为新的实现方式。</p>
+<p>最初WindowType是<code>WindowManager.LayoutParams.TYPE_SYSTEM_ALERT</code>，可是这是悬浮窗了，MIUI会默认禁止（真他妈操蛋，也没有任何提示）最终放弃。</p>
+<p>后来试着换成了<code>WindowManager.LayoutParams.TYPE_TOAST</code>，起初效果很好，MIUI也不禁止了，哪里都能显示，这下开心了。可是后来又发现在2.3上不能接收点击事件，也就是说Dialog上的按钮不能点击，这他妈就很操蛋了，又放弃了。</p>
+<p>又试了试其他的Type都不能满足需求，结果如下： <!-- raw HTML omitted -->
+<code>TYPE_SEARCH_BAR</code>：未知  <!-- raw HTML omitted -->
+<code>TYPE_ACCESSIBILITY_OVERLAY</code>：拒绝使用  <!-- raw HTML omitted -->
+<code>TYPE_APPLICATION</code>：只能配合Activity在当前APP使用  <!-- raw HTML omitted -->
+<code>TYPE_APPLICATION_ATTACHED_DIALOG</code>：只能配合Activity在当前APP使用  <!-- raw HTML omitted -->
+<code>TYPE_APPLICATION_MEDIA</code>：无法使用（什么也不显示）  <!-- raw HTML omitted -->
+<code>TYPE_APPLICATION_PANEL</code>：只能配合Activity在当前APP使用（PopupWindow默认就是这个Type）  <!-- raw HTML omitted -->
+<code>TYPE_APPLICATION_STARTING</code>：无法使用（什么也不显示）  <!-- raw HTML omitted -->
+<code>TYPE_APPLICATION_SUB_PANEL</code>：只能配合Activity在当前APP使用  <!-- raw HTML omitted -->
+<code>TYPE_BASE_APPLICATION</code>：无法使用（什么也不显示）  <!-- raw HTML omitted -->
+<code>TYPE_CHANGED</code>：只能配合Activity在当前APP使用  <!-- raw HTML omitted -->
+<code>TYPE_INPUT_METHOD</code>：无法使用（直接崩溃）  <!-- raw HTML omitted -->
+<code>TYPE_INPUT_METHOD_DIALOG</code>：无法使用（直接崩溃）  <!-- raw HTML omitted -->
+<code>TYPE_KEYGUARD_DIALOG</code>：拒绝使用  <!-- raw HTML omitted -->
+<code>TYPE_PHONE</code>：属于悬浮窗（并且给一个Activity的话按下HOME键会出现看不到桌面上的图标异常情况）  <!-- raw HTML omitted -->
+<code>TYPE_TOAST</code>：不属于悬浮窗，但有悬浮窗的功能，缺点是在Android2.3上无法接收点击事件  <!-- raw HTML omitted -->
+<code>TYPE_SYSTEM_ALERT</code>：属于悬浮窗，但是会被禁止<!-- raw HTML omitted --></p>
+<p>大家如果对具体的逆向过程有兴趣，请参考原文: <a href="http://www.jianshu.com/p/167fd5f47d5c">http://www.jianshu.com/p/167fd5f47d5c</a></p>
+
+    </div>
+
+    <div class="post-copyright">
+             
+            <p class="copyright-item">
+                <span>Author:</span>
+                <span>Simon Chen </span>
+                </p>
+            
+           
+            <p class="copyright-item">
+                    <span>Words:</span>
+                   <span>226</span>
+            </p>
+            
+            <p class="copyright-item">
+                
+                <span>Share:</span>
+                <span>
+
+      
+        <a href="//twitter.com/share?url=https%3a%2f%2fwww.ithome.me%2fpost%2f2016%2f01%2f19%2fandroid%25E6%2597%25A0%25E9%259C%2580%25E6%259D%2583%25E9%2599%2590%25E6%2598%25BE%25E7%25A4%25BA%25E6%2582%25AC%25E6%25B5%25AE%25E7%25AA%2597-%25E5%2585%25BC%25E8%25B0%2588%25E9%2580%2586%25E5%2590%2591%25E5%2588%2586%25E6%259E%2590app%2f&amp;text=Android%e6%97%a0%e9%9c%80%e6%9d%83%e9%99%90%e6%98%be%e7%a4%ba%e6%82%ac%e6%b5%ae%e7%aa%97%2c%20%e5%85%bc%e8%b0%88%e9%80%86%e5%90%91%e5%88%86%e6%9e%90app&amp;via=https%3a%2f%2ftwitter.com%2fChenCiki" target="_blank" title="Share on Twitter">
+          <i class="iconfont icon-twitter"></i>
+        </a>
+        
+      
+      
+      
+      
+      
+      
+        <a href="//www.linkedin.com/shareArticle?url=https%3a%2f%2fwww.ithome.me%2fpost%2f2016%2f01%2f19%2fandroid%25E6%2597%25A0%25E9%259C%2580%25E6%259D%2583%25E9%2599%2590%25E6%2598%25BE%25E7%25A4%25BA%25E6%2582%25AC%25E6%25B5%25AE%25E7%25AA%2597-%25E5%2585%25BC%25E8%25B0%2588%25E9%2580%2586%25E5%2590%2591%25E5%2588%2586%25E6%259E%2590app%2f&amp;title=Android%e6%97%a0%e9%9c%80%e6%9d%83%e9%99%90%e6%98%be%e7%a4%ba%e6%82%ac%e6%b5%ae%e7%aa%97%2c%20%e5%85%bc%e8%b0%88%e9%80%86%e5%90%91%e5%88%86%e6%9e%90app" target="_blank" title="Share on LinkedIn">
+          <i class="iconfont icon-linkedin"></i>
+        </a>
+        
+      
+      
+        
+      
+        
+      
+
+          
+
+          
+
+          
+        <a href="//www.douban.com/recommend/?url=https%3a%2f%2fwww.ithome.me%2fpost%2f2016%2f01%2f19%2fandroid%25E6%2597%25A0%25E9%259C%2580%25E6%259D%2583%25E9%2599%2590%25E6%2598%25BE%25E7%25A4%25BA%25E6%2582%25AC%25E6%25B5%25AE%25E7%25AA%2597-%25E5%2585%25BC%25E8%25B0%2588%25E9%2580%2586%25E5%2590%2591%25E5%2588%2586%25E6%259E%2590app%2f&amp;title=Android%e6%97%a0%e9%9c%80%e6%9d%83%e9%99%90%e6%98%be%e7%a4%ba%e6%82%ac%e6%b5%ae%e7%aa%97%2c%20%e5%85%bc%e8%b0%88%e9%80%86%e5%90%91%e5%88%86%e6%9e%90app" target="_blank" title="Share on Douban ">
+            <i class="iconfont icon-douban"></i>
+          </a>
+          
+
+          
+        <a href="//service.weibo.com/share/share.php?url=https%3a%2f%2fwww.ithome.me%2fpost%2f2016%2f01%2f19%2fandroid%25E6%2597%25A0%25E9%259C%2580%25E6%259D%2583%25E9%2599%2590%25E6%2598%25BE%25E7%25A4%25BA%25E6%2582%25AC%25E6%25B5%25AE%25E7%25AA%2597-%25E5%2585%25BC%25E8%25B0%2588%25E9%2580%2586%25E5%2590%2591%25E5%2588%2586%25E6%259E%2590app%2f&amp;appkey=&amp;title=Android%e6%97%a0%e9%9c%80%e6%9d%83%e9%99%90%e6%98%be%e7%a4%ba%e6%82%ac%e6%b5%ae%e7%aa%97%2c%20%e5%85%bc%e8%b0%88%e9%80%86%e5%90%91%e5%88%86%e6%9e%90app" target="_blank" title="Share on Douban ">
+            <i class="iconfont icon-weibo"></i>
+          </a>
+          
+</span>
+                
+            </p>
+
+             
+            <p class="copyright-item">
+                Released under <a rel="license external nofollow noopener noreffer" href="https://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank">CC BY-NC-ND 4.0</a>
+            </p>
+            
+    </div>
+
+  
+    <div class="post-tags">
+        
+            <section>
+            <i class="iconfont icon-icon-tag"></i>Tag: 
+            
+            <span class="tag"><a href="https://www.ithome.me/tags/android/">
+                    #android</a></span>
+            
+            <span class="tag"><a href="https://www.ithome.me/tags/%E6%82%AC%E6%B5%AE%E6%A1%86/">
+                    #悬浮框</a></span>
+            
+            </section>
+        
+        <section>
+                <a href="javascript:window.history.back();">Back</a></span> · 
+                <span><a href="https://www.ithome.me/">Home</a></span>
+        </section>
+    </div>
+
+    <div class="post-nav">
+        
+        <a href="https://www.ithome.me/post/2016/01/19/git-%E4%BB%A3%E7%A0%81%E5%86%B2%E7%AA%81%E5%B8%B8%E8%A7%81%E8%A7%A3%E5%86%B3%E6%96%B9%E6%B3%95/" class="prev" rel="prev" title="Git:代码冲突常见解决方法"><i class="iconfont icon-dajiantou"></i>&nbsp;Git:代码冲突常见解决方法</a>
+         
+        
+        <a href="https://www.ithome.me/post/2016/01/19/android-gc-%E9%82%A3%E7%82%B9%E4%BA%8B/" class="next" rel="next" title="Android GC 那点事">Android GC 那点事&nbsp;<i class="iconfont icon-xiaojiantou"></i></a>
+        
+    </div>
+
+    <div class="post-comment">
+          
+          <div id="gitalk-container"></div>
+      <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.css" crossorigin="anonymous">
+      <script src="https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js" crossorigin="anonymous"></script>
+      <script type="text/javascript">
+          var gitalk = new Gitalk({
+              id: '2016-01-19 00:00:00 \u002b0000 UTC',
+              title: 'Android无需权限显示悬浮窗, 兼谈逆向分析app',
+              clientID: 'be0f52370ed1285b6c7c',
+              clientSecret: '734a7d8d0ded346ca7a3d565d57de3f8eeb2850b',
+              repo: 'gitalk',
+              owner: 'cikichen',
+              admin: ['cikichen'],
+              body: decodeURI(location.href)
+          });
+          gitalk.render('gitalk-container');
+      </script>
+      <noscript>Please enable JavaScript to view the <a href="https://github.com/gitalk/gitalk">comments powered by gitalk.</a></noscript>
+
+ 
+
+          
+    </div>
+</article>
+          </div>
+		   </main>
+      <footer class="footer">
+    <div class="copyright">
+        &copy;
+        
+        <span itemprop="copyrightYear">2011 - 2021</span>
+        
+        
+        <span class="author" itemprop="copyrightHolder"><a href="https://www.ithome.me/">Simon Chen</a>
+        </span>
+        
+
+        <span id="busuanzi_container_site_uv">您是第<span id="busuanzi_value_site_uv"></span>位访客</span>
+    </div>
+</footer>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<link crossorigin="anonymous" integrity="sha384-yziQACfvCVwLqVFLqkWBYRO3XeA4EqzfXKGwaWnenYn5XzqfJFlFdKEmvutIQdKb"
+    href="https://lib.baomitu.com/lightgallery/1.6.12/css/lightgallery.min.css" rel="stylesheet">
+
+<script src="/js/vendor_gallery.min.js" async=""></script>
+
+
+
+
+
+
+
+
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+     </div>
+  </body>
+</html>

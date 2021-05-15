@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+  <meta http-equiv="content-type" content="text/html;charset=utf-8">
+  <meta http-equiv="X-UA-Compatible" content="chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noodp"/>
+  
+  
+  
+  
+  
+  <link rel="prev" href="https://www.ithome.me/post/2020/05/02/windows-terminal%E6%B7%BB%E5%8A%A0%E5%8F%B3%E9%94%AE%E8%8F%9C%E5%8D%95/" />
+  <link rel="next" href="https://www.ithome.me/post/2020/10/21/%E5%BF%AB%E9%80%9F%E7%90%86%E8%A7%A3%E4%BA%8C%E5%8D%81%E4%B8%89%E7%A7%8D%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/" />
+  <link rel="canonical" href="https://www.ithome.me/post/2020/10/19/mac%E4%B8%8A%E5%AE%89%E8%A3%85yarn%E5%92%8Cnvm/" />
+  <link rel='shortcut icon' type='image/x-icon' href='/favicon.ico' />
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+  <link rel="manifest" href="/site.webmanifest">
+  <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
+  <meta name="msapplication-TileColor" content="#da532c">
+  <meta name="theme-color" content="#ffffff">
+  <title>
+       
+       
+           Mac上安装yarn和nvm | Creator
+       
+  </title>
+  <meta name="title" content="Mac上安装yarn和nvm | Creator">
+    
+  
+  <link rel="stylesheet" href="/font/iconfont.css">
+  <link rel="stylesheet" href="/css/main.min.css">
+
+
+  <meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="Mac上安装yarn和nvm"/>
+<meta name="twitter:description" content="Mac上安装yarn最方便的方式就是命令行输入:
+brew install yarn 但是这样会把node也一并安装，作为开发者来说，保持多个node版本是必要的，所以我们一般都是通过nvm来管理node版本。
+brew也提供过brew install yarn --without-node命令，但是现在已经失效。不必再试。
+输入brew install，根据提示我们发现目前可用的指令是brew install yarn --ignore-dependencies
+运行后会报错，提示你找不到node，那么我们是不是可以把nvm的node link 到brew去呢？
+答案是可以的，步骤如下(node的版本号改为你实际使用的版本):
+~ which node /usr/local/opt/nvm/versions/node/v14.14.0/bin/node ~ mkdir /usr/local/Cellar/node ~ ln -s /usr/local/opt/nvm/versions/node/v14.14.0 /usr/local/Cellar/node ~ brew link --overwrite node ~ brew doctor ~ brew install yarn --ignore-dependencies 安装这个顺序操作就OK了。"/>
+
+  <script type="application/ld+json">
+{
+  "@context": "http://schema.org",
+  "@type": "BlogPosting",
+  "headline": "Mac上安装yarn和nvm",
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https:\/\/www.ithome.me\/post\/2020\/10\/19\/mac%E4%B8%8A%E5%AE%89%E8%A3%85yarn%E5%92%8Cnvm\/"
+  },
+  "image": {
+    "@type": "ImageObject",
+    "url": "https:\/\/www.ithome.me\/cover.png",
+    "width":  800 ,
+    "height":  600 
+  },
+  "genre": "posts",
+  "keywords": "编程, yarn, nvm",
+  "wordcount":  44 ,
+  "url": "https:\/\/www.ithome.me\/post\/2020\/10\/19\/mac%E4%B8%8A%E5%AE%89%E8%A3%85yarn%E5%92%8Cnvm\/",
+  "datePublished": "2020-10-19T17:38:08\u002b08:00",
+  "dateModified": "2020-10-19T17:38:08\u002b08:00",
+  "license": "©{year}, All Rights Reserved. Simon Chen",
+  "publisher": {
+    "@type": "Organization",
+    "name": "SimonChen",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https:\/\/www.ithome.me\/logo.png",
+      "width":  127 ,
+      "height":  40 
+    }
+  },
+  "author": {
+    "@type": "Person",
+    "name": "Simon"
+  },
+  "description": ""
+}
+</script>
+</head>
+
+  
+             
+  
+
+
+
+  <body class="">
+    <div class="wrapper">
+        <nav class="navbar">
+    <div class="container">
+        <div class="navbar-header header-logo">
+        	<a href="https://www.ithome.me/">Creator</a>
+        </div>
+        <div class="menu navbar-right">
+                
+                
+                <a class="menu-item" href="/posts/" title="">文章</a>
+                
+                <a class="menu-item" href="/categories/" title="">分类</a>
+                
+                <a class="menu-item" href="/tags/" title="">标签</a>
+                
+                <a class="menu-item" href="/about-me/" title="">关于</a>
+                
+                <a href="javascript:void(0);" class="theme-switch"><i class="iconfont icon-sun"></i></a>&nbsp;
+        </div>
+    </div>
+</nav>
+<nav class="navbar-mobile" id="nav-mobile" style="display: none">
+     <div class="container">
+        <div class="navbar-header">
+            <div>  <a href="javascript:void(0);" class="theme-switch"><i class="iconfont icon-sun"></i></a>&nbsp;<a href="https://www.ithome.me/">Creator</a></div>
+            <div class="menu-toggle">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+     
+          <div class="menu" id="mobile-menu">
+                
+                
+                <a class="menu-item" href="/posts/" title="">文章</a>
+                
+                <a class="menu-item" href="/categories/" title="">分类</a>
+                
+                <a class="menu-item" href="/tags/" title="">标签</a>
+                
+                <a class="menu-item" href="/about-me/" title="">关于</a>
+                
+        </div>
+    </div>
+</nav>
+
+    	 <main class="main">
+          <div class="container">
+      		
+<article class="post-warp">
+    <header class="post-header">
+        <h1 class="post-title">Mac上安装yarn和nvm</h1>
+        <div class="post-meta">
+            Written by <a href="https://www.ithome.me/" rel="author">Simon</a> with ♥ 
+                <span class="post-time">
+                    on <time datetime=2020-10-19 >19 October 2020</time>
+                </span>
+                in
+                <i class="iconfont icon-folder"></i>
+                <span class="post-category">
+                        <a href="https://www.ithome.me/categories/%E7%BC%96%E7%A8%8B/"> 编程 </a>
+                        
+                </span>
+                <i class="iconfont icon-timer"></i>
+                1 min
+        </div>
+    </header>
+    <div class="post-content">
+        
+
+        
+
+        
+        
+     
+          
+          
+          
+
+          
+          
+          
+
+          <p><code>Mac</code>上安装<code>yarn</code>最方便的方式就是命令行输入:</p>
+<div class="highlight"><pre class="chroma"><code class="language-shell" data-lang="shell">brew install yarn
+</code></pre></div><p>但是这样会把<code>node</code>也一并安装，作为开发者来说，保持多个<code>node</code>版本是必要的，所以我们一般都是通过<code>nvm</code>来管理<code>node</code>版本。</p>
+<p><code>brew</code>也提供过<code>brew install yarn --without-node</code>命令，但是现在已经失效。不必再试。</p>
+<p>输入<code>brew install</code>，根据提示我们发现目前可用的指令是<code>brew install yarn --ignore-dependencies</code></p>
+<p>运行后会报错，提示你找不到<code>node</code>，那么我们是不是可以把<code>nvm</code>的<code>node</code> link 到<code>brew</code>去呢？</p>
+<p>答案是可以的，步骤如下(<code>node</code>的版本号改为你实际使用的版本):</p>
+<div class="highlight"><pre class="chroma"><code class="language-shell" data-lang="shell">~ which node 
+/usr/local/opt/nvm/versions/node/v14.14.0/bin/node
+~ mkdir /usr/local/Cellar/node
+~ ln -s /usr/local/opt/nvm/versions/node/v14.14.0 /usr/local/Cellar/node
+~ brew link --overwrite node
+~ brew doctor
+~ brew install yarn --ignore-dependencies
+</code></pre></div><p>安装这个顺序操作就OK了。</p>
+
+    </div>
+
+    <div class="post-copyright">
+             
+            <p class="copyright-item">
+                <span>Author:</span>
+                <span>Simon Chen </span>
+                </p>
+            
+           
+            <p class="copyright-item">
+                    <span>Words:</span>
+                   <span>44</span>
+            </p>
+            
+            <p class="copyright-item">
+                
+                <span>Share:</span>
+                <span>
+
+      
+        <a href="//twitter.com/share?url=https%3a%2f%2fwww.ithome.me%2fpost%2f2020%2f10%2f19%2fmac%25E4%25B8%258A%25E5%25AE%2589%25E8%25A3%2585yarn%25E5%2592%258Cnvm%2f&amp;text=Mac%e4%b8%8a%e5%ae%89%e8%a3%85yarn%e5%92%8cnvm&amp;via=https%3a%2f%2ftwitter.com%2fChenCiki" target="_blank" title="Share on Twitter">
+          <i class="iconfont icon-twitter"></i>
+        </a>
+        
+      
+      
+      
+      
+      
+      
+        <a href="//www.linkedin.com/shareArticle?url=https%3a%2f%2fwww.ithome.me%2fpost%2f2020%2f10%2f19%2fmac%25E4%25B8%258A%25E5%25AE%2589%25E8%25A3%2585yarn%25E5%2592%258Cnvm%2f&amp;title=Mac%e4%b8%8a%e5%ae%89%e8%a3%85yarn%e5%92%8cnvm" target="_blank" title="Share on LinkedIn">
+          <i class="iconfont icon-linkedin"></i>
+        </a>
+        
+      
+      
+        
+      
+        
+      
+
+          
+
+          
+
+          
+        <a href="//www.douban.com/recommend/?url=https%3a%2f%2fwww.ithome.me%2fpost%2f2020%2f10%2f19%2fmac%25E4%25B8%258A%25E5%25AE%2589%25E8%25A3%2585yarn%25E5%2592%258Cnvm%2f&amp;title=Mac%e4%b8%8a%e5%ae%89%e8%a3%85yarn%e5%92%8cnvm" target="_blank" title="Share on Douban ">
+            <i class="iconfont icon-douban"></i>
+          </a>
+          
+
+          
+        <a href="//service.weibo.com/share/share.php?url=https%3a%2f%2fwww.ithome.me%2fpost%2f2020%2f10%2f19%2fmac%25E4%25B8%258A%25E5%25AE%2589%25E8%25A3%2585yarn%25E5%2592%258Cnvm%2f&amp;appkey=&amp;title=Mac%e4%b8%8a%e5%ae%89%e8%a3%85yarn%e5%92%8cnvm" target="_blank" title="Share on Douban ">
+            <i class="iconfont icon-weibo"></i>
+          </a>
+          
+</span>
+                
+            </p>
+
+             
+            <p class="copyright-item">
+                Released under <a rel="license external nofollow noopener noreffer" href="https://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank">CC BY-NC-ND 4.0</a>
+            </p>
+            
+    </div>
+
+  
+    <div class="post-tags">
+        
+            <section>
+            <i class="iconfont icon-icon-tag"></i>Tag: 
+            
+            <span class="tag"><a href="https://www.ithome.me/tags/%E7%BC%96%E7%A8%8B/">
+                    #编程</a></span>
+            
+            <span class="tag"><a href="https://www.ithome.me/tags/yarn/">
+                    #yarn</a></span>
+            
+            <span class="tag"><a href="https://www.ithome.me/tags/nvm/">
+                    #nvm</a></span>
+            
+            </section>
+        
+        <section>
+                <a href="javascript:window.history.back();">Back</a></span> · 
+                <span><a href="https://www.ithome.me/">Home</a></span>
+        </section>
+    </div>
+
+    <div class="post-nav">
+        
+        <a href="https://www.ithome.me/post/2020/05/02/windows-terminal%E6%B7%BB%E5%8A%A0%E5%8F%B3%E9%94%AE%E8%8F%9C%E5%8D%95/" class="prev" rel="prev" title="Windows Terminal添加右键菜单"><i class="iconfont icon-dajiantou"></i>&nbsp;Windows Terminal添加右键菜单</a>
+         
+        
+        <a href="https://www.ithome.me/post/2020/10/21/%E5%BF%AB%E9%80%9F%E7%90%86%E8%A7%A3%E4%BA%8C%E5%8D%81%E4%B8%89%E7%A7%8D%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/" class="next" rel="next" title="快速理解二十三种设计模式(速记)">快速理解二十三种设计模式(速记)&nbsp;<i class="iconfont icon-xiaojiantou"></i></a>
+        
+    </div>
+
+    <div class="post-comment">
+          
+          <div id="gitalk-container"></div>
+      <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.css" crossorigin="anonymous">
+      <script src="https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js" crossorigin="anonymous"></script>
+      <script type="text/javascript">
+          var gitalk = new Gitalk({
+              id: '2020-10-19 00:00:00 \u002b0000 UTC',
+              title: 'Mac上安装yarn和nvm',
+              clientID: 'be0f52370ed1285b6c7c',
+              clientSecret: '734a7d8d0ded346ca7a3d565d57de3f8eeb2850b',
+              repo: 'gitalk',
+              owner: 'cikichen',
+              admin: ['cikichen'],
+              body: decodeURI(location.href)
+          });
+          gitalk.render('gitalk-container');
+      </script>
+      <noscript>Please enable JavaScript to view the <a href="https://github.com/gitalk/gitalk">comments powered by gitalk.</a></noscript>
+
+ 
+
+          
+    </div>
+</article>
+          </div>
+		   </main>
+      <footer class="footer">
+    <div class="copyright">
+        &copy;
+        
+        <span itemprop="copyrightYear">2011 - 2021</span>
+        
+        
+        <span class="author" itemprop="copyrightHolder"><a href="https://www.ithome.me/">Simon Chen</a>
+        </span>
+        
+
+        <span id="busuanzi_container_site_uv">您是第<span id="busuanzi_value_site_uv"></span>位访客</span>
+    </div>
+</footer>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<script src="/js/vendor_no_gallery.min.js" async=""></script>
+
+
+
+
+
+
+
+
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+     </div>
+  </body>
+</html>
