@@ -172,7 +172,7 @@
 
           <p><figure><img src="/images/ring.svg" data-sizes="auto" data-src="https://img.ibook8.club/15862407395820.jpg" alt="" class="lazyload"><figcaption class="image-caption"></figcaption></figure></p>
 <p>关于手机端登录的代码，这里不做多余介绍，我们看下登录成功后， <code>Apple</code>返回给手机端的一些参数</p>
-<div class="highlight"><pre class="chroma"><code class="language-swift" data-lang="swift"><span class="n">open</span> <span class="kd">var</span> <span class="nv">user</span><span class="p">:</span> <span class="nb">String</span> <span class="p">{</span> <span class="kr">get</span> <span class="p">}</span>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-swift" data-lang="swift"><span class="n">open</span> <span class="kd">var</span> <span class="nv">user</span><span class="p">:</span> <span class="nb">String</span> <span class="p">{</span> <span class="kr">get</span> <span class="p">}</span>
 <span class="n">open</span> <span class="kd">var</span> <span class="nv">state</span><span class="p">:</span> <span class="nb">String</span><span class="p">?</span> <span class="p">{</span> <span class="kr">get</span> <span class="p">}</span>
 <span class="n">open</span> <span class="kd">var</span> <span class="nv">authorizedScopes</span><span class="p">:</span> <span class="p">[</span><span class="n">ASAuthorization</span><span class="p">.</span><span class="n">Scope</span><span class="p">]</span> <span class="p">{</span> <span class="kr">get</span> <span class="p">}</span>
 <span class="n">open</span> <span class="kd">var</span> <span class="nv">authorizationCode</span><span class="p">:</span> <span class="n">Data</span><span class="p">?</span> <span class="p">{</span> <span class="kr">get</span> <span class="p">}</span>
@@ -183,7 +183,7 @@
 </code></pre></div><p>这里初步登录成功，从 <code>Apple</code> 拿到 <code>user</code> 、 <code>identityToken</code> 、 <code>authorizationCode</code> 等相关信息。</p>
 <h3 id="1-首先手机端先做一个验证">1. 首先手机端先做一个验证</h3>
 <p><code>identityToken</code> 是一个 <code>JWT</code> 格式的加密数据 （JWT相关知识介绍 <a href="http://www.ruanyifeng.com/blog/2018/07/json_web_token-tutorial.html">JSON Web Token</a>），我们通过如下代码拿到 <code>header</code> 和 <code>payload</code> 中的数据</p>
-<div class="highlight"><pre class="chroma"><code class="language-swift" data-lang="swift"><span class="k">guard</span> <span class="kd">let</span> <span class="nv">_</span> <span class="p">=</span> <span class="n">identityToken</span> <span class="k">else</span> <span class="p">{</span> <span class="k">return</span> <span class="p">}</span>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-swift" data-lang="swift"><span class="k">guard</span> <span class="kd">let</span> <span class="nv">_</span> <span class="p">=</span> <span class="n">identityToken</span> <span class="k">else</span> <span class="p">{</span> <span class="k">return</span> <span class="p">}</span>
             
 <span class="kd">let</span> <span class="nv">token</span> <span class="p">=</span> <span class="nb">String</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="n">identityToken</span><span class="p">!,</span> <span class="n">encoding</span><span class="p">:</span> <span class="p">.</span><span class="n">utf8</span><span class="p">)</span>
 <span class="kd">let</span> <span class="nv">arr</span> <span class="p">=</span> <span class="n">token</span><span class="p">?.</span><span class="n">components</span><span class="p">(</span><span class="n">separatedBy</span><span class="p">:</span> <span class="s">&#34;.&#34;</span><span class="p">)</span>
@@ -193,14 +193,14 @@
 <blockquote>
 <p>注意：swift中需要用NSData进行转换，用Data进行转换会失败</p>
 </blockquote>
-<div class="highlight"><pre class="chroma"><code class="language-swift" data-lang="swift"><span class="c1">// 这里为了方便，均采用 ! 强行解包</span>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-swift" data-lang="swift"><span class="c1">// 这里为了方便，均采用 ! 强行解包</span>
 <span class="kd">let</span> <span class="nv">headerData</span> <span class="p">=</span> <span class="n">NSData</span><span class="p">(</span><span class="n">base64EncodedString</span><span class="p">:</span> <span class="n">payload</span><span class="p">!)</span>
 <span class="kd">let</span> <span class="nv">decodeHeader</span> <span class="p">=</span> <span class="nb">String</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="p">(</span><span class="n">headerData</span><span class="p">!</span> <span class="k">as</span> <span class="n">Data</span><span class="p">),</span> <span class="n">encoding</span><span class="p">:</span> <span class="p">.</span><span class="n">utf8</span><span class="p">)</span>
 
 <span class="kd">let</span> <span class="nv">payloadData</span> <span class="p">=</span> <span class="n">NSData</span><span class="p">(</span><span class="n">base64EncodedString</span><span class="p">:</span> <span class="n">payload</span><span class="p">!)</span>
 <span class="kd">let</span> <span class="nv">decodePayload</span> <span class="p">=</span> <span class="nb">String</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="p">(</span><span class="n">payloadData</span><span class="p">!</span> <span class="k">as</span> <span class="n">Data</span><span class="p">),</span> <span class="n">encoding</span><span class="p">:</span> <span class="p">.</span><span class="n">utf8</span><span class="p">)</span>
 </code></pre></div><p>得到结果如下</p>
-<div class="highlight"><pre class="chroma"><code class="language-json" data-lang="json"><span class="err">header:</span>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-json" data-lang="json"><span class="err">header:</span>
 <span class="p">{</span><span class="nt">&#34;kid&#34;</span><span class="p">:</span><span class="s2">&#34;AIDOPK1&#34;</span><span class="p">,</span><span class="nt">&#34;alg&#34;</span><span class="p">:</span><span class="s2">&#34;RS256&#34;</span><span class="p">}</span>
 
 <span class="err">payload:</span>
@@ -208,7 +208,7 @@
 </code></pre></div><p>通过如上操作，我们可以获取到 <code>payload</code> 中的 <code>sub</code> 字段，然后与上面的 <code>user</code> 字段做一个对比，如果对比通过，则第一步完成</p>
 <p>把 base64 data 转化成字符串之后，也可以去 <a href="https://jwt.io/">JWT官网</a> 把字符串粘贴进去，获取 header 及 payload 信息</p>
 <h5 id="python-decode-base64-字符串示例代码如下"><code>python</code> decode base64 字符串示例代码如下：</h5>
-<div class="highlight"><pre class="chroma"><code class="language-python" data-lang="python"><span class="kn">import</span> <span class="nn">base64</span>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="kn">import</span> <span class="nn">base64</span>
 
 <span class="n">token</span> <span class="o">=</span> <span class="s1">&#39;eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c&#39;</span>
 <span class="n">arr</span> <span class="o">=</span> <span class="n">token</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)</span>
@@ -228,7 +228,7 @@
 </code></pre></div><h3 id="2-服务端像苹果请求验证">2. 服务端像苹果请求验证</h3>
 <p>手机端需要提交 <code>user</code>  、<code>authorizationCode</code> 、 <code>identityToken</code>  字段信息（code和token字段苹果返回的是 <code>base64 Data</code> 形式，手机端可以先转换 base64 字符串之后在给服务器）到服务器。然后服务器通过 <code>https://appleid.apple.com/auth/token</code> 该接口，并拼接对应参数去验证，接口相关信息苹果有提供 <a href="https://developer.apple.com/documentation/signinwithapplerestapi/generate_and_validate_tokens">Generate and validate tokens</a> 。</p>
 <p>下面着重介绍几个参数及其获取方法。首先先看下该接口需要的参数，如下</p>
-<div class="highlight"><pre class="chroma"><code class="language-json" data-lang="json"><span class="err">client_id：</span> <span class="err">string</span> <span class="err">(Required)</span> <span class="err">(Authorization</span> <span class="err">and</span> <span class="err">Validation)</span> <span class="err">The</span> <span class="err">application</span> <span class="err">identifier</span> <span class="err">for</span> <span class="err">your</span> <span class="err">app</span>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-json" data-lang="json"><span class="err">client_id：</span> <span class="err">string</span> <span class="err">(Required)</span> <span class="err">(Authorization</span> <span class="err">and</span> <span class="err">Validation)</span> <span class="err">The</span> <span class="err">application</span> <span class="err">identifier</span> <span class="err">for</span> <span class="err">your</span> <span class="err">app</span>
 
 <span class="err">client_secret：</span> <span class="err">string</span> <span class="err">(Required)</span> <span class="err">(Authorization</span> <span class="err">and</span> <span class="err">Validation)</span> <span class="err">A</span> <span class="err">secret</span> <span class="err">generated</span> <span class="err">as</span> <span class="err">a</span> <span class="err">JSON</span> <span class="err">Web</span> <span class="err">Token</span> <span class="err">that</span> <span class="err">uses</span> <span class="err">the</span> <span class="err">secret</span> <span class="err">key</span> <span class="err">generated</span> <span class="err">by</span> <span class="err">the</span> <span class="err">WWDR</span> <span class="err">portal.</span>
 
@@ -251,7 +251,7 @@
 创建完之后把私钥下载下来，并保存好，<em><strong>注意，私钥只能下载一次。</strong></em></li>
 </ul>
 <p>拿到上面所有信息之后，可以通过如下代码生成 <code>client_secret</code> ，代码为 <code>Ruby</code> 代码，确保已安装ruby环境。</p>
-<div class="highlight"><pre class="chroma"><code class="language-ruby" data-lang="ruby"><span class="nb">require</span> <span class="s2">&#34;jwt&#34;</span>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-ruby" data-lang="ruby"><span class="nb">require</span> <span class="s2">&#34;jwt&#34;</span>
 
 <span class="n">key_file</span> <span class="o">=</span> <span class="s2">&#34;Path to the private key&#34;</span>
 <span class="n">team_id</span> <span class="o">=</span> <span class="s2">&#34;Your Team ID&#34;</span>
@@ -280,7 +280,7 @@
 </code></pre></div><p>创建文件 <code>secret_gen.rb</code> ，把上面代码粘贴进去，执行 <code>ruby secret_gen.rb</code> 即可生成 <code>client_secret</code></p>
 <p>代码中这个 <code>key_file</code> 需要指定刚才下载的文件的地址
 到这里， <code>https://appleid.apple.com/auth/token</code>  的三个必需参数已经全部获得，进行请求，获得请求结果如下</p>
-<div class="highlight"><pre class="chroma"><code class="language-json" data-lang="json"><span class="p">{</span>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-json" data-lang="json"><span class="p">{</span>
   <span class="nt">&#34;access_token&#34;</span><span class="p">:</span> <span class="s2">&#34;一个token，此处省略&#34;</span><span class="p">,</span>
   <span class="nt">&#34;token_type&#34;</span><span class="p">:</span> <span class="s2">&#34;Bearer&#34;</span><span class="p">,</span>
   <span class="nt">&#34;expires_in&#34;</span><span class="p">:</span> <span class="mi">3600</span><span class="p">,</span>
@@ -293,7 +293,7 @@
 其中 <code>aud</code> 部分与你的app的bundleID一致， <code>sub</code> 部分即与手机端获得的 <code>user</code> 一致，服务器端通过对比 <code>sub</code> 字段信息是否与手机端上传的 <code>user</code> 信息一致来确定是否成功登录。</p>
 <h3 id="关于apple文档中的-public-key">关于Apple文档中的 <code>Public Key</code></h3>
 <p><code>Apple</code> 在服务器验证时候给的<a href="https://developer.apple.com/documentation/signinwithapplerestapi">文档</a>有两个接口，一个是获取 <code>Public Key</code> 的，另一个便是验证token的。 <code>Public Key</code> 是一个固定的接口 <code>https://appleid.apple.com/auth/keys</code> ，直接调用便会获取到一个 <code>JWK</code> ，信息如下</p>
-<div class="highlight"><pre class="chroma"><code class="language-json" data-lang="json"><span class="p">{</span>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-json" data-lang="json"><span class="p">{</span>
   <span class="nt">&#34;keys&#34;</span><span class="p">:</span> <span class="p">[</span>
     <span class="p">{</span>
       <span class="nt">&#34;kty&#34;</span><span class="p">:</span> <span class="s2">&#34;RSA&#34;</span><span class="p">,</span>
@@ -311,7 +311,7 @@
 <li>首先我们需要将 <code>Public Key</code> 转为 <code>pem</code> （可通过这个<a href="https://8gwifi.org/jwkconvertfunctions.jsp">网址</a>进行转换）
 转换结果如下，我们创建一个文件名为 <code>publicKey.pem</code> 并把下面内容添加进去保存。</li>
 </ul>
-<div class="highlight"><pre class="chroma"><code class="language-fallback" data-lang="fallback">-----BEGIN PUBLIC KEY-----
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback">-----BEGIN PUBLIC KEY-----
 MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAlxrwmuYSAsTfn+lUu4go
 ZSXBD9ackM9OJuwUVQHmbZo6GW4Fu/auUdN5zI7Y1dEDfgt7m7QXWbHuMD01HLnD
 4eRtY+RNwCWdjNfEaY/esUPY3OVMrNDI15Ns13xspWS3q+13kdGv9jHI28P87RvM
@@ -324,7 +324,7 @@ d/JhmqX5CAaT9Pgi0J8lU/pcl215oANqjy7Ob+VMhug9eGyxAWVfu/1u6QJKePlE
 <li>安装库 <code>pip install authlib</code>  (其他各种语言对应的库都可从<a href="https://jwt.io/">JWT官网</a>查找获取)</li>
 </ul>
 <p>脚本文件内容如下</p>
-<div class="highlight"><pre class="chroma"><code class="language-python" data-lang="python"><span class="kn">from</span> <span class="nn">authlib.jose</span> <span class="kn">import</span> <span class="n">jwt</span>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="kn">from</span> <span class="nn">authlib.jose</span> <span class="kn">import</span> <span class="n">jwt</span>
 
 <span class="n">identityToken</span> <span class="o">=</span> <span class="s1">&#39;这个是手机端获取到的identityToken&#39;</span>
 
@@ -332,7 +332,7 @@ d/JhmqX5CAaT9Pgi0J8lU/pcl215oANqjy7Ob+VMhug9eGyxAWVfu/1u6QJKePlE
 <span class="n">dec</span> <span class="o">=</span> <span class="n">jwt</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="n">identityToken</span><span class="p">,</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&#34;publicKey.pem&#34;</span><span class="p">)</span><span class="o">.</span><span class="n">read</span><span class="p">())</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">dec</span><span class="p">)</span>
 </code></pre></div><p>这里打印出decode信息如下</p>
-<div class="highlight"><pre class="chroma"><code class="language-json" data-lang="json"><span class="p">{</span>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-json" data-lang="json"><span class="p">{</span>
   <span class="nt">&#34;iss&#34;</span><span class="p">:</span> <span class="s2">&#34;https://appleid.apple.com&#34;</span><span class="p">,</span>
   <span class="nt">&#34;aud&#34;</span><span class="p">:</span> <span class="s2">&#34;这个对应app的bundleid&#34;</span><span class="p">,</span>
   <span class="nt">&#34;exp&#34;</span><span class="p">:</span> <span class="mi">1567494694</span><span class="p">,</span>

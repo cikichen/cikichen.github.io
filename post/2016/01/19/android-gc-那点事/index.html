@@ -290,14 +290,14 @@ Dalvik GC：</p>
 <p>当我们想要根据GC日志来追查一些GC可能造成的卡顿时，我们需要了解GC日志的组成，不同信息代表了什么含义。</p>
 <h4 id="41-dalvik-gc日志">4.1. Dalvik GC日志</h4>
 <p>Dalvik的日志格式基本如下：</p>
-<div class="highlight"><pre class="chroma"><code class="language-fallback" data-lang="fallback">D/dalvikvm:&lt;GC_Reason&gt;&lt;Amount_freed&gt;,&lt;Heap_stats&gt;,&lt;Pause_time&gt;,&lt;Total_time&gt;
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback">D/dalvikvm:&lt;GC_Reason&gt;&lt;Amount_freed&gt;,&lt;Heap_stats&gt;,&lt;Pause_time&gt;,&lt;Total_time&gt;
 </code></pre></div><p><code>GC_Reason</code>: 就是我们上文提到的，是gc_alloc还是gc_concurrent，了解到不同的原因方便我们做不同的处理。
 <code>Amount_freed</code>: 表示系统通过这次GC操作释放了多少内存。
 <code>Heap_stats</code>: 中会显示当前内存的空闲比例以及使用情况（活动对象所占内存 / 当前程序总内存）。
 <code>Pause_time</code>: 表示这次GC操作导致应用程序暂停的时间。关于这个暂停的时间，在2.3之前GC操作是不能并发进行的，也就是系统正在进行GC，那么应用程序就只能阻塞住等待GC结束。而自2.3之后，GC操作改成了并发的方式进行，就是说GC的过程中不会影响到应用程序的正常运行，但是在GC操作的开始和结束的时候会短暂阻塞一段时间，所以还有后续的一个total_time。
 <code>Total_time</code>: 表示本次GC所花费的总时间和上面的Pause_time,也就是stop all是不一样的，卡顿时间主要看上面的pause_time。</p>
 <h4 id="42-art-gc日志">4.2. ART GC日志</h4>
-<div class="highlight"><pre class="chroma"><code class="language-fallback" data-lang="fallback">I/art:&lt;GC_Reason&gt;&lt;Amount_freed&gt;,&lt;LOS_Space_Status&gt;,&lt;Heap_stats&gt;,&lt;Pause_time&gt;,&lt;Total_time&gt;
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback">I/art:&lt;GC_Reason&gt;&lt;Amount_freed&gt;,&lt;LOS_Space_Status&gt;,&lt;Heap_stats&gt;,&lt;Pause_time&gt;,&lt;Total_time&gt;
 </code></pre></div><p>基本情况和Dalvik没有什么差别，GC的Reason更多了，还多了一个OS_Space_Status.
 <code>LOS_Space_Status</code>：Large Object Space，大对象占用的空间，这部分内存并不是分配在堆上的，但仍属于应用程序内存空间，主要用来管理 bitmap 等占内存大的对象，避免因分配大内存导致堆频繁 GC。
 写在最后：图片来源自网络，特别鸣谢罗升阳。</p>

@@ -7,7 +7,29 @@
     <generator>Hugo -- gohugo.io</generator>
     <language>zh-CN</language>
     <copyright>©{year}, All Rights Reserved. Simon Chen</copyright>
-    <lastBuildDate>Mon, 03 Aug 2015 00:00:00 +0000</lastBuildDate><atom:link href="https://www.ithome.me/tags/%E7%A8%8B%E5%BA%8F%E5%91%98/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Fri, 17 Dec 2021 00:00:00 +0000</lastBuildDate><atom:link href="https://www.ithome.me/tags/%E7%A8%8B%E5%BA%8F%E5%91%98/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>手摸手极简docker部署rocketmq单机实战</title>
+      <link>https://www.ithome.me/post/2021/12/17/docker%E9%83%A8%E7%BD%B2rocketmq%E5%8D%95%E6%9C%BA%E5%AE%9E%E6%88%98/</link>
+      <pubDate>Fri, 17 Dec 2021 00:00:00 +0000</pubDate>
+      
+      <guid>https://www.ithome.me/post/2021/12/17/docker%E9%83%A8%E7%BD%B2rocketmq%E5%8D%95%E6%9C%BA%E5%AE%9E%E6%88%98/</guid>
+      <description>自己本地搭建rocketmq开发环境还是用docker方便点，之前搭建一直有些小问题，最近专项解决了下，终于搞定了，这里整理分享下
+环境准备  因笔者用的MacBook，所以会主要以Mac为主讲解，其他环境区别不大
+ 首先请准备好docker环境，推荐docker desktop，无他，点点点就完事了，不用的时候不启动，开发机紧张的内存问题得到了心理上的安慰。
+还需要安装好docker-compose，请自行参考安装教程点这里
+ 注：docker desktop自带了docker-compose，所以不需要再单独安装compose了
+ 编译rocketmq镜像 环境搞定了，我们开始搭建rocketmq，直接用官方推荐的docker镜像即可。 镜像下载地址：https://github.com/apache/rocketmq-docker
+我们先通过git把代码拉下来，打开命令行复制粘贴
+git clone https://hub.fastgit.org/apache/rocketmq-docker.git
+clone完成后，继续cd rocketmq-docker/image-build到image-build目录下
+目前最新版本为4.9.2,我们就以这个版本为例： 继续输入下列指令
+sh build-image.sh 4.9.2 alpine 等待完成就即可，如果报错，请自行根据错误查找原因。只要环境没问题，编译完成后我们能得到apacherocketmq/rocketmq镜像
+至此，我们已经完成了一半的工作。
+编写docker-compose配置  鲁迅：授人以鱼不如授人以渔和鱼 有经验的同学此时已经急不可耐了，鱼拿去。 完整的docker-compose.yml文件
+ version: &amp;#39;3&amp;#39; services: namesrv: image: apacherocketmq/rocketmq:4.9.2-alpine container_name: rmqnamesrv ports: - 9876:9876 volumes: - ./data/namesrv/logs:/home/rocketmq/logs command: sh mqnamesrv restart: always broker: image: apacherocketmq/rocketmq:4.9.2-alpine container_name: rmqbroker links: - namesrv ports: - 10909:10909 - 10911:10911 - 10912:10912 environment: - NAMESRV_ADDR=namesrv:9876 volumes: - .</description>
+    </item>
+    
     <item>
       <title>程序员也配吃10元的饭盒?</title>
       <link>https://www.ithome.me/post/2015/08/03/%E7%A8%8B%E5%BA%8F%E5%91%98%E4%B9%9F%E9%85%8D%E5%90%8310%E5%85%83%E7%9A%84%E9%A5%AD%E7%9B%92/</link>

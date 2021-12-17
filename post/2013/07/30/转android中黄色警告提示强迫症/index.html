@@ -175,7 +175,7 @@ private Handler mHandler = new Handler(new Handler.Callback() { @Override public
 </blockquote>
 <p><strong>所以写此贴，将平时碰到的警告全部总结集中起来。</strong></p>
 <p><strong>1：Handler</strong></p>
-<div class="highlight"><pre class="chroma"><code class="language-java" data-lang="java"><span class="c1">// This Handler class should be static or leaks might occur: IncomingHandler
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="c1">// This Handler class should be static or leaks might occur: IncomingHandler
 </span><span class="c1"></span><span class="nd">@SuppressLint</span><span class="o">(</span><span class="s">&#34;HandlerLeak&#34;</span><span class="o">)</span>
 <span class="kd">private</span> <span class="n">Handler</span> <span class="n">mHandler</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Handler</span><span class="o">()</span> <span class="o">{</span>
     <span class="nd">@Override</span>
@@ -184,7 +184,7 @@ private Handler mHandler = new Handler(new Handler.Callback() { @Override public
     <span class="o">};</span>
 <span class="o">};</span>
 </code></pre></div><p>解决方法：</p>
-<div class="highlight"><pre class="chroma"><code class="language-java" data-lang="java"><span class="kd">private</span> <span class="n">Handler</span> <span class="n">mHandler</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Handler</span><span class="o">(</span><span class="k">new</span> <span class="n">Handler</span><span class="o">.</span><span class="na">Callback</span><span class="o">()</span> <span class="o">{</span>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="kd">private</span> <span class="n">Handler</span> <span class="n">mHandler</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Handler</span><span class="o">(</span><span class="k">new</span> <span class="n">Handler</span><span class="o">.</span><span class="na">Callback</span><span class="o">()</span> <span class="o">{</span>
         <span class="nd">@Override</span>
         <span class="kd">public</span> <span class="kt">boolean</span> <span class="nf">handleMessage</span><span class="o">(</span><span class="n">Message</span> <span class="n">msg</span><span class="o">)</span> <span class="o">{</span>
             <span class="k">return</span> <span class="kc">false</span><span class="o">;</span>
@@ -192,21 +192,21 @@ private Handler mHandler = new Handler(new Handler.Callback() { @Override public
 <span class="o">});</span>
 </code></pre></div><p>警告原因：静态弱应用可能出现内存泄露问题</p>
 <p><strong>2：SimpleDateFormat</strong></p>
-<div class="highlight"><pre class="chroma"><code class="language-java" data-lang="java"><span class="c1">// To get local formatting use getDateInstance(), getDateTimeInstance(), or
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="c1">// To get local formatting use getDateInstance(), getDateTimeInstance(), or
 </span><span class="c1"></span>    <span class="c1">// getTimeInstance(), or use new SimpleDateFormat(String template, Locale
 </span><span class="c1"></span>    <span class="c1">// locale) with for example Locale.US for ASCII dates.
 </span><span class="c1"></span>    <span class="nd">@SuppressLint</span><span class="o">(</span><span class="s">&#34;SimpleDateFormat&#34;</span><span class="o">)</span>
     <span class="n">SimpleDateFormat</span> <span class="n">simpleDateFormat</span> <span class="o">=</span> <span class="k">new</span> <span class="n">SimpleDateFormat</span><span class="o">(</span>
             <span class="s">&#34;yyyy-MM-ddHH:mm:ss&#34;</span><span class="o">);</span>
 </code></pre></div><p>解决方法：</p>
-<div class="highlight"><pre class="chroma"><code class="language-java" data-lang="java"><span class="n">SimpleDateFormat</span> <span class="n">newSimpleDateFormat</span> <span class="o">=</span> <span class="k">new</span> <span class="n">SimpleDateFormat</span><span class="o">(</span>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="n">SimpleDateFormat</span> <span class="n">newSimpleDateFormat</span> <span class="o">=</span> <span class="k">new</span> <span class="n">SimpleDateFormat</span><span class="o">(</span>
             <span class="s">&#34;yyyy年MM月dd日HH时mm分&#34;</span><span class="o">,</span> <span class="n">Locale</span><span class="o">.</span><span class="na">getDefault</span><span class="o">());</span>
 </code></pre></div><p>警告原因：需要指定默认的locale</p>
 <p><strong>3：new HashMap()</strong></p>
-<div class="highlight"><pre class="chroma"><code class="language-java" data-lang="java"><span class="nd">@SuppressLint</span><span class="o">(</span><span class="s">&#34;UseSparseArrays&#34;</span><span class="o">)</span>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="nd">@SuppressLint</span><span class="o">(</span><span class="s">&#34;UseSparseArrays&#34;</span><span class="o">)</span>
     <span class="kd">public</span> <span class="kd">static</span> <span class="n">Map</span><span class="o">&lt;</span><span class="n">Integer</span><span class="o">,</span> <span class="n">String</span><span class="o">&gt;</span> <span class="n">CMD_MAP</span> <span class="o">=</span> <span class="k">new</span> <span class="n">HashMap</span><span class="o">&lt;</span><span class="n">Integer</span><span class="o">,</span> <span class="n">String</span><span class="o">&gt;();</span>
 </code></pre></div><p>解决方法：</p>
-<div class="highlight"><pre class="chroma"><code class="language-java" data-lang="java"><span class="nd">@SuppressLint</span><span class="o">(</span><span class="s">&#34;UseSparseArrays&#34;</span><span class="o">)</span>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="nd">@SuppressLint</span><span class="o">(</span><span class="s">&#34;UseSparseArrays&#34;</span><span class="o">)</span>
     <span class="kd">public</span> <span class="kd">static</span> <span class="n">SparseArray</span><span class="o">&lt;</span><span class="n">Integer</span><span class="o">,</span> <span class="n">String</span><span class="o">&gt;</span> <span class="n">CMD_MAP</span> <span class="o">=</span> <span class="k">new</span> <span class="n">SparseArray</span><span class="o">&lt;</span><span class="n">Integer</span><span class="o">,</span> <span class="n">String</span><span class="o">&gt;();</span>
 </code></pre></div><p>警告原因：SparseArray是android提供的效率更高的集合工具</p>
 <p>原文地址： <a href="http://my.eoe.cn/864234/archive/5162.html" title="原文地址">http://my.eoe.cn/864234/archive/5162.html</a></p>

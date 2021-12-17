@@ -391,13 +391,13 @@
 <p><strong>原理</strong> ：Robust插件对每个产品代码的每个函数都在编译打包阶段自动的插入了一段代码，插入过程对业务开发是完全透明。</p>
 <p>Robust为每个class增加了个类型为ChangeQuickRedirect的静态成员，而在每个方法前都插入了使用changeQuickRedirect相关的逻辑，当 changeQuickRedirect不为null时，可能会执行到accessDispatch从而替换掉之前老的逻辑，达到fix的目的。</p>
 <p>如State.java的getIndex函数：</p>
-<div class="highlight"><pre class="chroma"><code class="language-fallback" data-lang="fallback">public longgetIndex(){
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback">public longgetIndex(){
 
     **return** 100;
 
 }
 </code></pre></div><p>被处理成如下的实现：</p>
-<div class="highlight"><pre class="chroma"><code class="language-fallback" data-lang="fallback">public static ChangeQuickRedirectchangeQuickRedirect;
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback">public static ChangeQuickRedirectchangeQuickRedirect;
 
     public longgetIndex(){
 
@@ -424,7 +424,7 @@
 <p>优点：即时生效，无性能损耗，无侵入。缺点：不能新增字段以及修改&lt;init&gt;方法，不能修改资源，兼容性可能有问题。</p>
 <p><strong>简述</strong> ：AndFix采用native hook的方式，这套方案直接使用dalvik_replaceMethod替换class中方法的实现。</p>
 <p>我们看下主要的几个natvie方法</p>
-<div class="highlight"><pre class="chroma"><code class="language-fallback" data-lang="fallback">public class AndFix {
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback">public class AndFix {
 
     //运行时装载libdvm.so动态库，用于获取内部函数1、dvmThreadSelf()：查询当前的线程，2、dvmDecodeIndirectRef()：根据当前线程获得ClassObject对象
 
@@ -450,7 +450,7 @@ JIT最早在 <a href="https://zh.wikipedia.org/wiki/Android_2.2"><strong>Android
 <p>通过源码结构，我们可以看出AndFix针对不同的运行环境做了不同的处理。</p>
 <p><img src="" alt=""></p>
 <p>dalvik_replaceMethod方法实现:</p>
-<div class="highlight"><pre class="chroma"><code class="language-fallback" data-lang="fallback">externvoid\_\_attribute\_\_((visibility(&amp;quot;hidden&amp;quot;)))dalvik\_replaceMethod(
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback">externvoid\_\_attribute\_\_((visibility(&amp;quot;hidden&amp;quot;)))dalvik\_replaceMethod(
 
     JNIEnv\*env,jobjectsrc,jobjectdest){
 

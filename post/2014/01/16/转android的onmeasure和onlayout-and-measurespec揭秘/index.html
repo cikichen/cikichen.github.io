@@ -192,7 +192,7 @@ onMeasure
 <p>Measure the view and its content to determine the measured width and the measured height. 即 测量View和它的内容决定宽度和高度。</p>
 <p>说实在的，官方文档说测量我刚开始很疑惑，onMeasure翻译过来是测量，根本不知道它的意图，其实它有两方面作用：①获得ViewGroup和子View的宽和高 ②设置子ViewGroup的宽和高，注意，只是宽和高。其实，追踪onMeasure方法会发现，它继承自View。<br>
 典型的onMeasure的一个实现</p>
-<div class="highlight"><pre class="chroma"><code class="language-java" data-lang="java"><span class="nd">@Override</span>  
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="nd">@Override</span>  
 <span class="kd">protected</span> <span class="kt">void</span> <span class="nf">onMeasure</span><span class="o">(</span><span class="kt">int</span> <span class="n">widthMeasureSpec</span><span class="o">,</span> <span class="kt">int</span> <span class="n">heightMeasureSpec</span><span class="o">)</span> <span class="o">{</span>  
 
     <span class="kt">int</span> <span class="n">width</span> <span class="o">=</span> <span class="n">MeasureSpec</span><span class="o">.</span><span class="na">getSize</span><span class="o">(</span><span class="n">widthMeasureSpec</span><span class="o">);</span>   <span class="c1">//获取ViewGroup宽度  
@@ -207,7 +207,7 @@ onMeasure
  <span class="o">}</span>
 </code></pre></div><p>很明显，先获取到了宽高再设置。顺序是先设置ViewGroup的，再设置子View。<br>
 其中，设置ViewGroup宽高的方法是 setMeasureDimension(),查看这个方法的源代码，它在view.class下</p>
-<div class="highlight"><pre class="chroma"><code class="language-java" data-lang="java"><span class="kd">protected</span> <span class="kd">final</span> <span class="kt">void</span> <span class="nf">setMeasuredDimension</span><span class="o">(</span><span class="kt">int</span> <span class="n">measuredWidth</span><span class="o">,</span> <span class="kt">int</span> <span class="n">measuredHeight</span><span class="o">)</span> <span class="o">{</span>  
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="kd">protected</span> <span class="kd">final</span> <span class="kt">void</span> <span class="nf">setMeasuredDimension</span><span class="o">(</span><span class="kt">int</span> <span class="n">measuredWidth</span><span class="o">,</span> <span class="kt">int</span> <span class="n">measuredHeight</span><span class="o">)</span> <span class="o">{</span>  
         <span class="kt">boolean</span> <span class="n">optical</span> <span class="o">=</span> <span class="n">isLayoutModeOptical</span><span class="o">(</span><span class="k">this</span><span class="o">);</span>  
         <span class="k">if</span> <span class="o">(</span><span class="n">optical</span> <span class="o">!=</span> <span class="n">isLayoutModeOptical</span><span class="o">(</span><span class="n">mParent</span><span class="o">))</span> <span class="o">{</span>  
             <span class="n">Insets</span> <span class="n">insets</span> <span class="o">=</span> <span class="n">getOpticalInsets</span><span class="o">();</span>  
@@ -225,14 +225,14 @@ onMeasure
 </code></pre></div><p>setMeasureDimension方法必须由onMeasure调用，上上的代码刚好是在onMeasure中调用，所以才符合要求。那设置的这个宽高保存在哪里呢？源代码中也可以看出，它保存在ViewGroup中：mMeasuredWidth，mMeasuredHeight是View这个类中的变量。<br>
 接下来是设置子View的宽高，每个子View都会分别设置，这个宽高当然是自己定义的。child.measure(viewWidth, viewHeight);调用的是measure方法，注意这个方法是属于子View的方法，那设置的高度保存在哪里呢？对了，就是每个子View中，而不是ViewGroup中，这点要分清楚。<br>
 <strong>再来看看measure的实现</strong></p>
-<div class="highlight"><pre class="chroma"><code class="language-java" data-lang="java"><span class="kd">public</span> <span class="kd">final</span> <span class="kt">void</span> <span class="nf">measure</span><span class="o">(</span><span class="kt">int</span> <span class="n">widthMeasureSpec</span><span class="o">,</span> <span class="kt">int</span> <span class="n">heightMeasureSpec</span><span class="o">)</span> <span class="o">{</span>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="kd">public</span> <span class="kd">final</span> <span class="kt">void</span> <span class="nf">measure</span><span class="o">(</span><span class="kt">int</span> <span class="n">widthMeasureSpec</span><span class="o">,</span> <span class="kt">int</span> <span class="n">heightMeasureSpec</span><span class="o">)</span> <span class="o">{</span>
 <span class="o">.........</span>  
 <span class="c1">// measure ourselves, this should set the measured dimension flag back  
 </span><span class="c1"></span>    <span class="n">onMeasure</span><span class="o">(</span><span class="n">widthMeasureSpec</span><span class="o">,</span> <span class="n">heightMeasureSpec</span><span class="o">);</span>  
 <span class="o">..........</span>  
 <span class="o">}</span>
 </code></pre></div><p>其实它又调用了View类中的onMeasure方法，在看View.class的onMeasure方法</p>
-<div class="highlight"><pre class="chroma"><code class="language-java" data-lang="java"><span class="kd">protected</span> <span class="kt">void</span> <span class="nf">onMeasure</span><span class="o">(</span><span class="kt">int</span> <span class="n">widthMeasureSpec</span><span class="o">,</span> <span class="kt">int</span> <span class="n">heightMeasureSpec</span><span class="o">)</span> <span class="o">{</span>  
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="kd">protected</span> <span class="kt">void</span> <span class="nf">onMeasure</span><span class="o">(</span><span class="kt">int</span> <span class="n">widthMeasureSpec</span><span class="o">,</span> <span class="kt">int</span> <span class="n">heightMeasureSpec</span><span class="o">)</span> <span class="o">{</span>  
         <span class="n">setMeasuredDimension</span><span class="o">(</span><span class="n">getDefaultSize</span><span class="o">(</span><span class="n">getSuggestedMinimumWidth</span><span class="o">(),</span> <span class="n">widthMeasureSpec</span><span class="o">),</span>  
                 <span class="n">getDefaultSize</span><span class="o">(</span><span class="n">getSuggestedMinimumHeight</span><span class="o">(),</span> <span class="n">heightMeasureSpec</span><span class="o">));</span>  
 <span class="o">}</span>
@@ -246,7 +246,7 @@ Called from layout when this view should assign a size and position to each of i
 </blockquote>
 <p>它才是设置子View的大小和位置。onMeasure只是获得宽高并且存储在它各自的View中，这时ViewGroup根本就不知道子View的大小，onLayout告诉ViewGroup，子View在它里面中的大小和应该放在哪里。注意两个的区别，我当时也被搞得一头雾水。<br>
 参数int l, int t, int r, int b不用多说，就是ViewGroup在屏幕的位置。</p>
-<div class="highlight"><pre class="chroma"><code class="language-java" data-lang="java"><span class="nd">@Override</span>    
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="nd">@Override</span>    
 <span class="kd">protected</span> <span class="kt">void</span> <span class="nf">onLayout</span><span class="o">(</span><span class="kt">boolean</span> <span class="n">changed</span><span class="o">,</span> <span class="kt">int</span> <span class="n">left</span><span class="o">,</span> <span class="kt">int</span> <span class="n">top</span><span class="o">,</span> <span class="kt">int</span> <span class="n">right</span><span class="o">,</span> <span class="kt">int</span> <span class="n">bottom</span><span class="o">)</span> <span class="o">{</span>    
     <span class="kt">int</span> <span class="n">mTotalHeight</span> <span class="o">=</span> <span class="n">0</span><span class="o">;</span>    
     <span class="c1">// 当然，也是遍历子View，每个都要告诉ViewGroup    
@@ -264,7 +264,7 @@ Called from layout when this view should assign a size and position to each of i
 好了，现在的理解只能是这样</p>
 <p>ADD：<strong><em>关于</em>****<em>MeasureSpec</em></strong></p>
 <p>MeasureSpec是View中的一个内部类，A MeasureSpec encapsulates the layout requirements passed from parent to child. 即封装了布局传递的参数。它代表Height和Width，先贴一段使用情况的代码：</p>
-<div class="highlight"><pre class="chroma"><code class="language-java" data-lang="java"><span class="nd">@Override</span>  
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="nd">@Override</span>  
 <span class="kd">protected</span> <span class="kt">void</span> <span class="nf">onMeasure</span><span class="o">(</span><span class="kt">int</span> <span class="n">widthMeasureSpec</span><span class="o">,</span> <span class="kt">int</span> <span class="n">heightMeasureSpec</span><span class="o">)</span> <span class="o">{</span>  
     <span class="kd">super</span><span class="o">.</span><span class="na">onMeasure</span><span class="o">(</span><span class="n">widthMeasureSpec</span><span class="o">,</span> <span class="n">heightMeasureSpec</span><span class="o">);</span>  
     <span class="kt">int</span> <span class="n">width</span> <span class="o">=</span> <span class="n">MeasureSpec</span><span class="o">.</span><span class="na">getSize</span><span class="o">(</span><span class="n">widthMeasureSpec</span><span class="o">);</span>  <span class="c1">//获取真实width
@@ -275,7 +275,7 @@ Called from layout when this view should assign a size and position to each of i
 </span><span class="c1"></span>    <span class="o">}</span>  
 <span class="o">}</span>
 </code></pre></div><p>为什么onMeasure的参数widthMeasureSpec和heightMeasure要经过getSize()方法才得到真实的宽高 ，既然参数是int类型为什么不直接传递真实宽高，其实这暗藏玄机。我们当然是直接找到MeasureSpec的源码来看咯</p>
-<div class="highlight"><pre class="chroma"><code class="language-java" data-lang="java"><span class="kd">public</span> <span class="kd">static</span> <span class="kd">class</span> <span class="nc">MeasureSpec</span> <span class="o">{</span>  
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="kd">public</span> <span class="kd">static</span> <span class="kd">class</span> <span class="nc">MeasureSpec</span> <span class="o">{</span>  
        <span class="kd">private</span> <span class="kd">static</span> <span class="kd">final</span> <span class="kt">int</span> <span class="n">MODE_SHIFT</span> <span class="o">=</span> <span class="n">30</span><span class="o">;</span>    <span class="c1">//  
 </span><span class="c1"></span>       <span class="kd">private</span> <span class="kd">static</span> <span class="kd">final</span> <span class="kt">int</span> <span class="n">MODE_MASK</span>  <span class="o">=</span> <span class="n">0x3</span> <span class="o">&lt;&lt;</span> <span class="n">MODE_SHIFT</span><span class="o">;</span>  
        <span class="kd">public</span> <span class="kd">static</span> <span class="kt">int</span> <span class="nf">getMode</span><span class="o">(</span><span class="kt">int</span> <span class="n">measureSpec</span><span class="o">)</span> <span class="o">{</span>  
