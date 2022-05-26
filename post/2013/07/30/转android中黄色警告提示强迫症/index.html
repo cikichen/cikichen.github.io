@@ -175,40 +175,40 @@ private Handler mHandler = new Handler(new Handler.Callback() { @Override public
 </blockquote>
 <p><strong>所以写此贴，将平时碰到的警告全部总结集中起来。</strong></p>
 <p><strong>1：Handler</strong></p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="c1">// This Handler class should be static or leaks might occur: IncomingHandler
-</span><span class="c1"></span><span class="nd">@SuppressLint</span><span class="o">(</span><span class="s">&#34;HandlerLeak&#34;</span><span class="o">)</span>
-<span class="kd">private</span> <span class="n">Handler</span> <span class="n">mHandler</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Handler</span><span class="o">()</span> <span class="o">{</span>
-    <span class="nd">@Override</span>
-    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">handleMessage</span><span class="o">(</span><span class="n">Message</span> <span class="n">msg</span><span class="o">)</span> <span class="o">{</span>
-
-    <span class="o">};</span>
-<span class="o">};</span>
-</code></pre></div><p>解决方法：</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="kd">private</span> <span class="n">Handler</span> <span class="n">mHandler</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Handler</span><span class="o">(</span><span class="k">new</span> <span class="n">Handler</span><span class="o">.</span><span class="na">Callback</span><span class="o">()</span> <span class="o">{</span>
-        <span class="nd">@Override</span>
-        <span class="kd">public</span> <span class="kt">boolean</span> <span class="nf">handleMessage</span><span class="o">(</span><span class="n">Message</span> <span class="n">msg</span><span class="o">)</span> <span class="o">{</span>
-            <span class="k">return</span> <span class="kc">false</span><span class="o">;</span>
-        <span class="o">}</span>
-<span class="o">});</span>
-</code></pre></div><p>警告原因：静态弱应用可能出现内存泄露问题</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="c1">// This Handler class should be static or leaks might occur: IncomingHandler
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="nd">@SuppressLint</span><span class="o">(</span><span class="s">&#34;HandlerLeak&#34;</span><span class="o">)</span>
+</span></span><span class="line"><span class="cl"><span class="kd">private</span> <span class="n">Handler</span> <span class="n">mHandler</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Handler</span><span class="o">()</span> <span class="o">{</span>
+</span></span><span class="line"><span class="cl">    <span class="nd">@Override</span>
+</span></span><span class="line"><span class="cl">    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">handleMessage</span><span class="o">(</span><span class="n">Message</span> <span class="n">msg</span><span class="o">)</span> <span class="o">{</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="o">};</span>
+</span></span><span class="line"><span class="cl"><span class="o">};</span>
+</span></span></code></pre></div><p>解决方法：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kd">private</span> <span class="n">Handler</span> <span class="n">mHandler</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Handler</span><span class="o">(</span><span class="k">new</span> <span class="n">Handler</span><span class="o">.</span><span class="na">Callback</span><span class="o">()</span> <span class="o">{</span>
+</span></span><span class="line"><span class="cl">        <span class="nd">@Override</span>
+</span></span><span class="line"><span class="cl">        <span class="kd">public</span> <span class="kt">boolean</span> <span class="nf">handleMessage</span><span class="o">(</span><span class="n">Message</span> <span class="n">msg</span><span class="o">)</span> <span class="o">{</span>
+</span></span><span class="line"><span class="cl">            <span class="k">return</span> <span class="kc">false</span><span class="o">;</span>
+</span></span><span class="line"><span class="cl">        <span class="o">}</span>
+</span></span><span class="line"><span class="cl"><span class="o">});</span>
+</span></span></code></pre></div><p>警告原因：静态弱应用可能出现内存泄露问题</p>
 <p><strong>2：SimpleDateFormat</strong></p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="c1">// To get local formatting use getDateInstance(), getDateTimeInstance(), or
-</span><span class="c1"></span>    <span class="c1">// getTimeInstance(), or use new SimpleDateFormat(String template, Locale
-</span><span class="c1"></span>    <span class="c1">// locale) with for example Locale.US for ASCII dates.
-</span><span class="c1"></span>    <span class="nd">@SuppressLint</span><span class="o">(</span><span class="s">&#34;SimpleDateFormat&#34;</span><span class="o">)</span>
-    <span class="n">SimpleDateFormat</span> <span class="n">simpleDateFormat</span> <span class="o">=</span> <span class="k">new</span> <span class="n">SimpleDateFormat</span><span class="o">(</span>
-            <span class="s">&#34;yyyy-MM-ddHH:mm:ss&#34;</span><span class="o">);</span>
-</code></pre></div><p>解决方法：</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="n">SimpleDateFormat</span> <span class="n">newSimpleDateFormat</span> <span class="o">=</span> <span class="k">new</span> <span class="n">SimpleDateFormat</span><span class="o">(</span>
-            <span class="s">&#34;yyyy年MM月dd日HH时mm分&#34;</span><span class="o">,</span> <span class="n">Locale</span><span class="o">.</span><span class="na">getDefault</span><span class="o">());</span>
-</code></pre></div><p>警告原因：需要指定默认的locale</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="c1">// To get local formatting use getDateInstance(), getDateTimeInstance(), or
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="c1">// getTimeInstance(), or use new SimpleDateFormat(String template, Locale
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="c1">// locale) with for example Locale.US for ASCII dates.
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="nd">@SuppressLint</span><span class="o">(</span><span class="s">&#34;SimpleDateFormat&#34;</span><span class="o">)</span>
+</span></span><span class="line"><span class="cl">    <span class="n">SimpleDateFormat</span> <span class="n">simpleDateFormat</span> <span class="o">=</span> <span class="k">new</span> <span class="n">SimpleDateFormat</span><span class="o">(</span>
+</span></span><span class="line"><span class="cl">            <span class="s">&#34;yyyy-MM-ddHH:mm:ss&#34;</span><span class="o">);</span>
+</span></span></code></pre></div><p>解决方法：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="n">SimpleDateFormat</span> <span class="n">newSimpleDateFormat</span> <span class="o">=</span> <span class="k">new</span> <span class="n">SimpleDateFormat</span><span class="o">(</span>
+</span></span><span class="line"><span class="cl">            <span class="s">&#34;yyyy年MM月dd日HH时mm分&#34;</span><span class="o">,</span> <span class="n">Locale</span><span class="o">.</span><span class="na">getDefault</span><span class="o">());</span>
+</span></span></code></pre></div><p>警告原因：需要指定默认的locale</p>
 <p><strong>3：new HashMap()</strong></p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="nd">@SuppressLint</span><span class="o">(</span><span class="s">&#34;UseSparseArrays&#34;</span><span class="o">)</span>
-    <span class="kd">public</span> <span class="kd">static</span> <span class="n">Map</span><span class="o">&lt;</span><span class="n">Integer</span><span class="o">,</span> <span class="n">String</span><span class="o">&gt;</span> <span class="n">CMD_MAP</span> <span class="o">=</span> <span class="k">new</span> <span class="n">HashMap</span><span class="o">&lt;</span><span class="n">Integer</span><span class="o">,</span> <span class="n">String</span><span class="o">&gt;();</span>
-</code></pre></div><p>解决方法：</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="nd">@SuppressLint</span><span class="o">(</span><span class="s">&#34;UseSparseArrays&#34;</span><span class="o">)</span>
-    <span class="kd">public</span> <span class="kd">static</span> <span class="n">SparseArray</span><span class="o">&lt;</span><span class="n">Integer</span><span class="o">,</span> <span class="n">String</span><span class="o">&gt;</span> <span class="n">CMD_MAP</span> <span class="o">=</span> <span class="k">new</span> <span class="n">SparseArray</span><span class="o">&lt;</span><span class="n">Integer</span><span class="o">,</span> <span class="n">String</span><span class="o">&gt;();</span>
-</code></pre></div><p>警告原因：SparseArray是android提供的效率更高的集合工具</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="nd">@SuppressLint</span><span class="o">(</span><span class="s">&#34;UseSparseArrays&#34;</span><span class="o">)</span>
+</span></span><span class="line"><span class="cl">    <span class="kd">public</span> <span class="kd">static</span> <span class="n">Map</span><span class="o">&lt;</span><span class="n">Integer</span><span class="o">,</span> <span class="n">String</span><span class="o">&gt;</span> <span class="n">CMD_MAP</span> <span class="o">=</span> <span class="k">new</span> <span class="n">HashMap</span><span class="o">&lt;</span><span class="n">Integer</span><span class="o">,</span> <span class="n">String</span><span class="o">&gt;();</span>
+</span></span></code></pre></div><p>解决方法：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="nd">@SuppressLint</span><span class="o">(</span><span class="s">&#34;UseSparseArrays&#34;</span><span class="o">)</span>
+</span></span><span class="line"><span class="cl">    <span class="kd">public</span> <span class="kd">static</span> <span class="n">SparseArray</span><span class="o">&lt;</span><span class="n">Integer</span><span class="o">,</span> <span class="n">String</span><span class="o">&gt;</span> <span class="n">CMD_MAP</span> <span class="o">=</span> <span class="k">new</span> <span class="n">SparseArray</span><span class="o">&lt;</span><span class="n">Integer</span><span class="o">,</span> <span class="n">String</span><span class="o">&gt;();</span>
+</span></span></code></pre></div><p>警告原因：SparseArray是android提供的效率更高的集合工具</p>
 <p>原文地址： <a href="http://my.eoe.cn/864234/archive/5162.html" title="原文地址">http://my.eoe.cn/864234/archive/5162.html</a></p>
 
     </div>
@@ -225,50 +225,8 @@ private Handler mHandler = new Handler(new Handler.Callback() { @Override public
                     <span>Words:</span>
                    <span>120</span>
             </p>
-            
+
             <p class="copyright-item">
-                
-                <span>Share:</span>
-                <span>
-
-      
-        <a href="//twitter.com/share?url=https%3a%2f%2fwww.ithome.me%2fpost%2f2013%2f07%2f30%2f%25E8%25BD%25ACandroid%25E4%25B8%25AD%25E9%25BB%2584%25E8%2589%25B2%25E8%25AD%25A6%25E5%2591%258A%25E6%258F%2590%25E7%25A4%25BA%25E5%25BC%25BA%25E8%25BF%25AB%25E7%2597%2587%2f&amp;text=%5b%e8%bd%ac%5dAndroid%e4%b8%ad%e9%bb%84%e8%89%b2%e8%ad%a6%e5%91%8a%e6%8f%90%e7%a4%ba%e5%bc%ba%e8%bf%ab%e7%97%87&amp;via=https%3a%2f%2ftwitter.com%2fChenCiki" target="_blank" title="Share on Twitter">
-          <i class="iconfont icon-twitter"></i>
-        </a>
-        
-      
-      
-      
-      
-      
-      
-        <a href="//www.linkedin.com/shareArticle?url=https%3a%2f%2fwww.ithome.me%2fpost%2f2013%2f07%2f30%2f%25E8%25BD%25ACandroid%25E4%25B8%25AD%25E9%25BB%2584%25E8%2589%25B2%25E8%25AD%25A6%25E5%2591%258A%25E6%258F%2590%25E7%25A4%25BA%25E5%25BC%25BA%25E8%25BF%25AB%25E7%2597%2587%2f&amp;title=%5b%e8%bd%ac%5dAndroid%e4%b8%ad%e9%bb%84%e8%89%b2%e8%ad%a6%e5%91%8a%e6%8f%90%e7%a4%ba%e5%bc%ba%e8%bf%ab%e7%97%87" target="_blank" title="Share on LinkedIn">
-          <i class="iconfont icon-linkedin"></i>
-        </a>
-        
-      
-      
-        
-      
-        
-      
-
-          
-
-          
-
-          
-        <a href="//www.douban.com/recommend/?url=https%3a%2f%2fwww.ithome.me%2fpost%2f2013%2f07%2f30%2f%25E8%25BD%25ACandroid%25E4%25B8%25AD%25E9%25BB%2584%25E8%2589%25B2%25E8%25AD%25A6%25E5%2591%258A%25E6%258F%2590%25E7%25A4%25BA%25E5%25BC%25BA%25E8%25BF%25AB%25E7%2597%2587%2f&amp;title=%5b%e8%bd%ac%5dAndroid%e4%b8%ad%e9%bb%84%e8%89%b2%e8%ad%a6%e5%91%8a%e6%8f%90%e7%a4%ba%e5%bc%ba%e8%bf%ab%e7%97%87" target="_blank" title="Share on Douban ">
-            <i class="iconfont icon-douban"></i>
-          </a>
-          
-
-          
-        <a href="//service.weibo.com/share/share.php?url=https%3a%2f%2fwww.ithome.me%2fpost%2f2013%2f07%2f30%2f%25E8%25BD%25ACandroid%25E4%25B8%25AD%25E9%25BB%2584%25E8%2589%25B2%25E8%25AD%25A6%25E5%2591%258A%25E6%258F%2590%25E7%25A4%25BA%25E5%25BC%25BA%25E8%25BF%25AB%25E7%2597%2587%2f&amp;appkey=&amp;title=%5b%e8%bd%ac%5dAndroid%e4%b8%ad%e9%bb%84%e8%89%b2%e8%ad%a6%e5%91%8a%e6%8f%90%e7%a4%ba%e5%bc%ba%e8%bf%ab%e7%97%87" target="_blank" title="Share on Douban ">
-            <i class="iconfont icon-weibo"></i>
-          </a>
-          
-</span>
                 
             </p>
 
@@ -339,14 +297,14 @@ private Handler mHandler = new Handler(new Handler.Callback() { @Override public
     <div class="copyright">
         &copy;
         
-        <span itemprop="copyrightYear">2011 - 2021</span>
+        <span itemprop="copyrightYear">2011 - 2022</span>
         
         
         <span class="author" itemprop="copyrightHolder"><a href="https://www.ithome.me/">Simon Chen</a>
         </span>
         
 
-        <span id="busuanzi_container_site_uv">您是第<span id="busuanzi_value_site_uv"></span>位访客</span>
+        <span id="busuanzi_container_site_uv">您是第<span id="busuanzi_value_site_uv"></span>位访客</span> | <a href="https://beian.miit.gov.cn/" target="_blank">粤ICP备16016876号</a>
     </div>
 </footer>
 

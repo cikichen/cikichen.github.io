@@ -166,46 +166,46 @@ import java.io.*; import java.util.zip.*; class Zip { public static void main(St
           
 
           <p>本文是关于实现Java建立Zip压缩文件的代码实例</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="kn">import</span> <span class="nn">java.io.*</span><span class="o">;</span>
-<span class="kn">import</span> <span class="nn">java.util.zip.*</span><span class="o">;</span>
-
-<span class="kd">class</span> <span class="nc">Zip</span> <span class="o">{</span>
-    <span class="kd">public</span> <span class="kd">static</span> <span class="kt">void</span> <span class="nf">main</span><span class="o">(</span><span class="n">String</span><span class="o">[]</span> <span class="n">args</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">IOException</span> <span class="o">{</span>
-        <span class="kt">byte</span><span class="o">[]</span> <span class="n">b</span> <span class="o">=</span> <span class="k">new</span> <span class="kt">byte</span><span class="o">[</span><span class="n">512</span><span class="o">];</span>
-        <span class="n">ZipOutputStream</span> <span class="n">zout</span> <span class="o">=</span> <span class="k">new</span> <span class="n">ZipOutputStream</span><span class="o">(</span><span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">);</span>
-
-        <span class="k">for</span> <span class="o">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="n">0</span><span class="o">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">args</span><span class="o">.</span><span class="na">length</span><span class="o">;</span> <span class="n">i</span><span class="o">++)</span> <span class="o">{</span>
-            <span class="n">InputStream</span> <span class="n">in</span> <span class="o">=</span> <span class="k">new</span> <span class="n">FileInputStream</span><span class="o">(</span><span class="n">args</span><span class="o">[</span><span class="n">i</span><span class="o">]);</span>
-            <span class="n">ZipEntry</span> <span class="n">e</span> <span class="o">=</span> <span class="k">new</span> <span class="n">ZipEntry</span><span class="o">(</span><span class="n">args</span><span class="o">[</span><span class="n">i</span><span class="o">].</span><span class="na">replace</span><span class="o">(</span><span class="n">File</span><span class="o">.</span><span class="na">separatorChar</span><span class="o">,</span> <span class="sc">&#39;/&#39;</span><span class="o">));</span>
-            <span class="n">zout</span><span class="o">.</span><span class="na">putNextEntry</span><span class="o">(</span><span class="n">e</span><span class="o">);</span>
-            <span class="kt">int</span> <span class="n">len</span> <span class="o">=</span> <span class="n">0</span><span class="o">;</span>
-            <span class="k">while</span> <span class="o">((</span><span class="n">len</span> <span class="o">=</span> <span class="n">in</span><span class="o">.</span><span class="na">read</span><span class="o">(</span><span class="n">b</span><span class="o">))</span> <span class="o">!=</span> <span class="o">-</span><span class="n">1</span><span class="o">)</span> <span class="o">{</span>
-                <span class="n">zout</span><span class="o">.</span><span class="na">write</span><span class="o">(</span><span class="n">b</span><span class="o">,</span> <span class="n">0</span><span class="o">,</span> <span class="n">len</span><span class="o">);</span>
-            <span class="o">}</span>
-            <span class="n">zout</span><span class="o">.</span><span class="na">closeEntry</span><span class="o">();</span>
-            <span class="n">print</span><span class="o">(</span><span class="n">e</span><span class="o">);</span>
-        <span class="o">}</span>
-        <span class="n">zout</span><span class="o">.</span><span class="na">close</span><span class="o">();</span>
-    <span class="o">}</span>
-
-    <span class="kd">public</span> <span class="kd">static</span> <span class="kt">void</span> <span class="nf">print</span><span class="o">(</span><span class="n">ZipEntry</span> <span class="n">e</span><span class="o">)</span> <span class="o">{</span>
-        <span class="n">PrintStream</span> <span class="n">err</span> <span class="o">=</span> <span class="n">System</span><span class="o">.</span><span class="na">err</span><span class="o">;</span>
-        <span class="n">err</span><span class="o">.</span><span class="na">print</span><span class="o">(</span><span class="s">&#34;added &#34;</span> <span class="o">+</span> <span class="n">e</span><span class="o">.</span><span class="na">getName</span><span class="o">());</span>
-        <span class="k">if</span> <span class="o">(</span><span class="n">e</span><span class="o">.</span><span class="na">getMethod</span><span class="o">()</span> <span class="o">==</span> <span class="n">ZipEntry</span><span class="o">.</span><span class="na">DEFLATED</span><span class="o">)</span> <span class="o">{</span>
-            <span class="kt">long</span> <span class="n">size</span> <span class="o">=</span> <span class="n">e</span><span class="o">.</span><span class="na">getSize</span><span class="o">();</span>
-            <span class="k">if</span> <span class="o">(</span><span class="n">size</span> <span class="o">&gt;</span> <span class="n">0</span><span class="o">)</span> <span class="o">{</span>
-                <span class="kt">long</span> <span class="n">csize</span> <span class="o">=</span> <span class="n">e</span><span class="o">.</span><span class="na">getCompressedSize</span><span class="o">();</span>
-                <span class="kt">long</span> <span class="n">ratio</span> <span class="o">=</span> <span class="o">((</span><span class="n">size</span> <span class="o">-</span> <span class="n">csize</span><span class="o">)</span> <span class="o">*</span> <span class="n">100</span><span class="o">)</span> <span class="o">/</span> <span class="n">size</span><span class="o">;</span>
-                <span class="n">err</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">&#34; (deflated &#34;</span> <span class="o">+</span> <span class="n">ratio</span> <span class="o">+</span> <span class="s">&#34;%)&#34;</span><span class="o">);</span>
-            <span class="o">}</span> <span class="k">else</span> <span class="o">{</span>
-                <span class="n">err</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">&#34; (deflated 0%)&#34;</span><span class="o">);</span>
-            <span class="o">}</span>
-        <span class="o">}</span> <span class="k">else</span> <span class="o">{</span>
-            <span class="n">err</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">&#34; (stored 0%)&#34;</span><span class="o">);</span>
-        <span class="o">}</span>
-    <span class="o">}</span>
-<span class="o">}</span>
-</code></pre></div>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">java.io.*</span><span class="o">;</span>
+</span></span><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">java.util.zip.*</span><span class="o">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kd">class</span> <span class="nc">Zip</span> <span class="o">{</span>
+</span></span><span class="line"><span class="cl">    <span class="kd">public</span> <span class="kd">static</span> <span class="kt">void</span> <span class="nf">main</span><span class="o">(</span><span class="n">String</span><span class="o">[]</span> <span class="n">args</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">IOException</span> <span class="o">{</span>
+</span></span><span class="line"><span class="cl">        <span class="kt">byte</span><span class="o">[]</span> <span class="n">b</span> <span class="o">=</span> <span class="k">new</span> <span class="kt">byte</span><span class="o">[</span><span class="n">512</span><span class="o">];</span>
+</span></span><span class="line"><span class="cl">        <span class="n">ZipOutputStream</span> <span class="n">zout</span> <span class="o">=</span> <span class="k">new</span> <span class="n">ZipOutputStream</span><span class="o">(</span><span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">        <span class="k">for</span> <span class="o">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="n">0</span><span class="o">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">args</span><span class="o">.</span><span class="na">length</span><span class="o">;</span> <span class="n">i</span><span class="o">++)</span> <span class="o">{</span>
+</span></span><span class="line"><span class="cl">            <span class="n">InputStream</span> <span class="n">in</span> <span class="o">=</span> <span class="k">new</span> <span class="n">FileInputStream</span><span class="o">(</span><span class="n">args</span><span class="o">[</span><span class="n">i</span><span class="o">]);</span>
+</span></span><span class="line"><span class="cl">            <span class="n">ZipEntry</span> <span class="n">e</span> <span class="o">=</span> <span class="k">new</span> <span class="n">ZipEntry</span><span class="o">(</span><span class="n">args</span><span class="o">[</span><span class="n">i</span><span class="o">].</span><span class="na">replace</span><span class="o">(</span><span class="n">File</span><span class="o">.</span><span class="na">separatorChar</span><span class="o">,</span> <span class="sc">&#39;/&#39;</span><span class="o">));</span>
+</span></span><span class="line"><span class="cl">            <span class="n">zout</span><span class="o">.</span><span class="na">putNextEntry</span><span class="o">(</span><span class="n">e</span><span class="o">);</span>
+</span></span><span class="line"><span class="cl">            <span class="kt">int</span> <span class="n">len</span> <span class="o">=</span> <span class="n">0</span><span class="o">;</span>
+</span></span><span class="line"><span class="cl">            <span class="k">while</span> <span class="o">((</span><span class="n">len</span> <span class="o">=</span> <span class="n">in</span><span class="o">.</span><span class="na">read</span><span class="o">(</span><span class="n">b</span><span class="o">))</span> <span class="o">!=</span> <span class="o">-</span><span class="n">1</span><span class="o">)</span> <span class="o">{</span>
+</span></span><span class="line"><span class="cl">                <span class="n">zout</span><span class="o">.</span><span class="na">write</span><span class="o">(</span><span class="n">b</span><span class="o">,</span> <span class="n">0</span><span class="o">,</span> <span class="n">len</span><span class="o">);</span>
+</span></span><span class="line"><span class="cl">            <span class="o">}</span>
+</span></span><span class="line"><span class="cl">            <span class="n">zout</span><span class="o">.</span><span class="na">closeEntry</span><span class="o">();</span>
+</span></span><span class="line"><span class="cl">            <span class="n">print</span><span class="o">(</span><span class="n">e</span><span class="o">);</span>
+</span></span><span class="line"><span class="cl">        <span class="o">}</span>
+</span></span><span class="line"><span class="cl">        <span class="n">zout</span><span class="o">.</span><span class="na">close</span><span class="o">();</span>
+</span></span><span class="line"><span class="cl">    <span class="o">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="kd">public</span> <span class="kd">static</span> <span class="kt">void</span> <span class="nf">print</span><span class="o">(</span><span class="n">ZipEntry</span> <span class="n">e</span><span class="o">)</span> <span class="o">{</span>
+</span></span><span class="line"><span class="cl">        <span class="n">PrintStream</span> <span class="n">err</span> <span class="o">=</span> <span class="n">System</span><span class="o">.</span><span class="na">err</span><span class="o">;</span>
+</span></span><span class="line"><span class="cl">        <span class="n">err</span><span class="o">.</span><span class="na">print</span><span class="o">(</span><span class="s">&#34;added &#34;</span> <span class="o">+</span> <span class="n">e</span><span class="o">.</span><span class="na">getName</span><span class="o">());</span>
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="o">(</span><span class="n">e</span><span class="o">.</span><span class="na">getMethod</span><span class="o">()</span> <span class="o">==</span> <span class="n">ZipEntry</span><span class="o">.</span><span class="na">DEFLATED</span><span class="o">)</span> <span class="o">{</span>
+</span></span><span class="line"><span class="cl">            <span class="kt">long</span> <span class="n">size</span> <span class="o">=</span> <span class="n">e</span><span class="o">.</span><span class="na">getSize</span><span class="o">();</span>
+</span></span><span class="line"><span class="cl">            <span class="k">if</span> <span class="o">(</span><span class="n">size</span> <span class="o">&gt;</span> <span class="n">0</span><span class="o">)</span> <span class="o">{</span>
+</span></span><span class="line"><span class="cl">                <span class="kt">long</span> <span class="n">csize</span> <span class="o">=</span> <span class="n">e</span><span class="o">.</span><span class="na">getCompressedSize</span><span class="o">();</span>
+</span></span><span class="line"><span class="cl">                <span class="kt">long</span> <span class="n">ratio</span> <span class="o">=</span> <span class="o">((</span><span class="n">size</span> <span class="o">-</span> <span class="n">csize</span><span class="o">)</span> <span class="o">*</span> <span class="n">100</span><span class="o">)</span> <span class="o">/</span> <span class="n">size</span><span class="o">;</span>
+</span></span><span class="line"><span class="cl">                <span class="n">err</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">&#34; (deflated &#34;</span> <span class="o">+</span> <span class="n">ratio</span> <span class="o">+</span> <span class="s">&#34;%)&#34;</span><span class="o">);</span>
+</span></span><span class="line"><span class="cl">            <span class="o">}</span> <span class="k">else</span> <span class="o">{</span>
+</span></span><span class="line"><span class="cl">                <span class="n">err</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">&#34; (deflated 0%)&#34;</span><span class="o">);</span>
+</span></span><span class="line"><span class="cl">            <span class="o">}</span>
+</span></span><span class="line"><span class="cl">        <span class="o">}</span> <span class="k">else</span> <span class="o">{</span>
+</span></span><span class="line"><span class="cl">            <span class="n">err</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">&#34; (stored 0%)&#34;</span><span class="o">);</span>
+</span></span><span class="line"><span class="cl">        <span class="o">}</span>
+</span></span><span class="line"><span class="cl">    <span class="o">}</span>
+</span></span><span class="line"><span class="cl"><span class="o">}</span>
+</span></span></code></pre></div>
     </div>
 
     <div class="post-copyright">
@@ -220,50 +220,8 @@ import java.io.*; import java.util.zip.*; class Zip { public static void main(St
                     <span>Words:</span>
                    <span>133</span>
             </p>
-            
+
             <p class="copyright-item">
-                
-                <span>Share:</span>
-                <span>
-
-      
-        <a href="//twitter.com/share?url=https%3a%2f%2fwww.ithome.me%2fpost%2f2013%2f03%2f20%2fjava%25E5%25BB%25BA%25E7%25AB%258Bzip%25E5%258E%258B%25E7%25BC%25A9%25E6%2596%2587%25E4%25BB%25B6%2f&amp;text=Java%e5%bb%ba%e7%ab%8bZip%e5%8e%8b%e7%bc%a9%e6%96%87%e4%bb%b6&amp;via=https%3a%2f%2ftwitter.com%2fChenCiki" target="_blank" title="Share on Twitter">
-          <i class="iconfont icon-twitter"></i>
-        </a>
-        
-      
-      
-      
-      
-      
-      
-        <a href="//www.linkedin.com/shareArticle?url=https%3a%2f%2fwww.ithome.me%2fpost%2f2013%2f03%2f20%2fjava%25E5%25BB%25BA%25E7%25AB%258Bzip%25E5%258E%258B%25E7%25BC%25A9%25E6%2596%2587%25E4%25BB%25B6%2f&amp;title=Java%e5%bb%ba%e7%ab%8bZip%e5%8e%8b%e7%bc%a9%e6%96%87%e4%bb%b6" target="_blank" title="Share on LinkedIn">
-          <i class="iconfont icon-linkedin"></i>
-        </a>
-        
-      
-      
-        
-      
-        
-      
-
-          
-
-          
-
-          
-        <a href="//www.douban.com/recommend/?url=https%3a%2f%2fwww.ithome.me%2fpost%2f2013%2f03%2f20%2fjava%25E5%25BB%25BA%25E7%25AB%258Bzip%25E5%258E%258B%25E7%25BC%25A9%25E6%2596%2587%25E4%25BB%25B6%2f&amp;title=Java%e5%bb%ba%e7%ab%8bZip%e5%8e%8b%e7%bc%a9%e6%96%87%e4%bb%b6" target="_blank" title="Share on Douban ">
-            <i class="iconfont icon-douban"></i>
-          </a>
-          
-
-          
-        <a href="//service.weibo.com/share/share.php?url=https%3a%2f%2fwww.ithome.me%2fpost%2f2013%2f03%2f20%2fjava%25E5%25BB%25BA%25E7%25AB%258Bzip%25E5%258E%258B%25E7%25BC%25A9%25E6%2596%2587%25E4%25BB%25B6%2f&amp;appkey=&amp;title=Java%e5%bb%ba%e7%ab%8bZip%e5%8e%8b%e7%bc%a9%e6%96%87%e4%bb%b6" target="_blank" title="Share on Douban ">
-            <i class="iconfont icon-weibo"></i>
-          </a>
-          
-</span>
                 
             </p>
 
@@ -334,14 +292,14 @@ import java.io.*; import java.util.zip.*; class Zip { public static void main(St
     <div class="copyright">
         &copy;
         
-        <span itemprop="copyrightYear">2011 - 2021</span>
+        <span itemprop="copyrightYear">2011 - 2022</span>
         
         
         <span class="author" itemprop="copyrightHolder"><a href="https://www.ithome.me/">Simon Chen</a>
         </span>
         
 
-        <span id="busuanzi_container_site_uv">您是第<span id="busuanzi_value_site_uv"></span>位访客</span>
+        <span id="busuanzi_container_site_uv">您是第<span id="busuanzi_value_site_uv"></span>位访客</span> | <a href="https://beian.miit.gov.cn/" target="_blank">粤ICP备16016876号</a>
     </div>
 </footer>
 

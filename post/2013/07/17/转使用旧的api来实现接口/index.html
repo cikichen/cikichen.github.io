@@ -192,50 +192,50 @@ There generally isn’t a one-size-fits-all solution for backporting newer UI co
 具体的实现类为 TabHelperEclair 和 CompatTabEclair，名字暗示了该实现只支持Android 2.0 (Eclair)以后的版本。</p>
 <p><a href="http://www.ithome.me/wp-content/uploads/2013/07/backward-compatible-ui-classes-honeycomb.png"><figure><img src="/images/ring.svg" data-sizes="auto" data-src="http://www.ithome.me/wp-content/uploads/2013/07/backward-compatible-ui-classes-honeycomb-300x124.png" alt="backward-compatible-ui-classes-honeycomb" class="lazyload"><figcaption class="image-caption">backward-compatible-ui-classes-honeycomb</figcaption></figure></a></p>
 <p>CompatTabEclair 实现中保存了tab的属性（比如 文字和图片）。</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="kd">public</span> <span class="kd">class</span> <span class="nc">CompatTabEclair</span> <span class="kd">extends</span> <span class="n">CompatTab</span> <span class="o">{</span>
-    <span class="c1">// Store these properties in the instance,
-</span><span class="c1"></span>    <span class="c1">// as there is no ActionBar.Tab object.
-</span><span class="c1"></span>    <span class="kd">private</span> <span class="n">CharSequence</span> <span class="n">mText</span><span class="o">;</span>
-    <span class="o">...</span>
-
-    <span class="kd">public</span> <span class="n">CompatTab</span> <span class="nf">setText</span><span class="o">(</span><span class="kt">int</span> <span class="n">resId</span><span class="o">)</span> <span class="o">{</span>
-        <span class="c1">// Our older implementation simply stores this
-</span><span class="c1"></span>        <span class="c1">// information in the object instance.
-</span><span class="c1"></span>        <span class="n">mText</span> <span class="o">=</span> <span class="n">mActivity</span><span class="o">.</span><span class="na">getResources</span><span class="o">().</span><span class="na">getText</span><span class="o">(</span><span class="n">resId</span><span class="o">);</span>
-        <span class="k">return</span> <span class="k">this</span><span class="o">;</span>
-    <span class="o">}</span>
-
-    <span class="o">...</span>
-    <span class="c1">// Do the same for other properties (icon, callback, etc.)
-</span><span class="c1"></span><span class="o">}</span>
-</code></pre></div><p>而 TabHelperEclair 实现中使用<a href="http://developer.android.com/reference/android/widget/TabHost.html">TabHost</a> 控件来创建<a href="http://developer.android.com/reference/android/widget/TabHost.TabSpec.html">TabHost.TabSpec</a>对象和tab指示器。</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="kd">public</span> <span class="kd">class</span> <span class="nc">TabHelperEclair</span> <span class="kd">extends</span> <span class="n">TabHelper</span> <span class="o">{</span>
-    <span class="kd">private</span> <span class="n">TabHost</span> <span class="n">mTabHost</span><span class="o">;</span>
-    <span class="o">...</span>
-
-    <span class="kd">protected</span> <span class="kt">void</span> <span class="nf">setUp</span><span class="o">()</span> <span class="o">{</span>
-        <span class="k">if</span> <span class="o">(</span><span class="n">mTabHost</span> <span class="o">==</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
-            <span class="c1">// Our activity layout for pre-Honeycomb devices
-</span><span class="c1"></span>            <span class="c1">// must contain a TabHost.
-</span><span class="c1"></span>            <span class="n">mTabHost</span> <span class="o">=</span> <span class="o">(</span><span class="n">TabHost</span><span class="o">)</span> <span class="n">mActivity</span><span class="o">.</span><span class="na">findViewById</span><span class="o">(</span>
-                    <span class="n">android</span><span class="o">.</span><span class="na">R</span><span class="o">.</span><span class="na">id</span><span class="o">.</span><span class="na">tabhost</span><span class="o">);</span>
-            <span class="n">mTabHost</span><span class="o">.</span><span class="na">setup</span><span class="o">();</span>
-        <span class="o">}</span>
-    <span class="o">}</span>
-
-    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">addTab</span><span class="o">(</span><span class="n">CompatTab</span> <span class="n">tab</span><span class="o">)</span> <span class="o">{</span>
-        <span class="o">...</span>
-        <span class="n">TabSpec</span> <span class="n">spec</span> <span class="o">=</span> <span class="n">mTabHost</span>
-                <span class="o">.</span><span class="na">newTabSpec</span><span class="o">(</span><span class="n">tag</span><span class="o">)</span>
-                <span class="o">.</span><span class="na">setIndicator</span><span class="o">(</span><span class="n">tab</span><span class="o">.</span><span class="na">getText</span><span class="o">());</span> <span class="c1">// And optional icon
-</span><span class="c1"></span>        <span class="o">...</span>
-        <span class="n">mTabHost</span><span class="o">.</span><span class="na">addTab</span><span class="o">(</span><span class="n">spec</span><span class="o">);</span>
-    <span class="o">}</span>
-
-    <span class="c1">// The other important method, newTab() is part of
-</span><span class="c1"></span>    <span class="c1">// the base implementation.
-</span><span class="c1"></span><span class="o">}</span>
-</code></pre></div><p>现在有两种不同的<strong>CompatTab</strong> 和 <strong>TabHelper</strong>实现方式了：
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kd">public</span> <span class="kd">class</span> <span class="nc">CompatTabEclair</span> <span class="kd">extends</span> <span class="n">CompatTab</span> <span class="o">{</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// Store these properties in the instance,
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="c1">// as there is no ActionBar.Tab object.
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="kd">private</span> <span class="n">CharSequence</span> <span class="n">mText</span><span class="o">;</span>
+</span></span><span class="line"><span class="cl">    <span class="o">...</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="kd">public</span> <span class="n">CompatTab</span> <span class="nf">setText</span><span class="o">(</span><span class="kt">int</span> <span class="n">resId</span><span class="o">)</span> <span class="o">{</span>
+</span></span><span class="line"><span class="cl">        <span class="c1">// Our older implementation simply stores this
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="c1">// information in the object instance.
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="n">mText</span> <span class="o">=</span> <span class="n">mActivity</span><span class="o">.</span><span class="na">getResources</span><span class="o">().</span><span class="na">getText</span><span class="o">(</span><span class="n">resId</span><span class="o">);</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="k">this</span><span class="o">;</span>
+</span></span><span class="line"><span class="cl">    <span class="o">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="o">...</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// Do the same for other properties (icon, callback, etc.)
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="o">}</span>
+</span></span></code></pre></div><p>而 TabHelperEclair 实现中使用<a href="http://developer.android.com/reference/android/widget/TabHost.html">TabHost</a> 控件来创建<a href="http://developer.android.com/reference/android/widget/TabHost.TabSpec.html">TabHost.TabSpec</a>对象和tab指示器。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kd">public</span> <span class="kd">class</span> <span class="nc">TabHelperEclair</span> <span class="kd">extends</span> <span class="n">TabHelper</span> <span class="o">{</span>
+</span></span><span class="line"><span class="cl">    <span class="kd">private</span> <span class="n">TabHost</span> <span class="n">mTabHost</span><span class="o">;</span>
+</span></span><span class="line"><span class="cl">    <span class="o">...</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="kd">protected</span> <span class="kt">void</span> <span class="nf">setUp</span><span class="o">()</span> <span class="o">{</span>
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="o">(</span><span class="n">mTabHost</span> <span class="o">==</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
+</span></span><span class="line"><span class="cl">            <span class="c1">// Our activity layout for pre-Honeycomb devices
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>            <span class="c1">// must contain a TabHost.
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>            <span class="n">mTabHost</span> <span class="o">=</span> <span class="o">(</span><span class="n">TabHost</span><span class="o">)</span> <span class="n">mActivity</span><span class="o">.</span><span class="na">findViewById</span><span class="o">(</span>
+</span></span><span class="line"><span class="cl">                    <span class="n">android</span><span class="o">.</span><span class="na">R</span><span class="o">.</span><span class="na">id</span><span class="o">.</span><span class="na">tabhost</span><span class="o">);</span>
+</span></span><span class="line"><span class="cl">            <span class="n">mTabHost</span><span class="o">.</span><span class="na">setup</span><span class="o">();</span>
+</span></span><span class="line"><span class="cl">        <span class="o">}</span>
+</span></span><span class="line"><span class="cl">    <span class="o">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">addTab</span><span class="o">(</span><span class="n">CompatTab</span> <span class="n">tab</span><span class="o">)</span> <span class="o">{</span>
+</span></span><span class="line"><span class="cl">        <span class="o">...</span>
+</span></span><span class="line"><span class="cl">        <span class="n">TabSpec</span> <span class="n">spec</span> <span class="o">=</span> <span class="n">mTabHost</span>
+</span></span><span class="line"><span class="cl">                <span class="o">.</span><span class="na">newTabSpec</span><span class="o">(</span><span class="n">tag</span><span class="o">)</span>
+</span></span><span class="line"><span class="cl">                <span class="o">.</span><span class="na">setIndicator</span><span class="o">(</span><span class="n">tab</span><span class="o">.</span><span class="na">getText</span><span class="o">());</span> <span class="c1">// And optional icon
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="o">...</span>
+</span></span><span class="line"><span class="cl">        <span class="n">mTabHost</span><span class="o">.</span><span class="na">addTab</span><span class="o">(</span><span class="n">spec</span><span class="o">);</span>
+</span></span><span class="line"><span class="cl">    <span class="o">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="c1">// The other important method, newTab() is part of
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="c1">// the base implementation.
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="o">}</span>
+</span></span></code></pre></div><p>现在有两种不同的<strong>CompatTab</strong> 和 <strong>TabHelper</strong>实现方式了：
 一种用于3.0+系统，一种用于2.0+系统。在下面将接续介绍如何在不同的系统上使用对应的实现。</p>
 <p>原文:http://blog.chengyunfeng.com/?p=404</p>
 
@@ -253,50 +253,8 @@ There generally isn’t a one-size-fits-all solution for backporting newer UI co
                     <span>Words:</span>
                    <span>273</span>
             </p>
-            
+
             <p class="copyright-item">
-                
-                <span>Share:</span>
-                <span>
-
-      
-        <a href="//twitter.com/share?url=https%3a%2f%2fwww.ithome.me%2fpost%2f2013%2f07%2f17%2f%25E8%25BD%25AC%25E4%25BD%25BF%25E7%2594%25A8%25E6%2597%25A7%25E7%259A%2584api%25E6%259D%25A5%25E5%25AE%259E%25E7%258E%25B0%25E6%258E%25A5%25E5%258F%25A3%2f&amp;text=%5b%e8%bd%ac%5d%e4%bd%bf%e7%94%a8%e6%97%a7%e7%9a%84API%e6%9d%a5%e5%ae%9e%e7%8e%b0%e6%8e%a5%e5%8f%a3&amp;via=https%3a%2f%2ftwitter.com%2fChenCiki" target="_blank" title="Share on Twitter">
-          <i class="iconfont icon-twitter"></i>
-        </a>
-        
-      
-      
-      
-      
-      
-      
-        <a href="//www.linkedin.com/shareArticle?url=https%3a%2f%2fwww.ithome.me%2fpost%2f2013%2f07%2f17%2f%25E8%25BD%25AC%25E4%25BD%25BF%25E7%2594%25A8%25E6%2597%25A7%25E7%259A%2584api%25E6%259D%25A5%25E5%25AE%259E%25E7%258E%25B0%25E6%258E%25A5%25E5%258F%25A3%2f&amp;title=%5b%e8%bd%ac%5d%e4%bd%bf%e7%94%a8%e6%97%a7%e7%9a%84API%e6%9d%a5%e5%ae%9e%e7%8e%b0%e6%8e%a5%e5%8f%a3" target="_blank" title="Share on LinkedIn">
-          <i class="iconfont icon-linkedin"></i>
-        </a>
-        
-      
-      
-        
-      
-        
-      
-
-          
-
-          
-
-          
-        <a href="//www.douban.com/recommend/?url=https%3a%2f%2fwww.ithome.me%2fpost%2f2013%2f07%2f17%2f%25E8%25BD%25AC%25E4%25BD%25BF%25E7%2594%25A8%25E6%2597%25A7%25E7%259A%2584api%25E6%259D%25A5%25E5%25AE%259E%25E7%258E%25B0%25E6%258E%25A5%25E5%258F%25A3%2f&amp;title=%5b%e8%bd%ac%5d%e4%bd%bf%e7%94%a8%e6%97%a7%e7%9a%84API%e6%9d%a5%e5%ae%9e%e7%8e%b0%e6%8e%a5%e5%8f%a3" target="_blank" title="Share on Douban ">
-            <i class="iconfont icon-douban"></i>
-          </a>
-          
-
-          
-        <a href="//service.weibo.com/share/share.php?url=https%3a%2f%2fwww.ithome.me%2fpost%2f2013%2f07%2f17%2f%25E8%25BD%25AC%25E4%25BD%25BF%25E7%2594%25A8%25E6%2597%25A7%25E7%259A%2584api%25E6%259D%25A5%25E5%25AE%259E%25E7%258E%25B0%25E6%258E%25A5%25E5%258F%25A3%2f&amp;appkey=&amp;title=%5b%e8%bd%ac%5d%e4%bd%bf%e7%94%a8%e6%97%a7%e7%9a%84API%e6%9d%a5%e5%ae%9e%e7%8e%b0%e6%8e%a5%e5%8f%a3" target="_blank" title="Share on Douban ">
-            <i class="iconfont icon-weibo"></i>
-          </a>
-          
-</span>
                 
             </p>
 
@@ -370,14 +328,14 @@ There generally isn’t a one-size-fits-all solution for backporting newer UI co
     <div class="copyright">
         &copy;
         
-        <span itemprop="copyrightYear">2011 - 2021</span>
+        <span itemprop="copyrightYear">2011 - 2022</span>
         
         
         <span class="author" itemprop="copyrightHolder"><a href="https://www.ithome.me/">Simon Chen</a>
         </span>
         
 
-        <span id="busuanzi_container_site_uv">您是第<span id="busuanzi_value_site_uv"></span>位访客</span>
+        <span id="busuanzi_container_site_uv">您是第<span id="busuanzi_value_site_uv"></span>位访客</span> | <a href="https://beian.miit.gov.cn/" target="_blank">粤ICP备16016876号</a>
     </div>
 </footer>
 

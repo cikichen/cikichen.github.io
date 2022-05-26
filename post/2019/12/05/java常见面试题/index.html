@@ -293,15 +293,15 @@
 <p>简单的来说：String 类中使用 final 关键字修饰字符数组来保存字符串，<code>private　final　char　value[]</code>，所以 String 对象是不可变的。而StringBuilder 与 StringBuffer 都继承自 AbstractStringBuilder 类，在 AbstractStringBuilder 中也是使用字符数组保存字符串<code>char[]value</code> 但是没有用 final 关键字修饰，所以这两种对象都是可变的。</p>
 <p>StringBuilder 与 StringBuffer 的构造方法都是调用父类构造方法也就是 AbstractStringBuilder 实现的，大家可以自行查阅源码。</p>
 <p>AbstractStringBuilder.java</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="kd">abstract</span> <span class="kd">class</span> <span class="nc">AbstractStringBuilder</span> <span class="kd">implements</span> <span class="n">Appendable</span><span class="o">,</span> <span class="n">CharSequence</span> <span class="o">{</span>
-    <span class="kt">char</span><span class="o">[]</span> <span class="n">value</span><span class="o">;</span>
-    <span class="kt">int</span> <span class="n">count</span><span class="o">;</span>
-    <span class="n">AbstractStringBuilder</span><span class="o">()</span> <span class="o">{</span>
-    <span class="o">}</span>
-    <span class="n">AbstractStringBuilder</span><span class="o">(</span><span class="kt">int</span> <span class="n">capacity</span><span class="o">)</span> <span class="o">{</span>
-        <span class="n">value</span> <span class="o">=</span> <span class="k">new</span> <span class="kt">char</span><span class="o">[</span><span class="n">capacity</span><span class="o">];</span>
-    <span class="o">}</span>
-</code></pre></div><p><strong>线程安全性</strong></p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kd">abstract</span> <span class="kd">class</span> <span class="nc">AbstractStringBuilder</span> <span class="kd">implements</span> <span class="n">Appendable</span><span class="o">,</span> <span class="n">CharSequence</span> <span class="o">{</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">char</span><span class="o">[]</span> <span class="n">value</span><span class="o">;</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">int</span> <span class="n">count</span><span class="o">;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">AbstractStringBuilder</span><span class="o">()</span> <span class="o">{</span>
+</span></span><span class="line"><span class="cl">    <span class="o">}</span>
+</span></span><span class="line"><span class="cl">    <span class="n">AbstractStringBuilder</span><span class="o">(</span><span class="kt">int</span> <span class="n">capacity</span><span class="o">)</span> <span class="o">{</span>
+</span></span><span class="line"><span class="cl">        <span class="n">value</span> <span class="o">=</span> <span class="k">new</span> <span class="kt">char</span><span class="o">[</span><span class="n">capacity</span><span class="o">];</span>
+</span></span><span class="line"><span class="cl">    <span class="o">}</span>
+</span></span></code></pre></div><p><strong>线程安全性</strong></p>
 <p>String 中的对象是不可变的，也就可以理解为常量，线程安全。AbstractStringBuilder 是 StringBuilder 与 StringBuffer 的公共父类，定义了一些字符串的基本操作，如 expandCapacity、append、insert、indexOf 等公共方法。StringBuffer 对方法加了同步锁或者对调用的方法加了同步锁，所以是线程安全的。StringBuilder 并没有对方法进行加同步锁，所以是非线程安全的。　</p>
 <p><strong>性能</strong></p>
 <p>每次对 String 类型进行改变的时候，都会生成一个新的 String 对象，然后将指针指向新的 String 对象。StringBuffer 每次都会对 StringBuffer 对象本身进行操作，而不是生成新的对象并改变对象引用。相同情况下使用 StringBuilder 相比使用 StringBuffer 仅能获得 10%~15% 左右的性能提升，但却要冒多线程不安全的风险。</p>
@@ -373,24 +373,24 @@
 <li>情况2：类覆盖了 equals() 方法。一般，我们都覆盖 equals() 方法来比较两个对象的内容是否相等；若它们的内容相等，则返回 true (即，认为这两个对象相等)。</li>
 </ul>
 <p><strong>举个例子：</strong></p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="kd">public</span> <span class="kd">class</span> <span class="nc">test1</span> <span class="o">{</span>
-    <span class="kd">public</span> <span class="kd">static</span> <span class="kt">void</span> <span class="nf">main</span><span class="o">(</span><span class="n">String</span><span class="o">[]</span> <span class="n">args</span><span class="o">)</span> <span class="o">{</span>
-        <span class="n">String</span> <span class="n">a</span> <span class="o">=</span> <span class="k">new</span> <span class="n">String</span><span class="o">(</span><span class="s">&#34;ab&#34;</span><span class="o">);</span> <span class="c1">// a 为一个引用
-</span><span class="c1"></span>        <span class="n">String</span> <span class="n">b</span> <span class="o">=</span> <span class="k">new</span> <span class="n">String</span><span class="o">(</span><span class="s">&#34;ab&#34;</span><span class="o">);</span> <span class="c1">// b为另一个引用,对象的内容一样
-</span><span class="c1"></span>        <span class="n">String</span> <span class="n">aa</span> <span class="o">=</span> <span class="s">&#34;ab&#34;</span><span class="o">;</span> <span class="c1">// 放在常量池中
-</span><span class="c1"></span>        <span class="n">String</span> <span class="n">bb</span> <span class="o">=</span> <span class="s">&#34;ab&#34;</span><span class="o">;</span> <span class="c1">// 从常量池中查找
-</span><span class="c1"></span>        <span class="k">if</span> <span class="o">(</span><span class="n">aa</span> <span class="o">==</span> <span class="n">bb</span><span class="o">)</span> <span class="c1">// true
-</span><span class="c1"></span>            <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">&#34;aa==bb&#34;</span><span class="o">);</span>
-        <span class="k">if</span> <span class="o">(</span><span class="n">a</span> <span class="o">==</span> <span class="n">b</span><span class="o">)</span> <span class="c1">// false，非同一对象
-</span><span class="c1"></span>            <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">&#34;a==b&#34;</span><span class="o">);</span>
-        <span class="k">if</span> <span class="o">(</span><span class="n">a</span><span class="o">.</span><span class="na">equals</span><span class="o">(</span><span class="n">b</span><span class="o">))</span> <span class="c1">// true
-</span><span class="c1"></span>            <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">&#34;aEQb&#34;</span><span class="o">);</span>
-        <span class="k">if</span> <span class="o">(</span><span class="n">42</span> <span class="o">==</span> <span class="n">42</span><span class="o">.</span><span class="na">0</span><span class="o">)</span> <span class="o">{</span> <span class="c1">// true
-</span><span class="c1"></span>            <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">&#34;true&#34;</span><span class="o">);</span>
-        <span class="o">}</span>
-    <span class="o">}</span>
-<span class="o">}</span>
-</code></pre></div><p><strong>说明：</strong></p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kd">public</span> <span class="kd">class</span> <span class="nc">test1</span> <span class="o">{</span>
+</span></span><span class="line"><span class="cl">    <span class="kd">public</span> <span class="kd">static</span> <span class="kt">void</span> <span class="nf">main</span><span class="o">(</span><span class="n">String</span><span class="o">[]</span> <span class="n">args</span><span class="o">)</span> <span class="o">{</span>
+</span></span><span class="line"><span class="cl">        <span class="n">String</span> <span class="n">a</span> <span class="o">=</span> <span class="k">new</span> <span class="n">String</span><span class="o">(</span><span class="s">&#34;ab&#34;</span><span class="o">);</span> <span class="c1">// a 为一个引用
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="n">String</span> <span class="n">b</span> <span class="o">=</span> <span class="k">new</span> <span class="n">String</span><span class="o">(</span><span class="s">&#34;ab&#34;</span><span class="o">);</span> <span class="c1">// b为另一个引用,对象的内容一样
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="n">String</span> <span class="n">aa</span> <span class="o">=</span> <span class="s">&#34;ab&#34;</span><span class="o">;</span> <span class="c1">// 放在常量池中
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="n">String</span> <span class="n">bb</span> <span class="o">=</span> <span class="s">&#34;ab&#34;</span><span class="o">;</span> <span class="c1">// 从常量池中查找
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="k">if</span> <span class="o">(</span><span class="n">aa</span> <span class="o">==</span> <span class="n">bb</span><span class="o">)</span> <span class="c1">// true
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>            <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">&#34;aa==bb&#34;</span><span class="o">);</span>
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="o">(</span><span class="n">a</span> <span class="o">==</span> <span class="n">b</span><span class="o">)</span> <span class="c1">// false，非同一对象
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>            <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">&#34;a==b&#34;</span><span class="o">);</span>
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="o">(</span><span class="n">a</span><span class="o">.</span><span class="na">equals</span><span class="o">(</span><span class="n">b</span><span class="o">))</span> <span class="c1">// true
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>            <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">&#34;aEQb&#34;</span><span class="o">);</span>
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="o">(</span><span class="n">42</span> <span class="o">==</span> <span class="n">42</span><span class="o">.</span><span class="na">0</span><span class="o">)</span> <span class="o">{</span> <span class="c1">// true
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>            <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">&#34;true&#34;</span><span class="o">);</span>
+</span></span><span class="line"><span class="cl">        <span class="o">}</span>
+</span></span><span class="line"><span class="cl">    <span class="o">}</span>
+</span></span><span class="line"><span class="cl"><span class="o">}</span>
+</span></span></code></pre></div><p><strong>说明：</strong></p>
 <ul>
 <li>String 中的 equals 方法是被重写过的，因为 object 的 equals 方法是比较的对象的内存地址，而 String 的 equals 方法比较的是对象的值。</li>
 <li>当创建 String 类型的对象时，虚拟机会在常量池中查找有没有已经存在的值和要创建的值相同的对象，如果有就把它赋给当前引用。如果没有就在常量池中重新创建一个 String 对象。</li>
@@ -469,28 +469,28 @@
 </ol>
 <p>下面这部分内容来自issue:<a href="https://github.com/Snailclimb/JavaGuide/issues/190">https://github.com/Snailclimb/JavaGuide/issues/190</a>。</p>
 <p><strong>注意：</strong> 当try语句和finally语句中都有return语句时，在方法返回之前，finally语句的内容将被执行，并且finally语句的返回值将会覆盖原始的返回值。如下：</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java">    <span class="kd">public</span> <span class="kd">static</span> <span class="kt">int</span> <span class="nf">f</span><span class="o">(</span><span class="kt">int</span> <span class="n">value</span><span class="o">)</span> <span class="o">{</span>
-        <span class="k">try</span> <span class="o">{</span>
-            <span class="k">return</span> <span class="n">value</span> <span class="o">*</span> <span class="n">value</span><span class="o">;</span>
-        <span class="o">}</span> <span class="k">finally</span> <span class="o">{</span>
-            <span class="k">if</span> <span class="o">(</span><span class="n">value</span> <span class="o">==</span> <span class="n">2</span><span class="o">)</span> <span class="o">{</span>
-                <span class="k">return</span> <span class="n">0</span><span class="o">;</span>
-            <span class="o">}</span>
-        <span class="o">}</span>
-    <span class="o">}</span>
-</code></pre></div><p>如果调用 <code>f(2)</code>，返回值将是0，因为finally语句的返回值覆盖了try语句块的返回值。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl">    <span class="kd">public</span> <span class="kd">static</span> <span class="kt">int</span> <span class="nf">f</span><span class="o">(</span><span class="kt">int</span> <span class="n">value</span><span class="o">)</span> <span class="o">{</span>
+</span></span><span class="line"><span class="cl">        <span class="k">try</span> <span class="o">{</span>
+</span></span><span class="line"><span class="cl">            <span class="k">return</span> <span class="n">value</span> <span class="o">*</span> <span class="n">value</span><span class="o">;</span>
+</span></span><span class="line"><span class="cl">        <span class="o">}</span> <span class="k">finally</span> <span class="o">{</span>
+</span></span><span class="line"><span class="cl">            <span class="k">if</span> <span class="o">(</span><span class="n">value</span> <span class="o">==</span> <span class="n">2</span><span class="o">)</span> <span class="o">{</span>
+</span></span><span class="line"><span class="cl">                <span class="k">return</span> <span class="n">0</span><span class="o">;</span>
+</span></span><span class="line"><span class="cl">            <span class="o">}</span>
+</span></span><span class="line"><span class="cl">        <span class="o">}</span>
+</span></span><span class="line"><span class="cl">    <span class="o">}</span>
+</span></span></code></pre></div><p>如果调用 <code>f(2)</code>，返回值将是0，因为finally语句的返回值覆盖了try语句块的返回值。</p>
 <h2 id="33-java序列化中如果有些字段不想进行序列化怎么办">33 Java序列化中如果有些字段不想进行序列化，怎么办？</h2>
 <p>对于不想进行序列化的变量，使用transient关键字修饰。</p>
 <p>transient关键字的作用是：阻止实例中那些用此关键字修饰的的变量序列化；当对象被反序列化时，被transient修饰的变量值不会被持久化和恢复。transient只能修饰变量，不能修饰类和方法。</p>
 <h2 id="34-获取用键盘输入常用的两种方法">34 获取用键盘输入常用的两种方法</h2>
 <p>方法1：通过 Scanner</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="n">Scanner</span> <span class="n">input</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Scanner</span><span class="o">(</span><span class="n">System</span><span class="o">.</span><span class="na">in</span><span class="o">);</span>
-<span class="n">String</span> <span class="n">s</span>  <span class="o">=</span> <span class="n">input</span><span class="o">.</span><span class="na">nextLine</span><span class="o">();</span>
-<span class="n">input</span><span class="o">.</span><span class="na">close</span><span class="o">();</span>
-</code></pre></div><p>方法2：通过 BufferedReader</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="n">BufferedReader</span> <span class="n">input</span> <span class="o">=</span> <span class="k">new</span> <span class="n">BufferedReader</span><span class="o">(</span><span class="k">new</span> <span class="n">InputStreamReader</span><span class="o">(</span><span class="n">System</span><span class="o">.</span><span class="na">in</span><span class="o">));</span> 
-<span class="n">String</span> <span class="n">s</span> <span class="o">=</span> <span class="n">input</span><span class="o">.</span><span class="na">readLine</span><span class="o">();</span> 
-</code></pre></div><h2 id="35-java-中-io-流">35 Java 中 IO 流</h2>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="n">Scanner</span> <span class="n">input</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Scanner</span><span class="o">(</span><span class="n">System</span><span class="o">.</span><span class="na">in</span><span class="o">);</span>
+</span></span><span class="line"><span class="cl"><span class="n">String</span> <span class="n">s</span>  <span class="o">=</span> <span class="n">input</span><span class="o">.</span><span class="na">nextLine</span><span class="o">();</span>
+</span></span><span class="line"><span class="cl"><span class="n">input</span><span class="o">.</span><span class="na">close</span><span class="o">();</span>
+</span></span></code></pre></div><p>方法2：通过 BufferedReader</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="n">BufferedReader</span> <span class="n">input</span> <span class="o">=</span> <span class="k">new</span> <span class="n">BufferedReader</span><span class="o">(</span><span class="k">new</span> <span class="n">InputStreamReader</span><span class="o">(</span><span class="n">System</span><span class="o">.</span><span class="na">in</span><span class="o">));</span> 
+</span></span><span class="line"><span class="cl"><span class="n">String</span> <span class="n">s</span> <span class="o">=</span> <span class="n">input</span><span class="o">.</span><span class="na">readLine</span><span class="o">();</span> 
+</span></span></code></pre></div><h2 id="35-java-中-io-流">35 Java 中 IO 流</h2>
 <h3 id="java-中-io-流分为几种">Java 中 IO 流分为几种?</h3>
 <ul>
 <li>按照流的流向分，可以分为输入流和输出流；</li>
@@ -540,50 +540,8 @@
                     <span>Words:</span>
                    <span>943</span>
             </p>
-            
+
             <p class="copyright-item">
-                
-                <span>Share:</span>
-                <span>
-
-      
-        <a href="//twitter.com/share?url=https%3a%2f%2fwww.ithome.me%2fpost%2f2019%2f12%2f05%2fjava%25E5%25B8%25B8%25E8%25A7%2581%25E9%259D%25A2%25E8%25AF%2595%25E9%25A2%2598%2f&amp;text=Java%e5%b8%b8%e8%a7%81%e9%9d%a2%e8%af%95%e9%a2%98&amp;via=https%3a%2f%2ftwitter.com%2fChenCiki" target="_blank" title="Share on Twitter">
-          <i class="iconfont icon-twitter"></i>
-        </a>
-        
-      
-      
-      
-      
-      
-      
-        <a href="//www.linkedin.com/shareArticle?url=https%3a%2f%2fwww.ithome.me%2fpost%2f2019%2f12%2f05%2fjava%25E5%25B8%25B8%25E8%25A7%2581%25E9%259D%25A2%25E8%25AF%2595%25E9%25A2%2598%2f&amp;title=Java%e5%b8%b8%e8%a7%81%e9%9d%a2%e8%af%95%e9%a2%98" target="_blank" title="Share on LinkedIn">
-          <i class="iconfont icon-linkedin"></i>
-        </a>
-        
-      
-      
-        
-      
-        
-      
-
-          
-
-          
-
-          
-        <a href="//www.douban.com/recommend/?url=https%3a%2f%2fwww.ithome.me%2fpost%2f2019%2f12%2f05%2fjava%25E5%25B8%25B8%25E8%25A7%2581%25E9%259D%25A2%25E8%25AF%2595%25E9%25A2%2598%2f&amp;title=Java%e5%b8%b8%e8%a7%81%e9%9d%a2%e8%af%95%e9%a2%98" target="_blank" title="Share on Douban ">
-            <i class="iconfont icon-douban"></i>
-          </a>
-          
-
-          
-        <a href="//service.weibo.com/share/share.php?url=https%3a%2f%2fwww.ithome.me%2fpost%2f2019%2f12%2f05%2fjava%25E5%25B8%25B8%25E8%25A7%2581%25E9%259D%25A2%25E8%25AF%2595%25E9%25A2%2598%2f&amp;appkey=&amp;title=Java%e5%b8%b8%e8%a7%81%e9%9d%a2%e8%af%95%e9%a2%98" target="_blank" title="Share on Douban ">
-            <i class="iconfont icon-weibo"></i>
-          </a>
-          
-</span>
                 
             </p>
 
@@ -654,14 +612,14 @@
     <div class="copyright">
         &copy;
         
-        <span itemprop="copyrightYear">2011 - 2021</span>
+        <span itemprop="copyrightYear">2011 - 2022</span>
         
         
         <span class="author" itemprop="copyrightHolder"><a href="https://www.ithome.me/">Simon Chen</a>
         </span>
         
 
-        <span id="busuanzi_container_site_uv">您是第<span id="busuanzi_value_site_uv"></span>位访客</span>
+        <span id="busuanzi_container_site_uv">您是第<span id="busuanzi_value_site_uv"></span>位访客</span> | <a href="https://beian.miit.gov.cn/" target="_blank">粤ICP备16016876号</a>
     </div>
 </footer>
 
