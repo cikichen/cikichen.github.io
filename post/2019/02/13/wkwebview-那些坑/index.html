@@ -34,9 +34,9 @@
   <link rel="stylesheet" href="/css/main.min.css">
 
 
-  <meta name="twitter:card" content="summary"/>
-<meta name="twitter:title" content="WKWebView 那些坑"/>
+  <meta name="twitter:card" content="summary"/><meta name="twitter:title" content="WKWebView 那些坑"/>
 <meta name="twitter:description" content="WKWebView 那些坑"/>
+<meta name="twitter:site" content="@https://twitter.com/ChenCiki"/>
 
   <script type="application/ld+json">
 {
@@ -204,11 +204,11 @@
 <h4 id="23workaround">2.3、Workaround</h4>
 <p>由于许多 H5 业务都依赖于 Cookie 作登录态校验，而 WKWebView 上请求不会自动携带 Cookie, 目前的主要解决方案是：</p>
 <h4 id="awkwebview-loadrequest-前在-request-header-中设置-cookie-解决首个请求-cookie-带不上的问题">a、WKWebView loadRequest 前，在 request header 中设置 Cookie, 解决首个请求 Cookie 带不上的问题；</h4>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">WKWebView * webView = [WKWebView new]; 
-</span></span><span class="line"><span class="cl">NSMutableURLRequest * request = [NSMutableURLRequest requestWithURL:[NSURL URLWithString:@&#34;http://h5.qzone.qq.com/mqzone/index&#34;]]; 
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-gdscript3" data-lang="gdscript3"><span class="line"><span class="cl"><span class="n">WKWebView</span> <span class="o">*</span> <span class="n">webView</span> <span class="o">=</span> <span class="p">[</span><span class="n">WKWebView</span> <span class="n">new</span><span class="p">];</span> 
+</span></span><span class="line"><span class="cl"><span class="n">NSMutableURLRequest</span> <span class="o">*</span> <span class="n">request</span> <span class="o">=</span> <span class="p">[</span><span class="n">NSMutableURLRequest</span> <span class="n">requestWithURL</span><span class="p">:[</span><span class="n">NSURL</span> <span class="n">URLWithString</span><span class="p">:</span><span class="err">@</span><span class="s2">&#34;http://h5.qzone.qq.com/mqzone/index&#34;</span><span class="p">]];</span> 
 </span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">[request addValue:@&#34;skey=skeyValue&#34; forHTTPHeaderField:@&#34;Cookie&#34;]; 
-</span></span><span class="line"><span class="cl">[webView loadRequest:request];
+</span></span><span class="line"><span class="cl"><span class="p">[</span><span class="n">request</span> <span class="n">addValue</span><span class="p">:</span><span class="err">@</span><span class="s2">&#34;skey=skeyValue&#34;</span> <span class="n">forHTTPHeaderField</span><span class="p">:</span><span class="err">@</span><span class="s2">&#34;Cookie&#34;</span><span class="p">];</span> 
+</span></span><span class="line"><span class="cl"><span class="p">[</span><span class="n">webView</span> <span class="n">loadRequest</span><span class="p">:</span><span class="n">request</span><span class="p">];</span>
 </span></span></code></pre></div><h4 id="b通过-documentcookie-设置-cookie-解决后续页面同域ajaxiframe-请求的-cookie-问题">b、通过 document.cookie 设置 Cookie 解决后续页面(同域)Ajax、iframe 请求的 Cookie 问题；</h4>
 <p><code>注意：document.cookie()无法跨域设置 cookie</code></p>
 <div class="highlight"><pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">WKUserContentController* userContentController = [WKUserContentController new]; 
@@ -246,10 +246,10 @@
 <p>WKWebView 可以注册 customScheme, 比如 dynamic://, 因此希望使用离线功能又不使用 post 方式的请求可以通过 customScheme 发起请求，比如 dynamic://www.dynamicalbumlocalimage.com/，然后在 app 进程 NSURLProtocol 拦截这个请求并加载离线数据。不足：使用 post 方式的请求该方案依然不适用，同时需要 H5 侧修改请求 scheme 以及 CSP 规则；</p>
 <h3 id="4wkwebview-loadrequest-问题">4、WKWebView loadRequest 问题</h3>
 <p>在 WKWebView 上通过 loadRequest 发起的 post 请求 body 数据会丢失：</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">//同样是由于进程间通信性能问题，HTTPBody字段被丢弃
-</span></span><span class="line"><span class="cl">[request setHTTPMethod:@&#34;POST&#34;];
-</span></span><span class="line"><span class="cl">[request setHTTPBody:[@&#34;bodyData&#34; dataUsingEncoding:NSUTF8StringEncoding]];
-</span></span><span class="line"><span class="cl">[wkwebview loadRequest: request];
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-gdscript3" data-lang="gdscript3"><span class="line"><span class="cl"><span class="o">//</span><span class="err">同样是由于进程间通信性能问题，</span><span class="n">HTTPBody字段被丢弃</span>
+</span></span><span class="line"><span class="cl"><span class="p">[</span><span class="n">request</span> <span class="n">setHTTPMethod</span><span class="p">:</span><span class="err">@</span><span class="s2">&#34;POST&#34;</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl"><span class="p">[</span><span class="n">request</span> <span class="n">setHTTPBody</span><span class="p">:[</span><span class="err">@</span><span class="s2">&#34;bodyData&#34;</span> <span class="n">dataUsingEncoding</span><span class="p">:</span><span class="n">NSUTF8StringEncoding</span><span class="p">]];</span>
+</span></span><span class="line"><span class="cl"><span class="p">[</span><span class="n">wkwebview</span> <span class="n">loadRequest</span><span class="p">:</span> <span class="n">request</span><span class="p">];</span>
 </span></span></code></pre></div><h4 id="workaround">workaround:</h4>
 <p>假如想通过-[WKWebView loadRequest:]加载 post 请求 request1: <strong><a href="http://h5.qzone.qq.com/mqzone/index">http://h5.qzone.qq.com/mqzone/index</a></strong>,可以通过以下步骤实现：</p>
 <ol>
@@ -323,21 +323,21 @@
 <p>另一个 crash 发生在 WKWebView 退出前调用：</p>
 <div class="highlight"><pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl"> -[WKWebView evaluateJavaScript: completionHandler:]
 </span></span></code></pre></div><p>执行JS代码的情况下。WKWebView 退出并被释放后导致<code>completionHandler</code>变成野指针，而此时 javaScript Core 还在执行JS代码，待 javaScript Core 执行完毕后会调用<code>completionHandler()</code>，导致 crash。这个 crash 只发生在 iOS 8 系统上，参考Apple Open Source，在iOS9及以后系统苹果已经修复了这个bug，主要是对<code>completionHandler block</code>做了copy（refer: <a href="https://trac.webkit.org/changeset/179160">https://trac.webkit.org/changeset/179160</a>）；对于iOS 8系统，可以通过在 completionHandler 里 retain WKWebView 防止 completionHandler 被过早释放。我们最后用 methodSwizzle hook 了这个系统方法：</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">+ (void) load 
-</span></span><span class="line"><span class="cl">{ 
-</span></span><span class="line"><span class="cl">     [self jr_swizzleMethod:NSSelectorFromString(@&#34;evaluateJavaScript:completionHandler:&#34;) withMethod:@selector(altEvaluateJavaScript:completionHandler:) error:nil]; 
-</span></span><span class="line"><span class="cl">} 
-</span></span><span class="line"><span class="cl">/* * fix: WKWebView crashes on deallocation if it has pending JavaScript evaluation */ 
-</span></span><span class="line"><span class="cl">- (void)altEvaluateJavaScript:(NSString *)javaScriptString completionHandler:(void (^)(id, NSError *))completionHandler 
-</span></span><span class="line"><span class="cl">{ 
-</span></span><span class="line"><span class="cl">    id strongSelf = self; 
-</span></span><span class="line"><span class="cl">    [self altEvaluateJavaScript:javaScriptString completionHandler:^(id r, NSError *e) { 
-</span></span><span class="line"><span class="cl">        [strongSelf title]; 
-</span></span><span class="line"><span class="cl">        if (completionHandler) { 
-</span></span><span class="line"><span class="cl">            completionHandler(r, e); 
-</span></span><span class="line"><span class="cl">        } 
-</span></span><span class="line"><span class="cl">    }]; 
-</span></span><span class="line"><span class="cl">}
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-gdscript3" data-lang="gdscript3"><span class="line"><span class="cl"><span class="o">+</span> <span class="p">(</span><span class="n">void</span><span class="p">)</span> <span class="nb">load</span> 
+</span></span><span class="line"><span class="cl"><span class="p">{</span> 
+</span></span><span class="line"><span class="cl">     <span class="p">[</span><span class="bp">self</span> <span class="n">jr_swizzleMethod</span><span class="p">:</span><span class="n">NSSelectorFromString</span><span class="p">(</span><span class="err">@</span><span class="s2">&#34;evaluateJavaScript:completionHandler:&#34;</span><span class="p">)</span> <span class="n">withMethod</span><span class="p">:</span><span class="err">@</span><span class="n">selector</span><span class="p">(</span><span class="n">altEvaluateJavaScript</span><span class="p">:</span><span class="n">completionHandler</span><span class="p">:)</span> <span class="n">error</span><span class="p">:</span><span class="n">nil</span><span class="p">];</span> 
+</span></span><span class="line"><span class="cl"><span class="p">}</span> 
+</span></span><span class="line"><span class="cl"><span class="o">/*</span> <span class="o">*</span> <span class="n">fix</span><span class="p">:</span> <span class="n">WKWebView</span> <span class="n">crashes</span> <span class="n">on</span> <span class="n">deallocation</span> <span class="k">if</span> <span class="n">it</span> <span class="n">has</span> <span class="n">pending</span> <span class="n">JavaScript</span> <span class="n">evaluation</span> <span class="o">*/</span> 
+</span></span><span class="line"><span class="cl"><span class="o">-</span> <span class="p">(</span><span class="n">void</span><span class="p">)</span><span class="n">altEvaluateJavaScript</span><span class="p">:(</span><span class="n">NSString</span> <span class="o">*</span><span class="p">)</span><span class="n">javaScriptString</span> <span class="n">completionHandler</span><span class="p">:(</span><span class="n">void</span> <span class="p">(</span><span class="o">^</span><span class="p">)(</span><span class="n">id</span><span class="p">,</span> <span class="n">NSError</span> <span class="o">*</span><span class="p">))</span><span class="n">completionHandler</span> 
+</span></span><span class="line"><span class="cl"><span class="p">{</span> 
+</span></span><span class="line"><span class="cl">    <span class="n">id</span> <span class="n">strongSelf</span> <span class="o">=</span> <span class="bp">self</span><span class="p">;</span> 
+</span></span><span class="line"><span class="cl">    <span class="p">[</span><span class="bp">self</span> <span class="n">altEvaluateJavaScript</span><span class="p">:</span><span class="n">javaScriptString</span> <span class="n">completionHandler</span><span class="p">:</span><span class="o">^</span><span class="p">(</span><span class="n">id</span> <span class="n">r</span><span class="p">,</span> <span class="n">NSError</span> <span class="o">*</span><span class="n">e</span><span class="p">)</span> <span class="p">{</span> 
+</span></span><span class="line"><span class="cl">        <span class="p">[</span><span class="n">strongSelf</span> <span class="n">title</span><span class="p">];</span> 
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="p">(</span><span class="n">completionHandler</span><span class="p">)</span> <span class="p">{</span> 
+</span></span><span class="line"><span class="cl">            <span class="n">completionHandler</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">e</span><span class="p">);</span> 
+</span></span><span class="line"><span class="cl">        <span class="p">}</span> 
+</span></span><span class="line"><span class="cl">    <span class="p">}];</span> 
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
 </span></span></code></pre></div><h3 id="8其它问题">8、其它问题</h3>
 <h4 id="81视频自动播放">8.1、视频自动播放</h4>
 <p>WKWebView 需要通过<code>WKWebViewConfiguration.mediaPlaybackRequiresUserAction</code>设置是否允许自动播放，但一定要在 WKWebView 初始化之前设置，在 WKWebView 初始化之后设置无效。</p>

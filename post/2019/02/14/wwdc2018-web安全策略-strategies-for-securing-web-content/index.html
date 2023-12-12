@@ -34,8 +34,7 @@
   <link rel="stylesheet" href="/css/main.min.css">
 
 
-  <meta name="twitter:card" content="summary"/>
-<meta name="twitter:title" content="[ WWDC2018 ] - Web安全策略 Strategies for Securing Web Content"/>
+  <meta name="twitter:card" content="summary"/><meta name="twitter:title" content="[ WWDC2018 ] - Web安全策略 Strategies for Securing Web Content"/>
 <meta name="twitter:description" content="web安全策略 web安全对iOS开发者来说重要吗？重要！APP中通常会使用很多web页面，例如广告、登录流程、闪屏，或者需要使用跨平台功能的时候。你可能在页面中仅仅一部分使用web，也可以整个页面都是webView,甚至做一个web app。因此web安全对于app来说非常重要。
 来自web的安全攻击有以下几种：
 跨域攻击 预测执行攻击 窗口控制攻击 本文将针对这三种攻击类型，给出安全防御措施。
@@ -45,6 +44,7 @@ HTTPS和WSS（webSocket Secure） Http Strict Transport Security（HSTS）遵循
 &lt;script src=&#34;https://cdn.example/framework.js&#34; integrity=&#34;sha256-8WqyJLuWKRB...oZkCnxQbWwJVw=&#34;&gt; &lt;/script&gt; window.framwork || // reload from own domain 2. Content Security Policy HTTP response： :status:200 Content-Security-Policy: default &#39;self&#39;; // No inline script-src cdn.example; frame-src social.example; frame-ancestors news.example; HTTP response的Header里面，default设置成自己，默认只能加载同源的资源；script-src和frame-src 分别指定可信任的脚本和iframe的来源；frame-ancestor设置成news.example，指定只有news.example可以iframe我们的web。
 另外不使用inline属性的脚本也是一种防御措施，不使用inline脚本，只从文件加载脚本，这么做分离了逻辑和文件，更加安全。
 3. HttpOnly cookies HTTPOnly cookies作为一种安全措施，已经有至少15年的使用历史。在这之前script通过document."/>
+<meta name="twitter:site" content="@https://twitter.com/ChenCiki"/>
 
   <script type="application/ld+json">
 {
@@ -202,11 +202,11 @@ HTTPS和WSS（webSocket Secure） Http Strict Transport Security（HSTS）遵循
 <p>web的内容可以来自任何站点，例如，webView上的一张图片可以来自任何服务器，也可以从任意服务器上加载一个脚本或iframe。需要注意的是要当心来自其它服务器的资源。跨域的保护已经有20多年的历史，并且形成了基本原则&ndash;同源策略：只有和页面来源相同的脚本才会被该页面执行。例如iframe来自不同的域名，同源策略不允许加载这个iframe。仅仅靠同源策略还是不够的，还需要采取其它的防御措施。</p>
 <h3 id="1-subresource-integrity">1. Subresource Integrity</h3>
 <p>服务器可能会发生异常导致下发错误的资源使得web发生crash，但是开发者通常是知道所要请求哪个资源的，在脚本里面增加一个检查签名。如果签名匹配则认为是下发了正确的资源，如果不匹配仍然可以正常工作，此时尝试从页面的资源里查找或者从自己的服务器重新加载。这样做虽然降低了性能，但是提升了安全性。</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">&lt;script src=&#34;https://cdn.example/framework.js&#34;  
-</span></span><span class="line"><span class="cl"> integrity=&#34;sha256-8WqyJLuWKRB...oZkCnxQbWwJVw=&#34;&gt;
-</span></span><span class="line"><span class="cl">&lt;/script&gt;
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-gdscript3" data-lang="gdscript3"><span class="line"><span class="cl"><span class="o">&lt;</span><span class="n">script</span> <span class="n">src</span><span class="o">=</span><span class="s2">&#34;https://cdn.example/framework.js&#34;</span>  
+</span></span><span class="line"><span class="cl"> <span class="n">integrity</span><span class="o">=</span><span class="s2">&#34;sha256-8WqyJLuWKRB...oZkCnxQbWwJVw=&#34;</span><span class="o">&gt;</span>
+</span></span><span class="line"><span class="cl"><span class="o">&lt;/</span><span class="n">script</span><span class="o">&gt;</span>
 </span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">window.framwork || // reload from own domain  
+</span></span><span class="line"><span class="cl"><span class="n">window</span><span class="o">.</span><span class="n">framwork</span> <span class="o">||</span> <span class="o">//</span> <span class="n">reload</span> <span class="n">from</span> <span class="n">own</span> <span class="n">domain</span>  
 </span></span></code></pre></div><h3 id="2-content-security-policy">2. Content Security Policy</h3>
 <div class="highlight"><pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">HTTP response：  
 </span></span><span class="line"><span class="cl">:status:200
@@ -267,11 +267,11 @@ HTTPS和WSS（webSocket Secure） Http Strict Transport Security（HSTS）遵循
 </span></span><span class="line"><span class="cl">    default-src &#39;self&#39;;  
 </span></span><span class="line"><span class="cl">    script-src cdn.example;
 </span></span></code></pre></div><p>在HTML中：</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">&lt;script src=&#34;https://cdn.example/framework.js&#34;  
-</span></span><span class="line"><span class="cl"> integrity=&#34;sha256-8WqyJLuWKRB...oZkCnxQbWwJVw=&#34;&gt;
-</span></span><span class="line"><span class="cl">&lt;/script&gt;
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-gdscript3" data-lang="gdscript3"><span class="line"><span class="cl"><span class="o">&lt;</span><span class="n">script</span> <span class="n">src</span><span class="o">=</span><span class="s2">&#34;https://cdn.example/framework.js&#34;</span>  
+</span></span><span class="line"><span class="cl"> <span class="n">integrity</span><span class="o">=</span><span class="s2">&#34;sha256-8WqyJLuWKRB...oZkCnxQbWwJVw=&#34;</span><span class="o">&gt;</span>
+</span></span><span class="line"><span class="cl"><span class="o">&lt;/</span><span class="n">script</span><span class="o">&gt;</span>
 </span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">window.framwork || // reload from own domain  
+</span></span><span class="line"><span class="cl"><span class="n">window</span><span class="o">.</span><span class="n">framwork</span> <span class="o">||</span> <span class="o">//</span> <span class="n">reload</span> <span class="n">from</span> <span class="n">own</span> <span class="n">domain</span>  
 </span></span></code></pre></div><h4 id="3-cross-site-request-forgeries">3. Cross-Site Request Forgeries</h4>
 <p>攻击者可能在自己的web中嵌入我们的web，然后向我们的服务器发起一个伪造的网络请求（使用的是攻击者网站的cookie），如下图
 <figure><img src="/images/ring.svg" data-sizes="auto" data-src="http://img.ibook8.club/2019-02-14-15501230297157.jpg" alt="" class="lazyload"><figcaption class="image-caption"></figcaption></figure>

@@ -34,10 +34,10 @@
   <link rel="stylesheet" href="/css/main.min.css">
 
 
-  <meta name="twitter:card" content="summary"/>
-<meta name="twitter:title" content="Android高频面试题汇总(一)"/>
+  <meta name="twitter:card" content="summary"/><meta name="twitter:title" content="Android高频面试题汇总(一)"/>
 <meta name="twitter:description" content="1.Leakcanary原理？ 利用 application.registerActivityLifecycleCallbacks(lifecycleCallbacks) 来监听整个生命周期内的 Activity onDestoryed 事件 某个 Activity 被 destory 后，将它传给 RefWatcher 去做观测，确保其后续会被正常回收； RefWatcher 首先把 Activity 使用 KeyedWeakReference 引用起来，并使用一个 ReferenceQueue 来记录该 KeyedWeakReference 指向的对象是否已被回收； AndroidWatchExecutor 会在 5s 后，开始检查这个弱引用内的 Activity 是否被正常回收。判断条件是：若 Activity 被正常回收，那么引用它的 KeyedWeakReference 会被自动放入 ReferenceQueue 中。 判断方式是：先看 Activity 对应的 KeyedWeakReference 是否已经放入 ReferenceQueue 中；如果没有，则手动 GC：gcTrigger.runGc();；然后再一次判断 ReferenceQueue 是否已经含有对应的 KeyedWeakReference。若还未被回收，则认为可能发生内存泄漏 2.如何理解Java的多态？其中，重载和重写有什么区别？ 多态是同一个行为具有多个不同表现形式或形态的能力，多态是同一个接口，使用不同的实例而执行不同操作，多态就是程序运行期间才确定，一个引用变量倒底会指向哪个类的实例对象，该引用变量发出的方法调用到底是哪个类中实现的方法。 多态存在的三个必要条件是：继承，重写，父类引用指向子类引用。 多态的三个实现方式是：重写，接口，抽象类和抽象方法。
 区别点 重载 重写 参数列表 必须修改 不能修改 返回类型 可以修改 不能修改 异常 可以修改 可以减少或删除，一定不能抛出新的或者更广的异常 访问 可以修改 一定不能做更严格的限制（可以降低限制） 3.谈一下JVM内存区域划分？哪部分是线程公有的，哪部分是私有的？ 4.final关键字的用法？ final 可以修饰类、变量和方法。修饰类代表这个类不可被继承。修饰变量代表此变量不可被改变。修饰方法表示此方法不可被重写 (override)。"/>
+<meta name="twitter:site" content="@https://twitter.com/ChenCiki"/>
 
   <script type="application/ld+json">
 {
@@ -425,15 +425,15 @@ Zygote进程，该进程主要用来fork新进程。
 <p>其实简单概括来讲，就是 <code>startActivity</code> - <code>Instrumetaton Binder</code> 与 <code>AMS</code> 通信，<code>AMS</code> 检验各种信息，如果没问题，<code>ApplicationThread</code> 发送信息给 <code>ActivityThread</code> ，<code>ActivityThread</code> 的<code>Handler</code> 启动 <code>activity</code>。详细看大图：
 <figure><img src="/images/ring.svg" data-sizes="auto" data-src="https://img.ibook8.club/mweb/16033683104394.jpg" alt="" class="lazyload"><figcaption class="image-caption"></figcaption></figure></p>
 <h3 id="15线程池的参数详解">15.线程池的参数详解</h3>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kd">public</span> <span class="nf">ThreadPoolExecutor</span><span class="o">(</span><span class="kt">int</span> <span class="n">corePoolSize</span><span class="o">,</span>  <span class="c1">// 线程池的核心线程数
-</span></span></span><span class="line"><span class="cl"><span class="c1"></span>                          <span class="kt">int</span> <span class="n">maximumPoolSize</span><span class="o">,</span> <span class="c1">// 线程池的最大线程数
-</span></span></span><span class="line"><span class="cl"><span class="c1"></span>                          <span class="kt">long</span> <span class="n">keepAliveTime</span><span class="o">,</span> <span class="c1">// 当线程数大于核心时，多余的空闲线程等待新任务的存活时间。
-</span></span></span><span class="line"><span class="cl"><span class="c1"></span>                          <span class="n">TimeUnit</span> <span class="n">unit</span><span class="o">,</span> <span class="c1">// keepAliveTime的时间单位
-</span></span></span><span class="line"><span class="cl"><span class="c1"></span>                          <span class="n">ThreadFactory</span> <span class="n">threadFactory</span><span class="o">,</span> <span class="c1">// 线程工厂
-</span></span></span><span class="line"><span class="cl"><span class="c1"></span>                          <span class="n">BlockingQueue</span><span class="o">&lt;</span><span class="n">Runnable</span><span class="o">&gt;</span> <span class="n">workQueue</span><span class="o">,</span><span class="c1">// 用来储存等待执行任务的队列
-</span></span></span><span class="line"><span class="cl"><span class="c1"></span>                          <span class="n">RejectedExecutionHandler</span> <span class="n">handler</span> <span class="c1">// 拒绝策略
-</span></span></span><span class="line"><span class="cl"><span class="c1"></span>                          <span class="o">)</span> 
-</span></span></code></pre></div><ol>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="nf">ThreadPoolExecutor</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">corePoolSize</span><span class="p">,</span><span class="w">  </span><span class="c1">// 线程池的核心线程数</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">                          </span><span class="kt">int</span><span class="w"> </span><span class="n">maximumPoolSize</span><span class="p">,</span><span class="w"> </span><span class="c1">// 线程池的最大线程数</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">                          </span><span class="kt">long</span><span class="w"> </span><span class="n">keepAliveTime</span><span class="p">,</span><span class="w"> </span><span class="c1">// 当线程数大于核心时，多余的空闲线程等待新任务的存活时间。</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">                          </span><span class="n">TimeUnit</span><span class="w"> </span><span class="n">unit</span><span class="p">,</span><span class="w"> </span><span class="c1">// keepAliveTime的时间单位</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">                          </span><span class="n">ThreadFactory</span><span class="w"> </span><span class="n">threadFactory</span><span class="p">,</span><span class="w"> </span><span class="c1">// 线程工厂</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">                          </span><span class="n">BlockingQueue</span><span class="o">&lt;</span><span class="n">Runnable</span><span class="o">&gt;</span><span class="w"> </span><span class="n">workQueue</span><span class="p">,</span><span class="c1">// 用来储存等待执行任务的队列</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">                          </span><span class="n">RejectedExecutionHandler</span><span class="w"> </span><span class="n">handler</span><span class="w"> </span><span class="c1">// 拒绝策略</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">                          </span><span class="p">)</span><span class="w"> 
+</span></span></span></code></pre></div><ol>
 <li><code>corePoolSize</code>
 线程池保留的最小线程数。如果线程池中的线程少于此数目，则在执行<code>execut()</code>时创建。</li>
 <li><code>maximumPoolSize</code>
