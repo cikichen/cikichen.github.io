@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="robots" content="noodp" />
+        <title>Android之使用私有存储 - 编程心语</title><meta name="Description" content="This is my KeepIt site"><meta property="og:url" content="https://www.ithome.me/post/2013/03/19/android%E4%B9%8B%E4%BD%BF%E7%94%A8%E7%A7%81%E6%9C%89%E5%AD%98%E5%82%A8/">
+  <meta property="og:site_name" content="编程心语">
+  <meta property="og:title" content="Android之使用私有存储">
+  <meta property="og:description" content="首先内部存储路径为/data/data/youPackageName/，下面讲解的各路径都是基于你自己的应用的内部存储路径下。所有内部存储中保存的文件在用户卸载应用的时候会被删除。
+files Context.getFilesDir()，该方法返回/data/data/youPackageName/files的File对象。
+Context.openFileInput()与Context.openFileOutput()，只能读取和写入files下的文件，返回的是FileInputStream和FileOutputStream对象。
+Context.fileList()，返回files下所有的文件名，返回的是String[]对象。
+Context.deleteFile(String)，删除files下指定名称的文件。
+cache Context.getCacheDir()，该方法返回/data/data/youPackageName/cache的File对象。 custom dir getDir(String name, int mode)，返回/data/data/youPackageName/下的指定名称的文件夹File对象，如果该文件夹不存在则用指定名称创建一个新的文件夹。
+通过getDir创建的文件夹包含前缀app_">
+  <meta property="og:locale" content="zh_CN">
+  <meta property="og:type" content="article">
+    <meta property="article:section" content="posts">
+    <meta property="article:published_time" content="2013-03-19T23:21:18+08:00">
+    <meta property="article:modified_time" content="2013-03-19T23:21:18+08:00">
+    <meta property="article:tag" content="Android">
+    <meta property="article:tag" content="私有存储">
+
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Android之使用私有存储">
+  <meta name="twitter:description" content="首先内部存储路径为/data/data/youPackageName/，下面讲解的各路径都是基于你自己的应用的内部存储路径下。所有内部存储中保存的文件在用户卸载应用的时候会被删除。
+files Context.getFilesDir()，该方法返回/data/data/youPackageName/files的File对象。
+Context.openFileInput()与Context.openFileOutput()，只能读取和写入files下的文件，返回的是FileInputStream和FileOutputStream对象。
+Context.fileList()，返回files下所有的文件名，返回的是String[]对象。
+Context.deleteFile(String)，删除files下指定名称的文件。
+cache Context.getCacheDir()，该方法返回/data/data/youPackageName/cache的File对象。 custom dir getDir(String name, int mode)，返回/data/data/youPackageName/下的指定名称的文件夹File对象，如果该文件夹不存在则用指定名称创建一个新的文件夹。
+通过getDir创建的文件夹包含前缀app_">
+      <meta name="twitter:site" content="@https://twitter.com/ChenCiki">
+<meta name="application-name" content="My KeepIt site">
+<meta name="apple-mobile-web-app-title" content="My KeepIt site"><meta name="theme-color" content="#ffffff"><meta name="msapplication-TileColor" content="#da532c"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5"><link rel="manifest" href="/site.webmanifest"><link rel="canonical" href="https://www.ithome.me/post/2013/03/19/android%E4%B9%8B%E4%BD%BF%E7%94%A8%E7%A7%81%E6%9C%89%E5%AD%98%E5%82%A8/" /><link rel="prev" href="https://www.ithome.me/post/2013/03/19/android%E5%BC%80%E5%8F%91%E4%B8%AD%E6%95%88%E7%8E%87%E6%9C%80%E9%AB%98%E7%9A%84%E5%BE%AA%E7%8E%AF%E4%BB%A3%E7%A0%81/" /><link rel="next" href="https://www.ithome.me/post/2013/03/19/%E8%BD%AC%E8%BD%BDy470%E5%8F%8C%E6%98%BE%E5%8D%A1%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88/" /><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/normalize.css@8.0.1/normalize.min.css"><link rel="stylesheet" href="/css/style.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css"><script type="application/ld+json">
+    {
+        "@context": "http://schema.org",
+        "@type": "BlogPosting",
+        "headline": "Android之使用私有存储",
+        "inLanguage": "zh-CN",
+        "mainEntityOfPage": {
+            "@type": "WebPage",
+            "@id": "https:\/\/www.ithome.me\/post\/2013\/03\/19\/android%E4%B9%8B%E4%BD%BF%E7%94%A8%E7%A7%81%E6%9C%89%E5%AD%98%E5%82%A8\/"
+        },"genre": "posts","keywords": "android, 私有存储","wordcount":  15 ,
+        "url": "https:\/\/www.ithome.me\/post\/2013\/03\/19\/android%E4%B9%8B%E4%BD%BF%E7%94%A8%E7%A7%81%E6%9C%89%E5%AD%98%E5%82%A8\/","datePublished": "2013-03-19T23:21:18+08:00","dateModified": "2013-03-19T23:21:18+08:00","license": "©{year}, All Rights Reserved. Simon Chen","publisher": {
+            "@type": "Organization",
+            "name": ""},"author": {
+                "@type": "Person",
+                "name": "SimonChen"
+            },"description": ""
+    }
+    </script></head>
+    <body data-header-desktop="fixed" data-header-mobile="auto"><script type="text/javascript">(window.localStorage && localStorage.getItem('theme') ? localStorage.getItem('theme') === 'dark' : ('auto' === 'auto' ? window.matchMedia('(prefers-color-scheme: dark)').matches : 'auto' === 'dark')) && document.body.setAttribute('theme', 'dark');</script>
+
+        <div id="mask"></div><div class="wrapper"><header class="desktop" id="header-desktop">
+    <div class="header-wrapper">
+        <div class="header-title">
+            <a href="/" title="编程心语">编程心语</a>
+        </div>
+        <div class="menu">
+            <div class="menu-inner"><a class="menu-item" href="/posts/"> 文章 </a><a class="menu-item" href="/categories/"> 分类 </a><a class="menu-item" href="/tags/"> 标签 </a><a class="menu-item" href="/about-me/"> 关于 </a><span class="menu-item delimiter"></span><span class="menu-item search" id="search-desktop">
+                        <input type="text" placeholder="Search titles or contents..." id="search-input-desktop">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-desktop" title="Search">
+                            <i class="fas fa-search fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-desktop" title="Clear">
+                            <i class="fas fa-times-circle fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-desktop">
+                            <i class="fas fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+                        </span>
+                    </span><a href="javascript:void(0);" class="menu-item theme-switch" title="Switch Theme">
+                    <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</header><header class="mobile" id="header-mobile">
+    <div class="header-container">
+        <div class="header-wrapper">
+            <div class="header-title">
+                <a href="/" title="编程心语">编程心语</a>
+            </div>
+            <div class="menu-toggle" id="menu-toggle-mobile">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+        <div class="menu" id="menu-mobile"><div class="search-wrapper">
+                    <div class="search mobile" id="search-mobile">
+                        <input type="text" placeholder="Search titles or contents..." id="search-input-mobile">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-mobile" title="Search">
+                            <i class="fas fa-search fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-mobile" title="Clear">
+                            <i class="fas fa-times-circle fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-mobile">
+                            <i class="fas fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+                        </span>
+                    </div>
+                    <a href="javascript:void(0);" class="search-cancel" id="search-cancel-mobile">
+                        Cancel
+                    </a>
+                </div><a class="menu-item" href="/posts/" title="">文章</a><a class="menu-item" href="/categories/" title="">分类</a><a class="menu-item" href="/tags/" title="">标签</a><a class="menu-item" href="/about-me/" title="">关于</a><a href="javascript:void(0);" class="menu-item theme-switch" title="Switch Theme">
+                <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
+            </a></div>
+    </div>
+</header><div class="search-dropdown desktop">
+        <div id="search-dropdown-desktop"></div>
+    </div>
+    <div class="search-dropdown mobile">
+        <div id="search-dropdown-mobile"></div>
+    </div><main class="main">
+                <div class="container"><div class="toc" id="toc-auto">
+            <h2 class="toc-title">Contents</h2>
+            <div class="toc-content" id="toc-content-auto"></div>
+        </div><article class="page single"><h1 class="single-title animate__animated animate__flipInX">Android之使用私有存储</h1><div class="post-meta">
+            <div class="post-meta-line"><span class="post-author"><a href="/" title="Author" rel=" author" class="author"><i class="fas fa-user-circle fa-fw" aria-hidden="true"></i>SimonChen</a>
+</span></div>
+            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw" aria-hidden="true"></i>&nbsp;<time datetime="2013-03-19">2013-03-19</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden="true"></i>&nbsp;15 words&nbsp;
+                <i class="far fa-clock fa-fw" aria-hidden="true"></i>&nbsp;One minute&nbsp;</div>
+        </div><div class="details toc" id="toc-static"  data-kept="">
+                <div class="details-summary toc-title">
+                    <span>Contents</span>
+                    <span><i class="details-icon fas fa-angle-right" aria-hidden="true"></i></span>
+                </div>
+                <div class="details-content toc-content" id="toc-content-static"><nav id="TableOfContents">
+  <ul>
+    <li><a href="#files">files</a></li>
+    <li><a href="#cache">cache</a></li>
+    <li><a href="#custom-dir">custom dir</a></li>
+  </ul>
+</nav></div>
+            </div><div class="content" id="content"><p>首先内部存储路径为/data/data/youPackageName/，下面讲解的各路径都是基于你自己的应用的内部存储路径下。所有内部存储中保存的文件在用户卸载应用的时候会被删除。</p>
+<h2 id="files">files</h2>
+<ol>
+<li>
+<p><strong>Context.getFilesDir()</strong>，该方法返回/data/data/youPackageName/files的File对象。</p>
+</li>
+<li>
+<p><strong>Context.openFileInput()<strong>与</strong>Context.openFileOutput()</strong>，只能读取和写入files下的文件，返回的是FileInputStream和FileOutputStream对象。</p>
+</li>
+<li>
+<p><strong>Context.fileList()</strong>，返回files下所有的文件名，返回的是String[]对象。</p>
+</li>
+<li>
+<p><strong>Context.deleteFile(String)</strong>，删除files下指定名称的文件。</p>
+</li>
+</ol>
+<h2 id="cache">cache</h2>
+<ol>
+<li><strong>Context.getCacheDir()</strong>，该方法返回/data/data/youPackageName/cache的File对象。</li>
+</ol>
+<h2 id="custom-dir">custom dir</h2>
+<p> <strong>getDir(String name, int mode)</strong>，返回/data/data/youPackageName/下的指定名称的文件夹File对象，如果该文件夹不存在则用指定名称创建一个新的文件夹。</p>
+<p>通过getDir创建的文件夹包含前缀app_</p>
+</div><div class="post-footer" id="post-footer">
+    <div class="post-info">
+        <div class="post-info-line">
+            <div class="post-info-mod">
+                <span>Updated on 2013-03-19</span>
+            </div></div>
+        <div class="post-info-line">
+            <div class="post-info-md"></div>
+            <div class="post-info-share">
+                <span><a href="javascript:void(0);" title="Share on Twitter" data-sharer="twitter" data-url="https://www.ithome.me/post/2013/03/19/android%E4%B9%8B%E4%BD%BF%E7%94%A8%E7%A7%81%E6%9C%89%E5%AD%98%E5%82%A8/" data-title="Android之使用私有存储" data-via="https://twitter.com/ChenCiki" data-hashtags="android,私有存储"><i class="fab fa-twitter fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on Facebook" data-sharer="facebook" data-url="https://www.ithome.me/post/2013/03/19/android%E4%B9%8B%E4%BD%BF%E7%94%A8%E7%A7%81%E6%9C%89%E5%AD%98%E5%82%A8/" data-hashtag="android"><i class="fab fa-facebook-square fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on Hacker News" data-sharer="hackernews" data-url="https://www.ithome.me/post/2013/03/19/android%E4%B9%8B%E4%BD%BF%E7%94%A8%E7%A7%81%E6%9C%89%E5%AD%98%E5%82%A8/" data-title="Android之使用私有存储"><i class="fab fa-hacker-news fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on Line" data-sharer="line" data-url="https://www.ithome.me/post/2013/03/19/android%E4%B9%8B%E4%BD%BF%E7%94%A8%E7%A7%81%E6%9C%89%E5%AD%98%E5%82%A8/" data-title="Android之使用私有存储"><i data-svg-src="https://cdn.jsdelivr.net/npm/simple-icons@6.20.0/icons/line.svg" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on 微博" data-sharer="weibo" data-url="https://www.ithome.me/post/2013/03/19/android%E4%B9%8B%E4%BD%BF%E7%94%A8%E7%A7%81%E6%9C%89%E5%AD%98%E5%82%A8/" data-title="Android之使用私有存储" data-ralateuid="xxx"><i class="fab fa-weibo fa-fw" aria-hidden="true"></i></a></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="post-info-more">
+        <section class="post-tags"><i class="fas fa-tags fa-fw" aria-hidden="true"></i>&nbsp;<a href="/tags/android/">Android</a>,&nbsp;<a href="/tags/%E7%A7%81%E6%9C%89%E5%AD%98%E5%82%A8/">私有存储</a></section>
+        <section>
+            <span><a href="javascript:void(0);" onclick="window.history.back();">Back</a></span>&nbsp;|&nbsp;<span><a href="/">Home</a></span>
+        </section>
+    </div>
+
+    <div class="post-nav"><a href="/post/2013/03/19/android%E5%BC%80%E5%8F%91%E4%B8%AD%E6%95%88%E7%8E%87%E6%9C%80%E9%AB%98%E7%9A%84%E5%BE%AA%E7%8E%AF%E4%BB%A3%E7%A0%81/" class="prev" rel="prev" title="Android开发中效率最高的循环代码"><i class="fas fa-angle-left fa-fw" aria-hidden="true"></i>Android开发中效率最高的循环代码</a>
+            <a href="/post/2013/03/19/%E8%BD%AC%E8%BD%BDy470%E5%8F%8C%E6%98%BE%E5%8D%A1%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88/" class="next" rel="next" title="[转载]y470双显卡解决方案">[转载]y470双显卡解决方案<i class="fas fa-angle-right fa-fw" aria-hidden="true"></i></a></div>
+</div>
+</article></div>
+            </main><footer class="footer">
+        <div class="footer-container"><div class="footer-line" itemscope itemtype="http://schema.org/CreativeWork"><i class="far fa-copyright fa-fw" aria-hidden="true"></i><span itemprop="copyrightYear">2011 - 2024</span><span class="author" itemprop="copyrightHolder">&nbsp;<a href="/" target="_blank">SimonChen</a></span></div>
+        </div>
+    </footer></div>
+
+        <div id="fixed-buttons"><a href="#" id="back-to-top" class="fixed-button" title="Back to Top">
+                <i class="fas fa-arrow-up fa-fw" aria-hidden="true"></i>
+            </a><a href="#" id="view-comments" class="fixed-button" title="View Comments">
+                <i class="fas fa-comment fa-fw" aria-hidden="true"></i>
+            </a>
+        </div><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/autocomplete.js@0.38.1/dist/autocomplete.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lunr@2.3.9/lunr.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lazysizes@5.3.1/lazysizes.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/clipboard@2.0.11/dist/clipboard.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/sharer.js@0.5.1/sharer.min.js"></script><script type="text/javascript">window.config={"code":{"copyTitle":"Copy to clipboard","maxShownLines":50},"comment":{},"search":{"highlightTag":"em","maxResultLength":10,"noResultsFound":"No results found","snippetLength":30}};</script><script type="text/javascript" src="/js/theme.min.js"></script></body>
+</html>

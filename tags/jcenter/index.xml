@@ -1,0 +1,33 @@
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0">
+    <channel>
+        <title>Jcenter - Tag - 编程心语</title>
+        <link>https://www.ithome.me/tags/jcenter/</link>
+        <description>Jcenter - Tag - 编程心语</description>
+        <generator>Hugo -- gohugo.io</generator><language>zh-CN</language><copyright>©{year}, All Rights Reserved. Simon Chen</copyright><lastBuildDate>Tue, 25 Dec 2018 00:00:00 &#43;0000</lastBuildDate><atom:link href="https://www.ithome.me/tags/jcenter/" rel="self" type="application/rss+xml" /><item>
+    <title>Android开发Jcenter替换为国内镜像</title>
+    <link>https://www.ithome.me/post/2018/12/25/android%E5%BC%80%E5%8F%91jcenter%E6%9B%BF%E6%8D%A2%E4%B8%BA%E5%9B%BD%E5%86%85%E9%95%9C%E5%83%8F/</link>
+    <pubDate>Tue, 25 Dec 2018 00:00:00 &#43;0000</pubDate>
+    <author>SimonChen</author>
+    <guid>https://www.ithome.me/post/2018/12/25/android%E5%BC%80%E5%8F%91jcenter%E6%9B%BF%E6%8D%A2%E4%B8%BA%E5%9B%BD%E5%86%85%E9%95%9C%E5%83%8F/</guid>
+    <description><![CDATA[<p>众所周知，在开发中我们需要从maven中央仓库下载依赖库，但是因为某种原因，导致这些仓库无法访问，幸运的是国内很多大公司都搭建的镜像库供我们使用，比如阿里的maven镜像。android现在都是通过gradle要管理依赖库，你发现直接添加<code>maven{url: url}</code>的方式是无效的。这里提供下一个有效的方案。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">allprojects{
+</span></span><span class="line"><span class="cl">    repositories {
+</span></span><span class="line"><span class="cl">        def REPOSITORY_URL = &#39;http://maven.aliyun.com/nexus/content/groups/public/&#39;
+</span></span><span class="line"><span class="cl">        all { ArtifactRepository repo -&gt;
+</span></span><span class="line"><span class="cl">            if(repo instanceof MavenArtifactRepository){
+</span></span><span class="line"><span class="cl">                def url = repo.url.toString()
+</span></span><span class="line"><span class="cl">                if (url.startsWith(&#39;https://repo1.maven.org/maven2&#39;) || url.startsWith(&#39;https://jcenter.bintray.com/&#39;)) {
+</span></span><span class="line"><span class="cl">                    project.logger.lifecycle &#34;Repository ${repo.url} replaced by $REPOSITORY_URL.&#34;
+</span></span><span class="line"><span class="cl">                    remove repo
+</span></span><span class="line"><span class="cl">                }
+</span></span><span class="line"><span class="cl">            }
+</span></span><span class="line"><span class="cl">        }
+</span></span><span class="line"><span class="cl">        maven {
+</span></span><span class="line"><span class="cl">            url REPOSITORY_URL
+</span></span><span class="line"><span class="cl">        }
+</span></span><span class="line"><span class="cl">    }
+</span></span><span class="line"><span class="cl">}
+</span></span></code></pr]]></description>
+</item>
+</channel>
+</rss>

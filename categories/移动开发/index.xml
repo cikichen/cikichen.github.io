@@ -1,0 +1,360 @@
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0">
+    <channel>
+        <title>移动开发 - Category - 编程心语</title>
+        <link>https://www.ithome.me/categories/%E7%A7%BB%E5%8A%A8%E5%BC%80%E5%8F%91/</link>
+        <description>移动开发 - Category - 编程心语</description>
+        <generator>Hugo -- gohugo.io</generator><language>zh-CN</language><copyright>©{year}, All Rights Reserved. Simon Chen</copyright><lastBuildDate>Wed, 07 Apr 2021 00:00:00 &#43;0000</lastBuildDate><atom:link href="https://www.ithome.me/categories/%E7%A7%BB%E5%8A%A8%E5%BC%80%E5%8F%91/" rel="self" type="application/rss+xml" /><item>
+    <title>ABIs [arm64-v8a, x86_64] are not supported for platform. Supported ABIs are [armeabi-v7a, x86].</title>
+    <link>https://www.ithome.me/post/2021/04/07/m1-abis-arm64-v8a-x86_64-are-not-supported-for-platform.-supported-abis-are-armeabi-v7a-x86/</link>
+    <pubDate>Wed, 07 Apr 2021 00:00:00 &#43;0000</pubDate>
+    <author>Simon</author>
+    <guid>https://www.ithome.me/post/2021/04/07/m1-abis-arm64-v8a-x86_64-are-not-supported-for-platform.-supported-abis-are-armeabi-v7a-x86/</guid>
+    <description><![CDATA[<p>M1的兼容性问题还是不少，比如NDK开发遇到坑了，提示
+<code>ABIs [arm64-v8a, x86_64] are not supported for platform. Supported ABIs are [armeabi-v7a, x86]</code></p>
+<p>然后找到了这个issue:
+<a href="https://github.com/android/ndk/issues/1299" target="_blank" rel="noopener noreffer">https://github.com/android/ndk/issues/1299</a>
+</p>
+<p>尝试了无果。</p>
+<p>然后无意中发现其他人的M1可以编译，对比后发现是NDK版本问题，我使用的最新22版本报错，但是降级到<code>21.1.6352462</code>后能正常编译成功。</p>]]></description>
+</item>
+<item>
+    <title>解决MacBook M1下无法运行uiautomatorviewer</title>
+    <link>https://www.ithome.me/post/2021/04/06/%E8%A7%A3%E5%86%B3macbook-m1%E4%B8%8B%E6%97%A0%E6%B3%95%E8%BF%90%E8%A1%8Cuiautomatorviewer/</link>
+    <pubDate>Tue, 06 Apr 2021 00:00:00 &#43;0000</pubDate>
+    <author>Simon</author>
+    <guid>https://www.ithome.me/post/2021/04/06/%E8%A7%A3%E5%86%B3macbook-m1%E4%B8%8B%E6%97%A0%E6%B3%95%E8%BF%90%E8%A1%8Cuiautomatorviewer/</guid>
+    <description><![CDATA[<p>MacBook使用ARM芯片后虽然带来了性能和续航的提升，但是也带来了不少兼容性问题，好在发布几个月后主流的开发工具都慢慢适配完毕，然而一些小众的工具迟迟无法引来更新。所以<code>Rosetta 2</code>模式仍然非常重要。</p>
+<p>默认情况下，我们执行<code>./uiautomatorviewer</code>会报错:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-gdscript3" data-lang="gdscript3"><span class="line"><span class="cl"><span class="n">SWT</span> <span class="n">folder</span> <span class="s1">&#39;/Users/xxx/Library/Android/sdk/tools/lib/aarch64&#39;</span> <span class="n">does</span> <span class="ow">not</span> <span class="n">exist</span><span class="o">.</span>
+</span></span><span class="line"><span class="cl"><span class="n">Please</span> <span class="k">export</span> <span class="n">ANDROID_SWT</span> <span class="n">to</span> <span class="n">point</span> <span class="n">to</span> <span class="n">the</span> <span class="n">folder</span> <span class="n">containing</span> <span class="n">swt</span><span class="o">.</span><span class="n">jar</span> <span class="k">for</span> <span class="n">your</span> <span class="n">platform</span><span class="o">.</span>
+</span></span></code></pre></div><p>意思是<code>lib</code>下没有<code>aarch64</code>这个目录。</p>
+<p>尝试方案1：
+在<code>lib</code>下建立<code>aarch64</code>目录，网上找<code>aarch64</code>版本的<code>swt.jar</code>，无果。
+最终报错如下：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-gdscript3" data-lang="gdscript3"><span class="line"><span class="cl"><span class="n">Exception</span> <span class="ow">in</span> <span class="n">thread</span> <span class="s2">&#34;main&#34;</span> <span class="n">java</span><span class="o">.</span><span class="n">lang</span><span class="o">.</span><span class="n">UnsatisfiedLinkError</span><span class="p">:</span> <span class="n">Could</span> <span class="ow">not</span> <span class="nb">load</span> <span class="n">SWT</span> <span class="n">library</span><span class="o">.</span> <span class="n">Reasons</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">	<span class="n">no</span> <span class="n">swt</span><span class="o">-</span><span class="n">cocoa</span><span class="o">-</span><span class="mi">4936</span><span class="n">r26</span> <span class="ow">in</span> <span class="n">java</span><span class="o">.</span><span class="n">library</span><span class="o">.</span><span class="n">path</span>
+</span></span><span class="line"><span class="cl">	<span class="n">no</span> <span class="n">swt</span><span class="o">-</span><span class="n">cocoa</span> <span class="ow">in</span> <span class="n">java</span><span class="o">.</span><span class="n">library</span><span class="o">.</span><span class="n">path</span>
+</span></span><span class="line"><span class="cl">	<span class="n">Can</span><span class="s1">&#39;t load library: /Users/xxx/.swt/lib/macosx/aarch64/libswt-cocoa-4936r26.jnilib</span>
+</span></span><span class="line"><span class="cl">	<span class="n">Can</span><span class="s1">&#39;t load library: /Users/xxx/.swt/lib/macosx/aarch64/libswt-cocoa.jnilib</span>
+</span></span><span class="line"><span class="cl">	<span class="o">/</span><span class="n">Users</span><span class="o">/</span><span class="n">xxx</span><span class="o">/.</span><span class="n">swt</span><span class="o">/</span><span class="n">lib</span><span class="o">/</span><span class="n">macosx</span><span class="o">/</span><span class="n">aarch64</span><span class="o">/</span><span class="n">libswt</span><span class="o">-</span><span class="n">cocoa</span><span class="o">-</span><span class="mi">4936</span><span class="n">r26</span><span class="o">.</span><span class="n">jnilib</span><span class="p">:</span> <span class="n">dlopen</span><span class="p">(</span><span class="o">/</span><span class="n">Users</span><span class="o">/</span><span class="n">xxx</span><span class="o">/.</span><span class="n">swt</span><span class="o">/</span><span class="n">lib</span><span class="o">/</span><span class="n">macosx</span><span class="o">/</span><span class="n">aarch64</span><span class="o">/</span><span class="n">libswt</span><span class="o">-</span><span class="n">cocoa</span><span class="o">-</span><span class="mi">4936</span><span class="n">r26</span><span class="o">.</span><span class="n">jnilib</span><span class="p">,</span> <span class="mi">1</span><span class="p">):</span> <span class="n">no</span> <span class="n">suitable</span> <span class="n">image</span> <span class="n">found</span><span class="o">.</span>  <span class="n">Did</span> <span class="n">find</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">	<span class="o">/</span><span class="n">Users</span><span class="o">/</span><span class="n">xxx</span><span class="o">/.</span><span class="n">swt</span><span class="o">/</span><span class="n">lib</span><span class="o">/</span><span class="n">macosx</span><span class="o">/</span><span class="n">aarch64</span><span class="o">/</span><span class="n">libswt</span><span class="o">-</span><span class="n">cocoa</span><span class="o">-</span><span class="mi">4936</span><span class="n">r26</span><span class="o">.</span><span class="n">jnilib</span><span class="p">:</span> <span class="n">mach</span><span class="o">-</span><span class="n">o</span><span class="p">,</span> <span class="n">but</span> <span class="n">wrong</span> <span class="n">architecture</span>
+</span></span><span class="line"><span class="cl">	<span class="o">/</span><span class="n">Users</span><span class="o">/</span><span class="n">xxx</span><span class="o">/.</span><span class="n">swt</span><span class="o">/</span><span class="n">lib</span><span class="o">/</span><span class="n">macosx</span><span class="o">/</span><span class="n">aarch64</span><span class="o">/</span><span class="n">libswt</span><span class="o">-</span><span class="n">cocoa</span><span class="o">-</span><span class="mi">4936</span><span class="n">r26</span><span class="o">.</span><span class="n">jnilib</span><span class="p">:</span> <span class="n">mach</span><span class="o">-</span><span class="n">o</span><span class="p">,</span> <span class="n">but</span> <span class="n">wrong</span> <span class="n">architecture</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="n">at</span> <span class="n">org</span><span class="o">.</span><span class="n">eclipse</span><span class="o">.</span><span class="n">swt</span><span class="o">.</span><span class="n">internal</span><span class="o">.</span><span class="n">Library</span><span class="o">.</span><span class="n">loadLibrary</span><span class="p">(</span><span class="n">Library</span><span class="o">.</span><span class="n">java</span><span class="p">:</span><span class="mi">338</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">	<span class="n">at</span> <span class="n">org</span><span class="o">.</span><span class="n">eclipse</span><span class="o">.</span><span class="n">swt</span><span class="o">.</span><span class="n">internal</span><span class="o">.</span><span class="n">Library</span><span class="o">.</span><span class="n">loadLibrary</span><span class="p">(</span><span class="n">Library</span><span class="o">.</span><span class="n">java</span><span class="p">:</span><span class="mi">257</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">	<span class="n">at</span> <span class="n">org</span><span class="o">.</span><span class="n">eclipse</span><span class="o">.</span><span class="n">swt</span><span class="o">.</span><span class="n">internal</span><span class="o">.</span><span class="n">C</span><span class="o">.&lt;</span><span class="n">clinit</span><span class="o">&gt;</span><span class="p">(</span><span class="n">C</span><span class="o">.</span><span class="n">java</span><span class="p">:</span><span class="mi">19</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">	<span class="n">at</span> <span class="n">org</span><span class="o">.</span><span class="n">eclipse</span><span class="o">.</span><span class="n">swt</span><span class="o">.</span><span class="n">internal</span><span class="o">.</span><span class="n">cocoa</span><span class="o">.</span><span class="n">NSMutableArray</span><span class="o">.</span><span class="n">arrayWithCapacity</span><span class="p">(</span><span class="n">NSMutableArray</span><span class="o">.</span><span class="n">java</span><span class="p">:</span><span class="mi">39</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">	<span class="n">at</span> <span class="n">org</span><span class="o">.</span><span class="n">eclipse</span><span class="o">.</span><span class="n">swt</span><span class="o">.</span><span class="n">widgets</span><span class="o">.</span><span class="n">Canvas</span><span class="o">.&lt;</span><span class="n">clinit</span><span class="o">&gt;</span><span class="p">(</span><span class="n">Canvas</span><span class="o">.</span><span class="n">java</span><span class="p">:</span><span class="mi">55</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">	<span class="n">at</span> <span class="n">org</span><span class="o">.</span><span class="n">eclipse</span><span class="o">.</span><span class="n">jface</span><span class="o">.</span><span class="n">window</span><span class="o">.</span><span class="n">Window</span><span class="o">.</span><span class="n">createShell</span><span class="p">(</span><span class="n">Window</span><span class="o">.</span><span class="n">java</span><span class="p">:</span><span class="mi">487</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">	<span class="n">at</span> <span class="n">org</span><span class="o">.</span><span class="n">eclipse</span><span class="o">.</span><span class="n">jface</span><span class="o">.</span><span class="n">window</span><span class="o">.</span><span class="n">Window</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">Window</span><span class="o">.</span><span class="n">java</span><span class="p">:</span><span class="mi">430</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">	<span class="n">at</span> <span class="n">org</span><span class="o">.</span><span class="n">eclipse</span><span class="o">.</span><span class="n">jface</span><span class="o">.</span><span class="n">window</span><span class="o">.</span><span class="n">Window</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">Window</span><span class="o">.</span><span class="n">java</span><span class="p">:</span><span class="mi">790</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">	<span class="n">at</span> <span class="n">com</span><span class="o">.</span><span class="n">android</span><span class="o">.</span><span class="n">uiautomator</span><span class="o">.</span><span class="n">UiAutomatorViewer</span><span class="o">.</span><span class="n">main</span><span class="p">(</span><span class="n">UiAutomatorViewer</span><span class="o">.</span><span class="n">java</span><span class="p">:</span><span class="mi">78</span><span class="p">)</span>
+</span></span></code></pr]]></description>
+</item>
+<item>
+    <title>MacBook M1开发Flutter遇到的问题</title>
+    <link>https://www.ithome.me/post/2020/12/31/macbook-m1%E5%BC%80%E5%8F%91flutter%E9%81%87%E5%88%B0%E7%9A%84%E9%97%AE%E9%A2%98/</link>
+    <pubDate>Thu, 31 Dec 2020 00:00:00 &#43;0000</pubDate>
+    <author>Simon</author>
+    <guid>https://www.ithome.me/post/2020/12/31/macbook-m1%E5%BC%80%E5%8F%91flutter%E9%81%87%E5%88%B0%E7%9A%84%E9%97%AE%E9%A2%98/</guid>
+    <description><![CDATA[<h3 id="前言">前言</h3>
+<p>前一台MacBook已经战了6年，去年准备换16寸，因为各种原因一直等到了今年，又因为得知ARM架构的MacBook要上了，等等党永不为奴，终于等到了它。</p>
+<p>我买的是MacBook Pro M1 16+512的配置，用了几天觉得等M2才是真香，M1离真香还差点意思，尤其是系统bug，太致命，开发工具目前原生适配的也不多，用起来提升没那么明显。</p>
+<h3 id="搭建flutter环境">搭建flutter环境</h3>
+<p>这个不细说，官网已经很详细了：https://flutterchina.club/setup-macos/</p>
+<h3 id="m1开发flutter靠谱吗">M1开发Flutter靠谱吗？</h3>
+<p>整体还行，但是目前来说，因为适配的问题，想模拟器运行都要调试一番，iPhone和Android都是。不过<strong>M1可以直接把自己的<code>udid</code>注册到开发者账号中去，原生直接运行iPhone App</strong>，这个确实骚，但是为什么我的MacBook注册后设备类型是<code>ipod</code>?
+</p>]]></description>
+</item>
+<item>
+    <title>Flutter、JetPack Compose和SwiftUI对比</title>
+    <link>https://www.ithome.me/post/2020/11/04/flutterjetpack-composeswiftui%E5%AF%B9%E6%AF%94/</link>
+    <pubDate>Wed, 04 Nov 2020 00:00:00 &#43;0000</pubDate>
+    <author>Simon</author>
+    <guid>https://www.ithome.me/post/2020/11/04/flutterjetpack-composeswiftui%E5%AF%B9%E6%AF%94/</guid>
+    <description><![CDATA[<p>从目前技术的发展来看，通过声明式API来构建UI将会成为主流。</p>
+<table>
+  <thead>
+      <tr>
+          <th style="text-align: left">框架</th>
+          <th style="text-align: left">Flutter</th>
+          <th style="text-align: left">JetPack Compose</th>
+          <th style="text-align: left">SwiftUI</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td style="text-align: left">支持平台</td>
+          <td style="text-align: left">Android、iOS、Web、Desktop</td>
+          <td style="text-align: left">Android</td>
+          <td style="text-align: left">iOS、MacOS、iPadOS</td>
+      </tr>
+      <tr>
+          <td style="text-align: left">开发语言</td>
+          <td style="text-align: left">dart</td>
+          <td style="text-align: left">kotlin</td>
+          <td style="text-align: left">swift</td>
+      </tr>
+      <tr>
+          <td style="text-align: left">性能</td>
+          <td style="text-align: left">好</td>
+          <td style="text-align: left">优</td>
+          <td style="text-align: left">优</td>
+      </tr>
+      <tr>
+          <td style="text-align: left">优点</td>
+          <td style="text-align: left">跨平台</td>
+          <td style="text-align: left">原生，简化UI构建</td>
+          <td style="text-align: left">原生，简化UI构建</td>
+      </tr>
+      <tr>
+          <td style="text-align: left">缺点</td>
+          <td style="text-align: left">性能相比原生稍差，跨多平台目前还不完善，UI嵌套深</td>
+          <td style="text-align: left">不支持跨平台，Android的UI构建包</td>
+          <td style="text-align: left">仅支持Apple自家的跨平台，iOS的UI构建包，缺乏竞争力</td>
+      </tr>
+  </tbody>
+</table>
+<h3 id="1-如何选择">1. 如何选择？</h3>
+<p>这问题是个悖论，因为这三个东西完全不一样，面向的场景和未来也不一样。</p>]]></description>
+</item>
+<item>
+    <title>在Android中使用DataBinding(Kotlin)</title>
+    <link>https://www.ithome.me/post/2020/11/02/%E5%9C%A8android%E4%B8%AD%E4%BD%BF%E7%94%A8data-binding/</link>
+    <pubDate>Mon, 02 Nov 2020 00:00:00 &#43;0000</pubDate>
+    <author>Simon</author>
+    <guid>https://www.ithome.me/post/2020/11/02/%E5%9C%A8android%E4%B8%AD%E4%BD%BF%E7%94%A8data-binding/</guid>
+    <description><![CDATA[<blockquote>
+<p>本文主要介绍<code>DataBinding</code>在<code>Android App</code>中的使用方法。<em>数据绑定是将“提供器”的数据源与“消费者”绑定并使其同步的一种通用技术。</em></p>
+</blockquote>
+<h2 id="1-android应用程序使用数据绑定">1. Android应用程序使用数据绑定</h2>
+<h3 id="11-介绍databinding">1.1 介绍<code>DataBinding</code></h3>
+<p><code>Android</code>通过<code>DataBinding</code>提供了编写声明型布局的支持。这样可以最大程度简化<em>布局</em>和<em>逻辑</em>相关联的代码。</p>
+<p>数据绑定要求修改文件，外层需要包裹一个<code>layout</code>布局。主要通过<code>@{}</code> 或 <code>@={}</code>语法把布局中的元素和表达式的引用写入到属性中。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-xml" data-lang="xml"><span class="line"><span class="cl"><span class="cp">&lt;?xml version=&#34;1.0&#34; encoding=&#34;utf-8&#34;?&gt;</span>
+</span></span><span class="line"><span class="cl"><span class="nt">&lt;layout</span> <span class="na">xmlns:android=</span><span class="s">&#34;http://schemas.android.com/apk/res/android&#34;</span>
+</span></span><span class="line"><span class="cl">    <span class="na">xmlns:app=</span><span class="s">&#34;http://schemas.android.com/apk/res-auto&#34;</span>
+</span></span><span class="line"><span class="cl">    <span class="na">xmlns:tools=</span><span class="s">&#34;http://schemas.android.com/tools&#34;</span><span class="nt">&gt;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="nt">&lt;data&gt;</span>
+</span></span><span class="line"><span class="cl">        <span class="nt">&lt;variable</span>
+</span></span><span class="line"><span class="cl">            <span class="na">name=</span><span class="s">&#34;mainModel&#34;</span>
+</span></span><span class="line"><span class="cl">            <span class="na">type=</span><span class="s">&#34;me.ithome.jetpack.model.MainViewModel&#34;</span> <span class="nt">/&gt;</span>①
+</span></span><span class="line"><span class="cl">    <span class="nt">&lt;/data&gt;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="nt">&lt;androidx.constraintlayout.widget.ConstraintLayout</span>
+</span></span><span class="line"><span class="cl">        <span class="na">android:layout_width=</span><span class="s">&#34;match_parent&#34;</span>
+</span></span><span class="line"><span class="cl">        <span class="na">android:layout_height=</span><span class="s">&#34;match_parent&#34;</span>
+</span></span><span class="line"><span class="cl">        <span class="na">tools:context=</span><span class="s">&#34;.MainActivity&#34;</span><span class="nt">&gt;</span>②
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">        <span class="nt">&lt;TextView</span>
+</span></span><span class="line"><span class="cl">            <span class="na">android:id=</span><span class="s">&#34;@+id/tv_userinfo&#34;</span>
+</span></span><span class="line"><span class="cl">            <span class="na">android:layout_width=</span><span class="s">&#34;wrap_content&#34;</span>
+</span></span><span class="line"><span class="cl">            <span class="na">android:layout_height=</span><span class="s">&#34;wrap_content&#34;</span>
+</span></span><span class="line"><span class="cl">            <span class="na">android:text=</span><span class="s">&#34;@{mainModel.userData.toString()}&#34;</span>
+</span></span><span class="line"><span class="cl">            <span class="na">app:layout_constraintBottom_toBottomOf=</span><span class="s">&#34;parent&#34;</span>
+</span></span><span class="line"><span class="cl">            <span class="na">app:layout_constraintLeft_toLeftOf=</span><span class="s">&#34;parent&#34;</span>
+</span></span><span class="line"><span class="cl">            <span class="na">app:layout_constraintRight_toRightOf=</span><span class="s">&#34;parent&#34;</span>
+</span></span><span class="line"><span class="cl">            <span class="na">app:layout_constraintTop_toTopOf=</span><span class="s">&#34;parent&#34;</span> <span class="nt">/&gt;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">        <span class="nt">&lt;Button</span>
+</span></span><span class="line"><span class="cl">            <span class="na">android:id=</span><span class="s">&#34;@+id/button&#34;</span>
+</span></span><span class="line"><span class="cl">            <span class="na">android:layout_width=</span><span class="s">&#34;wrap_content&#34;</span>
+</span></span><span class="line"><span class="cl">            <span class="na">android:layout_height=</span><span class="s">&#34;wrap_content&#34;</span>
+</span></span><span class="line"><span class="cl">            <span class="na">android:layout_marginTop=</span><span class="s">&#34;56dp&#34;</span>
+</span></span><span class="line"><span class="cl">            <span class="na">android:onClick=</span><span class="s">&#34;@{(view) -&gt; mainModel.getClick(view)}&#34;</span>
+</span></span><span class="line"><span class="cl">            <span class="na">android:text=</span><span class="s">&#34;@string/btn_getUserInfo&#34;</span>
+</span></span><span class="line"><span class="cl">            <span class="na">app:layout_constraintBottom_toTopOf=</span><span class="s">&#34;@+id/tv_userinfo&#34;</span>
+</span></span><span class="line"><span class="cl">            <span class="na">app:layout_constraintEnd_toEndOf=</span><span class="s">&#34;parent&#34;</span>
+</span></span><span class="line"><span class="cl">            <span class="na">app:layout_constraintHorizontal_bias=</span><span class="s">&#34;0.498&#34;</span>
+</span></span><span class="line"><span class="cl">            <span class="na">app:layout_constraintStart_toStartOf=</span><span class="s">&#34;parent&#34;</span>
+</span></span><span class="line"><span class="cl">            <span class="na">app:layout_constraintTop_toTopOf=</span><span class="s">&#34;parent&#34;</span> <span class="nt">/&gt;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="nt">&lt;/androidx.constraintlayout.widget.ConstraintLayout&gt;</span>
+</span></span><span class="line"><span class="cl"><span class="nt">&lt;/layout&gt;</span>
+</span></span></code></pr]]></description>
+</item>
+<item>
+    <title>Android内存泄漏分析</title>
+    <link>https://www.ithome.me/post/2020/10/21/android%E5%86%85%E5%AD%98%E6%B3%84%E6%BC%8F%E5%88%86%E6%9E%90/</link>
+    <pubDate>Wed, 21 Oct 2020 00:00:00 &#43;0000</pubDate>
+    <author>Simon</author>
+    <guid>https://www.ithome.me/post/2020/10/21/android%E5%86%85%E5%AD%98%E6%B3%84%E6%BC%8F%E5%88%86%E6%9E%90/</guid>
+    <description><![CDATA[<h2 id="概述">概述</h2>
+<p>Android内存泄漏，也就是我们常说的<code>OOM(out of memory)</code>，<code>OOM</code>的后果大家都知道，严重影响APP的体验，轻则卡顿，重则闪退。而且内存泄漏在低端机上一般都会伴随着<code>ANR</code>，所以一定要重视它。</p>
+<p>造成内存泄漏的常见因素有：</p>
+<ul>
+<li>IO操作</li>
+<li>Bitmap</li>
+<li>Context
+<ul>
+<li>单例持有引用</li>
+</ul>
+</li>
+<li>Service
+<ul>
+<li>BroadcastReceiver</li>
+<li>ContentObserver</li>
+</ul>
+</li>
+<li>Handler</li>
+<li>Thread</li>
+</ul>
+<h2 id="分析方法">分析方法</h2>
+<p>分析内存泄漏的常用方法：</p>
+<ul>
+<li>StrictMode， 在<code>Application</code>的<code>onCreate</code>中添加<code>StrictMode</code>代码块</li>
+<li>Leakcanary，引用<code>Leakcanary</code>库(<strong>常规手段，仅供参与，不应完全依赖这个库</strong>)</li>
+<li>monkey，模拟用户点击操作，检查是否出现泄漏(<strong>推荐</strong>，最有效的方法)</li>
+<li>adb命令手动触发<code>adb shell dumpsys meminfo packagename -d</code></li>
+<li>Android Studio Memory Profiler，<code>Android Studio</code>自带的分析工具，已经非常好用了</li>
+<li>MAT，终极神器，内存分析绕不开的话题(<code>Android Studio</code>搞不定就靠它了)</li>
+</ul>
+<h2 id="解决方案">解决方案</h2>
+<ol>
+<li>
+<p>Context
+如果大家收集过内存泄漏的崩溃日志，会发现大量错误都是由<code>Context</code>和<code>Handler</code>造成。
+因为我们开发中会大量用到<code>Context</code>引用，而<code>Context</code>在<code>Application</code>，<code>Activity</code>，<code>Service</code>之类的地方会有自己的实例，而<code>Activity</code>和<code>Service</code>会因为生命周期的原因导致<code>Context</code>实例被回收，如果你继续使用其引用就会因为弱引用问题导致错误出现。
+<code>Context</code>的引用也常见于单例模式。
+所以建议大家尽可能使用<code>Application</code>的<code>Context</code>。</p>
+</li>
+<li>
+<p>Bitmap
+Bitmap的问题一般是因为没有对使用的图片及时释放所致。
+图片一般因为体积问题，会导致占用比较多的内存
+解决方案：就是在<code>Activity</code>的<code>onDestroy()</code>中及时回收内存。</p>
+</li>
+<li>
+<p>IO操作
+FileOutputStream()未关闭，IO流忘记关闭
+解决方案：及时关闭IO流，避免泄露</p>]]></description>
+</item>
+<item>
+    <title>Android高频面试题汇总(一)</title>
+    <link>https://www.ithome.me/post/2020/10/21/android%E9%9D%A2%E8%AF%95%E9%A2%98%E6%B1%87%E6%80%BB%E4%B8%80/</link>
+    <pubDate>Wed, 21 Oct 2020 00:00:00 &#43;0000</pubDate>
+    <author>Simon</author>
+    <guid>https://www.ithome.me/post/2020/10/21/android%E9%9D%A2%E8%AF%95%E9%A2%98%E6%B1%87%E6%80%BB%E4%B8%80/</guid>
+    <description><![CDATA[<h3 id="1leakcanary原理">1.Leakcanary原理？</h3>
+<ol>
+<li>利用 application.registerActivityLifecycleCallbacks(lifecycleCallbacks) 来监听整个生命周期内的 Activity onDestoryed 事件</li>
+<li>某个 Activity 被 destory 后，将它传给 RefWatcher 去做观测，确保其后续会被正常回收；</li>
+<li>RefWatcher 首先把 Activity 使用 KeyedWeakReference 引用起来，并使用一个 ReferenceQueue 来记录该 KeyedWeakReference 指向的对象是否已被回收；</li>
+<li>AndroidWatchExecutor 会在 5s 后，开始检查这个弱引用内的 Activity 是否被正常回收。判断条件是：若 Activity 被正常回收，那么引用它的 KeyedWeakReference 会被自动放入 ReferenceQueue 中。</li>
+<li>判断方式是：先看 Activity 对应的 KeyedWeakReference 是否已经放入 ReferenceQueue 中；如果没有，则手动 GC：gcTrigger.runGc();；然后再一次判断 ReferenceQueue 是否已经含有对应的 KeyedWeakReference。若还未被回收，则认为可能发生内存泄漏</li>
+</ol>
+<h3 id="2如何理解java的多态其中重载和重写有什么区别">2.如何理解Java的多态？其中，重载和重写有什么区别？</h3>
+<p>多态是同一个行为具有多个不同表现形式或形态的能力，多态是同一个接口，使用不同的实例而执行不同操作，多态就是程序运行期间才确定，一个引用变量倒底会指向哪个类的实例对象，该引用变量发出的方法调用到底是哪个类中实现的方法。
+多态存在的三个必要条件是：继承，重写，父类引用指向子类引用。
+多态的三个实现方式是：重写，接口，抽象类和抽象方法。</p>
+<table>
+  <thead>
+      <tr>
+          <th style="text-align: left">区别点</th>
+          <th style="text-align: left">重载</th>
+          <th style="text-align: left">重写</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td style="text-align: left">参数列表</td>
+          <td style="text-align: left">必须修改</td>
+          <td style="text-align: left">不能修改</td>
+      </tr>
+      <tr>
+          <td style="text-align: left">返回类型</td>
+          <td style="text-align: left">可以修改</td>
+          <td style="text-align: left">不能修改</td>
+      </tr>
+      <tr>
+          <td style="text-align: left">异常</td>
+          <td style="text-align: left">可以修改</td>
+          <td style="text-align: left">可以减少或删除，一定不能抛出新的或者更广的异常</td>
+      </tr>
+      <tr>
+          <td style="text-align: left">访问</td>
+          <td style="text-align: left">可以修改</td>
+          <td style="text-align: left">一定不能做更严格的限制（可以降低限制）</td>
+      </tr>
+  </tbody>
+</table>
+<h3 id="3谈一下jvm内存区域划分哪部分是线程公有的哪部分是私有的">3.谈一下JVM内存区域划分？哪部分是线程公有的，哪部分是私有的？</h3>
+<p></p>]]></description>
+</item>
+<item>
+    <title>快速理解二十三种设计模式(速记)</title>
+    <link>https://www.ithome.me/post/2020/10/21/%E5%BF%AB%E9%80%9F%E7%90%86%E8%A7%A3%E4%BA%8C%E5%8D%81%E4%B8%89%E7%A7%8D%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/</link>
+    <pubDate>Wed, 21 Oct 2020 00:00:00 &#43;0000</pubDate>
+    <author>Simon</author>
+    <guid>https://www.ithome.me/post/2020/10/21/%E5%BF%AB%E9%80%9F%E7%90%86%E8%A7%A3%E4%BA%8C%E5%8D%81%E4%B8%89%E7%A7%8D%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/</guid>
+    <description><![CDATA[<h2 id="设计模式六大原则">设计模式六大原则</h2>
+<ul>
+<li>单一职责原则（Single Responsibility Principle）</li>
+<li>里氏替换原则（Liskov Substitution Principle）</li>
+<li>依赖倒置原则（Dependence Inversion Principle）</li>
+<li>接口隔离原则（Interface Segregation Principle）</li>
+<li>迪米特法则（最少知道原则）(Law of Demeter)</li>
+<li>合成复用原则（Composite Reuse Principle）</li>
+</ul>
+<h2 id="设计模式三大类">设计模式三大类</h2>
+<ol>
+<li>
+<p>创建型模式（Creational Pattern）：对类的实例化过程进行了抽象，能够将软件模块中对象的创建和对象的使用分离。
+（5种）工厂模式、抽象工厂模式、单例模式、建造者模式、原型模式</p>
+</li>
+<li>
+<p>结构型模式（Structural Pattern）：关注于对象的组成以及对象之间的依赖关系，描述如何将类或者对象结合在一起形成更大的结构，就像搭积木，可以通过简单积木的组合形成复杂的、功能更为强大的结构。
+（7种）适配器模式、装饰者模式、代理模式、外观模式、桥接模式、组合模式、享元模式</p>
+</li>
+<li>
+<p>行为型模式（Behavioral Pattern）：关注于对象的行为问题，是对在不同的对象之间划分责任和算法的抽象化；不仅仅关注类和对象的结构，而且重点关注它们之间的相互作用。
+（11种）策略模式、模板方法模式、观察者模式、迭代器模式、责任链模式、命令模式、备忘录模式、状态模式、访问者模式、中介者模式、解释器模式</p>
+</li>
+</ol>
+<h2 id="简单工厂模式">简单工厂模式</h2>
+<p>一个工厂根据不同的参数返回不同的产品</p>
+<blockquote>
+<p>水果店理解为一个简单工厂，你要苹果，他给你苹果，你要梨子，他就给你梨子。</p>
+</blockquote>
+<h2 id="工厂模式">工厂模式</h2>
+<p>一个工厂创建一个具体的产品，一个产品对应一个工厂类。</p>
+<blockquote>
+<p>宝马x1一个工厂类，x2一个工厂类，x3一个工厂类，奔驰A级一个工厂类，C级一个工厂类</p>
+</blockquote>
+<h2 id="抽象工厂模式">抽象工厂模式</h2>
+<p>一个工厂创建一类产品，一类产品对应一个工厂。</p>
+<blockquote>
+<p>比如汽车制造工厂是个抽象工厂，它既可以生产宝马X1，也可以生产X2，X3。罐头厂是一个抽象工厂，它可以生产橘子罐头，也可以生产黄桃罐头。</p>
+</blockquote>
+<h2 id="单例模式">单例模式</h2>
+<p>这个没啥好说的，保证一个类仅有一个实例，并提供一个访问它的全局访问点。
+需要记忆的是<code>懒汉式</code>和<code>饿汉式</code>。
+懒汉式：需要的时候才实例化，常用的例子就是非空检查和双重检查式的实现。
+饿汉式：类加载的时候就先实例化。
+类似这样的</p>]]></description>
+</item>
+<item>
+    <title>Sign in With Apple 从登陆到服务器验证</title>
+    <link>https://www.ithome.me/post/2020/04/07/sign-in-with-apple-%E4%BB%8E%E7%99%BB%E9%99%86%E5%88%B0%E6%9C%8D%E5%8A%A1%E5%99%A8%E9%AA%8C%E8%AF%81/</link>
+    <pubDate>Tue, 07 Apr 2020 00:00:00 &#43;0000</pubDate>
+    <author>张龙</author>
+    <guid>https://www.ithome.me/post/2020/04/07/sign-in-with-apple-%E4%BB%8E%E7%99%BB%E9%99%86%E5%88%B0%E6%9C%8D%E5%8A%A1%E5%99%A8%E9%AA%8C%E8%AF%81/</guid>
+    <description><![CDATA[<p></p>
+<p>关于手机端登录的代码，这里不做多余介绍，我们看下登录成功后， <code>Apple</code>返回给手机端的一些参数</p>]]></description>
+</item>
+<item>
+    <title>Flutter开发App常见问题解决方案</title>
+    <link>https://www.ithome.me/post/2019/12/13/flutter%E5%BC%80%E5%8F%91app%E5%B8%B8%E8%A7%81%E9%97%AE%E9%A2%98%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88/</link>
+    <pubDate>Fri, 13 Dec 2019 00:00:00 &#43;0000</pubDate>
+    <author>SimonChen</author>
+    <guid>https://www.ithome.me/post/2019/12/13/flutter%E5%BC%80%E5%8F%91app%E5%B8%B8%E8%A7%81%E9%97%AE%E9%A2%98%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88/</guid>
+    <description><![CDATA[<p>Flutter开发真的会遇到各种各样的坑爹问题，Android运行起来了可能发现iOS出问题了。遇到过不少问题，因此写这个文章做个汇总，也免得以后遇到了再次翻车。</p>
+<p>当成FAQ使用吧</p>
+<p>Q: [!] The &lsquo;Pods-Runner&rsquo; target has transitive dependencies that include statically linked binaries:
+A： 这种问题一般都是<code>ios/Podfile</code>中的<code>use_frameworks!</code>造成的，注释掉它。</p>
+<p>Q: Flutter中如何引用库工程？
+A: 我在18年尝试过各种办法，真的无解，还是老实的传到<code>jcenter</code>和<code>cocoapods</code>上去。</p>]]></description>
+</item>
+</channel>
+</rss>

@@ -1,0 +1,124 @@
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0">
+    <channel>
+        <title>热更新 - Tag - 编程心语</title>
+        <link>https://www.ithome.me/tags/%E7%83%AD%E6%9B%B4%E6%96%B0/</link>
+        <description>热更新 - Tag - 编程心语</description>
+        <generator>Hugo -- gohugo.io</generator><language>zh-CN</language><copyright>©{year}, All Rights Reserved. Simon Chen</copyright><lastBuildDate>Thu, 26 Oct 2017 00:00:00 &#43;0000</lastBuildDate><atom:link href="https://www.ithome.me/tags/%E7%83%AD%E6%9B%B4%E6%96%B0/" rel="self" type="application/rss+xml" /><item>
+    <title>Android热更新技术总结</title>
+    <link>https://www.ithome.me/post/2017/10/26/android%E7%83%AD%E6%9B%B4%E6%96%B0%E6%8A%80%E6%9C%AF%E6%80%BB%E7%BB%93/</link>
+    <pubDate>Thu, 26 Oct 2017 00:00:00 &#43;0000</pubDate>
+    <author>SimonChen</author>
+    <guid>https://www.ithome.me/post/2017/10/26/android%E7%83%AD%E6%9B%B4%E6%96%B0%E6%8A%80%E6%9C%AF%E6%80%BB%E7%BB%93/</guid>
+    <description><![CDATA[<p>当前市面的热补丁方案有很多，其中比较出名的有阿里的HotFix、美团的Robust、微信的Tinker以及QZone的超级补丁方案。</p>
+<h2 id="1热修复技术的优势">1、热修复技术的优势？</h2>
+<ul>
+<li>无需重新发版，实时高效热修复</li>
+<li>用户无感知修复，无需下载新的应用，代价小</li>
+<li>远程调试</li>
+</ul>
+<table>
+  <thead>
+      <tr>
+          <th style="text-align: left">平台</th>
+          <th style="text-align: left">阿里百川HotFix(Sophix)</th>
+          <th style="text-align: left">AndFix</th>
+          <th style="text-align: left">Tinker</th>
+          <th style="text-align: left">Qzone</th>
+          <th style="text-align: left">Robust</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td style="text-align: left">即时生效</td>
+          <td style="text-align: left">yes</td>
+          <td style="text-align: left">yes</td>
+          <td style="text-align: left">no</td>
+          <td style="text-align: left">no</td>
+          <td style="text-align: left">yes</td>
+      </tr>
+      <tr>
+          <td style="text-align: left">性能损耗</td>
+          <td style="text-align: left">较小</td>
+          <td style="text-align: left">较小</td>
+          <td style="text-align: left">较大</td>
+          <td style="text-align: left">较大</td>
+          <td style="text-align: left">较小</td>
+      </tr>
+      <tr>
+          <td style="text-align: left">侵入式打包</td>
+          <td style="text-align: left">无侵入式打包</td>
+          <td style="text-align: left">无侵入式打包</td>
+          <td style="text-align: left">依赖侵入式打包</td>
+          <td style="text-align: left">依赖侵入式打包</td>
+          <td style="text-align: left">依赖侵入式打包</td>
+      </tr>
+      <tr>
+          <td style="text-align: left">Rom体积</td>
+          <td style="text-align: left">较小</td>
+          <td style="text-align: left">较小</td>
+          <td style="text-align: left">较大</td>
+          <td style="text-align: left">较小</td>
+          <td style="text-align: left">较小</td>
+      </tr>
+      <tr>
+          <td style="text-align: left">接入复杂度</td>
+          <td style="text-align: left">傻瓜式接入</td>
+          <td style="text-align: left">比较简单</td>
+          <td style="text-align: left">复杂</td>
+          <td style="text-align: left">比较简单</td>
+          <td style="text-align: left">复杂</td>
+      </tr>
+      <tr>
+          <td style="text-align: left">补丁包大小</td>
+          <td style="text-align: left">较小</td>
+          <td style="text-align: left">较小</td>
+          <td style="text-align: left">较小</td>
+          <td style="text-align: left">较大</td>
+          <td style="text-align: left">一般</td>
+      </tr>
+      <tr>
+          <td style="text-align: left">全平台支持</td>
+          <td style="text-align: left">yes</td>
+          <td style="text-align: left">yes</td>
+          <td style="text-align: left">yes</td>
+          <td style="text-align: left">yes</td>
+          <td style="text-align: left">yes</td>
+      </tr>
+      <tr>
+          <td style="text-align: left">类替换</td>
+          <td style="text-align: left">yes</td>
+          <td style="text-align: left">yes</td>
+          <td style="text-align: left">yes</td>
+          <td style="text-align: left">yes</td>
+          <td style="text-align: left">no</td>
+      </tr>
+      <tr>
+          <td style="text-align: left">so替换</td>
+          <td style="text-align: left">yes</td>
+          <td style="text-align: left">no</td>
+          <td style="text-align: left">yes</td>
+          <td style="text-align: left">no</td>
+          <td style="text-align: left">no</td>
+      </tr>
+      <tr>
+          <td style="text-align: left">资源替换</td>
+          <td style="text-align: left">yes</td>
+          <td style="text-align: left">no</td>
+          <td style="text-align: left">yes</td>
+          <td style="text-align: left">yes</td>
+          <td style="text-align: left">no</td>
+      </tr>
+      <tr>
+          <td style="text-align: left">成功率</td>
+          <td style="text-align: left">?</td>
+          <td style="text-align: left">一般</td>
+          <td style="text-align: left">较高（95.6%）</td>
+          <td style="text-align: left">较高</td>
+          <td style="text-align: left">最高（99.9%）</td>
+      </tr>
+  </tbody>
+</table>
+<p>可以看到阿里的Sophix有很大优势，阿里系在热修复领域有很多积累，我们可以看下阿里系的热修复技术发展路径，一张表格来说明一下各个版本热修复的差别：</p>]]></description>
+</item>
+</channel>
+</rss>

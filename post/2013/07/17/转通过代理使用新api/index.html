@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="robots" content="noodp" />
+        <title>[转]Android通过代理使用新API - 编程心语</title><meta name="Description" content="This is my KeepIt site"><meta property="og:url" content="https://www.ithome.me/post/2013/07/17/%E8%BD%AC%E9%80%9A%E8%BF%87%E4%BB%A3%E7%90%86%E4%BD%BF%E7%94%A8%E6%96%B0api/">
+  <meta property="og:site_name" content="编程心语">
+  <meta property="og:title" content="[转]Android通过代理使用新API">
+  <meta property="og:description" content="课程内容 使用新API实现Tabs Implement CompatTabHoneycomb Implement TabHelperHoneycomb 您还应该阅读 Action Bar Action Bar Tabs 动手试试 下载示例代码
+TabCompat.zip 这节课程将演示如何使用新的API来实现CompatTab和** TabHelper** 。该实现可以在支持新特性的系统上运行。
+使用新API实现Tabs 通过_proxy代理_的方式来实现CompatTab 和 TabHelper 类。由于抽象的API和新的API是一样的，所以只要通过代理把对这些方法的调用委托给新的API即可。
+在具体实现中您可以直接使用新的API，由于这些具体的实现类是延时加载的，所以当运行在旧的设备上时不会导致程序Crash。只要您不在3.0之前的系统上调用Honeycomb相关的具体实现，则 Dalvik VM 就不会 抛出 [VerifyError](http://developer.android.com/reference/java/lang/VerifyError.html) 异常。
+好的命名策略就是使用具体的版本号对应的名称来命名，这样方便以后管理。由于这里的实现是基于3.0新功能的，所以我们的实现类名字就为CompatTabHoneycomb 和 TabHelperHoneycomb 。">
+  <meta property="og:locale" content="zh_CN">
+  <meta property="og:type" content="article">
+    <meta property="article:section" content="posts">
+    <meta property="article:published_time" content="2013-07-17T17:17:14+08:00">
+    <meta property="article:modified_time" content="2013-07-17T17:17:14+08:00">
+    <meta property="article:tag" content="Android">
+    <meta property="article:tag" content="代理">
+    <meta property="article:tag" content="API">
+
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="[转]Android通过代理使用新API">
+  <meta name="twitter:description" content="课程内容 使用新API实现Tabs Implement CompatTabHoneycomb Implement TabHelperHoneycomb 您还应该阅读 Action Bar Action Bar Tabs 动手试试 下载示例代码
+TabCompat.zip 这节课程将演示如何使用新的API来实现CompatTab和** TabHelper** 。该实现可以在支持新特性的系统上运行。
+使用新API实现Tabs 通过_proxy代理_的方式来实现CompatTab 和 TabHelper 类。由于抽象的API和新的API是一样的，所以只要通过代理把对这些方法的调用委托给新的API即可。
+在具体实现中您可以直接使用新的API，由于这些具体的实现类是延时加载的，所以当运行在旧的设备上时不会导致程序Crash。只要您不在3.0之前的系统上调用Honeycomb相关的具体实现，则 Dalvik VM 就不会 抛出 [VerifyError](http://developer.android.com/reference/java/lang/VerifyError.html) 异常。
+好的命名策略就是使用具体的版本号对应的名称来命名，这样方便以后管理。由于这里的实现是基于3.0新功能的，所以我们的实现类名字就为CompatTabHoneycomb 和 TabHelperHoneycomb 。">
+      <meta name="twitter:site" content="@https://twitter.com/ChenCiki">
+<meta name="application-name" content="My KeepIt site">
+<meta name="apple-mobile-web-app-title" content="My KeepIt site"><meta name="theme-color" content="#ffffff"><meta name="msapplication-TileColor" content="#da532c"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5"><link rel="manifest" href="/site.webmanifest"><link rel="canonical" href="https://www.ithome.me/post/2013/07/17/%E8%BD%AC%E9%80%9A%E8%BF%87%E4%BB%A3%E7%90%86%E4%BD%BF%E7%94%A8%E6%96%B0api/" /><link rel="prev" href="https://www.ithome.me/post/2013/07/17/%E8%BD%AC%E4%BD%BF%E7%94%A8%E5%92%8C%E7%89%88%E6%9C%AC%E5%85%B3%E8%81%94%E7%9A%84%E7%BB%84%E4%BB%B6/" /><link rel="next" href="https://www.ithome.me/post/2013/07/19/%E8%BD%AC%E4%BD%BF%E7%94%A8%E8%AE%BE%E5%A4%87%E7%AE%A1%E7%90%86%E7%AD%96%E7%95%A5%E6%9D%A5%E5%8A%A0%E5%BC%BA%E4%BF%A1%E6%81%AF%E5%AE%89%E5%85%A8/" /><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/normalize.css@8.0.1/normalize.min.css"><link rel="stylesheet" href="/css/style.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css"><script type="application/ld+json">
+    {
+        "@context": "http://schema.org",
+        "@type": "BlogPosting",
+        "headline": "[转]Android通过代理使用新API",
+        "inLanguage": "zh-CN",
+        "mainEntityOfPage": {
+            "@type": "WebPage",
+            "@id": "https:\/\/www.ithome.me\/post\/2013\/07\/17\/%E8%BD%AC%E9%80%9A%E8%BF%87%E4%BB%A3%E7%90%86%E4%BD%BF%E7%94%A8%E6%96%B0api\/"
+        },"genre": "posts","keywords": "android, 代理, API","wordcount":  176 ,
+        "url": "https:\/\/www.ithome.me\/post\/2013\/07\/17\/%E8%BD%AC%E9%80%9A%E8%BF%87%E4%BB%A3%E7%90%86%E4%BD%BF%E7%94%A8%E6%96%B0api\/","datePublished": "2013-07-17T17:17:14+08:00","dateModified": "2013-07-17T17:17:14+08:00","license": "©{year}, All Rights Reserved. Simon Chen","publisher": {
+            "@type": "Organization",
+            "name": ""},"author": {
+                "@type": "Person",
+                "name": "SimonChen"
+            },"description": ""
+    }
+    </script></head>
+    <body data-header-desktop="fixed" data-header-mobile="auto"><script type="text/javascript">(window.localStorage && localStorage.getItem('theme') ? localStorage.getItem('theme') === 'dark' : ('auto' === 'auto' ? window.matchMedia('(prefers-color-scheme: dark)').matches : 'auto' === 'dark')) && document.body.setAttribute('theme', 'dark');</script>
+
+        <div id="mask"></div><div class="wrapper"><header class="desktop" id="header-desktop">
+    <div class="header-wrapper">
+        <div class="header-title">
+            <a href="/" title="编程心语">编程心语</a>
+        </div>
+        <div class="menu">
+            <div class="menu-inner"><a class="menu-item" href="/posts/"> 文章 </a><a class="menu-item" href="/categories/"> 分类 </a><a class="menu-item" href="/tags/"> 标签 </a><a class="menu-item" href="/about-me/"> 关于 </a><span class="menu-item delimiter"></span><span class="menu-item search" id="search-desktop">
+                        <input type="text" placeholder="Search titles or contents..." id="search-input-desktop">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-desktop" title="Search">
+                            <i class="fas fa-search fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-desktop" title="Clear">
+                            <i class="fas fa-times-circle fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-desktop">
+                            <i class="fas fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+                        </span>
+                    </span><a href="javascript:void(0);" class="menu-item theme-switch" title="Switch Theme">
+                    <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</header><header class="mobile" id="header-mobile">
+    <div class="header-container">
+        <div class="header-wrapper">
+            <div class="header-title">
+                <a href="/" title="编程心语">编程心语</a>
+            </div>
+            <div class="menu-toggle" id="menu-toggle-mobile">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+        <div class="menu" id="menu-mobile"><div class="search-wrapper">
+                    <div class="search mobile" id="search-mobile">
+                        <input type="text" placeholder="Search titles or contents..." id="search-input-mobile">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-mobile" title="Search">
+                            <i class="fas fa-search fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-mobile" title="Clear">
+                            <i class="fas fa-times-circle fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-mobile">
+                            <i class="fas fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+                        </span>
+                    </div>
+                    <a href="javascript:void(0);" class="search-cancel" id="search-cancel-mobile">
+                        Cancel
+                    </a>
+                </div><a class="menu-item" href="/posts/" title="">文章</a><a class="menu-item" href="/categories/" title="">分类</a><a class="menu-item" href="/tags/" title="">标签</a><a class="menu-item" href="/about-me/" title="">关于</a><a href="javascript:void(0);" class="menu-item theme-switch" title="Switch Theme">
+                <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
+            </a></div>
+    </div>
+</header><div class="search-dropdown desktop">
+        <div id="search-dropdown-desktop"></div>
+    </div>
+    <div class="search-dropdown mobile">
+        <div id="search-dropdown-mobile"></div>
+    </div><main class="main">
+                <div class="container"><div class="toc" id="toc-auto">
+            <h2 class="toc-title">Contents</h2>
+            <div class="toc-content" id="toc-content-auto"></div>
+        </div><article class="page single"><h1 class="single-title animate__animated animate__flipInX">[转]Android通过代理使用新API</h1><div class="post-meta">
+            <div class="post-meta-line"><span class="post-author"><a href="/" title="Author" rel=" author" class="author"><i class="fas fa-user-circle fa-fw" aria-hidden="true"></i>SimonChen</a>
+</span></div>
+            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw" aria-hidden="true"></i>&nbsp;<time datetime="2013-07-17">2013-07-17</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden="true"></i>&nbsp;176 words&nbsp;
+                <i class="far fa-clock fa-fw" aria-hidden="true"></i>&nbsp;One minute&nbsp;</div>
+        </div><div class="details toc" id="toc-static"  data-kept="">
+                <div class="details-summary toc-title">
+                    <span>Contents</span>
+                    <span><i class="details-icon fas fa-angle-right" aria-hidden="true"></i></span>
+                </div>
+                <div class="details-content toc-content" id="toc-content-static"><nav id="TableOfContents">
+  <ul>
+    <li><a href="#课程内容">课程内容</a></li>
+    <li><a href="#您还应该阅读">您还应该阅读</a></li>
+    <li><a href="#动手试试">动手试试</a></li>
+    <li><a href="#使用新api实现tabs">使用新API实现Tabs</a></li>
+    <li><a href="#implement-compattabhoneycomb">Implement CompatTabHoneycomb</a></li>
+    <li><a href="#implement-tabhelperhoneycomb">Implement TabHelperHoneycomb</a></li>
+  </ul>
+</nav></div>
+            </div><div class="content" id="content"><h2 id="课程内容">课程内容</h2>
+<ol>
+<li>使用新API实现Tabs</li>
+<li>Implement CompatTabHoneycomb</li>
+<li>Implement TabHelperHoneycomb</li>
+</ol>
+<h2 id="您还应该阅读">您还应该阅读</h2>
+<ul>
+<li><a href="http://developer.android.com/guide/topics/ui/actionbar.html" target="_blank" rel="noopener noreffer">Action Bar</a>
+</li>
+<li><a href="http://developer.android.com/guide/topics/ui/actionbar.html#Tabs" target="_blank" rel="noopener noreffer">Action Bar Tabs</a>
+</li>
+</ul>
+<h2 id="动手试试">动手试试</h2>
+<p>下载示例代码<br>
+<a href="http://developer.android.com/shareables/training/TabCompat.zip" target="_blank" rel="noopener noreffer">TabCompat.zip</a>
+</p>
+<p>这节课程将演示如何使用新的API来实现<strong>CompatTab</strong>和** TabHelper** 。该实现可以在支持新特性的系统上运行。</p>
+<h2 id="使用新api实现tabs">使用新API实现Tabs</h2>
+<p>通过_proxy代理_的方式来实现<strong>CompatTab</strong> 和 <strong>TabHelper</strong> 类。由于抽象的API和新的API是一样的，所以只要通过代理把对这些方法的调用委托给新的API即可。</p>
+<p>在具体实现中您可以直接使用新的API，由于这些具体的实现类是延时加载的，所以当运行在旧的设备上时不会导致程序Crash。只要您不在3.0之前的系统上调用Honeycomb相关的具体实现，则 Dalvik VM 就不会
+抛出 <code>[VerifyError](http://developer.android.com/reference/java/lang/VerifyError.html)</code> 异常。</p>
+<p>好的命名策略就是使用具体的版本号对应的名称来命名，这样方便以后管理。由于这里的实现是基于3.0新功能的，所以我们的实现类名字就为<strong>CompatTabHoneycomb</strong> 和 <strong>TabHelperHoneycomb</strong> 。</p>
+<p><a href="http://www.ithome.me/wp-content/uploads/2013/07/backward-compatible-ui-classes-honeycomb.png" target="_blank" rel="noopener noreffer"><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="http://www.ithome.me/wp-content/uploads/2013/07/backward-compatible-ui-classes-honeycomb-300x124.png"
+        data-srcset="http://www.ithome.me/wp-content/uploads/2013/07/backward-compatible-ui-classes-honeycomb-300x124.png, http://www.ithome.me/wp-content/uploads/2013/07/backward-compatible-ui-classes-honeycomb-300x124.png 1.5x, http://www.ithome.me/wp-content/uploads/2013/07/backward-compatible-ui-classes-honeycomb-300x124.png 2x"
+        data-sizes="auto"
+        alt="http://www.ithome.me/wp-content/uploads/2013/07/backward-compatible-ui-classes-honeycomb-300x124.png"
+        title="backward-compatible-ui-classes-honeycomb" /></a>
+</p>
+<h2 id="implement-compattabhoneycomb">Implement CompatTabHoneycomb</h2>
+<p>CompatTabHoneycomb 实现了 CompatTab 抽象类，该类的实现中只是把每个函数的调用委托给
+ActionBar.Tab对象，该对象从Activity中获取。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kd">class</span> <span class="nc">CompatTabHoneycomb</span><span class="w"> </span><span class="kd">extends</span><span class="w"> </span><span class="n">CompatTab</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="c1">// The native tab object that this CompatTab acts as a proxy for.</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="n">ActionBar</span><span class="p">.</span><span class="na">Tab</span><span class="w"> </span><span class="n">mTab</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">...</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">protected</span><span class="w"> </span><span class="nf">CompatTabHoneycomb</span><span class="p">(</span><span class="n">FragmentActivity</span><span class="w"> </span><span class="n">activity</span><span class="p">,</span><span class="w"> </span><span class="n">String</span><span class="w"> </span><span class="n">tag</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="p">...</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="c1">// Proxy to new ActionBar.newTab API</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">mTab</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">activity</span><span class="p">.</span><span class="na">getActionBar</span><span class="p">().</span><span class="na">newTab</span><span class="p">();</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="n">CompatTab</span><span class="w"> </span><span class="nf">setText</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">resId</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="c1">// Proxy to new ActionBar.Tab.setText API</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">mTab</span><span class="p">.</span><span class="na">setText</span><span class="p">(</span><span class="n">resId</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="k">this</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">...</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="c1">// Do the same for other properties (icon, callback, etc.)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="p">}</span><span class="w">
+</span></span></span></code></pre></div><h2 id="implement-tabhelperhoneycomb">Implement TabHelperHoneycomb</h2>
+<p>同样，TabHelperHoneycomb实现了TabHelper 抽象类。 函数的调用都委托给ActionBar对应的函数了。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kd">class</span> <span class="nc">TabHelperHoneycomb</span><span class="w"> </span><span class="kd">extends</span><span class="w"> </span><span class="n">TabHelper</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="n">ActionBar</span><span class="w"> </span><span class="n">mActionBar</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">...</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">protected</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">setUp</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">mActionBar</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="kc">null</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="n">mActionBar</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">mActivity</span><span class="p">.</span><span class="na">getActionBar</span><span class="p">();</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="n">mActionBar</span><span class="p">.</span><span class="na">setNavigationMode</span><span class="p">(</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">                    </span><span class="n">ActionBar</span><span class="p">.</span><span class="na">NAVIGATION_MODE_TABS</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">addTab</span><span class="p">(</span><span class="n">CompatTab</span><span class="w"> </span><span class="n">tab</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="p">...</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="c1">// Tab is a CompatTabHoneycomb instance, so its</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="c1">// native tab object is an ActionBar.Tab.</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">mActionBar</span><span class="p">.</span><span class="na">addTab</span><span class="p">((</span><span class="n">ActionBar</span><span class="p">.</span><span class="na">Tab</span><span class="p">)</span><span class="w"> </span><span class="n">tab</span><span class="p">.</span><span class="na">getTab</span><span class="p">());</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="c1">// The other important method, newTab() is part of</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="c1">// the base implementation.</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="p">}</span><span class="w">
+</span></span></span></code></pre></div><blockquote>
+<p>原文:http://blog.chengyunfeng.com/?p=403</p>
+</blockquote>
+</div><div class="post-footer" id="post-footer">
+    <div class="post-info">
+        <div class="post-info-line">
+            <div class="post-info-mod">
+                <span>Updated on 2013-07-17</span>
+            </div></div>
+        <div class="post-info-line">
+            <div class="post-info-md"></div>
+            <div class="post-info-share">
+                <span><a href="javascript:void(0);" title="Share on Twitter" data-sharer="twitter" data-url="https://www.ithome.me/post/2013/07/17/%E8%BD%AC%E9%80%9A%E8%BF%87%E4%BB%A3%E7%90%86%E4%BD%BF%E7%94%A8%E6%96%B0api/" data-title="[转]Android通过代理使用新API" data-via="https://twitter.com/ChenCiki" data-hashtags="android,代理,API"><i class="fab fa-twitter fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on Facebook" data-sharer="facebook" data-url="https://www.ithome.me/post/2013/07/17/%E8%BD%AC%E9%80%9A%E8%BF%87%E4%BB%A3%E7%90%86%E4%BD%BF%E7%94%A8%E6%96%B0api/" data-hashtag="android"><i class="fab fa-facebook-square fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on Hacker News" data-sharer="hackernews" data-url="https://www.ithome.me/post/2013/07/17/%E8%BD%AC%E9%80%9A%E8%BF%87%E4%BB%A3%E7%90%86%E4%BD%BF%E7%94%A8%E6%96%B0api/" data-title="[转]Android通过代理使用新API"><i class="fab fa-hacker-news fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on Line" data-sharer="line" data-url="https://www.ithome.me/post/2013/07/17/%E8%BD%AC%E9%80%9A%E8%BF%87%E4%BB%A3%E7%90%86%E4%BD%BF%E7%94%A8%E6%96%B0api/" data-title="[转]Android通过代理使用新API"><i data-svg-src="https://cdn.jsdelivr.net/npm/simple-icons@6.20.0/icons/line.svg" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on 微博" data-sharer="weibo" data-url="https://www.ithome.me/post/2013/07/17/%E8%BD%AC%E9%80%9A%E8%BF%87%E4%BB%A3%E7%90%86%E4%BD%BF%E7%94%A8%E6%96%B0api/" data-title="[转]Android通过代理使用新API" data-ralateuid="xxx"><i class="fab fa-weibo fa-fw" aria-hidden="true"></i></a></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="post-info-more">
+        <section class="post-tags"><i class="fas fa-tags fa-fw" aria-hidden="true"></i>&nbsp;<a href="/tags/android/">Android</a>,&nbsp;<a href="/tags/%E4%BB%A3%E7%90%86/">代理</a>,&nbsp;<a href="/tags/api/">API</a></section>
+        <section>
+            <span><a href="javascript:void(0);" onclick="window.history.back();">Back</a></span>&nbsp;|&nbsp;<span><a href="/">Home</a></span>
+        </section>
+    </div>
+
+    <div class="post-nav"><a href="/post/2013/07/17/%E8%BD%AC%E4%BD%BF%E7%94%A8%E5%92%8C%E7%89%88%E6%9C%AC%E5%85%B3%E8%81%94%E7%9A%84%E7%BB%84%E4%BB%B6/" class="prev" rel="prev" title="[转]使用和版本关联的组件"><i class="fas fa-angle-left fa-fw" aria-hidden="true"></i>[转]使用和版本关联的组件</a>
+            <a href="/post/2013/07/19/%E8%BD%AC%E4%BD%BF%E7%94%A8%E8%AE%BE%E5%A4%87%E7%AE%A1%E7%90%86%E7%AD%96%E7%95%A5%E6%9D%A5%E5%8A%A0%E5%BC%BA%E4%BF%A1%E6%81%AF%E5%AE%89%E5%85%A8/" class="next" rel="next" title="[转]使用设备管理策略来加强信息安全">[转]使用设备管理策略来加强信息安全<i class="fas fa-angle-right fa-fw" aria-hidden="true"></i></a></div>
+</div>
+</article></div>
+            </main><footer class="footer">
+        <div class="footer-container"><div class="footer-line" itemscope itemtype="http://schema.org/CreativeWork"><i class="far fa-copyright fa-fw" aria-hidden="true"></i><span itemprop="copyrightYear">2011 - 2024</span><span class="author" itemprop="copyrightHolder">&nbsp;<a href="/" target="_blank">SimonChen</a></span></div>
+        </div>
+    </footer></div>
+
+        <div id="fixed-buttons"><a href="#" id="back-to-top" class="fixed-button" title="Back to Top">
+                <i class="fas fa-arrow-up fa-fw" aria-hidden="true"></i>
+            </a><a href="#" id="view-comments" class="fixed-button" title="View Comments">
+                <i class="fas fa-comment fa-fw" aria-hidden="true"></i>
+            </a>
+        </div><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/autocomplete.js@0.38.1/dist/autocomplete.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lunr@2.3.9/lunr.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lazysizes@5.3.1/lazysizes.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/clipboard@2.0.11/dist/clipboard.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/sharer.js@0.5.1/sharer.min.js"></script><script type="text/javascript">window.config={"code":{"copyTitle":"Copy to clipboard","maxShownLines":50},"comment":{},"search":{"highlightTag":"em","maxResultLength":10,"noResultsFound":"No results found","snippetLength":30}};</script><script type="text/javascript" src="/js/theme.min.js"></script></body>
+</html>
