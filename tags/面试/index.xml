@@ -37,7 +37,54 @@
 <blockquote>
 <p>鲁迅：授人以鱼不如授人以渔和鱼
 有经验的同学此时已经急不可耐了，鱼拿去。
-完整的<code>docker-compose.yml</code>文件</p>]]></description>
+完整的<code>docker-compose.yml</code>文件</p>
+</blockquote>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">version: &#39;3&#39;
+</span></span><span class="line"><span class="cl">services:
+</span></span><span class="line"><span class="cl">  namesrv:
+</span></span><span class="line"><span class="cl">    image: apacherocketmq/rocketmq:4.9.2-alpine
+</span></span><span class="line"><span class="cl">    container_name: rmqnamesrv
+</span></span><span class="line"><span class="cl">    ports:
+</span></span><span class="line"><span class="cl">      - 9876:9876
+</span></span><span class="line"><span class="cl">    volumes:
+</span></span><span class="line"><span class="cl">      - ./data/namesrv/logs:/home/rocketmq/logs
+</span></span><span class="line"><span class="cl">    command: sh mqnamesrv
+</span></span><span class="line"><span class="cl">    restart: always
+</span></span><span class="line"><span class="cl">  broker:
+</span></span><span class="line"><span class="cl">    image: apacherocketmq/rocketmq:4.9.2-alpine
+</span></span><span class="line"><span class="cl">    container_name: rmqbroker
+</span></span><span class="line"><span class="cl">    links:
+</span></span><span class="line"><span class="cl">      - namesrv
+</span></span><span class="line"><span class="cl">    ports:
+</span></span><span class="line"><span class="cl">      - 10909:10909
+</span></span><span class="line"><span class="cl">      - 10911:10911
+</span></span><span class="line"><span class="cl">      - 10912:10912
+</span></span><span class="line"><span class="cl">    environment:
+</span></span><span class="line"><span class="cl">      - NAMESRV_ADDR=namesrv:9876
+</span></span><span class="line"><span class="cl">    volumes:
+</span></span><span class="line"><span class="cl">      - ./data/broker/logs:/home/rocketmq/logs
+</span></span><span class="line"><span class="cl">      - ./data/broker/store:/home/rocketmq/store
+</span></span><span class="line"><span class="cl">      - ./data/broker/conf/broker.conf:/home/rocketmq/rocketmq-4.9.2/conf/broker.conf
+</span></span><span class="line"><span class="cl">      - ./data/broker/runbroker.sh:/home/rocketmq/rocketmq-4.9.2/bin/runbroker.sh
+</span></span><span class="line"><span class="cl">    command: sh mqbroker -c /home/rocketmq/rocketmq-4.9.2/conf/broker.conf
+</span></span><span class="line"><span class="cl">    depends_on:
+</span></span><span class="line"><span class="cl">      - namesrv
+</span></span><span class="line"><span class="cl">    restart: always
+</span></span><span class="line"><span class="cl">  rmqconsole:
+</span></span><span class="line"><span class="cl">    image: candice0630/rocketmq-console-ng:2.0
+</span></span><span class="line"><span class="cl">    container_name: rmqconsole
+</span></span><span class="line"><span class="cl">    ports:
+</span></span><span class="line"><span class="cl">      - 9001:8080
+</span></span><span class="line"><span class="cl">    environment:
+</span></span><span class="line"><span class="cl">      JAVA_OPTS: -Drocketmq.namesrv.addr=namesrv:9876
+</span></span><span class="line"><span class="cl">        -Dcom.rocketmq.sendMessageWithVIPChannel=false
+</span></span><span class="line"><span class="cl">    depends_on:
+</span></span><span class="line"><span class="cl">      - namesrv
+</span></span><span class="line"><span class="cl">    restart: always
+</span></span></code></pre></div><p>上面一共三个images，<code>namesrv</code>、<code>broker</code>和<code>rmqconsole</code>
+熟悉<code>docker-compose</code>的同学可以直接跳过这部分了
+本部分主要结合上面的配置来说，不适应的根据自己的习惯自行更改
+先建立一个<code>rocketmq</code>文件夹，然后在文件夹下面创建<code>docker-compose.yml</code>文件，复制上面的内容进去。在<code>docker-compose.yml</code>同级目录下创建<code>data</code>文件夹，在<code>data</code>文件夹下分别创建<code>broker</code>和<code>namesrv</code>文件夹，<code>broker</code>目录下分别创建<code>conf</code>、<code>logs</code>和<code>store</code>文件夹。<code>namesrv</code>目录下创建<code>logs</code>目录，<code>logs</code>目录下创建<code>rocketmqlogs</code>目录，这样所有的目录创建完成。自定义的<code>broker.conf</code>文件放到<code>data/broker/conf</code>目录下。</p>]]></description>
 </item>
 <item>
     <title>Android高频面试题汇总(一)</title>
@@ -60,31 +107,31 @@
 <table>
   <thead>
       <tr>
-          <th style="text-align: left">区别点</th>
-          <th style="text-align: left">重载</th>
-          <th style="text-align: left">重写</th>
+          <th>区别点</th>
+          <th>重载</th>
+          <th>重写</th>
       </tr>
   </thead>
   <tbody>
       <tr>
-          <td style="text-align: left">参数列表</td>
-          <td style="text-align: left">必须修改</td>
-          <td style="text-align: left">不能修改</td>
+          <td>参数列表</td>
+          <td>必须修改</td>
+          <td>不能修改</td>
       </tr>
       <tr>
-          <td style="text-align: left">返回类型</td>
-          <td style="text-align: left">可以修改</td>
-          <td style="text-align: left">不能修改</td>
+          <td>返回类型</td>
+          <td>可以修改</td>
+          <td>不能修改</td>
       </tr>
       <tr>
-          <td style="text-align: left">异常</td>
-          <td style="text-align: left">可以修改</td>
-          <td style="text-align: left">可以减少或删除，一定不能抛出新的或者更广的异常</td>
+          <td>异常</td>
+          <td>可以修改</td>
+          <td>可以减少或删除，一定不能抛出新的或者更广的异常</td>
       </tr>
       <tr>
-          <td style="text-align: left">访问</td>
-          <td style="text-align: left">可以修改</td>
-          <td style="text-align: left">一定不能做更严格的限制（可以降低限制）</td>
+          <td>访问</td>
+          <td>可以修改</td>
+          <td>一定不能做更严格的限制（可以降低限制）</td>
       </tr>
   </tbody>
 </table>
@@ -141,7 +188,23 @@
 需要记忆的是<code>懒汉式</code>和<code>饿汉式</code>。
 懒汉式：需要的时候才实例化，常用的例子就是非空检查和双重检查式的实现。
 饿汉式：类加载的时候就先实例化。
-类似这样的</p>]]></description>
+类似这样的</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kd">private</span><span class="w"> </span><span class="kd">static</span><span class="w"> </span><span class="n">Singleton</span><span class="w"> </span><span class="n">instance</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">Singleton</span><span class="p">();</span><span class="w">
+</span></span></span></code></pre></div><p>饿汉式会线程安全些。
+我们用的最主流的方式是静态内部类的方式。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kd">class</span> <span class="nc">SingleInstance</span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="kd">private</span><span class="w"> </span><span class="nf">SingleInstance</span><span class="p">(){}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"> 
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="kd">private</span><span class="w"> </span><span class="kd">static</span><span class="w"> </span><span class="kd">class</span> <span class="nc">SingleInstanceHolder</span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">     </span><span class="kd">private</span><span class="w"> </span><span class="kd">static</span><span class="w"> </span><span class="n">SingleInstance</span><span class="w"> </span><span class="n">INSTANCE</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">SingleInstance</span><span class="p">();</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"> </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"> 
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="kd">public</span><span class="w"> </span><span class="kd">static</span><span class="w"> </span><span class="n">SingleInstance</span><span class="w"> </span><span class="nf">getInstance</span><span class="p">(){</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">SingleInstanceHolder</span><span class="p">.</span><span class="na">INSTANCE</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="p">}</span><span class="w">
+</span></span></span></code></pre></div><blockquote>
+<p>一个省只会有一个省长。</p>]]></description>
 </item>
 <item>
     <title>Java集合</title>
@@ -191,7 +254,13 @@
 </blockquote>
 <h2 id="3-关于-jvm-jdk-和-jre-最详细通俗的解答">3. 关于 JVM JDK 和 JRE 最详细通俗的解答</h2>
 <h3 id="jvm">JVM</h3>
-<p>Java虚拟机（JVM）是运行 Java 字节码的虚拟机。JVM有针对不同系统的特定实现（Windows，Linux，macOS），目的是使用相同的字节码，它们都会给出相同的结果。</p>]]></description>
+<p>Java虚拟机（JVM）是运行 Java 字节码的虚拟机。JVM有针对不同系统的特定实现（Windows，Linux，macOS），目的是使用相同的字节码，它们都会给出相同的结果。</p>
+<p><strong>什么是字节码?采用字节码的好处是什么?</strong></p>
+<blockquote>
+<p>在 Java 中，JVM可以理解的代码就叫做<code>字节码</code>（即扩展名为 <code>.class</code> 的文件），它不面向任何特定的处理器，只面向虚拟机。Java 语言通过字节码的方式，在一定程度上解决了传统解释型语言执行效率低的问题，同时又保留了解释型语言可移植的特点。所以 Java 程序运行时比较高效，而且，由于字节码并不针对一种特定的机器，因此，Java程序无须重新编译便可在多种不同操作系统的计算机上运行。</p>
+</blockquote>
+<p><strong>Java 程序从源代码到运行一般有下面3步：</strong></p>
+<p></p>]]></description>
 </item>
 </channel>
 </rss>

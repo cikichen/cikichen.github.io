@@ -23,7 +23,97 @@
  是材料设计非常重要的一个控件，继承于 <a href="https://developer.android.com/reference/android/widget/ImageView.html" target="_blank" rel="noopener noreffer">ImageView</a>
 。它可以显著的提升对行为的强调。目前市面上已经有很多app,web都实现了这个设计。</p>
 <p>先看看浮动按钮是什么样的。
-</p>]]></description>
+</p>
+<!-- raw HTML omitted -->
+<h3 id="实现">实现</h3>
+<p>确保已经加入了依赖库:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">compile &#39;com.android.support:design:22.2.1&#39;
+</span></span></code></pre></div><p>FloatingActionButton一般需要结合<code>android.support.design.widget.CoordinatorLayout</code>来使用，主要是为了实现一些动效，比如动态的隐藏显示，新布局显示的时候自动位移等等。</p>
+<p>直接看布局代码：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-xml" data-lang="xml"><span class="line"><span class="cl"><span class="cp">&lt;?xml version=&#34;1.0&#34; encoding=&#34;utf-8&#34;?&gt;</span>
+</span></span><span class="line"><span class="cl"><span class="nt">&lt;LinearLayout</span>
+</span></span><span class="line"><span class="cl">    <span class="na">android:id=</span><span class="s">&#34;@+id/drawer_layout&#34;</span>
+</span></span><span class="line"><span class="cl">    <span class="na">xmlns:android=</span><span class="s">&#34;http://schemas.android.com/apk/res/android&#34;</span>
+</span></span><span class="line"><span class="cl">    <span class="na">xmlns:app=</span><span class="s">&#34;http://schemas.android.com/apk/res-auto&#34;</span>
+</span></span><span class="line"><span class="cl">    <span class="na">android:layout_width=</span><span class="s">&#34;match_parent&#34;</span>
+</span></span><span class="line"><span class="cl">    <span class="na">android:layout_height=</span><span class="s">&#34;match_parent&#34;</span>
+</span></span><span class="line"><span class="cl">    <span class="na">android:fitsSystemWindows=</span><span class="s">&#34;true&#34;</span><span class="nt">&gt;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="nt">&lt;android.support.design.widget.CoordinatorLayout</span>
+</span></span><span class="line"><span class="cl">        <span class="na">android:id=</span><span class="s">&#34;@+id/snackbarPosition&#34;</span>
+</span></span><span class="line"><span class="cl">        <span class="na">android:layout_width=</span><span class="s">&#34;match_parent&#34;</span>
+</span></span><span class="line"><span class="cl">        <span class="na">android:layout_height=</span><span class="s">&#34;match_parent&#34;</span>
+</span></span><span class="line"><span class="cl">        <span class="na">android:layout_centerHorizontal=</span><span class="s">&#34;true&#34;</span><span class="nt">&gt;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">        <span class="nt">&lt;android.support.design.widget.AppBarLayout</span>
+</span></span><span class="line"><span class="cl">            <span class="na">android:id=</span><span class="s">&#34;@+id/appbar&#34;</span>
+</span></span><span class="line"><span class="cl">            <span class="na">android:layout_width=</span><span class="s">&#34;match_parent&#34;</span>
+</span></span><span class="line"><span class="cl">            <span class="na">android:layout_height=</span><span class="s">&#34;wrap_content&#34;</span>
+</span></span><span class="line"><span class="cl">            <span class="na">android:theme=</span><span class="s">&#34;@style/ThemeOverlay.AppCompat.Dark.ActionBar&#34;</span><span class="nt">&gt;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">            <span class="nt">&lt;android.support.v7.widget.Toolbar</span>
+</span></span><span class="line"><span class="cl">                <span class="na">android:id=</span><span class="s">&#34;@+id/toolbar&#34;</span>
+</span></span><span class="line"><span class="cl">                <span class="na">android:layout_width=</span><span class="s">&#34;match_parent&#34;</span>
+</span></span><span class="line"><span class="cl">                <span class="na">android:layout_height=</span><span class="s">&#34;?attr/actionBarSize&#34;</span>
+</span></span><span class="line"><span class="cl">                <span class="na">android:background=</span><span class="s">&#34;?attr/colorPrimary&#34;</span>
+</span></span><span class="line"><span class="cl">                <span class="na">android:layout_gravity=</span><span class="s">&#34;center&#34;</span>
+</span></span><span class="line"><span class="cl">                <span class="na">app:layout_collapseMode=</span><span class="s">&#34;parallax&#34;</span>
+</span></span><span class="line"><span class="cl">                <span class="na">app:layout_scrollFlags=</span><span class="s">&#34;scroll|enterAlways&#34;</span>
+</span></span><span class="line"><span class="cl">                <span class="na">app:popupTheme=</span><span class="s">&#34;@style/ThemeOverlay.AppCompat.Light&#34;</span><span class="nt">&gt;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">                <span class="nt">&lt;TextView</span>
+</span></span><span class="line"><span class="cl">                    <span class="na">android:layout_width=</span><span class="s">&#34;wrap_content&#34;</span>
+</span></span><span class="line"><span class="cl">                    <span class="na">android:layout_height=</span><span class="s">&#34;wrap_content&#34;</span>
+</span></span><span class="line"><span class="cl">                    <span class="na">android:gravity=</span><span class="s">&#34;center&#34;</span>
+</span></span><span class="line"><span class="cl">                    <span class="na">android:layout_gravity=</span><span class="s">&#34;center&#34;</span>
+</span></span><span class="line"><span class="cl">                    <span class="na">android:textColor=</span><span class="s">&#34;@android:color/white&#34;</span>
+</span></span><span class="line"><span class="cl">                    <span class="na">android:textSize=</span><span class="s">&#34;20sp&#34;</span>
+</span></span><span class="line"><span class="cl">                    <span class="na">android:text=</span><span class="s">&#34;标题栏&#34;</span><span class="nt">/&gt;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">            <span class="nt">&lt;/android.support.v7.widget.Toolbar&gt;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">        <span class="nt">&lt;/android.support.design.widget.AppBarLayout&gt;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">        <span class="nt">&lt;android.support.design.widget.FloatingActionButton</span>
+</span></span><span class="line"><span class="cl">            <span class="na">android:id=</span><span class="s">&#34;@+id/fab&#34;</span>
+</span></span><span class="line"><span class="cl">            <span class="na">android:layout_width=</span><span class="s">&#34;wrap_content&#34;</span>
+</span></span><span class="line"><span class="cl">            <span class="na">android:layout_height=</span><span class="s">&#34;wrap_content&#34;</span>
+</span></span><span class="line"><span class="cl">            <span class="na">android:layout_gravity=</span><span class="s">&#34;end|bottom&#34;</span>
+</span></span><span class="line"><span class="cl">            <span class="na">android:layout_margin=</span><span class="s">&#34;16dp&#34;</span>
+</span></span><span class="line"><span class="cl">            <span class="na">android:elevation=</span><span class="s">&#34;4dp&#34;</span>
+</span></span><span class="line"><span class="cl">            <span class="na">app:fabSize=</span><span class="s">&#34;normal&#34;</span>
+</span></span><span class="line"><span class="cl">            <span class="na">app:backgroundTint=</span><span class="s">&#34;#673AB7&#34;</span>
+</span></span><span class="line"><span class="cl">            <span class="na">android:src=</span><span class="s">&#34;@drawable/ic_add_white_24dp&#34;</span><span class="nt">/&gt;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">        <span class="nt">&lt;android.support.design.widget.FloatingActionButton</span>
+</span></span><span class="line"><span class="cl">            <span class="na">android:id=</span><span class="s">&#34;@+id/fab2&#34;</span>
+</span></span><span class="line"><span class="cl">            <span class="na">android:layout_width=</span><span class="s">&#34;wrap_content&#34;</span>
+</span></span><span class="line"><span class="cl">            <span class="na">android:layout_height=</span><span class="s">&#34;wrap_content&#34;</span>
+</span></span><span class="line"><span class="cl">            <span class="na">android:layout_gravity=</span><span class="s">&#34;end|bottom&#34;</span>
+</span></span><span class="line"><span class="cl">            <span class="na">android:layout_marginRight=</span><span class="s">&#34;80dp&#34;</span>
+</span></span><span class="line"><span class="cl">            <span class="na">android:layout_marginBottom=</span><span class="s">&#34;16dp&#34;</span>
+</span></span><span class="line"><span class="cl">            <span class="na">android:elevation=</span><span class="s">&#34;10dp&#34;</span>
+</span></span><span class="line"><span class="cl">            <span class="na">android:background=</span><span class="s">&#34;@drawable/ic_android_purple_700_18dp&#34;</span>
+</span></span><span class="line"><span class="cl">            <span class="na">app:fabSize=</span><span class="s">&#34;normal&#34;</span>
+</span></span><span class="line"><span class="cl">            <span class="na">app:backgroundTint=</span><span class="s">&#34;#673AB7&#34;</span>
+</span></span><span class="line"><span class="cl">            <span class="na">app:borderWidth=</span><span class="s">&#34;0dp&#34;</span><span class="nt">/&gt;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">        <span class="nt">&lt;android.support.design.widget.FloatingActionButton</span>
+</span></span><span class="line"><span class="cl">            <span class="na">android:id=</span><span class="s">&#34;@+id/fab3&#34;</span>
+</span></span><span class="line"><span class="cl">            <span class="na">android:layout_width=</span><span class="s">&#34;wrap_content&#34;</span>
+</span></span><span class="line"><span class="cl">            <span class="na">android:layout_height=</span><span class="s">&#34;wrap_content&#34;</span>
+</span></span><span class="line"><span class="cl">            <span class="na">android:layout_gravity=</span><span class="s">&#34;end|bottom&#34;</span>
+</span></span><span class="line"><span class="cl">            <span class="na">android:layout_marginBottom=</span><span class="s">&#34;20dp&#34;</span>
+</span></span><span class="line"><span class="cl">            <span class="na">android:layout_marginRight=</span><span class="s">&#34;150dp&#34;</span>
+</span></span><span class="line"><span class="cl">            <span class="na">android:elevation=</span><span class="s">&#34;4dp&#34;</span>
+</span></span><span class="line"><span class="cl">            <span class="na">app:fabSize=</span><span class="s">&#34;mini&#34;</span>
+</span></span><span class="line"><span class="cl">            <span class="na">app:backgroundTint=</span><span class="s">&#34;#673AB7&#34;</span>
+</span></span><span class="line"><span class="cl">            <span class="na">android:src=</span><span class="s">&#34;@drawable/ic_add_white_24dp&#34;</span><span class="nt">/&gt;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="nt">&lt;/android.support.design.widget.CoordinatorLayout&gt;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="nt">&lt;/LinearLayout&gt;</span>
+</span></span></code></pre></div><p>我这里放了三个FloatingActionButton，显示效果就如上图所示。当然你也可以用一个父布局把三个FloatingActionButton包裹起来，实现你需要的布局。</p>]]></description>
 </item>
 <item>
     <title>Android Design Support Library</title>

@@ -8,7 +8,7 @@
   <meta property="og:site_name" content="编程心语">
   <meta property="og:title" content="Android高频面试题汇总(一)">
   <meta property="og:description" content="1.Leakcanary原理？ 利用 application.registerActivityLifecycleCallbacks(lifecycleCallbacks) 来监听整个生命周期内的 Activity onDestoryed 事件 某个 Activity 被 destory 后，将它传给 RefWatcher 去做观测，确保其后续会被正常回收； RefWatcher 首先把 Activity 使用 KeyedWeakReference 引用起来，并使用一个 ReferenceQueue 来记录该 KeyedWeakReference 指向的对象是否已被回收； AndroidWatchExecutor 会在 5s 后，开始检查这个弱引用内的 Activity 是否被正常回收。判断条件是：若 Activity 被正常回收，那么引用它的 KeyedWeakReference 会被自动放入 ReferenceQueue 中。 判断方式是：先看 Activity 对应的 KeyedWeakReference 是否已经放入 ReferenceQueue 中；如果没有，则手动 GC：gcTrigger.runGc();；然后再一次判断 ReferenceQueue 是否已经含有对应的 KeyedWeakReference。若还未被回收，则认为可能发生内存泄漏 2.如何理解Java的多态？其中，重载和重写有什么区别？ 多态是同一个行为具有多个不同表现形式或形态的能力，多态是同一个接口，使用不同的实例而执行不同操作，多态就是程序运行期间才确定，一个引用变量倒底会指向哪个类的实例对象，该引用变量发出的方法调用到底是哪个类中实现的方法。 多态存在的三个必要条件是：继承，重写，父类引用指向子类引用。 多态的三个实现方式是：重写，接口，抽象类和抽象方法。
-区别点 重载 重写 参数列表 必须修改 不能修改 返回类型 可以修改 不能修改 异常 可以修改 可以减少或删除，一定不能抛出新的或者更广的异常 访问 可以修改 一定不能做更严格的限制（可以降低限制） 3.谈一下JVM内存区域划分？哪部分是线程公有的，哪部分是私有的？ ">
+区别点 重载 重写 参数列表 必须修改 不能修改 返回类型 可以修改 不能修改 异常 可以修改 可以减少或删除，一定不能抛出新的或者更广的异常 访问 可以修改 一定不能做更严格的限制（可以降低限制） 3.谈一下JVM内存区域划分？哪部分是线程公有的，哪部分是私有的？">
   <meta property="og:locale" content="zh_CN">
   <meta property="og:type" content="article">
     <meta property="article:section" content="posts">
@@ -21,7 +21,7 @@
   <meta name="twitter:card" content="summary">
   <meta name="twitter:title" content="Android高频面试题汇总(一)">
   <meta name="twitter:description" content="1.Leakcanary原理？ 利用 application.registerActivityLifecycleCallbacks(lifecycleCallbacks) 来监听整个生命周期内的 Activity onDestoryed 事件 某个 Activity 被 destory 后，将它传给 RefWatcher 去做观测，确保其后续会被正常回收； RefWatcher 首先把 Activity 使用 KeyedWeakReference 引用起来，并使用一个 ReferenceQueue 来记录该 KeyedWeakReference 指向的对象是否已被回收； AndroidWatchExecutor 会在 5s 后，开始检查这个弱引用内的 Activity 是否被正常回收。判断条件是：若 Activity 被正常回收，那么引用它的 KeyedWeakReference 会被自动放入 ReferenceQueue 中。 判断方式是：先看 Activity 对应的 KeyedWeakReference 是否已经放入 ReferenceQueue 中；如果没有，则手动 GC：gcTrigger.runGc();；然后再一次判断 ReferenceQueue 是否已经含有对应的 KeyedWeakReference。若还未被回收，则认为可能发生内存泄漏 2.如何理解Java的多态？其中，重载和重写有什么区别？ 多态是同一个行为具有多个不同表现形式或形态的能力，多态是同一个接口，使用不同的实例而执行不同操作，多态就是程序运行期间才确定，一个引用变量倒底会指向哪个类的实例对象，该引用变量发出的方法调用到底是哪个类中实现的方法。 多态存在的三个必要条件是：继承，重写，父类引用指向子类引用。 多态的三个实现方式是：重写，接口，抽象类和抽象方法。
-区别点 重载 重写 参数列表 必须修改 不能修改 返回类型 可以修改 不能修改 异常 可以修改 可以减少或删除，一定不能抛出新的或者更广的异常 访问 可以修改 一定不能做更严格的限制（可以降低限制） 3.谈一下JVM内存区域划分？哪部分是线程公有的，哪部分是私有的？ ">
+区别点 重载 重写 参数列表 必须修改 不能修改 返回类型 可以修改 不能修改 异常 可以修改 可以减少或删除，一定不能抛出新的或者更广的异常 访问 可以修改 一定不能做更严格的限制（可以降低限制） 3.谈一下JVM内存区域划分？哪部分是线程公有的，哪部分是私有的？">
       <meta name="twitter:site" content="@https://twitter.com/ChenCiki">
 <meta name="application-name" content="My KeepIt site">
 <meta name="apple-mobile-web-app-title" content="My KeepIt site"><meta name="theme-color" content="#ffffff"><meta name="msapplication-TileColor" content="#da532c"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
@@ -157,31 +157,31 @@
 <table>
   <thead>
       <tr>
-          <th style="text-align: left">区别点</th>
-          <th style="text-align: left">重载</th>
-          <th style="text-align: left">重写</th>
+          <th>区别点</th>
+          <th>重载</th>
+          <th>重写</th>
       </tr>
   </thead>
   <tbody>
       <tr>
-          <td style="text-align: left">参数列表</td>
-          <td style="text-align: left">必须修改</td>
-          <td style="text-align: left">不能修改</td>
+          <td>参数列表</td>
+          <td>必须修改</td>
+          <td>不能修改</td>
       </tr>
       <tr>
-          <td style="text-align: left">返回类型</td>
-          <td style="text-align: left">可以修改</td>
-          <td style="text-align: left">不能修改</td>
+          <td>返回类型</td>
+          <td>可以修改</td>
+          <td>不能修改</td>
       </tr>
       <tr>
-          <td style="text-align: left">异常</td>
-          <td style="text-align: left">可以修改</td>
-          <td style="text-align: left">可以减少或删除，一定不能抛出新的或者更广的异常</td>
+          <td>异常</td>
+          <td>可以修改</td>
+          <td>可以减少或删除，一定不能抛出新的或者更广的异常</td>
       </tr>
       <tr>
-          <td style="text-align: left">访问</td>
-          <td style="text-align: left">可以修改</td>
-          <td style="text-align: left">一定不能做更严格的限制（可以降低限制）</td>
+          <td>访问</td>
+          <td>可以修改</td>
+          <td>一定不能做更严格的限制（可以降低限制）</td>
       </tr>
   </tbody>
 </table>
@@ -244,60 +244,60 @@
 <table>
   <thead>
       <tr>
-          <th style="text-align: left">名称</th>
-          <th style="text-align: left">优点</th>
-          <th style="text-align: left">缺点</th>
-          <th style="text-align: left">适用场景</th>
+          <th>名称</th>
+          <th>优点</th>
+          <th>缺点</th>
+          <th>适用场景</th>
       </tr>
   </thead>
   <tbody>
       <tr>
-          <td style="text-align: left">Intent</td>
-          <td style="text-align: left">简单易用</td>
-          <td style="text-align: left">只能传输Bundle所支持的数据类型</td>
-          <td style="text-align: left">四大组件间的进程间通信</td>
+          <td>Intent</td>
+          <td>简单易用</td>
+          <td>只能传输Bundle所支持的数据类型</td>
+          <td>四大组件间的进程间通信</td>
       </tr>
       <tr>
-          <td style="text-align: left">文件共享</td>
-          <td style="text-align: left">简单易用</td>
-          <td style="text-align: left">不适合高并发</td>
-          <td style="text-align: left">简单的数据共享，无高并发场景</td>
+          <td>文件共享</td>
+          <td>简单易用</td>
+          <td>不适合高并发</td>
+          <td>简单的数据共享，无高并发场景</td>
       </tr>
       <tr>
-          <td style="text-align: left">AIDL</td>
-          <td style="text-align: left">功能强大，支持一对多并发实时通信</td>
-          <td style="text-align: left">使用稍微复杂，需要注意线程同步</td>
-          <td style="text-align: left">复杂的进程间调用,Android中最常用</td>
+          <td>AIDL</td>
+          <td>功能强大，支持一对多并发实时通信</td>
+          <td>使用稍微复杂，需要注意线程同步</td>
+          <td>复杂的进程间调用,Android中最常用</td>
       </tr>
       <tr>
-          <td style="text-align: left">Messenger</td>
-          <td style="text-align: left">比AIDL稍微简单易用些</td>
-          <td style="text-align: left">比AIDL功能弱，只支持一对多串行实时通信</td>
-          <td style="text-align: left">简单的进程间通信</td>
+          <td>Messenger</td>
+          <td>比AIDL稍微简单易用些</td>
+          <td>比AIDL功能弱，只支持一对多串行实时通信</td>
+          <td>简单的进程间通信</td>
       </tr>
       <tr>
-          <td style="text-align: left">ContentProvider</td>
-          <td style="text-align: left">强大的数据共享能力，可通过call方法扩展</td>
-          <td style="text-align: left">受约束的AIDL，主要对外提供数据线的CRUD操作</td>
-          <td style="text-align: left">进程间的大量数据共享</td>
+          <td>ContentProvider</td>
+          <td>强大的数据共享能力，可通过call方法扩展</td>
+          <td>受约束的AIDL，主要对外提供数据线的CRUD操作</td>
+          <td>进程间的大量数据共享</td>
       </tr>
       <tr>
-          <td style="text-align: left">RemoteViews</td>
-          <td style="text-align: left">在跨进程访问UI方面有奇效</td>
-          <td style="text-align: left">比较小众的通信方式</td>
-          <td style="text-align: left">某些特殊的场景</td>
+          <td>RemoteViews</td>
+          <td>在跨进程访问UI方面有奇效</td>
+          <td>比较小众的通信方式</td>
+          <td>某些特殊的场景</td>
       </tr>
       <tr>
-          <td style="text-align: left">Socket</td>
-          <td style="text-align: left">跨主机，通信范围广</td>
-          <td style="text-align: left">只能传输原始的字节流</td>
-          <td style="text-align: left">常用于网络通信中</td>
+          <td>Socket</td>
+          <td>跨主机，通信范围广</td>
+          <td>只能传输原始的字节流</td>
+          <td>常用于网络通信中</td>
       </tr>
       <tr>
-          <td style="text-align: left">BroadcastReceiver</td>
-          <td style="text-align: left">简单易用</td>
-          <td style="text-align: left">只能单向通信，接收者只能被动的接收消息</td>
-          <td style="text-align: left">简单的进程间通信</td>
+          <td>BroadcastReceiver</td>
+          <td>简单易用</td>
+          <td>只能单向通信，接收者只能被动的接收消息</td>
+          <td>简单的进程间通信</td>
       </tr>
   </tbody>
 </table>

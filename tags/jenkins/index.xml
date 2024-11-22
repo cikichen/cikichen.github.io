@@ -31,7 +31,161 @@ A:Xcode插件方式不仅配置麻烦，而且配置完成后还需要大量的�
 <div class="highlight"><pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">[sudo] gem install fastlane -NV
 </span></span></code></pre></div><p><strong>方式二：</strong></p>
 <div class="highlight"><pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">brew cask install fastlane
-</span></span></code></pr]]></description>
+</span></span></code></pre></div><h4 id="12-项目中配置fastlane"><strong>1.2 项目中配置fastlane</strong></h4>
+<p><em>给我们需要自动化编译的iOS工程配置fastlane</em></p>
+<p>假如我们现在有一个<code>BlocklySample</code>的工程，我们需要在项目根目录下执行命令行</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">fastlane init
+</span></span></code></pre></div><p>会有如下图这样的提示，需要我们选择哪种任务，这里我们可以选<code>2</code>或者<code>3</code>。选择这两个选择后会提示让你输入iOS开发者的账号密码，这样会自动给你生成团队信息、bid和基本编译脚本等等。
+</p>
+<p>执行完成后在项目根目录下会自动新建一个fastlane的目录
+</p>
+<p>修改fastlane目录下的Fastfile文件</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-gdscript3" data-lang="gdscript3"><span class="line"><span class="cl"><span class="c1"># This file contains the fastlane.tools configuration</span>
+</span></span><span class="line"><span class="cl"><span class="c1"># You can find the documentation at https://docs.fastlane.tools</span>
+</span></span><span class="line"><span class="cl"><span class="c1">#</span>
+</span></span><span class="line"><span class="cl"><span class="c1"># For a list of all available actions, check out</span>
+</span></span><span class="line"><span class="cl"><span class="c1">#</span>
+</span></span><span class="line"><span class="cl"><span class="c1">#     https://docs.fastlane.tools/actions</span>
+</span></span><span class="line"><span class="cl"><span class="c1">#</span>
+</span></span><span class="line"><span class="cl"><span class="c1"># For a list of all available plugins, check out</span>
+</span></span><span class="line"><span class="cl"><span class="c1">#</span>
+</span></span><span class="line"><span class="cl"><span class="c1">#     https://docs.fastlane.tools/plugins/available-plugins</span>
+</span></span><span class="line"><span class="cl"><span class="c1">#</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># Uncomment the line if you want fastlane to automatically update itself</span>
+</span></span><span class="line"><span class="cl"><span class="c1"># update_fastlane</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">default_platform</span><span class="p">(:</span><span class="n">ios</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">platform</span> <span class="p">:</span><span class="n">ios</span> <span class="k">do</span>
+</span></span><span class="line"><span class="cl">  <span class="n">desc</span> <span class="s2">&#34;Push a new release build to the App Store&#34;</span>
+</span></span><span class="line"><span class="cl">  <span class="n">lane</span> <span class="p">:</span><span class="n">release_appstore</span> <span class="k">do</span>
+</span></span><span class="line"><span class="cl">    <span class="n">increment_build_number</span><span class="p">(</span><span class="n">xcodeproj</span><span class="p">:</span> <span class="s2">&#34;xxx.xcodeproj&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="n">update_project_provisioning</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">        <span class="c1"># 之前有sigh下载的描述文件存储路径</span>
+</span></span><span class="line"><span class="cl">        <span class="n">profile</span><span class="p">:</span><span class="s2">&#34;fastlane/provision/xxx.mobileprovision&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">        <span class="c1"># 打包配置，Debug，Release</span>
+</span></span><span class="line"><span class="cl">        <span class="n">build_configuration</span><span class="p">:</span><span class="s2">&#34;Release&#34;</span>
+</span></span><span class="line"><span class="cl">    <span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="n">automatic_code_signing</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">        <span class="c1"># 工程文件所在路径</span>
+</span></span><span class="line"><span class="cl">        <span class="n">path</span><span class="p">:</span><span class="s2">&#34;xxx.xcodeproj&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">        <span class="c1"># 是否使用自动签名，这里如果是打包的话应该一般都为false吧，默认也是false</span>
+</span></span><span class="line"><span class="cl">        <span class="n">use_automatic_signing</span><span class="p">:</span><span class="bp">false</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">        <span class="c1"># 这个就不用说了，需要修改的targets</span>
+</span></span><span class="line"><span class="cl">        <span class="n">targets</span><span class="p">:</span><span class="s2">&#34;xxx&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">        <span class="c1"># 用哪种方式打包“iPhone Develop”还是“iPhone Distribution”</span>
+</span></span><span class="line"><span class="cl">        <span class="n">code_sign_identity</span><span class="p">:</span><span class="s2">&#34;iPhone Distribution&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">        <span class="c1"># 描述文件名称， 也就是使用哪个描述文件打包</span>
+</span></span><span class="line"><span class="cl">        <span class="n">profile_name</span><span class="p">:</span><span class="s2">&#34;xxx&#34;</span>
+</span></span><span class="line"><span class="cl">    <span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="n">scheme_name</span> <span class="o">=</span> <span class="s1">&#39;xxx&#39;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">configuration</span> <span class="o">=</span> <span class="s1">&#39;AppStore&#39;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">version</span> <span class="o">=</span> <span class="n">get_info_plist_value</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="s2">&#34;./#{scheme_name}/Info.plist&#34;</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="s2">&#34;CFBundleShortVersionString&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="n">build</span> <span class="o">=</span> <span class="n">get_info_plist_value</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="s2">&#34;./#{scheme_name}/Info.plist&#34;</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="s2">&#34;CFBundleVersion&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="n">output_directory</span> <span class="o">=</span> <span class="ne">File</span><span class="o">.</span><span class="n">expand_path</span><span class="p">(</span><span class="s2">&#34;..&#34;</span><span class="p">,</span> <span class="n">Dir</span><span class="o">.</span><span class="n">pwd</span><span class="p">)</span> <span class="o">+</span> <span class="ne">File</span><span class="p">::</span><span class="ne">Separator</span> <span class="o">+</span> <span class="s1">&#39;build&#39;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">output_name</span> <span class="o">=</span> <span class="s2">&#34;#{scheme_name}_#{configuration}_#{version}_#{build}_#{Time.now.strftime(&#39;%Y%m</span><span class="si">%d</span><span class="s2">%H%M%S&#39;)}.ipa&#34;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">build_app</span><span class="p">(</span><span class="n">workspace</span><span class="p">:</span> <span class="s2">&#34;xxx.xcworkspace&#34;</span><span class="p">,</span> <span class="n">scheme</span><span class="p">:</span> <span class="s2">&#34;xxx&#34;</span><span class="p">,</span> <span class="n">export_method</span><span class="p">:</span> <span class="s2">&#34;app-store&#34;</span><span class="p">,</span> <span class="n">output_directory</span><span class="p">:</span> <span class="n">output_directory</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">      <span class="n">output_name</span><span class="p">:</span> <span class="n">output_name</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="n">upload_to_app_store</span>
+</span></span><span class="line"><span class="cl">  <span class="n">end</span>
+</span></span><span class="line"><span class="cl">  <span class="n">desc</span> <span class="s2">&#34;Push a new release build to the Testflight&#34;</span>
+</span></span><span class="line"><span class="cl">  <span class="n">lane</span> <span class="p">:</span><span class="n">release_testflight</span> <span class="k">do</span>
+</span></span><span class="line"><span class="cl">    <span class="n">update_project_provisioning</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">        <span class="c1"># 之前有sigh下载的描述文件存储路径</span>
+</span></span><span class="line"><span class="cl">        <span class="n">profile</span><span class="p">:</span><span class="s2">&#34;fastlane/provision/xxx.mobileprovision&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">        <span class="c1"># 打包配置，Debug，Release</span>
+</span></span><span class="line"><span class="cl">        <span class="n">build_configuration</span><span class="p">:</span><span class="s2">&#34;Release&#34;</span>
+</span></span><span class="line"><span class="cl">    <span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="n">automatic_code_signing</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">        <span class="c1"># 工程文件所在路径</span>
+</span></span><span class="line"><span class="cl">        <span class="n">path</span><span class="p">:</span><span class="s2">&#34;xxx.xcodeproj&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">        <span class="c1"># 是否使用自动签名，这里如果是打包的话应该一般都为false吧，默认也是false</span>
+</span></span><span class="line"><span class="cl">        <span class="n">use_automatic_signing</span><span class="p">:</span><span class="bp">false</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">        <span class="c1"># 这个就不用说了，需要修改的targets</span>
+</span></span><span class="line"><span class="cl">        <span class="n">targets</span><span class="p">:</span><span class="s2">&#34;xxx&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">        <span class="c1"># 用哪种方式打包“iPhone Develop”还是“iPhone Distribution”</span>
+</span></span><span class="line"><span class="cl">        <span class="n">code_sign_identity</span><span class="p">:</span><span class="s2">&#34;iPhone Distribution&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">        <span class="c1"># 描述文件名称， 也就是使用哪个描述文件打包</span>
+</span></span><span class="line"><span class="cl">        <span class="n">profile_name</span><span class="p">:</span><span class="s2">&#34;xxx&#34;</span>
+</span></span><span class="line"><span class="cl">    <span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="n">scheme_name</span> <span class="o">=</span> <span class="s1">&#39;xxx&#39;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">configuration</span> <span class="o">=</span> <span class="s1">&#39;AppStore&#39;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">version</span> <span class="o">=</span> <span class="n">get_info_plist_value</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="s2">&#34;./#{scheme_name}/Info.plist&#34;</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="s2">&#34;CFBundleShortVersionString&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="n">build</span> <span class="o">=</span> <span class="n">get_info_plist_value</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="s2">&#34;./#{scheme_name}/Info.plist&#34;</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="s2">&#34;CFBundleVersion&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="n">output_directory</span> <span class="o">=</span> <span class="ne">File</span><span class="o">.</span><span class="n">expand_path</span><span class="p">(</span><span class="s2">&#34;..&#34;</span><span class="p">,</span> <span class="n">Dir</span><span class="o">.</span><span class="n">pwd</span><span class="p">)</span> <span class="o">+</span> <span class="ne">File</span><span class="p">::</span><span class="ne">Separator</span> <span class="o">+</span> <span class="s1">&#39;build&#39;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">output_name</span> <span class="o">=</span> <span class="s2">&#34;#{scheme_name}_#{configuration}_#{version}_#{build}_#{Time.now.strftime(&#39;%Y%m</span><span class="si">%d</span><span class="s2">%H%M%S&#39;)}.ipa&#34;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">build_app</span><span class="p">(</span><span class="n">workspace</span><span class="p">:</span> <span class="s2">&#34;xxx.xcworkspace&#34;</span><span class="p">,</span> <span class="n">scheme</span><span class="p">:</span> <span class="s2">&#34;xxx&#34;</span><span class="p">,</span> <span class="n">export_method</span><span class="p">:</span> <span class="s2">&#34;app-store&#34;</span><span class="p">,</span> <span class="n">output_directory</span><span class="p">:</span> <span class="n">output_directory</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">      <span class="n">output_name</span><span class="p">:</span> <span class="n">output_name</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="n">upload_to_testflight</span>
+</span></span><span class="line"><span class="cl">  <span class="n">end</span>
+</span></span><span class="line"><span class="cl">  <span class="n">desc</span> <span class="s2">&#34;Push a new release build to the Ad Hoc&#34;</span>
+</span></span><span class="line"><span class="cl">  <span class="n">lane</span> <span class="p">:</span><span class="n">release_adhoc</span> <span class="k">do</span> <span class="o">|</span><span class="n">option</span><span class="o">|</span>
+</span></span><span class="line"><span class="cl">  	<span class="c1"># cocoapods</span>
+</span></span><span class="line"><span class="cl">  	<span class="c1">#根据传入参数version设置app的版本号</span>
+</span></span><span class="line"><span class="cl">	<span class="c1"># increment_version_number(version_number: option[:version]) </span>
+</span></span><span class="line"><span class="cl">	<span class="c1">#自动增加build号</span>
+</span></span><span class="line"><span class="cl">	<span class="c1">#increment_build_number</span>
+</span></span><span class="line"><span class="cl">  	<span class="n">update_project_provisioning</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">        <span class="c1"># 之前有sigh下载的描述文件存储路径</span>
+</span></span><span class="line"><span class="cl">        <span class="n">profile</span><span class="p">:</span><span class="s2">&#34;fastlane/provision/xxx.mobileprovision&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">        <span class="c1"># 打包配置，Debug，Release</span>
+</span></span><span class="line"><span class="cl">        <span class="n">build_configuration</span><span class="p">:</span><span class="s2">&#34;Release&#34;</span>
+</span></span><span class="line"><span class="cl">    <span class="p">)</span>
+</span></span><span class="line"><span class="cl">  	<span class="n">automatic_code_signing</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">        <span class="c1"># 工程文件所在路径</span>
+</span></span><span class="line"><span class="cl">        <span class="n">path</span><span class="p">:</span><span class="s2">&#34;xxx.xcodeproj&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">        <span class="c1"># 是否使用自动签名，这里如果是打包的话应该一般都为false吧，默认也是false</span>
+</span></span><span class="line"><span class="cl">        <span class="n">use_automatic_signing</span><span class="p">:</span><span class="bp">false</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">        <span class="c1"># 打包的team ID， 也就是打包使用的证书中的team ID，这个如果不知道是什么的话可以在xCode中设置好签名用的描述文件后到xcodeproj下的pbxproj文件中搜索“DEVELOPMENT_TEAM”，它的值就是了</span>
+</span></span><span class="line"><span class="cl">        <span class="n">team_id</span><span class="p">:</span><span class="s2">&#34;RRRRR5555&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">        <span class="c1"># 这个就不用说了，需要修改的targets</span>
+</span></span><span class="line"><span class="cl">        <span class="n">targets</span><span class="p">:</span><span class="s2">&#34;xxx&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">        <span class="c1"># 用哪种方式打包“iPhone Develop”还是“iPhone Distribution”</span>
+</span></span><span class="line"><span class="cl">        <span class="n">code_sign_identity</span><span class="p">:</span><span class="s2">&#34;iPhone Distribution&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">        <span class="c1"># 描述文件名称， 也就是使用哪个描述文件打包</span>
+</span></span><span class="line"><span class="cl">        <span class="n">profile_name</span><span class="p">:</span><span class="s2">&#34;xxx&#34;</span>
+</span></span><span class="line"><span class="cl">    <span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">#证书签名</span>
+</span></span><span class="line"><span class="cl">    <span class="c1"># sigh</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">#编译打包</span>
+</span></span><span class="line"><span class="cl">    <span class="n">scheme_name</span> <span class="o">=</span> <span class="s1">&#39;xxx&#39;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">configuration</span> <span class="o">=</span> <span class="s1">&#39;Release&#39;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">version</span> <span class="o">=</span> <span class="n">get_info_plist_value</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="s2">&#34;./#{scheme_name}/Info.plist&#34;</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="s2">&#34;CFBundleShortVersionString&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="n">build</span> <span class="o">=</span> <span class="n">get_info_plist_value</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="s2">&#34;./#{scheme_name}/Info.plist&#34;</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="s2">&#34;CFBundleVersion&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="n">output_directory</span> <span class="o">=</span> <span class="ne">File</span><span class="o">.</span><span class="n">expand_path</span><span class="p">(</span><span class="s2">&#34;..&#34;</span><span class="p">,</span> <span class="n">Dir</span><span class="o">.</span><span class="n">pwd</span><span class="p">)</span> <span class="o">+</span> <span class="ne">File</span><span class="p">::</span><span class="ne">Separator</span> <span class="o">+</span> <span class="s1">&#39;build&#39;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">output_name</span> <span class="o">=</span> <span class="s2">&#34;#{scheme_name}_#{configuration}_#{version}_#{build}_#{Time.now.strftime(&#39;%Y%m</span><span class="si">%d</span><span class="s2">%H%M%S&#39;)}.ipa&#34;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">gym</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">    	<span class="n">scheme</span><span class="p">:</span> <span class="n">scheme_name</span><span class="p">,</span> 
+</span></span><span class="line"><span class="cl">    	<span class="n">clean</span><span class="p">:</span> <span class="bp">true</span><span class="p">,</span> 
+</span></span><span class="line"><span class="cl">    	<span class="n">silent</span><span class="p">:</span><span class="bp">true</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    	<span class="n">export_method</span><span class="p">:</span><span class="s1">&#39;ad-hoc&#39;</span><span class="p">,</span> 
+</span></span><span class="line"><span class="cl">    	<span class="n">export_options</span><span class="p">:</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">      	  <span class="n">provisioningProfiles</span><span class="p">:</span> <span class="p">{</span> 
+</span></span><span class="line"><span class="cl">      	  <span class="c1">#前面的是bundle id，后面的是对应用到的mobileprovision，只需要名字，不需要后缀</span>
+</span></span><span class="line"><span class="cl">          <span class="s2">&#34;me.ithome.xxx&#34;</span> <span class="o">=&gt;</span> <span class="s2">&#34;xxx&#34;</span>
+</span></span><span class="line"><span class="cl">        <span class="p">}},</span>
+</span></span><span class="line"><span class="cl">        <span class="n">configuration</span><span class="p">:</span> <span class="n">configuration</span><span class="p">,</span> 
+</span></span><span class="line"><span class="cl">        <span class="n">output_directory</span><span class="p">:</span> <span class="n">output_directory</span><span class="p">,</span> 
+</span></span><span class="line"><span class="cl">        <span class="n">output_name</span><span class="p">:</span> <span class="n">output_name</span><span class="p">,</span> 
+</span></span><span class="line"><span class="cl">        <span class="c1"># 签名证书的名称，去钥匙串-登录-证书里面复制</span>
+</span></span><span class="line"><span class="cl">        <span class="n">codesigning_identity</span><span class="p">:</span><span class="s1">&#39;iPhone Distribution: xxx (Rxxx47)&#39;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">        <span class="n">export_xcargs</span><span class="p">:</span> <span class="s1">&#39;-allowProvisioningUpdates&#39;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="c1"># 上传到蒲公英，需要安装pgyer插件</span>
+</span></span><span class="line"><span class="cl">        <span class="c1">#pgyer(api_key: &#34;aaaa&#34;, user_key: &#34;bbbb&#34;)</span>
+</span></span><span class="line"><span class="cl">  <span class="n">end</span>
+</span></span><span class="line"><span class="cl"><span class="n">end</span>
+</span></span></code></pre></div><blockquote>
+<ul>
+<li>上述脚本中有部分xxx之类的东西，需要自行替换成自己项目的。</li>
+<li>所有脚本中用到的xxx.mobileprovision都需要双击安装一次，否者会提示找不到。</li>
+<li>需要安装好p12证书文件。</li>
+</ul>
+</blockquote>
+<p>修改完成后我们就有了三个命令，用来分别打包上传到appstore、testflight和蒲公英。
+<code>fastlane release_appstore</code>
+<code>fastlane release_testflight</code>
+<code>fastlane release_adhoc</code></p>]]></description>
 </item>
 </channel>
 </rss>

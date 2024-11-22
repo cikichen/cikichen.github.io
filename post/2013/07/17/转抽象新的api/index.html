@@ -7,11 +7,13 @@
         <title>[转]抽象新的API - 编程心语</title><meta name="Description" content="This is my KeepIt site"><meta property="og:url" content="https://www.ithome.me/post/2013/07/17/%E8%BD%AC%E6%8A%BD%E8%B1%A1%E6%96%B0%E7%9A%84api/">
   <meta property="og:site_name" content="编程心语">
   <meta property="og:title" content="[转]抽象新的API">
-  <meta property="og:description" content=" 课程内容 研究抽象接口 创建抽象后的Tab接口 抽象ActionBar.Tab 抽象ActionBar Tab 的函数 您还应该阅读 Action Bar Action Bar Tabs 动手试试 下载示例代码 TabCompat.zip
+  <meta property="og:description" content="课程内容 研究抽象接口 创建抽象后的Tab接口 抽象ActionBar.Tab 抽象ActionBar Tab 的函数 您还应该阅读 Action Bar Action Bar Tabs 动手试试 下载示例代码 TabCompat.zip
 在本示例中，您将创建一个tab UI控件接口，该接口在不同的Android版本中使用不同的实现方式。本课程介绍如何创建这样一个抽象接口。
 研究抽象接口 Abstraction 在Java语言中意味着隐藏实现细节。在使用新的API时，可以使用抽象机制来 创建一个版本相关的控件，该控件在新版本中使用新API，在旧版本中使用旧API。
 当使用这种方式的时候，您需要确定在旧版本中需要使用那些新版本的特性，然后基于新的接口来创建一个抽象类。在定义新的抽象接口的时候，应该尽可能的反映出新的特性（尽可能的复制新的API定义）。这样可以尽可能的向前兼容，并且当某一天您觉得不再需要抽象层的时候很容易的切换回来。
-一旦为新的API创建了抽象接口后，就可以定义多个实现类并且在运行时来选择使用那个实现方式。不同的API level对应的实现方式可能不一样。">
+一旦为新的API创建了抽象接口后，就可以定义多个实现类并且在运行时来选择使用那个实现方式。不同的API level对应的实现方式可能不一样。
+创建抽象后的Tab接口 为了创建向后兼容版本的tabs，需要首先定义您的程序需要哪些特性和具体的API。在这里的顶部导航tab中，我们 假设有如下特性：
+Tab 指示器，包含文字和图片 Tabs 可以和Fragment关联起来 Activity 应该可以监听到Tab切换事件 预先准备这些需求可以让你精确的控制抽象层的范围。这意味着您可以使用较少的时间创建多个抽象层实现，并且尽可能早的使用兼容性的实现。 这里用于Tabs的关键API为 [ActionBar](http://developer.android.com/reference/android/app/ActionBar.html) 和 [ActionBar.Tab](http://developer.android.com/reference/android/app/ActionBar.Tab.html)。 您需要抽象这些API来使您的Tabs和系统版本关联起来。这个项目中需要支持Eclair (API level 5) 同时能够使用Honeycomb (API Level 11)版本中的新特性。下图显示了该抽象API在 这两种版本中的具体实现关系图。">
   <meta property="og:locale" content="zh_CN">
   <meta property="og:type" content="article">
     <meta property="article:section" content="posts">
@@ -20,11 +22,13 @@
 
   <meta name="twitter:card" content="summary">
   <meta name="twitter:title" content="[转]抽象新的API">
-  <meta name="twitter:description" content=" 课程内容 研究抽象接口 创建抽象后的Tab接口 抽象ActionBar.Tab 抽象ActionBar Tab 的函数 您还应该阅读 Action Bar Action Bar Tabs 动手试试 下载示例代码 TabCompat.zip
+  <meta name="twitter:description" content="课程内容 研究抽象接口 创建抽象后的Tab接口 抽象ActionBar.Tab 抽象ActionBar Tab 的函数 您还应该阅读 Action Bar Action Bar Tabs 动手试试 下载示例代码 TabCompat.zip
 在本示例中，您将创建一个tab UI控件接口，该接口在不同的Android版本中使用不同的实现方式。本课程介绍如何创建这样一个抽象接口。
 研究抽象接口 Abstraction 在Java语言中意味着隐藏实现细节。在使用新的API时，可以使用抽象机制来 创建一个版本相关的控件，该控件在新版本中使用新API，在旧版本中使用旧API。
 当使用这种方式的时候，您需要确定在旧版本中需要使用那些新版本的特性，然后基于新的接口来创建一个抽象类。在定义新的抽象接口的时候，应该尽可能的反映出新的特性（尽可能的复制新的API定义）。这样可以尽可能的向前兼容，并且当某一天您觉得不再需要抽象层的时候很容易的切换回来。
-一旦为新的API创建了抽象接口后，就可以定义多个实现类并且在运行时来选择使用那个实现方式。不同的API level对应的实现方式可能不一样。">
+一旦为新的API创建了抽象接口后，就可以定义多个实现类并且在运行时来选择使用那个实现方式。不同的API level对应的实现方式可能不一样。
+创建抽象后的Tab接口 为了创建向后兼容版本的tabs，需要首先定义您的程序需要哪些特性和具体的API。在这里的顶部导航tab中，我们 假设有如下特性：
+Tab 指示器，包含文字和图片 Tabs 可以和Fragment关联起来 Activity 应该可以监听到Tab切换事件 预先准备这些需求可以让你精确的控制抽象层的范围。这意味着您可以使用较少的时间创建多个抽象层实现，并且尽可能早的使用兼容性的实现。 这里用于Tabs的关键API为 [ActionBar](http://developer.android.com/reference/android/app/ActionBar.html) 和 [ActionBar.Tab](http://developer.android.com/reference/android/app/ActionBar.Tab.html)。 您需要抽象这些API来使您的Tabs和系统版本关联起来。这个项目中需要支持Eclair (API level 5) 同时能够使用Honeycomb (API Level 11)版本中的新特性。下图显示了该抽象API在 这两种版本中的具体实现关系图。">
       <meta name="twitter:site" content="@https://twitter.com/ChenCiki">
 <meta name="application-name" content="My KeepIt site">
 <meta name="apple-mobile-web-app-title" content="My KeepIt site"><meta name="theme-color" content="#ffffff"><meta name="msapplication-TileColor" content="#da532c"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />

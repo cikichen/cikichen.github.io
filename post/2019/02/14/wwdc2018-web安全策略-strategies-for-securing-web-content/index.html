@@ -11,7 +11,9 @@
 来自web的安全攻击有以下几种：
 跨域攻击 预测执行攻击 窗口控制攻击 本文将针对这三种攻击类型，给出安全防御措施。
 安全传输 网络传输相信大家都很熟悉了，安全的传输能够保证接收到的数据来自可信任的站点，并且在传输工程中不会被篡改。安全传输是其它安全措施的基础，采取的措施包括：
-HTTPS和WSS（webSocket Secure） Http Strict Transport Security（HSTS）遵循HTTPS安全协议的web只能访问同样遵循HTTPS安全协议的内容，不能访问遵循HTTP不安全协议的内容。 Upgrade-Insecure-Requests 请求头中添加这一项表示web支持更加安全的升级机制，服务器可以重定向到这个站点的安全版本。 使用cookie确保安全，cookie只能被安全的传输，例如千万不要把cookie放到粘贴板上 在app的info.plist文件中 Allow Arbitrary Loads in Web Content 这个开关一定要置为 NO！ 跨域封锁 web的内容可以来自任何站点，例如，webView上的一张图片可以来自任何服务器，也可以从任意服务器上加载一个脚本或iframe。需要注意的是要当心来自其它服务器的资源。跨域的保护已经有20多年的历史，并且形成了基本原则–同源策略：只有和页面来源相同的脚本才会被该页面执行。例如iframe来自不同的域名，同源策略不允许加载这个iframe。仅仅靠同源策略还是不够的，还需要采取其它的防御措施。">
+HTTPS和WSS（webSocket Secure） Http Strict Transport Security（HSTS）遵循HTTPS安全协议的web只能访问同样遵循HTTPS安全协议的内容，不能访问遵循HTTP不安全协议的内容。 Upgrade-Insecure-Requests 请求头中添加这一项表示web支持更加安全的升级机制，服务器可以重定向到这个站点的安全版本。 使用cookie确保安全，cookie只能被安全的传输，例如千万不要把cookie放到粘贴板上 在app的info.plist文件中 Allow Arbitrary Loads in Web Content 这个开关一定要置为 NO！ 跨域封锁 web的内容可以来自任何站点，例如，webView上的一张图片可以来自任何服务器，也可以从任意服务器上加载一个脚本或iframe。需要注意的是要当心来自其它服务器的资源。跨域的保护已经有20多年的历史，并且形成了基本原则–同源策略：只有和页面来源相同的脚本才会被该页面执行。例如iframe来自不同的域名，同源策略不允许加载这个iframe。仅仅靠同源策略还是不够的，还需要采取其它的防御措施。
+1. Subresource Integrity 服务器可能会发生异常导致下发错误的资源使得web发生crash，但是开发者通常是知道所要请求哪个资源的，在脚本里面增加一个检查签名。如果签名匹配则认为是下发了正确的资源，如果不匹配仍然可以正常工作，此时尝试从页面的资源里查找或者从自己的服务器重新加载。这样做虽然降低了性能，但是提升了安全性。
+&lt;script src=&#34;https://cdn.example/framework.js&#34; integrity=&#34;sha256-8WqyJLuWKRB...oZkCnxQbWwJVw=&#34;&gt; &lt;/script&gt; window.framwork || // reload from own domain 2. Content Security Policy HTTP response： :status:200 Content-Security-Policy: default &#39;self&#39;; // No inline script-src cdn.example; frame-src social.example; frame-ancestors news.example; HTTP response的Header里面，default设置成自己，默认只能加载同源的资源；script-src和frame-src 分别指定可信任的脚本和iframe的来源；frame-ancestor设置成news.example，指定只有news.example可以iframe我们的web。">
   <meta property="og:locale" content="zh_CN">
   <meta property="og:type" content="article">
     <meta property="article:section" content="posts">
@@ -25,7 +27,9 @@ HTTPS和WSS（webSocket Secure） Http Strict Transport Security（HSTS）遵循
 来自web的安全攻击有以下几种：
 跨域攻击 预测执行攻击 窗口控制攻击 本文将针对这三种攻击类型，给出安全防御措施。
 安全传输 网络传输相信大家都很熟悉了，安全的传输能够保证接收到的数据来自可信任的站点，并且在传输工程中不会被篡改。安全传输是其它安全措施的基础，采取的措施包括：
-HTTPS和WSS（webSocket Secure） Http Strict Transport Security（HSTS）遵循HTTPS安全协议的web只能访问同样遵循HTTPS安全协议的内容，不能访问遵循HTTP不安全协议的内容。 Upgrade-Insecure-Requests 请求头中添加这一项表示web支持更加安全的升级机制，服务器可以重定向到这个站点的安全版本。 使用cookie确保安全，cookie只能被安全的传输，例如千万不要把cookie放到粘贴板上 在app的info.plist文件中 Allow Arbitrary Loads in Web Content 这个开关一定要置为 NO！ 跨域封锁 web的内容可以来自任何站点，例如，webView上的一张图片可以来自任何服务器，也可以从任意服务器上加载一个脚本或iframe。需要注意的是要当心来自其它服务器的资源。跨域的保护已经有20多年的历史，并且形成了基本原则–同源策略：只有和页面来源相同的脚本才会被该页面执行。例如iframe来自不同的域名，同源策略不允许加载这个iframe。仅仅靠同源策略还是不够的，还需要采取其它的防御措施。">
+HTTPS和WSS（webSocket Secure） Http Strict Transport Security（HSTS）遵循HTTPS安全协议的web只能访问同样遵循HTTPS安全协议的内容，不能访问遵循HTTP不安全协议的内容。 Upgrade-Insecure-Requests 请求头中添加这一项表示web支持更加安全的升级机制，服务器可以重定向到这个站点的安全版本。 使用cookie确保安全，cookie只能被安全的传输，例如千万不要把cookie放到粘贴板上 在app的info.plist文件中 Allow Arbitrary Loads in Web Content 这个开关一定要置为 NO！ 跨域封锁 web的内容可以来自任何站点，例如，webView上的一张图片可以来自任何服务器，也可以从任意服务器上加载一个脚本或iframe。需要注意的是要当心来自其它服务器的资源。跨域的保护已经有20多年的历史，并且形成了基本原则–同源策略：只有和页面来源相同的脚本才会被该页面执行。例如iframe来自不同的域名，同源策略不允许加载这个iframe。仅仅靠同源策略还是不够的，还需要采取其它的防御措施。
+1. Subresource Integrity 服务器可能会发生异常导致下发错误的资源使得web发生crash，但是开发者通常是知道所要请求哪个资源的，在脚本里面增加一个检查签名。如果签名匹配则认为是下发了正确的资源，如果不匹配仍然可以正常工作，此时尝试从页面的资源里查找或者从自己的服务器重新加载。这样做虽然降低了性能，但是提升了安全性。
+&lt;script src=&#34;https://cdn.example/framework.js&#34; integrity=&#34;sha256-8WqyJLuWKRB...oZkCnxQbWwJVw=&#34;&gt; &lt;/script&gt; window.framwork || // reload from own domain 2. Content Security Policy HTTP response： :status:200 Content-Security-Policy: default &#39;self&#39;; // No inline script-src cdn.example; frame-src social.example; frame-ancestors news.example; HTTP response的Header里面，default设置成自己，默认只能加载同源的资源；script-src和frame-src 分别指定可信任的脚本和iframe的来源；frame-ancestor设置成news.example，指定只有news.example可以iframe我们的web。">
       <meta name="twitter:site" content="@https://twitter.com/ChenCiki">
 <meta name="application-name" content="My KeepIt site">
 <meta name="apple-mobile-web-app-title" content="My KeepIt site"><meta name="theme-color" content="#ffffff"><meta name="msapplication-TileColor" content="#da532c"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />

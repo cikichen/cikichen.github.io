@@ -30,7 +30,23 @@
 <strong>Allow Arbitrary Loads in Web Content 这个开关一定要置为 NO！</strong></li>
 </ul>
 <h2 id="跨域封锁">跨域封锁</h2>
-<p>web的内容可以来自任何站点，例如，webView上的一张图片可以来自任何服务器，也可以从任意服务器上加载一个脚本或iframe。需要注意的是要当心来自其它服务器的资源。跨域的保护已经有20多年的历史，并且形成了基本原则&ndash;同源策略：只有和页面来源相同的脚本才会被该页面执行。例如iframe来自不同的域名，同源策略不允许加载这个iframe。仅仅靠同源策略还是不够的，还需要采取其它的防御措施。</p>]]></description>
+<p>web的内容可以来自任何站点，例如，webView上的一张图片可以来自任何服务器，也可以从任意服务器上加载一个脚本或iframe。需要注意的是要当心来自其它服务器的资源。跨域的保护已经有20多年的历史，并且形成了基本原则&ndash;同源策略：只有和页面来源相同的脚本才会被该页面执行。例如iframe来自不同的域名，同源策略不允许加载这个iframe。仅仅靠同源策略还是不够的，还需要采取其它的防御措施。</p>
+<h3 id="1-subresource-integrity">1. Subresource Integrity</h3>
+<p>服务器可能会发生异常导致下发错误的资源使得web发生crash，但是开发者通常是知道所要请求哪个资源的，在脚本里面增加一个检查签名。如果签名匹配则认为是下发了正确的资源，如果不匹配仍然可以正常工作，此时尝试从页面的资源里查找或者从自己的服务器重新加载。这样做虽然降低了性能，但是提升了安全性。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-gdscript3" data-lang="gdscript3"><span class="line"><span class="cl"><span class="o">&lt;</span><span class="n">script</span> <span class="n">src</span><span class="o">=</span><span class="s2">&#34;https://cdn.example/framework.js&#34;</span>  
+</span></span><span class="line"><span class="cl"> <span class="n">integrity</span><span class="o">=</span><span class="s2">&#34;sha256-8WqyJLuWKRB...oZkCnxQbWwJVw=&#34;</span><span class="o">&gt;</span>
+</span></span><span class="line"><span class="cl"><span class="o">&lt;/</span><span class="n">script</span><span class="o">&gt;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">window</span><span class="o">.</span><span class="n">framwork</span> <span class="o">||</span> <span class="o">//</span> <span class="n">reload</span> <span class="n">from</span> <span class="n">own</span> <span class="n">domain</span>  
+</span></span></code></pre></div><h3 id="2-content-security-policy">2. Content Security Policy</h3>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">HTTP response：  
+</span></span><span class="line"><span class="cl">:status:200
+</span></span><span class="line"><span class="cl">Content-Security-Policy:  
+</span></span><span class="line"><span class="cl">    default &#39;self&#39;;  // No inline
+</span></span><span class="line"><span class="cl">    script-src cdn.example;
+</span></span><span class="line"><span class="cl">    frame-src social.example;
+</span></span><span class="line"><span class="cl">    frame-ancestors news.example;
+</span></span></code></pre></div><p>HTTP response的Header里面，default设置成自己，默认只能加载同源的资源；script-src和frame-src 分别指定可信任的脚本和iframe的来源；frame-ancestor设置成news.example，指定只有news.example可以iframe我们的web。</p>]]></description>
 </item>
 </channel>
 </rss>

@@ -49,7 +49,13 @@
 </span></span><span class="line"><span class="cl">	<span class="n">at</span> <span class="n">org</span><span class="o">.</span><span class="n">eclipse</span><span class="o">.</span><span class="n">jface</span><span class="o">.</span><span class="n">window</span><span class="o">.</span><span class="n">Window</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">Window</span><span class="o">.</span><span class="n">java</span><span class="p">:</span><span class="mi">430</span><span class="p">)</span>
 </span></span><span class="line"><span class="cl">	<span class="n">at</span> <span class="n">org</span><span class="o">.</span><span class="n">eclipse</span><span class="o">.</span><span class="n">jface</span><span class="o">.</span><span class="n">window</span><span class="o">.</span><span class="n">Window</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">Window</span><span class="o">.</span><span class="n">java</span><span class="p">:</span><span class="mi">790</span><span class="p">)</span>
 </span></span><span class="line"><span class="cl">	<span class="n">at</span> <span class="n">com</span><span class="o">.</span><span class="n">android</span><span class="o">.</span><span class="n">uiautomator</span><span class="o">.</span><span class="n">UiAutomatorViewer</span><span class="o">.</span><span class="n">main</span><span class="p">(</span><span class="n">UiAutomatorViewer</span><span class="o">.</span><span class="n">java</span><span class="p">:</span><span class="mi">78</span><span class="p">)</span>
-</span></span></code></pr]]></description>
+</span></span></code></pre></div><p>折腾许久也没找到解决方案，放弃。</p>
+<p>尝试方案2：
+既然增加<code>aarch64</code>支持的方案无法解决，那就只能尝试<code>Rosetta 2</code>方式了。
+运行<code>arch -x86_64 ./uiautomatorviewer</code>无效果。</p>
+<p><code>uiautomatorviewer</code>依赖<code>Java环境</code>，我使用的是zulu arm版本<code>jdk</code>，所以切换<code>jdk</code>为x64版本。
+<code>export JAVA_HOME=/Library/Java/JavaVirtualMachines/jdk1.8.0_281.jdk/Contents/Home</code></p>
+<p>然后再次执行<code>./uiautomatorviewer</code>，成功运行。</p>]]></description>
 </item>
 <item>
     <title>MacBook M1开发Flutter遇到的问题</title>
@@ -64,7 +70,22 @@
 <p>这个不细说，官网已经很详细了：https://flutterchina.club/setup-macos/</p>
 <h3 id="m1开发flutter靠谱吗">M1开发Flutter靠谱吗？</h3>
 <p>整体还行，但是目前来说，因为适配的问题，想模拟器运行都要调试一番，iPhone和Android都是。不过<strong>M1可以直接把自己的<code>udid</code>注册到开发者账号中去，原生直接运行iPhone App</strong>，这个确实骚，但是为什么我的MacBook注册后设备类型是<code>ipod</code>?
-</p>]]></description>
+</p>
+<p>目前M1上iphone模拟器运行flutter app可能遇到一些问题，主要是三方依赖的插件很多没适配arm64，需要大量调试（参考:https://stackoverflow.com/questions/63607158/xcode-12-building-for-ios-simulator-but-linking-in-object-file-built-for-ios） <br>
+android模拟器只有个测试版，问题一大堆，也基本不可用，所以现在这个阶段想在M1上开发app的话，调试需要真机走起。(模拟器查看：https://androidstudio.googleblog.com/2020/12/android-emulator-apple-silicon-preview.html)</p>
+<p>偶尔会有一些无法理解的错误，命令行<code>flutter clean</code>可能有惊喜。</p>
+<h3 id="常见错误">常见错误</h3>
+<h4 id="webview_plugin-flutterflutterh-file-not-found">webview_plugin &lsquo;Flutter/Flutter.h&rsquo; file not found</h4>
+<p>旧项目迁移到M1上后，可能会出现这个错误
+解决方案:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">$ rm ios/Flutter/Flutter.podspec
+</span></span><span class="line"><span class="cl">$ flutter clean
+</span></span></code></pre></div><h4 id="vm-service-error-unhandled-exception">vm-service: Error: Unhandled exception</h4>
+<p>运行时报这个错，应该是你在运行小猫咪
+解决方案：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-gdscript3" data-lang="gdscript3"><span class="line"><span class="cl"><span class="k">export</span> <span class="n">NO_PROXY</span><span class="o">=</span><span class="n">localhost</span><span class="p">,</span><span class="mf">127.0</span><span class="o">.</span><span class="mf">0.1</span>
+</span></span><span class="line"><span class="cl"><span class="n">source</span> <span class="o">~/.</span><span class="n">zshrc</span>
+</span></span></code></pre></div>]]></description>
 </item>
 <item>
     <title>Flutter、JetPack Compose和SwiftUI对比</title>
@@ -76,47 +97,56 @@
 <table>
   <thead>
       <tr>
-          <th style="text-align: left">框架</th>
-          <th style="text-align: left">Flutter</th>
-          <th style="text-align: left">JetPack Compose</th>
-          <th style="text-align: left">SwiftUI</th>
+          <th>框架</th>
+          <th>Flutter</th>
+          <th>JetPack Compose</th>
+          <th>SwiftUI</th>
       </tr>
   </thead>
   <tbody>
       <tr>
-          <td style="text-align: left">支持平台</td>
-          <td style="text-align: left">Android、iOS、Web、Desktop</td>
-          <td style="text-align: left">Android</td>
-          <td style="text-align: left">iOS、MacOS、iPadOS</td>
+          <td>支持平台</td>
+          <td>Android、iOS、Web、Desktop</td>
+          <td>Android</td>
+          <td>iOS、MacOS、iPadOS</td>
       </tr>
       <tr>
-          <td style="text-align: left">开发语言</td>
-          <td style="text-align: left">dart</td>
-          <td style="text-align: left">kotlin</td>
-          <td style="text-align: left">swift</td>
+          <td>开发语言</td>
+          <td>dart</td>
+          <td>kotlin</td>
+          <td>swift</td>
       </tr>
       <tr>
-          <td style="text-align: left">性能</td>
-          <td style="text-align: left">好</td>
-          <td style="text-align: left">优</td>
-          <td style="text-align: left">优</td>
+          <td>性能</td>
+          <td>好</td>
+          <td>优</td>
+          <td>优</td>
       </tr>
       <tr>
-          <td style="text-align: left">优点</td>
-          <td style="text-align: left">跨平台</td>
-          <td style="text-align: left">原生，简化UI构建</td>
-          <td style="text-align: left">原生，简化UI构建</td>
+          <td>优点</td>
+          <td>跨平台</td>
+          <td>原生，简化UI构建</td>
+          <td>原生，简化UI构建</td>
       </tr>
       <tr>
-          <td style="text-align: left">缺点</td>
-          <td style="text-align: left">性能相比原生稍差，跨多平台目前还不完善，UI嵌套深</td>
-          <td style="text-align: left">不支持跨平台，Android的UI构建包</td>
-          <td style="text-align: left">仅支持Apple自家的跨平台，iOS的UI构建包，缺乏竞争力</td>
+          <td>缺点</td>
+          <td>性能相比原生稍差，跨多平台目前还不完善，UI嵌套深</td>
+          <td>不支持跨平台，Android的UI构建包</td>
+          <td>仅支持Apple自家的跨平台，iOS的UI构建包，缺乏竞争力</td>
       </tr>
   </tbody>
 </table>
 <h3 id="1-如何选择">1. 如何选择？</h3>
-<p>这问题是个悖论，因为这三个东西完全不一样，面向的场景和未来也不一样。</p>]]></description>
+<p>这问题是个悖论，因为这三个东西完全不一样，面向的场景和未来也不一样。</p>
+<h5 id="flutter">flutter</h5>
+<p>跨平台，使用自己的skia引起渲染，支持移动端(android、iOS)、web、桌面应用程序。
+所有的跨平台框架都绕不开目标平台，所以flutter想使用它来做跨平台开发，你得懂一些Android知识，iOS知识，h5知识。尤其在项目越来越复杂的情况下，和目标平台的耦合越来越深，导致后期还得进行相当一部分的原生开发。
+但是跨平台是趋势，从iOS和Android出现的时候跨平台问题就开始探讨了，flutter用于快速出前期产品非常有效，学会它毫无疑问会提升自己的竞争力。</p>
+<h5 id="jetpack-compose">JetPack Compose</h5>
+<p>Android UI工具包，只能用于AndroidUI构建，未来发展如何不知道，开发方式类似flutter，可以大幅度简化原来Android UI的构建方式，短时间应该不会完全普及，有闲暇与兴趣的可以去学学。</p>
+<h5 id="swiftui">SwiftUI</h5>
+<p>Apple未来的UI统一方案，能用于Apple全家桶的UI构建，以Apple的号召力，应该会大力推动它普及，iOS开发都应该去学。</p>
+<h3 id="2-代码对比">2. 代码对比</h3>]]></description>
 </item>
 <item>
     <title>在Android中使用DataBinding(Kotlin)</title>
@@ -172,7 +202,22 @@
 </span></span><span class="line"><span class="cl">
 </span></span><span class="line"><span class="cl">    <span class="nt">&lt;/androidx.constraintlayout.widget.ConstraintLayout&gt;</span>
 </span></span><span class="line"><span class="cl"><span class="nt">&lt;/layout&gt;</span>
-</span></span></code></pr]]></description>
+</span></span></code></pre></div><p>①用户变量，定义了能在这个布局里面使用的属性和类 <br>
+②常规布局</p>
+<p><code>DataBinding</code>会基于<code>layout</code>创建一个<code>Binding class</code>，这个类包含了布局属性(定义的变量)到相关视图的所有绑定，并且会为布局中的数据元素生成<code>setter</code>，生成的类的名称是基于<code>layout</code>的名称(驼峰命名，加上<code>Binding</code>后缀)。比如布局名是<code>activity_main.xml</code>，生成的类就是<code>ActivityMainBinding</code>。你能通过这个类去<code>inflate</code>布局和数据模型，也可以通过<code>DataBindingUtil</code>类。</p>
+<ol>
+<li><code>DataBindingUtils</code>加载布局</li>
+</ol>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-kt" data-lang="kt"><span class="line"><span class="cl"><span class="k">val</span> <span class="py">mainBindingUtil</span> <span class="p">=</span> <span class="nc">DataBindingUtil</span><span class="p">.</span><span class="n">setContentView</span><span class="p">&lt;</span><span class="n">ActivityMainBinding</span><span class="p">&gt;(</span><span class="k">this</span><span class="p">,</span> <span class="nc">R</span><span class="p">.</span><span class="n">layout</span><span class="p">.</span><span class="n">activity_main</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">mainBindingUtil</span><span class="p">.</span><span class="n">lifecycleOwner</span> <span class="p">=</span> <span class="k">this</span>
+</span></span></code></pre></div><ol start="2">
+<li><code>inflate</code>加载布局(此方法也能用于<code>RecyclerView</code>, <code>ViewPager</code>)</li>
+</ol>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-kt" data-lang="kt"><span class="line"><span class="cl"><span class="k">val</span> <span class="py">mainBindingUtil</span> <span class="p">=</span> <span class="nc">ActivityMainBinding</span><span class="p">.</span><span class="n">inflate</span><span class="p">(</span><span class="n">layoutInflater</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">setContentView</span><span class="p">(</span><span class="n">mainBindingUtil</span><span class="p">.</span><span class="n">root</span><span class="p">)</span>
+</span></span></code></pre></div><p>上述两种方法大家二选一，一般在<code>Activity</code>中我们都用第一种。</p>
+<h3 id="12-如何启用databinding">1.2 如何启用<code>DataBinding</code></h3>
+<p>想要在<code>Android App</code>工程中使用<code>databinding</code>，只需要在<code>app/build.gradle</code>文件中设置如下代码：</p>]]></description>
 </item>
 <item>
     <title>Android内存泄漏分析</title>
@@ -228,7 +273,23 @@ Bitmap的问题一般是因为没有对使用的图片及时释放所致。
 <li>
 <p>IO操作
 FileOutputStream()未关闭，IO流忘记关闭
-解决方案：及时关闭IO流，避免泄露</p>]]></description>
+解决方案：及时关闭IO流，避免泄露</p>
+</li>
+<li>
+<p>Handler泄漏
+由于Activity已经关闭，Handler任务还未执行完成，其引用了Activity的实例导致内存泄露
+解决方案：在Activity的onDestroy()方法回收Handler</p>
+</li>
+<li>
+<p>异步线程泄露
+一般发生在线程执行耗时操作时，如下载，此时Activity关闭后，由于其被异步线程引用，导致无法被正常回收，从而内存泄露
+解决方案：把线程作为对象提取出来，在Activity的onDestroy()方法阻塞线程</p>
+</li>
+<li>
+<p>静态成员变量
+开发中会定义许多<code>static</code>变量，如果有大量的静态变量定义，并有引用资源，一定要在<code>onDestroy</code>或其他地方及时释放(把变量置空即可)</p>
+</li>
+</ol>]]></description>
 </item>
 <item>
     <title>Android高频面试题汇总(一)</title>
@@ -251,31 +312,31 @@ FileOutputStream()未关闭，IO流忘记关闭
 <table>
   <thead>
       <tr>
-          <th style="text-align: left">区别点</th>
-          <th style="text-align: left">重载</th>
-          <th style="text-align: left">重写</th>
+          <th>区别点</th>
+          <th>重载</th>
+          <th>重写</th>
       </tr>
   </thead>
   <tbody>
       <tr>
-          <td style="text-align: left">参数列表</td>
-          <td style="text-align: left">必须修改</td>
-          <td style="text-align: left">不能修改</td>
+          <td>参数列表</td>
+          <td>必须修改</td>
+          <td>不能修改</td>
       </tr>
       <tr>
-          <td style="text-align: left">返回类型</td>
-          <td style="text-align: left">可以修改</td>
-          <td style="text-align: left">不能修改</td>
+          <td>返回类型</td>
+          <td>可以修改</td>
+          <td>不能修改</td>
       </tr>
       <tr>
-          <td style="text-align: left">异常</td>
-          <td style="text-align: left">可以修改</td>
-          <td style="text-align: left">可以减少或删除，一定不能抛出新的或者更广的异常</td>
+          <td>异常</td>
+          <td>可以修改</td>
+          <td>可以减少或删除，一定不能抛出新的或者更广的异常</td>
       </tr>
       <tr>
-          <td style="text-align: left">访问</td>
-          <td style="text-align: left">可以修改</td>
-          <td style="text-align: left">一定不能做更严格的限制（可以降低限制）</td>
+          <td>访问</td>
+          <td>可以修改</td>
+          <td>一定不能做更严格的限制（可以降低限制）</td>
       </tr>
   </tbody>
 </table>
@@ -332,7 +393,23 @@ FileOutputStream()未关闭，IO流忘记关闭
 需要记忆的是<code>懒汉式</code>和<code>饿汉式</code>。
 懒汉式：需要的时候才实例化，常用的例子就是非空检查和双重检查式的实现。
 饿汉式：类加载的时候就先实例化。
-类似这样的</p>]]></description>
+类似这样的</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kd">private</span><span class="w"> </span><span class="kd">static</span><span class="w"> </span><span class="n">Singleton</span><span class="w"> </span><span class="n">instance</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">Singleton</span><span class="p">();</span><span class="w">
+</span></span></span></code></pre></div><p>饿汉式会线程安全些。
+我们用的最主流的方式是静态内部类的方式。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kd">class</span> <span class="nc">SingleInstance</span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="kd">private</span><span class="w"> </span><span class="nf">SingleInstance</span><span class="p">(){}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"> 
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="kd">private</span><span class="w"> </span><span class="kd">static</span><span class="w"> </span><span class="kd">class</span> <span class="nc">SingleInstanceHolder</span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">     </span><span class="kd">private</span><span class="w"> </span><span class="kd">static</span><span class="w"> </span><span class="n">SingleInstance</span><span class="w"> </span><span class="n">INSTANCE</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">SingleInstance</span><span class="p">();</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"> </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"> 
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="kd">public</span><span class="w"> </span><span class="kd">static</span><span class="w"> </span><span class="n">SingleInstance</span><span class="w"> </span><span class="nf">getInstance</span><span class="p">(){</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">SingleInstanceHolder</span><span class="p">.</span><span class="na">INSTANCE</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="p">}</span><span class="w">
+</span></span></span></code></pre></div><blockquote>
+<p>一个省只会有一个省长。</p>]]></description>
 </item>
 <item>
     <title>Sign in With Apple 从登陆到服务器验证</title>
@@ -341,7 +418,42 @@ FileOutputStream()未关闭，IO流忘记关闭
     <author>张龙</author>
     <guid>https://www.ithome.me/post/2020/04/07/sign-in-with-apple-%E4%BB%8E%E7%99%BB%E9%99%86%E5%88%B0%E6%9C%8D%E5%8A%A1%E5%99%A8%E9%AA%8C%E8%AF%81/</guid>
     <description><![CDATA[<p></p>
-<p>关于手机端登录的代码，这里不做多余介绍，我们看下登录成功后， <code>Apple</code>返回给手机端的一些参数</p>]]></description>
+<p>关于手机端登录的代码，这里不做多余介绍，我们看下登录成功后， <code>Apple</code>返回给手机端的一些参数</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-swift" data-lang="swift"><span class="line"><span class="cl"><span class="n">open</span> <span class="kd">var</span> <span class="nv">user</span><span class="p">:</span> <span class="nb">String</span> <span class="p">{</span> <span class="kr">get</span> <span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="n">open</span> <span class="kd">var</span> <span class="nv">state</span><span class="p">:</span> <span class="nb">String</span><span class="p">?</span> <span class="p">{</span> <span class="kr">get</span> <span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="n">open</span> <span class="kd">var</span> <span class="nv">authorizedScopes</span><span class="p">:</span> <span class="p">[</span><span class="n">ASAuthorization</span><span class="p">.</span><span class="n">Scope</span><span class="p">]</span> <span class="p">{</span> <span class="kr">get</span> <span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="n">open</span> <span class="kd">var</span> <span class="nv">authorizationCode</span><span class="p">:</span> <span class="n">Data</span><span class="p">?</span> <span class="p">{</span> <span class="kr">get</span> <span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="n">open</span> <span class="kd">var</span> <span class="nv">identityToken</span><span class="p">:</span> <span class="n">Data</span><span class="p">?</span> <span class="p">{</span> <span class="kr">get</span> <span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="n">open</span> <span class="kd">var</span> <span class="nv">email</span><span class="p">:</span> <span class="nb">String</span><span class="p">?</span> <span class="p">{</span> <span class="kr">get</span> <span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="n">open</span> <span class="kd">var</span> <span class="nv">fullName</span><span class="p">:</span> <span class="n">PersonNameComponents</span><span class="p">?</span> <span class="p">{</span> <span class="kr">get</span> <span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="n">open</span> <span class="kd">var</span> <span class="nv">realUserStatus</span><span class="p">:</span> <span class="n">ASUserDetectionStatus</span>
+</span></span></code></pre></div><p>这里初步登录成功，从 <code>Apple</code> 拿到 <code>user</code> 、 <code>identityToken</code> 、 <code>authorizationCode</code> 等相关信息。</p>
+<h3 id="1-首先手机端先做一个验证">1. 首先手机端先做一个验证</h3>
+<p><code>identityToken</code> 是一个 <code>JWT</code> 格式的加密数据 （JWT相关知识介绍 <a href="http://www.ruanyifeng.com/blog/2018/07/json_web_token-tutorial.html" target="_blank" rel="noopener noreffer">JSON Web Token</a>
+），我们通过如下代码拿到 <code>header</code> 和 <code>payload</code> 中的数据</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-swift" data-lang="swift"><span class="line"><span class="cl"><span class="k">guard</span> <span class="kd">let</span> <span class="nv">_</span> <span class="p">=</span> <span class="n">identityToken</span> <span class="k">else</span> <span class="p">{</span> <span class="k">return</span> <span class="p">}</span>
+</span></span><span class="line"><span class="cl">            
+</span></span><span class="line"><span class="cl"><span class="kd">let</span> <span class="nv">token</span> <span class="p">=</span> <span class="nb">String</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="n">identityToken</span><span class="p">!,</span> <span class="n">encoding</span><span class="p">:</span> <span class="p">.</span><span class="n">utf8</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="kd">let</span> <span class="nv">arr</span> <span class="p">=</span> <span class="n">token</span><span class="p">?.</span><span class="n">components</span><span class="p">(</span><span class="n">separatedBy</span><span class="p">:</span> <span class="s">&#34;.&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="kd">let</span> <span class="nv">header</span> <span class="p">=</span> <span class="n">arr</span><span class="p">?[</span><span class="mi">0</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl"><span class="kd">let</span> <span class="nv">payload</span> <span class="p">=</span> <span class="n">arr</span><span class="p">?[</span><span class="mi">1</span><span class="p">]</span>
+</span></span></code></pre></div><p><code>header</code> 及 <code>payload</code> 均是base64编码的字符串，通过如下代码进行解码</p>
+<blockquote>
+<p>注意：swift中需要用NSData进行转换，用Data进行转换会失败</p>
+</blockquote>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-swift" data-lang="swift"><span class="line"><span class="cl"><span class="c1">// 这里为了方便，均采用 ! 强行解包</span>
+</span></span><span class="line"><span class="cl"><span class="kd">let</span> <span class="nv">headerData</span> <span class="p">=</span> <span class="n">NSData</span><span class="p">(</span><span class="n">base64EncodedString</span><span class="p">:</span> <span class="n">payload</span><span class="p">!)</span>
+</span></span><span class="line"><span class="cl"><span class="kd">let</span> <span class="nv">decodeHeader</span> <span class="p">=</span> <span class="nb">String</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="p">(</span><span class="n">headerData</span><span class="p">!</span> <span class="k">as</span> <span class="n">Data</span><span class="p">),</span> <span class="n">encoding</span><span class="p">:</span> <span class="p">.</span><span class="n">utf8</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kd">let</span> <span class="nv">payloadData</span> <span class="p">=</span> <span class="n">NSData</span><span class="p">(</span><span class="n">base64EncodedString</span><span class="p">:</span> <span class="n">payload</span><span class="p">!)</span>
+</span></span><span class="line"><span class="cl"><span class="kd">let</span> <span class="nv">decodePayload</span> <span class="p">=</span> <span class="nb">String</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="p">(</span><span class="n">payloadData</span><span class="p">!</span> <span class="k">as</span> <span class="n">Data</span><span class="p">),</span> <span class="n">encoding</span><span class="p">:</span> <span class="p">.</span><span class="n">utf8</span><span class="p">)</span>
+</span></span></code></pre></div><p>得到结果如下</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-json" data-lang="json"><span class="line"><span class="cl"><span class="err">header:</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span><span class="nt">&#34;kid&#34;</span><span class="p">:</span><span class="s2">&#34;AIDOPK1&#34;</span><span class="p">,</span><span class="nt">&#34;alg&#34;</span><span class="p">:</span><span class="s2">&#34;RS256&#34;</span><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="err">payload:</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span><span class="nt">&#34;iss&#34;</span><span class="p">:</span><span class="s2">&#34;https://appleid.apple.com&#34;</span><span class="p">,</span><span class="nt">&#34;aud&#34;</span><span class="p">:</span><span class="s2">&#34;这个是你的app的bundle identifier&#34;</span><span class="p">,</span><span class="nt">&#34;exp&#34;</span><span class="p">:</span><span class="mi">1567482337</span><span class="p">,</span><span class="nt">&#34;iat&#34;</span><span class="p">:</span><span class="mi">1567481737</span><span class="p">,</span><span class="nt">&#34;sub&#34;</span><span class="p">:</span><span class="s2">&#34;这个字段和上面获取的 user 字段是完全一样的&#34;</span><span class="p">,</span><span class="nt">&#34;c_hash&#34;</span><span class="p">:</span><span class="s2">&#34;8KDzfalU5kygg5zxXiX7dA&#34;</span><span class="p">,</span><span class="nt">&#34;auth_time&#34;</span><span class="p">:</span><span class="mi">1567481737</span><span class="p">}</span>
+</span></span></code></pre></div><p>通过如上操作，我们可以获取到 <code>payload</code> 中的 <code>sub</code> 字段，然后与上面的 <code>user</code> 字段做一个对比，如果对比通过，则第一步完成</p>]]></description>
 </item>
 <item>
     <title>Flutter开发App常见问题解决方案</title>

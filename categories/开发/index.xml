@@ -37,7 +37,54 @@
 <blockquote>
 <p>鲁迅：授人以鱼不如授人以渔和鱼
 有经验的同学此时已经急不可耐了，鱼拿去。
-完整的<code>docker-compose.yml</code>文件</p>]]></description>
+完整的<code>docker-compose.yml</code>文件</p>
+</blockquote>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">version: &#39;3&#39;
+</span></span><span class="line"><span class="cl">services:
+</span></span><span class="line"><span class="cl">  namesrv:
+</span></span><span class="line"><span class="cl">    image: apacherocketmq/rocketmq:4.9.2-alpine
+</span></span><span class="line"><span class="cl">    container_name: rmqnamesrv
+</span></span><span class="line"><span class="cl">    ports:
+</span></span><span class="line"><span class="cl">      - 9876:9876
+</span></span><span class="line"><span class="cl">    volumes:
+</span></span><span class="line"><span class="cl">      - ./data/namesrv/logs:/home/rocketmq/logs
+</span></span><span class="line"><span class="cl">    command: sh mqnamesrv
+</span></span><span class="line"><span class="cl">    restart: always
+</span></span><span class="line"><span class="cl">  broker:
+</span></span><span class="line"><span class="cl">    image: apacherocketmq/rocketmq:4.9.2-alpine
+</span></span><span class="line"><span class="cl">    container_name: rmqbroker
+</span></span><span class="line"><span class="cl">    links:
+</span></span><span class="line"><span class="cl">      - namesrv
+</span></span><span class="line"><span class="cl">    ports:
+</span></span><span class="line"><span class="cl">      - 10909:10909
+</span></span><span class="line"><span class="cl">      - 10911:10911
+</span></span><span class="line"><span class="cl">      - 10912:10912
+</span></span><span class="line"><span class="cl">    environment:
+</span></span><span class="line"><span class="cl">      - NAMESRV_ADDR=namesrv:9876
+</span></span><span class="line"><span class="cl">    volumes:
+</span></span><span class="line"><span class="cl">      - ./data/broker/logs:/home/rocketmq/logs
+</span></span><span class="line"><span class="cl">      - ./data/broker/store:/home/rocketmq/store
+</span></span><span class="line"><span class="cl">      - ./data/broker/conf/broker.conf:/home/rocketmq/rocketmq-4.9.2/conf/broker.conf
+</span></span><span class="line"><span class="cl">      - ./data/broker/runbroker.sh:/home/rocketmq/rocketmq-4.9.2/bin/runbroker.sh
+</span></span><span class="line"><span class="cl">    command: sh mqbroker -c /home/rocketmq/rocketmq-4.9.2/conf/broker.conf
+</span></span><span class="line"><span class="cl">    depends_on:
+</span></span><span class="line"><span class="cl">      - namesrv
+</span></span><span class="line"><span class="cl">    restart: always
+</span></span><span class="line"><span class="cl">  rmqconsole:
+</span></span><span class="line"><span class="cl">    image: candice0630/rocketmq-console-ng:2.0
+</span></span><span class="line"><span class="cl">    container_name: rmqconsole
+</span></span><span class="line"><span class="cl">    ports:
+</span></span><span class="line"><span class="cl">      - 9001:8080
+</span></span><span class="line"><span class="cl">    environment:
+</span></span><span class="line"><span class="cl">      JAVA_OPTS: -Drocketmq.namesrv.addr=namesrv:9876
+</span></span><span class="line"><span class="cl">        -Dcom.rocketmq.sendMessageWithVIPChannel=false
+</span></span><span class="line"><span class="cl">    depends_on:
+</span></span><span class="line"><span class="cl">      - namesrv
+</span></span><span class="line"><span class="cl">    restart: always
+</span></span></code></pre></div><p>上面一共三个images，<code>namesrv</code>、<code>broker</code>和<code>rmqconsole</code>
+熟悉<code>docker-compose</code>的同学可以直接跳过这部分了
+本部分主要结合上面的配置来说，不适应的根据自己的习惯自行更改
+先建立一个<code>rocketmq</code>文件夹，然后在文件夹下面创建<code>docker-compose.yml</code>文件，复制上面的内容进去。在<code>docker-compose.yml</code>同级目录下创建<code>data</code>文件夹，在<code>data</code>文件夹下分别创建<code>broker</code>和<code>namesrv</code>文件夹，<code>broker</code>目录下分别创建<code>conf</code>、<code>logs</code>和<code>store</code>文件夹。<code>namesrv</code>目录下创建<code>logs</code>目录，<code>logs</code>目录下创建<code>rocketmqlogs</code>目录，这样所有的目录创建完成。自定义的<code>broker.conf</code>文件放到<code>data/broker/conf</code>目录下。</p>]]></description>
 </item>
 <item>
     <title>npm使用入门(一)</title>
@@ -66,7 +113,21 @@
 <div class="highlight"><pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">mkdir npm-demo
 </span></span><span class="line"><span class="cl">cd npm-demo
 </span></span><span class="line"><span class="cl">npm init -y   //生成package.json文件
-</span></span></code></pr]]></description>
+</span></span></code></pre></div><p>安装依赖包可以执行下面的命令</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">$ npm install &lt;package_name&gt;
+</span></span></code></pre></div><p>便可以安装对应的包到执行命令的当前目录，并创建一个node_modules的文件夹,然后把需要安装的安装包下载到里面。</p>
+<p>上述命令默认安装的都是最新版本。版本信息会自动记录在<code>package.json</code>中。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">$ npm install &lt;package_name&gt; --save  //生产环境依赖
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">$ npm install &lt;package_name&gt; --save-dev  //开发环境依赖
+</span></span></code></pre></div><h4 id="模块更新">模块更新</h4>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">$ npm update
+</span></span></code></pre></div><h4 id="模块卸载">模块卸载</h4>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">npm uninstall &lt;package_name&gt;
+</span></span></code></pre></div><p>如果要在卸载模块的同时，也将他从package.json文件中移除</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">$ npm uninstall --save &lt;package_name&gt;
+</span></span></code></pre></div><h4 id="全局包管理">全局包管理</h4>
+<p>默认情况下，安装的包都是在当前目录。</p>]]></description>
 </item>
 </channel>
 </rss>

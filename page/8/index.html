@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
     <head>
-	<meta name="generator" content="Hugo 0.134.1">
+	<meta name="generator" content="Hugo 0.139.0">
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="robots" content="noodp" />
@@ -111,7 +111,12 @@
 <p>简单的适配方法本文不再赘述，主要来说说适配 WKWebView 过程中填过的坑以及善待解决的技术难题。</p>
 <h3 id="1wkwebview-白屏问题">1、WKWebView 白屏问题</h3>
 <p>WKWebView 自诩拥有更快的加载速度，更低的内存占用，但实际上 WKWebView 是一个多进程组件，Network Loading 以及 UI Rendering 在其它进程中执行。初次适配 WKWebView 的时候，我们也惊讶于打开 WKWebView 后，App 进程内存消耗反而大幅下降，但是仔细观察会发现，Other Process 的内存占用会增加。在一些用 webGL 渲染的复杂页面，使用 WKWebView 总体的内存占用（App Process Memory + Other Process Memory）不见得比 UIWebView 少很多。</p>
-<p>在 UIWebView 上当内存占用太大的时候，App Process 会 crash；而在 WKWebView 上当总体的内存占用比较大的时候，WebContent Process 会 crash，从而出现白屏现象。在 WKWebView 中加载下面的测试链接可以稳定重现白屏现象:</p></div><div class="post-footer">
+<p>在 UIWebView 上当内存占用太大的时候，App Process 会 crash；而在 WKWebView 上当总体的内存占用比较大的时候，WebContent Process 会 crash，从而出现白屏现象。在 WKWebView 中加载下面的测试链接可以稳定重现白屏现象:</p>
+<blockquote>
+<p><a href="http://people.mozilla.org/~rnewman/fennec/mem.html" target="_blank" rel="noopener noreffer">http://people.mozilla.org/~rnewman/fennec/mem.html</a>
+</p>
+</blockquote>
+<p>这个时候 WKWebView.URL 会变为 nil, 简单的 reload 刷新操作已经失效，对于一些长驻的H5页面影响比较大。</p></div><div class="post-footer">
         <a href="/post/2019/02/13/wkwebview-%E9%82%A3%E4%BA%9B%E5%9D%91/">Read More</a><div class="post-tags">
                 <i class="fas fa-tags fa-fw" aria-hidden="true"></i>&nbsp;<a href="/tags/wkwebview/">WKWebView</a></div></div>
 </article><article class="single summary" itemscope itemtype="http://schema.org/Article"><h1 class="single-title" itemprop="name headline">
@@ -135,7 +140,56 @@
         data-srcset="http://img.ibook8.club/2018-12-25-15457288297791.jpg, http://img.ibook8.club/2018-12-25-15457288297791.jpg 1.5x, http://img.ibook8.club/2018-12-25-15457288297791.jpg 2x"
         data-sizes="auto"
         alt="http://img.ibook8.club/2018-12-25-15457288297791.jpg"
-        title="http://img.ibook8.club/2018-12-25-15457288297791.jpg" /></p></div><div class="post-footer">
+        title="http://img.ibook8.club/2018-12-25-15457288297791.jpg" /></p>
+<p>细则图解如下：</p>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="http://img.ibook8.club/2018-12-25-15457185296810.jpg"
+        data-srcset="http://img.ibook8.club/2018-12-25-15457185296810.jpg, http://img.ibook8.club/2018-12-25-15457185296810.jpg 1.5x, http://img.ibook8.club/2018-12-25-15457185296810.jpg 2x"
+        data-sizes="auto"
+        alt="http://img.ibook8.club/2018-12-25-15457185296810.jpg"
+        title="http://img.ibook8.club/2018-12-25-15457185296810.jpg" /></p>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="http://img.ibook8.club/2018-12-25-15457185435893.jpg"
+        data-srcset="http://img.ibook8.club/2018-12-25-15457185435893.jpg, http://img.ibook8.club/2018-12-25-15457185435893.jpg 1.5x, http://img.ibook8.club/2018-12-25-15457185435893.jpg 2x"
+        data-sizes="auto"
+        alt="http://img.ibook8.club/2018-12-25-15457185435893.jpg"
+        title="http://img.ibook8.club/2018-12-25-15457185435893.jpg" /></p>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="http://img.ibook8.club/2018-12-25-15457185490326.jpg"
+        data-srcset="http://img.ibook8.club/2018-12-25-15457185490326.jpg, http://img.ibook8.club/2018-12-25-15457185490326.jpg 1.5x, http://img.ibook8.club/2018-12-25-15457185490326.jpg 2x"
+        data-sizes="auto"
+        alt="http://img.ibook8.club/2018-12-25-15457185490326.jpg"
+        title="http://img.ibook8.club/2018-12-25-15457185490326.jpg" /></p>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="http://img.ibook8.club/2018-12-25-15457185625124.jpg"
+        data-srcset="http://img.ibook8.club/2018-12-25-15457185625124.jpg, http://img.ibook8.club/2018-12-25-15457185625124.jpg 1.5x, http://img.ibook8.club/2018-12-25-15457185625124.jpg 2x"
+        data-sizes="auto"
+        alt="http://img.ibook8.club/2018-12-25-15457185625124.jpg"
+        title="http://img.ibook8.club/2018-12-25-15457185625124.jpg" /></p>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="http://img.ibook8.club/2018-12-25-15457185724261.jpg"
+        data-srcset="http://img.ibook8.club/2018-12-25-15457185724261.jpg, http://img.ibook8.club/2018-12-25-15457185724261.jpg 1.5x, http://img.ibook8.club/2018-12-25-15457185724261.jpg 2x"
+        data-sizes="auto"
+        alt="http://img.ibook8.club/2018-12-25-15457185724261.jpg"
+        title="http://img.ibook8.club/2018-12-25-15457185724261.jpg" /></p>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="http://img.ibook8.club/2018-12-25-15457185810751.jpg"
+        data-srcset="http://img.ibook8.club/2018-12-25-15457185810751.jpg, http://img.ibook8.club/2018-12-25-15457185810751.jpg 1.5x, http://img.ibook8.club/2018-12-25-15457185810751.jpg 2x"
+        data-sizes="auto"
+        alt="http://img.ibook8.club/2018-12-25-15457185810751.jpg"
+        title="http://img.ibook8.club/2018-12-25-15457185810751.jpg" /></p></div><div class="post-footer">
         <a href="/post/2018/12/25/2019%E6%96%B0%E4%B8%AA%E7%A8%8E%E6%89%A3%E9%99%A4%E7%BB%86%E5%88%99%E5%9B%BE%E4%BE%8B/">Read More</a><div class="post-tags">
                 <i class="fas fa-tags fa-fw" aria-hidden="true"></i>&nbsp;<a href="/tags/2019%E4%B8%AA%E7%A8%8E%E4%B8%93%E9%A1%B9/">2019个税专项</a>,&nbsp;<a href="/tags/%E4%B8%AA%E4%BA%BA%E6%89%80%E5%BE%97%E7%A8%8E/">个人所得税</a></div></div>
 </article><article class="single summary" itemscope itemtype="http://schema.org/Article"><h1 class="single-title" itemprop="name headline">
@@ -159,7 +213,7 @@
 </span></span><span class="line"><span class="cl">        }
 </span></span><span class="line"><span class="cl">    }
 </span></span><span class="line"><span class="cl">}
-</span></span></code></pr</div><div class="post-footer">
+</span></span></code></pre></div></div><div class="post-footer">
         <a href="/post/2018/12/25/android%E5%BC%80%E5%8F%91jcenter%E6%9B%BF%E6%8D%A2%E4%B8%BA%E5%9B%BD%E5%86%85%E9%95%9C%E5%83%8F/">Read More</a><div class="post-tags">
                 <i class="fas fa-tags fa-fw" aria-hidden="true"></i>&nbsp;<a href="/tags/android/">Android</a>,&nbsp;<a href="/tags/jcenter/">Jcenter</a>,&nbsp;<a href="/tags/%E9%95%9C%E5%83%8F/">镜像</a></div></div>
 </article><article class="single summary" itemscope itemtype="http://schema.org/Article"><h1 class="single-title" itemprop="name headline">
@@ -187,7 +241,35 @@
         data-srcset="http://img.ibook8.club/2018-12-05-image2a.png, http://img.ibook8.club/2018-12-05-image2a.png 1.5x, http://img.ibook8.club/2018-12-05-image2a.png 2x"
         data-sizes="auto"
         alt="http://img.ibook8.club/2018-12-05-image2a.png"
-        title="image2a" /></p></div><div class="post-footer">
+        title="image2a" /></p>
+<p>使用 Flare 构建的动画可以作为一个小部件嵌入到现有的 Flutter 应用程序中
+<img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="http://img.ibook8.club/2018-12-05-Flare.gif"
+        data-srcset="http://img.ibook8.club/2018-12-05-Flare.gif, http://img.ibook8.club/2018-12-05-Flare.gif 1.5x, http://img.ibook8.club/2018-12-05-Flare.gif 2x"
+        data-sizes="auto"
+        alt="http://img.ibook8.club/2018-12-05-Flare.gif"
+        title="Flare" /></p>
+<p>自从第一个测试版发布以来，我们一直在努力为 Flutter 增加新的功能和亮点。 特别是，我们完善了<a href="https://developers.googleblog.com/2018/09/flutter-release-preview-2-pixel-perfect.html" target="_blank" rel="noopener noreffer">pixel-perfect iOS apps</a>
+ iOS widgets支持; 添加了对近二十种不同 Firebase 服务的支持; 并致力于提高性能和减少 Flutter 应用程序的大小。 根据社区的反馈，我们也解决了数以千计的问题。</p>
+<p>下面是Flutter 1.0的新特性：</p>
+<ol>
+<li>1.0版本的主要焦点是 bug 修复和稳定性。Flutter 1.0 使用的是最新的 Dart 2.1。Dart 2.1 提供更小的代码体积，更快的类型检查和更好的诊断。按照 Google 的说法，Dart 2.1 将输出代码的大小减少了 17％，并将编译时间缩短了 15％ 。Dart 2.1 还包含新的语言特性，例如通过新mixin关键字改进 mixin 支持、支持 int-to-double 的转换、编译时类型检查、新的 HTTP 状态码等等。</li>
+<li>Add to App 是一种逐步将现有应用移植到 Flutter 的方法，主要用于将 Flutter 用于现有应用，或者将现有应用分阶段转换为 Flutter 。</li>
+<li>platform views 则是一种相反的方式，用于将 Android 或 iPhone 平台的控件嵌入到 Flutter 应用。
+可以把原生的视图控件嵌入到flutter app了
+<img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="http://img.ibook8.club/2018-12-05-image7a.png"
+        data-srcset="http://img.ibook8.club/2018-12-05-image7a.png, http://img.ibook8.club/2018-12-05-image7a.png 1.5x, http://img.ibook8.club/2018-12-05-image7a.png 2x"
+        data-sizes="auto"
+        alt="http://img.ibook8.club/2018-12-05-image7a.png"
+        title="image7a" /></li>
+</ol>
+<p>Google 还宣布了 Flutter 运行时基于 Web 的实验性实现 —— <a href="https://medium.com/flutter-io/hummingbird-building-flutter-for-the-web-e687c2a023a8" target="_blank" rel="noopener noreffer">Hummingbird</a>
+，旨在将 Flutter 应用引入浏览器。它利用 Dart 平台的特性不仅可以编译原生 ARM 代码，还可以编译 JavaScript 。这使得 Flutter 代码可以在基于标准的 Web 上运行而无需任何更改。</p></div><div class="post-footer">
         <a href="/post/2018/12/05/%E9%87%8D%E7%A3%85flutter-1-0-%E6%AD%A3%E5%BC%8F%E5%8F%91%E5%B8%83/">Read More</a><div class="post-tags">
                 <i class="fas fa-tags fa-fw" aria-hidden="true"></i>&nbsp;<a href="/tags/flutter/">Flutter</a></div></div>
 </article><article class="single summary" itemscope itemtype="http://schema.org/Article"><h1 class="single-title" itemprop="name headline">

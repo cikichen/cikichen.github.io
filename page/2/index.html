@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
     <head>
-	<meta name="generator" content="Hugo 0.134.1">
+	<meta name="generator" content="Hugo 0.139.0">
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="robots" content="noodp" />
@@ -128,7 +128,48 @@
 </span></span><span class="line"><span class="cl">        ssl_protocols TLSv1 TLSv1.1 TLSv1.2;
 </span></span><span class="line"><span class="cl">        ssl_prefer_server_ciphers on;
 </span></span><span class="line"><span class="cl">    }
-</span></span></code></pr</div><div class="post-footer">
+</span></span></code></pre></div><h2 id="强制http跳转到https提示重定向过多">强制http跳转到https，提示重定向过多</h2>
+<hr>
+<h3 id="你使用了rewrite并且在一个server里面同时监听了80和443">你使用了<code>rewrite</code>，并且在一个server里面同时监听了<code>80</code>和<code>443</code></h3>
+<p>解决方法：<code>80</code>和<code>443</code>分别拆分到不同的<code>server</code>，80里面做301重定向，下面是配置文件，仅供参考。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">   upstream halo {
+</span></span><span class="line"><span class="cl">        server 127.0.0.1:8090;
+</span></span><span class="line"><span class="cl">    }
+</span></span><span class="line"><span class="cl">    server {
+</span></span><span class="line"><span class="cl">        listen 80;
+</span></span><span class="line"><span class="cl">        return 301 https://yourdomain$request_uri;
+</span></span><span class="line"><span class="cl">    }
+</span></span><span class="line"><span class="cl">    server {
+</span></span><span class="line"><span class="cl">        listen 443 ssl;
+</span></span><span class="line"><span class="cl">        server_name yourdomain;
+</span></span><span class="line"><span class="cl">        client_max_body_size 1024m;
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">        #charset koi8-r;
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">        ssl_certificate /www/server/nginx/conf/cert/xxx.pem;
+</span></span><span class="line"><span class="cl">        ssl_certificate_key /www/server/nginx/conf/cert/xxx.key;
+</span></span><span class="line"><span class="cl">        ssl_session_timeout 5m;
+</span></span><span class="line"><span class="cl">        ssl_ciphers ECDHE-RSA-AES128-GCM-SHA256:ECDHE:ECDH:AES:HIGH:!NULL:!aNULL:!MD5:!ADH:!RC4;
+</span></span><span class="line"><span class="cl">        ssl_protocols TLSv1 TLSv1.1 TLSv1.2;
+</span></span><span class="line"><span class="cl">        ssl_prefer_server_ciphers on;
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">        #access_log  logs/host.access.log  main;
+</span></span><span class="line"><span class="cl">        location / {
+</span></span><span class="line"><span class="cl">            proxy_pass http://halo;
+</span></span><span class="line"><span class="cl">            proxy_set_header HOST $host;
+</span></span><span class="line"><span class="cl">            proxy_set_header X-Forwarded-Proto $scheme;
+</span></span><span class="line"><span class="cl">            proxy_set_header X-Real-IP $remote_addr;
+</span></span><span class="line"><span class="cl">            proxy_set_header X-Forwarded-For
+</span></span><span class="line"><span class="cl">            $proxy_add_x_forwarded_for;
+</span></span><span class="line"><span class="cl">        }
+</span></span><span class="line"><span class="cl">        #error_page  404              /404.html;
+</span></span><span class="line"><span class="cl">        # redirect server error pages to the static page /50x.html
+</span></span><span class="line"><span class="cl">        error_page 500 502 503 504 /50x.html;
+</span></span><span class="line"><span class="cl">        location = /50x.html {
+</span></span><span class="line"><span class="cl">            root html;
+</span></span><span class="line"><span class="cl">        }
+</span></span><span class="line"><span class="cl">    }
+</span></span></code></pre></div></div><div class="post-footer">
         <a href="/post/2021/05/16/nginx%E9%85%8D%E7%BD%AEssl%E8%AF%81%E4%B9%A6%E6%97%A0%E6%B3%95%E8%AE%BF%E9%97%AE%E7%9A%84%E9%97%AE%E9%A2%98/">Read More</a><div class="post-tags">
                 <i class="fas fa-tags fa-fw" aria-hidden="true"></i>&nbsp;<a href="/tags/ssl/">Ssl</a>,&nbsp;<a href="/tags/nginx/">Nginx</a></div></div>
 </article><article class="single summary" itemscope itemtype="http://schema.org/Article"><h1 class="single-title" itemprop="name headline">
@@ -152,7 +193,16 @@ taro-cli： v3.2.8</p>
 </span></span><span class="line"><span class="cl">
 </span></span><span class="line"><span class="cl">Try running this to fix the issue: .nvm/versions/node/v15.14.0/bin/node /node_modules/fibers/build
 </span></span><span class="line"><span class="cl">Error: Cannot find module &#39;node_modules/fibers/bin/darwin-arm64-88/fibers&#39;
-</span></span></code></pr</div><div class="post-footer">
+</span></span></code></pre></div><p>执行<code>/Users/xxx/.nvm/versions/node/v15.14.0/bin/node /Users/xxx/xxx/node_modules/fibers/build</code>时找不到fibers的<code>darwin-arm64-88</code></p>
+<ol>
+<li>在项目目录下执行<code>find . -name fibers.node</code>，看看输出路径有没有<code>darwin-arm64-88</code>，如果没有，继续下面步骤2</li>
+<li>在项目目录手动执行<code>/Users/xxx/.nvm/versions/node/v15.14.0/bin/node /Users/xxx/xxx/node_modules/fibers/build</code>，输出提示<code>node-gyp not found! Please ensure node-gyp is in your PATH--</code></li>
+<li>执行<code>npm install -g node-gyp</code>安装<code>node-gyp</code></li>
+<li>再次执行<code>/Users/xxx/.nvm/versions/node/v15.14.0/bin/node /Users/xxx/xxx/node_modules/fibers/build</code>，此时报错<code>binding.gyp not found</code></li>
+<li>项目目录下执行<code>find . -name binding.gyp</code>，会发现<code>node_modules/fibers/binding.gyp</code>，项目中是存在这个文件的</li>
+<li>项目录下下<code>cd node_modules/fibers</code>，然后再次执行<code>/Users/xxx/.nvm/versions/node/v15.14.0/bin/node /Users/xxx/xxx/node_modules/fibers/build</code>，不出意外的话此时应该编译通过了。</li>
+<li>然后<code>cd ../..</code>，执行<code>yarn dev:h5</code>，成功启动。</li>
+</ol></div><div class="post-footer">
         <a href="/post/2021/05/12/m1%E6%97%A0%E6%B3%95%E7%BC%96%E8%AF%91taro%E7%9A%84%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88/">Read More</a><div class="post-tags">
                 <i class="fas fa-tags fa-fw" aria-hidden="true"></i>&nbsp;<a href="/tags/%E7%BC%96%E7%A8%8B/">编程</a>,&nbsp;<a href="/tags/yarn/">Yarn</a>,&nbsp;<a href="/tags/nvm/">Nvm</a>,&nbsp;<a href="/tags/fibers/">Fibers</a>,&nbsp;<a href="/tags/taro/">Taro</a></div></div>
 </article><article class="single summary" itemscope itemtype="http://schema.org/Article"><h1 class="single-title" itemprop="name headline">
@@ -215,7 +265,13 @@ taro-cli： v3.2.8</p>
 </span></span><span class="line"><span class="cl">	<span class="n">at</span> <span class="n">org</span><span class="o">.</span><span class="n">eclipse</span><span class="o">.</span><span class="n">jface</span><span class="o">.</span><span class="n">window</span><span class="o">.</span><span class="n">Window</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">Window</span><span class="o">.</span><span class="n">java</span><span class="p">:</span><span class="mi">430</span><span class="p">)</span>
 </span></span><span class="line"><span class="cl">	<span class="n">at</span> <span class="n">org</span><span class="o">.</span><span class="n">eclipse</span><span class="o">.</span><span class="n">jface</span><span class="o">.</span><span class="n">window</span><span class="o">.</span><span class="n">Window</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">Window</span><span class="o">.</span><span class="n">java</span><span class="p">:</span><span class="mi">790</span><span class="p">)</span>
 </span></span><span class="line"><span class="cl">	<span class="n">at</span> <span class="n">com</span><span class="o">.</span><span class="n">android</span><span class="o">.</span><span class="n">uiautomator</span><span class="o">.</span><span class="n">UiAutomatorViewer</span><span class="o">.</span><span class="n">main</span><span class="p">(</span><span class="n">UiAutomatorViewer</span><span class="o">.</span><span class="n">java</span><span class="p">:</span><span class="mi">78</span><span class="p">)</span>
-</span></span></code></pr</div><div class="post-footer">
+</span></span></code></pre></div><p>折腾许久也没找到解决方案，放弃。</p>
+<p>尝试方案2：
+既然增加<code>aarch64</code>支持的方案无法解决，那就只能尝试<code>Rosetta 2</code>方式了。
+运行<code>arch -x86_64 ./uiautomatorviewer</code>无效果。</p>
+<p><code>uiautomatorviewer</code>依赖<code>Java环境</code>，我使用的是zulu arm版本<code>jdk</code>，所以切换<code>jdk</code>为x64版本。
+<code>export JAVA_HOME=/Library/Java/JavaVirtualMachines/jdk1.8.0_281.jdk/Contents/Home</code></p>
+<p>然后再次执行<code>./uiautomatorviewer</code>，成功运行。</p></div><div class="post-footer">
         <a href="/post/2021/04/06/%E8%A7%A3%E5%86%B3macbook-m1%E4%B8%8B%E6%97%A0%E6%B3%95%E8%BF%90%E8%A1%8Cuiautomatorviewer/">Read More</a><div class="post-tags">
                 <i class="fas fa-tags fa-fw" aria-hidden="true"></i>&nbsp;<a href="/tags/uiautomatorviewer/">Uiautomatorviewer</a>,&nbsp;<a href="/tags/aarch64/">Aarch64</a></div></div>
 </article><article class="single summary" itemscope itemtype="http://schema.org/Article"><h1 class="single-title" itemprop="name headline">
@@ -235,7 +291,22 @@ taro-cli： v3.2.8</p>
         data-srcset="https://img.ibook8.club/mweb/16094114966896.jpg, https://img.ibook8.club/mweb/16094114966896.jpg 1.5x, https://img.ibook8.club/mweb/16094114966896.jpg 2x"
         data-sizes="auto"
         alt="https://img.ibook8.club/mweb/16094114966896.jpg"
-        title="https://img.ibook8.club/mweb/16094114966896.jpg" /></p></div><div class="post-footer">
+        title="https://img.ibook8.club/mweb/16094114966896.jpg" /></p>
+<p>目前M1上iphone模拟器运行flutter app可能遇到一些问题，主要是三方依赖的插件很多没适配arm64，需要大量调试（参考:https://stackoverflow.com/questions/63607158/xcode-12-building-for-ios-simulator-but-linking-in-object-file-built-for-ios） <br>
+android模拟器只有个测试版，问题一大堆，也基本不可用，所以现在这个阶段想在M1上开发app的话，调试需要真机走起。(模拟器查看：https://androidstudio.googleblog.com/2020/12/android-emulator-apple-silicon-preview.html)</p>
+<p>偶尔会有一些无法理解的错误，命令行<code>flutter clean</code>可能有惊喜。</p>
+<h3 id="常见错误">常见错误</h3>
+<h4 id="webview_plugin-flutterflutterh-file-not-found">webview_plugin &lsquo;Flutter/Flutter.h&rsquo; file not found</h4>
+<p>旧项目迁移到M1上后，可能会出现这个错误
+解决方案:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">$ rm ios/Flutter/Flutter.podspec
+</span></span><span class="line"><span class="cl">$ flutter clean
+</span></span></code></pre></div><h4 id="vm-service-error-unhandled-exception">vm-service: Error: Unhandled exception</h4>
+<p>运行时报这个错，应该是你在运行小猫咪
+解决方案：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-gdscript3" data-lang="gdscript3"><span class="line"><span class="cl"><span class="k">export</span> <span class="n">NO_PROXY</span><span class="o">=</span><span class="n">localhost</span><span class="p">,</span><span class="mf">127.0</span><span class="o">.</span><span class="mf">0.1</span>
+</span></span><span class="line"><span class="cl"><span class="n">source</span> <span class="o">~/.</span><span class="n">zshrc</span>
+</span></span></code></pre></div></div><div class="post-footer">
         <a href="/post/2020/12/31/macbook-m1%E5%BC%80%E5%8F%91flutter%E9%81%87%E5%88%B0%E7%9A%84%E9%97%AE%E9%A2%98/">Read More</a><div class="post-tags">
                 <i class="fas fa-tags fa-fw" aria-hidden="true"></i>&nbsp;<a href="/tags/%E8%B7%A8%E5%B9%B3%E5%8F%B0/">跨平台</a>,&nbsp;<a href="/tags/flutter/">Flutter</a>,&nbsp;<a href="/tags/macbook/">Macbook</a>,&nbsp;<a href="/tags/m1/">M1</a></div></div>
 </article><ul class="pagination"><li class="page-item ">

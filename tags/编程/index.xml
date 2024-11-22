@@ -37,7 +37,54 @@
 <blockquote>
 <p>鲁迅：授人以鱼不如授人以渔和鱼
 有经验的同学此时已经急不可耐了，鱼拿去。
-完整的<code>docker-compose.yml</code>文件</p>]]></description>
+完整的<code>docker-compose.yml</code>文件</p>
+</blockquote>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">version: &#39;3&#39;
+</span></span><span class="line"><span class="cl">services:
+</span></span><span class="line"><span class="cl">  namesrv:
+</span></span><span class="line"><span class="cl">    image: apacherocketmq/rocketmq:4.9.2-alpine
+</span></span><span class="line"><span class="cl">    container_name: rmqnamesrv
+</span></span><span class="line"><span class="cl">    ports:
+</span></span><span class="line"><span class="cl">      - 9876:9876
+</span></span><span class="line"><span class="cl">    volumes:
+</span></span><span class="line"><span class="cl">      - ./data/namesrv/logs:/home/rocketmq/logs
+</span></span><span class="line"><span class="cl">    command: sh mqnamesrv
+</span></span><span class="line"><span class="cl">    restart: always
+</span></span><span class="line"><span class="cl">  broker:
+</span></span><span class="line"><span class="cl">    image: apacherocketmq/rocketmq:4.9.2-alpine
+</span></span><span class="line"><span class="cl">    container_name: rmqbroker
+</span></span><span class="line"><span class="cl">    links:
+</span></span><span class="line"><span class="cl">      - namesrv
+</span></span><span class="line"><span class="cl">    ports:
+</span></span><span class="line"><span class="cl">      - 10909:10909
+</span></span><span class="line"><span class="cl">      - 10911:10911
+</span></span><span class="line"><span class="cl">      - 10912:10912
+</span></span><span class="line"><span class="cl">    environment:
+</span></span><span class="line"><span class="cl">      - NAMESRV_ADDR=namesrv:9876
+</span></span><span class="line"><span class="cl">    volumes:
+</span></span><span class="line"><span class="cl">      - ./data/broker/logs:/home/rocketmq/logs
+</span></span><span class="line"><span class="cl">      - ./data/broker/store:/home/rocketmq/store
+</span></span><span class="line"><span class="cl">      - ./data/broker/conf/broker.conf:/home/rocketmq/rocketmq-4.9.2/conf/broker.conf
+</span></span><span class="line"><span class="cl">      - ./data/broker/runbroker.sh:/home/rocketmq/rocketmq-4.9.2/bin/runbroker.sh
+</span></span><span class="line"><span class="cl">    command: sh mqbroker -c /home/rocketmq/rocketmq-4.9.2/conf/broker.conf
+</span></span><span class="line"><span class="cl">    depends_on:
+</span></span><span class="line"><span class="cl">      - namesrv
+</span></span><span class="line"><span class="cl">    restart: always
+</span></span><span class="line"><span class="cl">  rmqconsole:
+</span></span><span class="line"><span class="cl">    image: candice0630/rocketmq-console-ng:2.0
+</span></span><span class="line"><span class="cl">    container_name: rmqconsole
+</span></span><span class="line"><span class="cl">    ports:
+</span></span><span class="line"><span class="cl">      - 9001:8080
+</span></span><span class="line"><span class="cl">    environment:
+</span></span><span class="line"><span class="cl">      JAVA_OPTS: -Drocketmq.namesrv.addr=namesrv:9876
+</span></span><span class="line"><span class="cl">        -Dcom.rocketmq.sendMessageWithVIPChannel=false
+</span></span><span class="line"><span class="cl">    depends_on:
+</span></span><span class="line"><span class="cl">      - namesrv
+</span></span><span class="line"><span class="cl">    restart: always
+</span></span></code></pre></div><p>上面一共三个images，<code>namesrv</code>、<code>broker</code>和<code>rmqconsole</code>
+熟悉<code>docker-compose</code>的同学可以直接跳过这部分了
+本部分主要结合上面的配置来说，不适应的根据自己的习惯自行更改
+先建立一个<code>rocketmq</code>文件夹，然后在文件夹下面创建<code>docker-compose.yml</code>文件，复制上面的内容进去。在<code>docker-compose.yml</code>同级目录下创建<code>data</code>文件夹，在<code>data</code>文件夹下分别创建<code>broker</code>和<code>namesrv</code>文件夹，<code>broker</code>目录下分别创建<code>conf</code>、<code>logs</code>和<code>store</code>文件夹。<code>namesrv</code>目录下创建<code>logs</code>目录，<code>logs</code>目录下创建<code>rocketmqlogs</code>目录，这样所有的目录创建完成。自定义的<code>broker.conf</code>文件放到<code>data/broker/conf</code>目录下。</p>]]></description>
 </item>
 <item>
     <title>There is an issue with node-fibers</title>
@@ -63,7 +110,16 @@ taro-cli： v3.2.8</p>
 </span></span><span class="line"><span class="cl">
 </span></span><span class="line"><span class="cl">Try running this to fix the issue: .nvm/versions/node/v15.14.0/bin/node /node_modules/fibers/build
 </span></span><span class="line"><span class="cl">Error: Cannot find module &#39;node_modules/fibers/bin/darwin-arm64-88/fibers&#39;
-</span></span></code></pr]]></description>
+</span></span></code></pre></div><p>执行<code>/Users/xxx/.nvm/versions/node/v15.14.0/bin/node /Users/xxx/xxx/node_modules/fibers/build</code>时找不到fibers的<code>darwin-arm64-88</code></p>
+<ol>
+<li>在项目目录下执行<code>find . -name fibers.node</code>，看看输出路径有没有<code>darwin-arm64-88</code>，如果没有，继续下面步骤2</li>
+<li>在项目目录手动执行<code>/Users/xxx/.nvm/versions/node/v15.14.0/bin/node /Users/xxx/xxx/node_modules/fibers/build</code>，输出提示<code>node-gyp not found! Please ensure node-gyp is in your PATH--</code></li>
+<li>执行<code>npm install -g node-gyp</code>安装<code>node-gyp</code></li>
+<li>再次执行<code>/Users/xxx/.nvm/versions/node/v15.14.0/bin/node /Users/xxx/xxx/node_modules/fibers/build</code>，此时报错<code>binding.gyp not found</code></li>
+<li>项目目录下执行<code>find . -name binding.gyp</code>，会发现<code>node_modules/fibers/binding.gyp</code>，项目中是存在这个文件的</li>
+<li>项目录下下<code>cd node_modules/fibers</code>，然后再次执行<code>/Users/xxx/.nvm/versions/node/v15.14.0/bin/node /Users/xxx/xxx/node_modules/fibers/build</code>，不出意外的话此时应该编译通过了。</li>
+<li>然后<code>cd ../..</code>，执行<code>yarn dev:h5</code>，成功启动。</li>
+</ol>]]></description>
 </item>
 <item>
     <title>Android内存泄漏分析</title>
@@ -119,7 +175,23 @@ Bitmap的问题一般是因为没有对使用的图片及时释放所致。
 <li>
 <p>IO操作
 FileOutputStream()未关闭，IO流忘记关闭
-解决方案：及时关闭IO流，避免泄露</p>]]></description>
+解决方案：及时关闭IO流，避免泄露</p>
+</li>
+<li>
+<p>Handler泄漏
+由于Activity已经关闭，Handler任务还未执行完成，其引用了Activity的实例导致内存泄露
+解决方案：在Activity的onDestroy()方法回收Handler</p>
+</li>
+<li>
+<p>异步线程泄露
+一般发生在线程执行耗时操作时，如下载，此时Activity关闭后，由于其被异步线程引用，导致无法被正常回收，从而内存泄露
+解决方案：把线程作为对象提取出来，在Activity的onDestroy()方法阻塞线程</p>
+</li>
+<li>
+<p>静态成员变量
+开发中会定义许多<code>static</code>变量，如果有大量的静态变量定义，并有引用资源，一定要在<code>onDestroy</code>或其他地方及时释放(把变量置空即可)</p>
+</li>
+</ol>]]></description>
 </item>
 <item>
     <title>Android高频面试题汇总(一)</title>
@@ -142,31 +214,31 @@ FileOutputStream()未关闭，IO流忘记关闭
 <table>
   <thead>
       <tr>
-          <th style="text-align: left">区别点</th>
-          <th style="text-align: left">重载</th>
-          <th style="text-align: left">重写</th>
+          <th>区别点</th>
+          <th>重载</th>
+          <th>重写</th>
       </tr>
   </thead>
   <tbody>
       <tr>
-          <td style="text-align: left">参数列表</td>
-          <td style="text-align: left">必须修改</td>
-          <td style="text-align: left">不能修改</td>
+          <td>参数列表</td>
+          <td>必须修改</td>
+          <td>不能修改</td>
       </tr>
       <tr>
-          <td style="text-align: left">返回类型</td>
-          <td style="text-align: left">可以修改</td>
-          <td style="text-align: left">不能修改</td>
+          <td>返回类型</td>
+          <td>可以修改</td>
+          <td>不能修改</td>
       </tr>
       <tr>
-          <td style="text-align: left">异常</td>
-          <td style="text-align: left">可以修改</td>
-          <td style="text-align: left">可以减少或删除，一定不能抛出新的或者更广的异常</td>
+          <td>异常</td>
+          <td>可以修改</td>
+          <td>可以减少或删除，一定不能抛出新的或者更广的异常</td>
       </tr>
       <tr>
-          <td style="text-align: left">访问</td>
-          <td style="text-align: left">可以修改</td>
-          <td style="text-align: left">一定不能做更严格的限制（可以降低限制）</td>
+          <td>访问</td>
+          <td>可以修改</td>
+          <td>一定不能做更严格的限制（可以降低限制）</td>
       </tr>
   </tbody>
 </table>
@@ -223,7 +295,23 @@ FileOutputStream()未关闭，IO流忘记关闭
 需要记忆的是<code>懒汉式</code>和<code>饿汉式</code>。
 懒汉式：需要的时候才实例化，常用的例子就是非空检查和双重检查式的实现。
 饿汉式：类加载的时候就先实例化。
-类似这样的</p>]]></description>
+类似这样的</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kd">private</span><span class="w"> </span><span class="kd">static</span><span class="w"> </span><span class="n">Singleton</span><span class="w"> </span><span class="n">instance</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">Singleton</span><span class="p">();</span><span class="w">
+</span></span></span></code></pre></div><p>饿汉式会线程安全些。
+我们用的最主流的方式是静态内部类的方式。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kd">class</span> <span class="nc">SingleInstance</span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="kd">private</span><span class="w"> </span><span class="nf">SingleInstance</span><span class="p">(){}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"> 
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="kd">private</span><span class="w"> </span><span class="kd">static</span><span class="w"> </span><span class="kd">class</span> <span class="nc">SingleInstanceHolder</span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">     </span><span class="kd">private</span><span class="w"> </span><span class="kd">static</span><span class="w"> </span><span class="n">SingleInstance</span><span class="w"> </span><span class="n">INSTANCE</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">SingleInstance</span><span class="p">();</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"> </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"> 
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="kd">public</span><span class="w"> </span><span class="kd">static</span><span class="w"> </span><span class="n">SingleInstance</span><span class="w"> </span><span class="nf">getInstance</span><span class="p">(){</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">SingleInstanceHolder</span><span class="p">.</span><span class="na">INSTANCE</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="p">}</span><span class="w">
+</span></span></span></code></pre></div><blockquote>
+<p>一个省只会有一个省长。</p>]]></description>
 </item>
 <item>
     <title>Mac上安装yarn和nvm</title>
@@ -245,7 +333,7 @@ FileOutputStream()未关闭，IO流忘记关闭
 </span></span><span class="line"><span class="cl">~ brew link --overwrite node
 </span></span><span class="line"><span class="cl">~ brew doctor
 </span></span><span class="line"><span class="cl">~ brew install yarn --ignore-dependencies
-</span></span></code></pr]]></description>
+</span></span></code></pre></div><p>安装这个顺序操作就OK了。</p>]]></description>
 </item>
 <item>
     <title>Windows Terminal添加右键菜单</title>
@@ -299,7 +387,19 @@ FileOutputStream()未关闭，IO流忘记关闭
 柏拉图笑了。他知道这个小孩已经朝他引导的方向走了。“这么说来你的意思是世界上没有什么东西是完全相同的咯？”  <br>
 思考了一会，小男孩回答：“是的。万物之间都至少有一丁点差别，哪怕我们无法分辨出来。” <br>
 说到点子上了！“那你说，如果世界上没有什么东西是完全相等的，你怎么理解‘完全相等’这个概念？”  <br>
-小男仆看起来很困惑。“这我就不知道了。”</p>]]></description>
+小男仆看起来很困惑。“这我就不知道了。”</p>
+<p>这是人类第一次试图了解数学的本质。柏拉图认为我们所在的世界中，万事万物都是完美模型的一个近似。他同时意识到虽然我们不能感受到完美的模型，但这丝毫不会阻止我们了解完美模型的概念。柏拉图进而得出结论：完美的数学模型只存在于另外一个世界，而因为某种原因我们却可以通过联系着这两个世界的一个纽带来认识这些模型。一个简单的例子就是完美的圆形。没有人见过这样的一个圆，但是我们知道怎样的圆是完美的圆，而且可以用公式把它描述出来。</p>
+<p>如此说来，什么是数学呢？为什么可以用数学法则来描述我们的这个宇宙？我们所处的这个世界中万事万物都可以用数学来描述吗？<!-- raw HTML omitted --><a href="#f2" rel="">2</a>
+<!-- raw HTML omitted -->
+数理哲学是一门很复杂的学科。它和其他多数哲学一样，更着重于提出问题而不是给出答案。数学就像拼图一样，很多结论都是这样推导出来的：先是确立一些互不冲突的基础原理，以及一些操作这些原理的规则，然后就可以把这些原理以及规则拼凑起来形成新的更加复杂的规则或是定理了。数学家把这种方法称为“形式系统”或是“演算”。如果你想做的话，可以用形式系统描述俄罗斯方块这个游戏。而事实上，俄罗斯方块这个游戏的实现，只要它正确运行，就是一个形式系统。只不过它以一种不常见的形式表现出来罢了。</p>
+<p>如果<a href="http://zh.wikipedia.org/wiki/%E5%8D%8A%E4%BA%BA%E9%A9%AC%E5%BA%A7%CE%B1" target="_blank" rel="noopener noreffer">半人马阿尔法</a>
+上有文明存在的话，那里的生物可能无法解读我们的俄罗斯方块形式系统甚至是简单的圆形的形式系统，因为它们感知世界的唯一器官可能只有鼻子（译者：偶的妈你咋知道？）也许它们是无法得知俄罗斯方块的形式系统了，但是它们很有可能知道圆形。它们的圆形我们可能没法解读，因为我们的鼻子没有它们那么灵敏（译者：那狗可以么？）可是只要越过形式系统的表示方式（比如通过使用“超级鼻子”之类的工具来感知这些用味道表示的形式系统，然后使用标准的解码技术把它们翻译成人类能理解的语言），那么任何有足够智力的文明都可以理解这些形式系统的本质。</p>
+<p>有意思的是，哪怕宇宙中完全不存在任何文明，类似俄罗斯方块还有圆形这样的形式系统依旧是成立的：只不过没有智慧生物去发现它们而已。这个时候如果忽然一个文明诞生了，那么这些具有智慧的生物就很有可能发现各种各样的形式系统，并且用它们发现的系统去描述各种宇宙法则。不过它们可能不会发现俄罗斯方块这样的形式系统，因为在它们的世界里没有俄罗斯方块这种东西嘛。有很多像俄罗斯方块这样的形式系统是与客观世界无关的，比如说自然数，很难说所有的自然数都与客观世界有关，随便举一个超级大的数，这个数可能就和世界上任何事物无关，因为这个世界可能不是无穷大的。</p>
+<h3 id="历史回眸sup-namea33f3sup">历史回眸<!-- raw HTML omitted --><a href="#f3" rel="">3</a>
+<!-- raw HTML omitted --></h3>
+<p>再次启动时间机……这次到达的是20世纪30年代，离今天近了很多。无论<a href="http://zh.wikipedia.org/wiki/%E6%96%B0%E5%A4%A7%E9%99%B8" target="_blank" rel="noopener noreffer">新</a>
+<a href="http://zh.wikipedia.org/wiki/%E8%88%8A%E5%A4%A7%E9%99%B8" target="_blank" rel="noopener noreffer">旧</a>
+大陆，经济大萧条都造成了巨大的破坏。社会各阶层几乎每一个家庭都深受其害。只有极其少数的几个地方能让人们免于遭受穷困之苦。几乎没有人能够幸运的在这些避难所里度过危机，注意，我说的是几乎没有，还真的有这么些幸运儿，比如说当时普林斯顿大学的数学家们。</p>]]></description>
 </item>
 </channel>
 </rss>

@@ -12,7 +12,12 @@
 定义和声明您的策略 首先，需要定义支持的策略种类。设备策略包含锁屏密码强度、密码失效时间 等。
 您必须在 res/xml/device_admin.xml 文件中定义使用的策略集合，程序会应用该策略到设备上。同时在Manifest文件中需要引用声明的策略集合。
 每个声明的策略都对应DevicePolicyManager 类中的一个或者几个相关的函数。如果一个程序尝试调用一个没有在XML文件中声明过的策略函数，会抛出一个 SecurityException 异常。如果程序想管理其他类型的策略，可以使用其他的权限 — 比如 force-lock。在后面您会看到，在设备管理器的激活流程中会有一个系统界面告诉用户您所声明的策略集合列表。
-下面的代码在res/xml/device_admin.xml文件中定义了limit password 策略：">
+下面的代码在res/xml/device_admin.xml文件中定义了limit password 策略：
+&lt;device-admin xmlns:android=&#34;http://schemas.android.com/apk/res/android&#34;&gt; &lt;uses-policies&gt; &lt;limit-password /&gt; &lt;/uses-policies&gt; &lt;/device-admin&gt; 在 manifest 文件中引用定义的策略：
+&lt;receiver android:name=&#34;.Policy$PolicyAdmin&#34; android:permission=&#34;android.permission.BIND_DEVICE_ADMIN&#34;&gt; &lt;strong&gt;&lt;meta-data android:name=&#34;android.app.device_admin&#34; android:resource=&#34;@xml/device_admin&#34; /&gt;&lt;/strong&gt; &lt;intent-filter&gt; &lt;action android:name=&#34;android.app.action.DEVICE_ADMIN_ENABLED&#34; /&gt; &lt;/intent-filter&gt; &lt;/receiver&gt; 创建 Device Administration Receiver 当您定义的策略事件发生的时候会通知您创建的这个设备管理器Receiver。可以根据情况覆盖(Override)需要的回调函数。
+在Device Admin这个示例程序中，如果用户撤销了设备管理器，示例程序所配置的策略信息将会清除。您需要考虑实现符合您的使用情况的业务逻辑。例如，程序可以删除一些敏感信息来减轻安全风险、还可以禁用远程同步功能 等。
+不要忘了在manifest文件中注册您的Receiver。
+public static class PolicyAdmin extends DeviceAdminReceiver { @Override public void onDisabled(Context context, Intent intent) { // Called when the app is about to be deactivated as a device administrator. // Deletes previously stored password policy. super.onDisabled(context, intent); SharedPreferences prefs = context.getSharedPreferences(APP_PREF, Activity.MODE_PRIVATE); prefs.edit().clear().commit(); } } 激活设备管理器 在执行任何策略之前，用户需要手工的激活设备管理器。下面的代码演示了如何触发设置界面来让用户激活您的设备管理器程序。包含一个介绍文本内容告诉用户为啥您的程序需要激活为设备管理器是个不错的选择， 通过在Intent中设置 EXTRA_ADD_EXPLANATION 字段。">
   <meta property="og:locale" content="zh_CN">
   <meta property="og:type" content="article">
     <meta property="article:section" content="posts">
@@ -28,7 +33,12 @@
 定义和声明您的策略 首先，需要定义支持的策略种类。设备策略包含锁屏密码强度、密码失效时间 等。
 您必须在 res/xml/device_admin.xml 文件中定义使用的策略集合，程序会应用该策略到设备上。同时在Manifest文件中需要引用声明的策略集合。
 每个声明的策略都对应DevicePolicyManager 类中的一个或者几个相关的函数。如果一个程序尝试调用一个没有在XML文件中声明过的策略函数，会抛出一个 SecurityException 异常。如果程序想管理其他类型的策略，可以使用其他的权限 — 比如 force-lock。在后面您会看到，在设备管理器的激活流程中会有一个系统界面告诉用户您所声明的策略集合列表。
-下面的代码在res/xml/device_admin.xml文件中定义了limit password 策略：">
+下面的代码在res/xml/device_admin.xml文件中定义了limit password 策略：
+&lt;device-admin xmlns:android=&#34;http://schemas.android.com/apk/res/android&#34;&gt; &lt;uses-policies&gt; &lt;limit-password /&gt; &lt;/uses-policies&gt; &lt;/device-admin&gt; 在 manifest 文件中引用定义的策略：
+&lt;receiver android:name=&#34;.Policy$PolicyAdmin&#34; android:permission=&#34;android.permission.BIND_DEVICE_ADMIN&#34;&gt; &lt;strong&gt;&lt;meta-data android:name=&#34;android.app.device_admin&#34; android:resource=&#34;@xml/device_admin&#34; /&gt;&lt;/strong&gt; &lt;intent-filter&gt; &lt;action android:name=&#34;android.app.action.DEVICE_ADMIN_ENABLED&#34; /&gt; &lt;/intent-filter&gt; &lt;/receiver&gt; 创建 Device Administration Receiver 当您定义的策略事件发生的时候会通知您创建的这个设备管理器Receiver。可以根据情况覆盖(Override)需要的回调函数。
+在Device Admin这个示例程序中，如果用户撤销了设备管理器，示例程序所配置的策略信息将会清除。您需要考虑实现符合您的使用情况的业务逻辑。例如，程序可以删除一些敏感信息来减轻安全风险、还可以禁用远程同步功能 等。
+不要忘了在manifest文件中注册您的Receiver。
+public static class PolicyAdmin extends DeviceAdminReceiver { @Override public void onDisabled(Context context, Intent intent) { // Called when the app is about to be deactivated as a device administrator. // Deletes previously stored password policy. super.onDisabled(context, intent); SharedPreferences prefs = context.getSharedPreferences(APP_PREF, Activity.MODE_PRIVATE); prefs.edit().clear().commit(); } } 激活设备管理器 在执行任何策略之前，用户需要手工的激活设备管理器。下面的代码演示了如何触发设置界面来让用户激活您的设备管理器程序。包含一个介绍文本内容告诉用户为啥您的程序需要激活为设备管理器是个不错的选择， 通过在Intent中设置 EXTRA_ADD_EXPLANATION 字段。">
       <meta name="twitter:site" content="@https://twitter.com/ChenCiki">
 <meta name="application-name" content="My KeepIt site">
 <meta name="apple-mobile-web-app-title" content="My KeepIt site"><meta name="theme-color" content="#ffffff"><meta name="msapplication-TileColor" content="#da532c"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />

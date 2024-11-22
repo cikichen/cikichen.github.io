@@ -33,7 +33,32 @@
 抛出 <code>[VerifyError](http://developer.android.com/reference/java/lang/VerifyError.html)</code> 异常。</p>
 <p>好的命名策略就是使用具体的版本号对应的名称来命名，这样方便以后管理。由于这里的实现是基于3.0新功能的，所以我们的实现类名字就为<strong>CompatTabHoneycomb</strong> 和 <strong>TabHelperHoneycomb</strong> 。</p>
 <p><a href="http://www.ithome.me/wp-content/uploads/2013/07/backward-compatible-ui-classes-honeycomb.png" target="_blank" rel="noopener noreffer"></a>
-</p>]]></description>
+</p>
+<h2 id="implement-compattabhoneycomb">Implement CompatTabHoneycomb</h2>
+<p>CompatTabHoneycomb 实现了 CompatTab 抽象类，该类的实现中只是把每个函数的调用委托给
+ActionBar.Tab对象，该对象从Activity中获取。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kd">class</span> <span class="nc">CompatTabHoneycomb</span><span class="w"> </span><span class="kd">extends</span><span class="w"> </span><span class="n">CompatTab</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="c1">// The native tab object that this CompatTab acts as a proxy for.</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="n">ActionBar</span><span class="p">.</span><span class="na">Tab</span><span class="w"> </span><span class="n">mTab</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">...</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">protected</span><span class="w"> </span><span class="nf">CompatTabHoneycomb</span><span class="p">(</span><span class="n">FragmentActivity</span><span class="w"> </span><span class="n">activity</span><span class="p">,</span><span class="w"> </span><span class="n">String</span><span class="w"> </span><span class="n">tag</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="p">...</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="c1">// Proxy to new ActionBar.newTab API</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">mTab</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">activity</span><span class="p">.</span><span class="na">getActionBar</span><span class="p">().</span><span class="na">newTab</span><span class="p">();</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="n">CompatTab</span><span class="w"> </span><span class="nf">setText</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">resId</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="c1">// Proxy to new ActionBar.Tab.setText API</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">mTab</span><span class="p">.</span><span class="na">setText</span><span class="p">(</span><span class="n">resId</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="k">this</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">...</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="c1">// Do the same for other properties (icon, callback, etc.)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="p">}</span><span class="w">
+</span></span></span></code></pre></div><h2 id="implement-tabhelperhoneycomb">Implement TabHelperHoneycomb</h2>
+<p>同样，TabHelperHoneycomb实现了TabHelper 抽象类。 函数的调用都委托给ActionBar对应的函数了。</p>]]></description>
 </item>
 <item>
     <title>[转]使用旧的API来实现接口</title>

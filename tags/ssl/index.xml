@@ -35,7 +35,48 @@
 </span></span><span class="line"><span class="cl">        ssl_protocols TLSv1 TLSv1.1 TLSv1.2;
 </span></span><span class="line"><span class="cl">        ssl_prefer_server_ciphers on;
 </span></span><span class="line"><span class="cl">    }
-</span></span></code></pr]]></description>
+</span></span></code></pre></div><h2 id="强制http跳转到https提示重定向过多">强制http跳转到https，提示重定向过多</h2>
+<hr>
+<h3 id="你使用了rewrite并且在一个server里面同时监听了80和443">你使用了<code>rewrite</code>，并且在一个server里面同时监听了<code>80</code>和<code>443</code></h3>
+<p>解决方法：<code>80</code>和<code>443</code>分别拆分到不同的<code>server</code>，80里面做301重定向，下面是配置文件，仅供参考。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">   upstream halo {
+</span></span><span class="line"><span class="cl">        server 127.0.0.1:8090;
+</span></span><span class="line"><span class="cl">    }
+</span></span><span class="line"><span class="cl">    server {
+</span></span><span class="line"><span class="cl">        listen 80;
+</span></span><span class="line"><span class="cl">        return 301 https://yourdomain$request_uri;
+</span></span><span class="line"><span class="cl">    }
+</span></span><span class="line"><span class="cl">    server {
+</span></span><span class="line"><span class="cl">        listen 443 ssl;
+</span></span><span class="line"><span class="cl">        server_name yourdomain;
+</span></span><span class="line"><span class="cl">        client_max_body_size 1024m;
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">        #charset koi8-r;
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">        ssl_certificate /www/server/nginx/conf/cert/xxx.pem;
+</span></span><span class="line"><span class="cl">        ssl_certificate_key /www/server/nginx/conf/cert/xxx.key;
+</span></span><span class="line"><span class="cl">        ssl_session_timeout 5m;
+</span></span><span class="line"><span class="cl">        ssl_ciphers ECDHE-RSA-AES128-GCM-SHA256:ECDHE:ECDH:AES:HIGH:!NULL:!aNULL:!MD5:!ADH:!RC4;
+</span></span><span class="line"><span class="cl">        ssl_protocols TLSv1 TLSv1.1 TLSv1.2;
+</span></span><span class="line"><span class="cl">        ssl_prefer_server_ciphers on;
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">        #access_log  logs/host.access.log  main;
+</span></span><span class="line"><span class="cl">        location / {
+</span></span><span class="line"><span class="cl">            proxy_pass http://halo;
+</span></span><span class="line"><span class="cl">            proxy_set_header HOST $host;
+</span></span><span class="line"><span class="cl">            proxy_set_header X-Forwarded-Proto $scheme;
+</span></span><span class="line"><span class="cl">            proxy_set_header X-Real-IP $remote_addr;
+</span></span><span class="line"><span class="cl">            proxy_set_header X-Forwarded-For
+</span></span><span class="line"><span class="cl">            $proxy_add_x_forwarded_for;
+</span></span><span class="line"><span class="cl">        }
+</span></span><span class="line"><span class="cl">        #error_page  404              /404.html;
+</span></span><span class="line"><span class="cl">        # redirect server error pages to the static page /50x.html
+</span></span><span class="line"><span class="cl">        error_page 500 502 503 504 /50x.html;
+</span></span><span class="line"><span class="cl">        location = /50x.html {
+</span></span><span class="line"><span class="cl">            root html;
+</span></span><span class="line"><span class="cl">        }
+</span></span><span class="line"><span class="cl">    }
+</span></span></code></pre></div>]]></description>
 </item>
 </channel>
 </rss>

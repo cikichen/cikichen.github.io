@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
     <head>
-	<meta name="generator" content="Hugo 0.134.1">
+	<meta name="generator" content="Hugo 0.139.0">
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="robots" content="noodp" />
@@ -125,7 +125,38 @@
 <p>每个声明的策略都对应<a href="http://developer.android.com/reference/android/app/admin/DevicePolicyManager.html" target="_blank" rel="noopener noreffer">DevicePolicyManager</a>
 类中的一个或者几个相关的函数。如果一个程序尝试调用一个没有在XML文件中声明过的策略函数，会抛出一个 <a href="http://developer.android.com/reference/java/lang/SecurityException.html" target="_blank" rel="noopener noreffer">SecurityException</a>
  异常。如果程序想管理其他类型的策略，可以使用其他的权限 — 比如 <strong>force-lock</strong>。在后面您会看到，在设备管理器的激活流程中会有一个系统界面告诉用户您所声明的策略集合列表。</p>
-<p>下面的代码在<strong>res/xml/device_admin.xml</strong>文件中定义了limit password 策略：</p></div><div class="post-footer">
+<p>下面的代码在<strong>res/xml/device_admin.xml</strong>文件中定义了limit password 策略：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-xml" data-lang="xml"><span class="line"><span class="cl"><span class="nt">&lt;device-admin</span> <span class="na">xmlns:android=</span><span class="s">&#34;http://schemas.android.com/apk/res/android&#34;</span><span class="nt">&gt;</span>
+</span></span><span class="line"><span class="cl">    <span class="nt">&lt;uses-policies&gt;</span>
+</span></span><span class="line"><span class="cl">        <span class="nt">&lt;limit-password</span> <span class="nt">/&gt;</span>
+</span></span><span class="line"><span class="cl">    <span class="nt">&lt;/uses-policies&gt;</span>
+</span></span><span class="line"><span class="cl"><span class="nt">&lt;/device-admin&gt;</span>
+</span></span></code></pre></div><p>在 manifest 文件中引用定义的策略：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-xml" data-lang="xml"><span class="line"><span class="cl"><span class="nt">&lt;receiver</span> <span class="na">android:name=</span><span class="s">&#34;.Policy$PolicyAdmin&#34;</span> <span class="na">android:permission=</span><span class="s">&#34;android.permission.BIND_DEVICE_ADMIN&#34;</span><span class="nt">&gt;</span>
+</span></span><span class="line"><span class="cl">    <span class="nt">&lt;strong&gt;&lt;meta-data</span> <span class="na">android:name=</span><span class="s">&#34;android.app.device_admin&#34;</span>
+</span></span><span class="line"><span class="cl">        <span class="na">android:resource=</span><span class="s">&#34;@xml/device_admin&#34;</span> <span class="nt">/&gt;&lt;/strong&gt;</span>
+</span></span><span class="line"><span class="cl">    <span class="nt">&lt;intent-filter&gt;</span>
+</span></span><span class="line"><span class="cl">        <span class="nt">&lt;action</span> <span class="na">android:name=</span><span class="s">&#34;android.app.action.DEVICE_ADMIN_ENABLED&#34;</span> <span class="nt">/&gt;</span>
+</span></span><span class="line"><span class="cl">    <span class="nt">&lt;/intent-filter&gt;</span>
+</span></span><span class="line"><span class="cl"><span class="nt">&lt;/receiver&gt;</span>
+</span></span></code></pre></div><h2 id="创建-device-administration-receiver">创建 Device Administration Receiver</h2>
+<p>当您定义的策略事件发生的时候会通知您创建的这个设备管理器Receiver。可以根据情况覆盖(Override)需要的回调函数。</p>
+<p>在Device Admin这个示例程序中，如果用户撤销了设备管理器，示例程序所配置的策略信息将会清除。您需要考虑实现符合您的使用情况的业务逻辑。例如，程序可以删除一些敏感信息来减轻安全风险、还可以禁用远程同步功能 等。</p>
+<p>不要忘了在manifest文件中注册您的Receiver。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kd">static</span><span class="w"> </span><span class="kd">class</span> <span class="nc">PolicyAdmin</span><span class="w"> </span><span class="kd">extends</span><span class="w"> </span><span class="n">DeviceAdminReceiver</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nd">@Override</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">onDisabled</span><span class="p">(</span><span class="n">Context</span><span class="w"> </span><span class="n">context</span><span class="p">,</span><span class="w"> </span><span class="n">Intent</span><span class="w"> </span><span class="n">intent</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="c1">// Called when the app is about to be deactivated as a device administrator.</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="c1">// Deletes previously stored password policy.</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="kd">super</span><span class="p">.</span><span class="na">onDisabled</span><span class="p">(</span><span class="n">context</span><span class="p">,</span><span class="w"> </span><span class="n">intent</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">SharedPreferences</span><span class="w"> </span><span class="n">prefs</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">context</span><span class="p">.</span><span class="na">getSharedPreferences</span><span class="p">(</span><span class="n">APP_PREF</span><span class="p">,</span><span class="w"> </span><span class="n">Activity</span><span class="p">.</span><span class="na">MODE_PRIVATE</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">prefs</span><span class="p">.</span><span class="na">edit</span><span class="p">().</span><span class="na">clear</span><span class="p">().</span><span class="na">commit</span><span class="p">();</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="p">}</span><span class="w">
+</span></span></span></code></pre></div><h2 id="激活设备管理器">激活设备管理器</h2>
+<p>在执行任何策略之前，用户需要手工的激活设备管理器。下面的代码演示了如何触发设置界面来让用户激活您的设备管理器程序。包含一个介绍文本内容告诉用户为啥您的程序需要激活为设备管理器是个不错的选择， 通过在Intent中设置 <a href="http://developer.android.com/reference/android/app/admin/DevicePolicyManager.html#EXTRA_ADD_EXPLANATION" target="_blank" rel="noopener noreffer">EXTRA_ADD_EXPLANATION</a>
+ 字段。</p></div><div class="post-footer">
         <a href="/post/2013/07/19/%E8%BD%AC%E4%BD%BF%E7%94%A8%E8%AE%BE%E5%A4%87%E7%AE%A1%E7%90%86%E7%AD%96%E7%95%A5%E6%9D%A5%E5%8A%A0%E5%BC%BA%E4%BF%A1%E6%81%AF%E5%AE%89%E5%85%A8/">Read More</a><div class="post-tags">
                 <i class="fas fa-tags fa-fw" aria-hidden="true"></i>&nbsp;<a href="/tags/android/">Android</a>,&nbsp;<a href="/tags/%E8%AE%BE%E5%A4%87%E7%AE%A1%E7%90%86%E7%AD%96%E7%95%A5/">设备管理策略</a></div></div>
 </article><article class="single summary" itemscope itemtype="http://schema.org/Article"><h1 class="single-title" itemprop="name headline">
@@ -162,7 +193,32 @@
         data-sizes="auto"
         alt="http://www.ithome.me/wp-content/uploads/2013/07/backward-compatible-ui-classes-honeycomb-300x124.png"
         title="backward-compatible-ui-classes-honeycomb" /></a>
-</p></div><div class="post-footer">
+</p>
+<h2 id="implement-compattabhoneycomb">Implement CompatTabHoneycomb</h2>
+<p>CompatTabHoneycomb 实现了 CompatTab 抽象类，该类的实现中只是把每个函数的调用委托给
+ActionBar.Tab对象，该对象从Activity中获取。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kd">class</span> <span class="nc">CompatTabHoneycomb</span><span class="w"> </span><span class="kd">extends</span><span class="w"> </span><span class="n">CompatTab</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="c1">// The native tab object that this CompatTab acts as a proxy for.</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="n">ActionBar</span><span class="p">.</span><span class="na">Tab</span><span class="w"> </span><span class="n">mTab</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">...</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">protected</span><span class="w"> </span><span class="nf">CompatTabHoneycomb</span><span class="p">(</span><span class="n">FragmentActivity</span><span class="w"> </span><span class="n">activity</span><span class="p">,</span><span class="w"> </span><span class="n">String</span><span class="w"> </span><span class="n">tag</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="p">...</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="c1">// Proxy to new ActionBar.newTab API</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">mTab</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">activity</span><span class="p">.</span><span class="na">getActionBar</span><span class="p">().</span><span class="na">newTab</span><span class="p">();</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="n">CompatTab</span><span class="w"> </span><span class="nf">setText</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">resId</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="c1">// Proxy to new ActionBar.Tab.setText API</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">mTab</span><span class="p">.</span><span class="na">setText</span><span class="p">(</span><span class="n">resId</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="k">this</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">...</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="c1">// Do the same for other properties (icon, callback, etc.)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="p">}</span><span class="w">
+</span></span></span></code></pre></div><h2 id="implement-tabhelperhoneycomb">Implement TabHelperHoneycomb</h2>
+<p>同样，TabHelperHoneycomb实现了TabHelper 抽象类。 函数的调用都委托给ActionBar对应的函数了。</p></div><div class="post-footer">
         <a href="/post/2013/07/17/%E8%BD%AC%E9%80%9A%E8%BF%87%E4%BB%A3%E7%90%86%E4%BD%BF%E7%94%A8%E6%96%B0api/">Read More</a><div class="post-tags">
                 <i class="fas fa-tags fa-fw" aria-hidden="true"></i>&nbsp;<a href="/tags/android/">Android</a>,&nbsp;<a href="/tags/%E4%BB%A3%E7%90%86/">代理</a>,&nbsp;<a href="/tags/api/">API</a></div></div>
 </article><article class="single summary" itemscope itemtype="http://schema.org/Article"><h1 class="single-title" itemprop="name headline">
@@ -202,7 +258,10 @@
 </span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="p">}</span><span class="w">
 </span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="p">...</span><span class="w">
 </span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="p">}</span><span class="w">
-</span></span></span></code></pr</div><div class="post-footer">
+</span></span></span></code></pre></div><h2 id="创建一个版本感知的activity-layout">创建一个版本感知的Activity Layout</h2>
+<p>然后是创建一个支持两种tab实现的布局。对于旧的实现方式 (TabHelperEclair)，布局中包含 <a href="https://developer.android.com/reference/android/widget/TabWidget.html" target="_blank" rel="noopener noreffer">TabWidget</a>
+ 和 <a href="https://developer.android.com/reference/android/widget/TabHost.html" target="_blank" rel="noopener noreffer">TabHost</a>
+，和一个包含tab的容器:</p></div><div class="post-footer">
         <a href="/post/2013/07/17/%E8%BD%AC%E4%BD%BF%E7%94%A8%E5%92%8C%E7%89%88%E6%9C%AC%E5%85%B3%E8%81%94%E7%9A%84%E7%BB%84%E4%BB%B6/">Read More</a><div class="post-tags">
                 <i class="fas fa-tags fa-fw" aria-hidden="true"></i>&nbsp;<a href="/tags/android/">Android</a>,&nbsp;<a href="/tags/%E7%89%88%E6%9C%AC%E5%85%B3%E8%81%94/">版本关联</a>,&nbsp;<a href="/tags/%E7%BB%84%E4%BB%B6/">组件</a></div></div>
 </article><article class="single summary" itemscope itemtype="http://schema.org/Article"><h1 class="single-title" itemprop="name headline">
@@ -274,7 +333,28 @@ There generally isn’t a one-size-fits-all solution for backporting newer UI co
  在Java语言中意味着隐藏实现细节。在使用新的API时，可以使用抽象机制来
 创建一个版本相关的控件，该控件在新版本中使用新API，在旧版本中使用旧API。</p>
 <p>当使用这种方式的时候，您需要确定在旧版本中需要使用那些新版本的特性，然后基于新的接口来创建一个抽象类。在定义新的抽象接口的时候，应该尽可能的反映出新的特性（尽可能的复制新的API定义）。这样可以尽可能的向前兼容，并且当某一天您觉得不再需要抽象层的时候很容易的切换回来。</p>
-<p>一旦为新的API创建了抽象接口后，就可以定义多个实现类并且在运行时来选择使用那个实现方式。不同的API level对应的实现方式可能不一样。</p></div><div class="post-footer">
+<p>一旦为新的API创建了抽象接口后，就可以定义多个实现类并且在运行时来选择使用那个实现方式。不同的API level对应的实现方式可能不一样。</p>
+<h2 id="创建抽象后的tab接口">创建抽象后的Tab接口</h2>
+<p>为了创建向后兼容版本的tabs，需要首先定义您的程序需要哪些特性和具体的API。在这里的顶部导航tab中，我们 假设有如下特性：</p>
+<ol>
+<li>Tab 指示器，包含文字和图片</li>
+<li>Tabs 可以和Fragment关联起来</li>
+<li>Activity 应该可以监听到Tab切换事件
+预先准备这些需求可以让你精确的控制抽象层的范围。这意味着您可以使用较少的时间创建多个抽象层实现，并且尽可能早的使用兼容性的实现。</li>
+</ol>
+<p>这里用于Tabs的关键API为 <code>[ActionBar](http://developer.android.com/reference/android/app/ActionBar.html)</code> 和
+<code>[ActionBar.Tab](http://developer.android.com/reference/android/app/ActionBar.Tab.html)</code>。
+您需要抽象这些API来使您的Tabs和系统版本关联起来。这个项目中需要支持Eclair (API level 5) 同时能够使用Honeycomb (API Level 11)版本中的新特性。下图显示了该抽象API在
+这两种版本中的具体实现关系图。</p>
+<p><a href="http://www.ithome.me/wp-content/uploads/2013/07/backward-compatible-ui-classes1.png" target="_blank" rel="noopener noreffer"><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="http://www.ithome.me/wp-content/uploads/2013/07/backward-compatible-ui-classes1-300x114.png"
+        data-srcset="http://www.ithome.me/wp-content/uploads/2013/07/backward-compatible-ui-classes1-300x114.png, http://www.ithome.me/wp-content/uploads/2013/07/backward-compatible-ui-classes1-300x114.png 1.5x, http://www.ithome.me/wp-content/uploads/2013/07/backward-compatible-ui-classes1-300x114.png 2x"
+        data-sizes="auto"
+        alt="http://www.ithome.me/wp-content/uploads/2013/07/backward-compatible-ui-classes1-300x114.png"
+        title="backward-compatible-ui-classes" /></a>
+</p></div><div class="post-footer">
         <a href="/post/2013/07/17/%E8%BD%AC%E6%8A%BD%E8%B1%A1%E6%96%B0%E7%9A%84api/">Read More</a></div>
 </article><article class="single summary" itemscope itemtype="http://schema.org/Article"><h1 class="single-title" itemprop="name headline">
         <a href="/post/2013/06/23/%E8%BD%ACdd-wrt%E8%B7%AF%E7%94%B1%E5%99%A8%E8%BF%85%E9%9B%B7%E7%A6%BB%E7%BA%BF%E8%84%B1%E6%9C%BA%E4%B8%8B%E8%BD%BD/">[转]DD-WRT路由器迅雷离线脱机下载</a>
@@ -291,7 +371,17 @@ There generally isn’t a one-size-fits-all solution for backporting newer UI co
 <!-- raw HTML omitted -->
 <p>修改为</p>
 <!-- raw HTML omitted -->
-<p>保存后将目录中的文件全部复制到路由器的 /opt/bin/lixian 目录（tests目录、.gitignore 和 README.md 无需复制）</p></div><div class="post-footer">
+<p>保存后将目录中的文件全部复制到路由器的 /opt/bin/lixian 目录（tests目录、.gitignore 和 README.md 无需复制）</p>
+<p>4、为 lixian_cli.py 创建别名</p>
+<p>使用 ssh 客户端连接至路由器，键入如下命令：</p>
+<!-- raw HTML omitted -->
+<p>之后就可以在 /opt 目录下使用 xunlei 来调用 <a href="https://github.com/iambus/xunlei-lixian" title="xunlei-lixian" target="_blank" rel="noopener noreffer">xunlei-lixian</a>
+ 了。</p>
+<p>5、建立配置文件</p>
+<p>使用 ssh 客户端连接至路由器，键入如下命令：</p>
+<!-- raw HTML omitted -->
+<!-- raw HTML omitted -->
+<p>完成后将 /tmp/root/.xunlei.lixian.config 复制到 /opt/bin/lixian 目录下。</p></div><div class="post-footer">
         <a href="/post/2013/06/23/%E8%BD%ACdd-wrt%E8%B7%AF%E7%94%B1%E5%99%A8%E8%BF%85%E9%9B%B7%E7%A6%BB%E7%BA%BF%E8%84%B1%E6%9C%BA%E4%B8%8B%E8%BD%BD/">Read More</a><div class="post-tags">
                 <i class="fas fa-tags fa-fw" aria-hidden="true"></i>&nbsp;<a href="/tags/dd-wrt/">Dd-Wrt</a>,&nbsp;<a href="/tags/%E7%A6%BB%E7%BA%BF%E4%B8%8B%E8%BD%BD/">离线下载</a>,&nbsp;<a href="/tags/%E8%84%B1%E6%9C%BA%E4%B8%8B%E8%BD%BD/">脱机下载</a></div></div>
 </article><ul class="pagination"><li class="page-item ">

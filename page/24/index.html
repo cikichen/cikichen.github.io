@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
     <head>
-	<meta name="generator" content="Hugo 0.134.1">
+	<meta name="generator" content="Hugo 0.139.0">
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="robots" content="noodp" />
@@ -129,7 +129,15 @@ long double US_deficit_2004;
 [/objc]</p>
 <p>要显示long double 的值，需要使用修饰符L。因此，%Lf表示用浮点计数法显示，%Le用科学计数法显示，而%Lg表示用上述两种中任选一种表示。</p>
 <h1 id="short-int">short int</h1>
-<p>short int 用来告诉objective-c编译器要声明的特定变量用来存储相当小的整数。之所以使用short变量，主要原因是对节约内存空间的考虑，当程序员需要大量内存而可用的内存量又十分有限时，就可以用short变量来解决这个问题。</p></div><div class="post-footer">
+<p>short int 用来告诉objective-c编译器要声明的特定变量用来存储相当小的整数。之所以使用short变量，主要原因是对节约内存空间的考虑，当程序员需要大量内存而可用的内存量又十分有限时，就可以用short变量来解决这个问题。</p>
+<p>在某些计算机上，short int 占用的内存空间是常规int变量所占空间的一半。在任何情况下，确保分配给short int的空间数量不少于16位。</p>
+<p>在objective-c中，没有其他方法可显式地编写short int 型常量。要显示short int变量，可将字母h放在任何普通的整型转换符号之前，例如：%hi,%ho或者%hx。</p>
+<h1 id="unsigned-int">unsigned int</h1>
+<p>[objc]
+unsigned int counter;
+[/objc]</p>
+<p>向编译器声明：变量counter只用于保存正值。通过限定整型变量的使用，使它专门存储正整数，可以扩展整型变量的精度。</p>
+<p>声明unsigned类型常量，需要在值后添加u(U)。例如：</p></div><div class="post-footer">
         <a href="/post/2013/12/26/objective-c-e8-af-ad-e6-b3-95-e5-ad-a6-e4-b9-a0-e9-99-90-e5-ae-9a-e8-af-8dlong-e3-80-81long-long-e3-80-81short-e3-80-81unsigned-e5-8f-8asigned/">Read More</a><div class="post-tags">
                 <i class="fas fa-tags fa-fw" aria-hidden="true"></i>&nbsp;<a href="/tags/objective-c/">Objective-C</a></div></div>
 </article><article class="single summary" itemscope itemtype="http://schema.org/Article"><h1 class="single-title" itemprop="name headline">
@@ -145,7 +153,59 @@ long double US_deficit_2004;
         data-sizes="auto"
         alt="http://www.ithome.me/wp-content/uploads/2013/12/type-300x196.png"
         title="type" /></a>
-</p></div><div class="post-footer">
+</p>
+<p>NSLog是打印函数，相当于c语言的printf()，或者Java里面的system.out.print()。</p>
+<p><a href="http://www.ithome.me/wp-content/uploads/2013/12/formate.png" target="_blank" rel="noopener noreffer"><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="http://www.ithome.me/wp-content/uploads/2013/12/formate-300x109.png"
+        data-srcset="http://www.ithome.me/wp-content/uploads/2013/12/formate-300x109.png, http://www.ithome.me/wp-content/uploads/2013/12/formate-300x109.png 1.5x, http://www.ithome.me/wp-content/uploads/2013/12/formate-300x109.png 2x"
+        data-sizes="auto"
+        alt="http://www.ithome.me/wp-content/uploads/2013/12/formate-300x109.png"
+        title="formate" /></a>
+</p>
+<h1 id="int类型">int类型</h1>
+<p>和Java一样，objc的八进制表示：如果整形值的第一位是0，那么这个整数将用八进制计数法来表示，就是说用基数8来表示。在这种情况下，该值的其余位必须是合法的八进制数字，也就是必须是0到7之间的数字。因此，在objc中以八进制表示的值50（等价于十进制40），表示方式为050。与此类似，八进制的常量0177表示十进制的值127（1x64+7x8+7）。通过在NSLog调用的格式字符串中使用格式符号%o，可在终端上用八进制显示整形值。这种情况下显示的八进制值不带前导0，如果像显示0，可以用格式符号%#o。</p>
+<p>关于十六进制的表示，通过0x开头。比如0xFFEF0D。格式输出符号是%x将用十六进制格式显示一个值，该值不带前导0x。如果要显示0x，需要用%#x。如果用%X或者%#X，注意X是大写，可用于十六进制中字母的大写输出。</p>
+<h1 id="float类型">float类型</h1>
+<p>声明为float类型的变量可存储包含小数位的值。要区分浮点常量，可通过产看其是否包含小数点。可以省略小数点前面或者后面的数字。值3.、125.8、以及-.0001都是合法的浮点常量。要显示浮点值，可用NSLog转换字符%f。</p>
+<p>浮点常量也能使用科学计数法来表示。比如1.7e4，2.25e-3。e字母可用大小写。</p>
+<p>要用科学计数法显示值，可以用格式输出符号%e。另外%g可以让NSLog自己确定使用浮点计数法还是科学计数法来显示值。具体怎么显示取决于值的大小。</p>
+<h1 id="double类型">double类型</h1>
+<p>类型double于float非常相似，而在float变量所提供的值域不能满足要求时，就要使用double变量。声明为double类型的变量可存储的位数大概是float变量所存储的两倍多。大多数计算机使用64位来便是double值。</p>
+<p>除非另有说明，否则，objc编译器将所有的浮点常量均看作double值。要清楚地表示float常量，需要在数字的尾部添加一个f或者F，例如12.5f</p>
+<p>要显示double值，可用格式符号%f,%e或者%g,他们与显示float值所用的格式符号是相同的。</p>
+<h1 id="char类型">char类型</h1>
+<p>char变量可存储单个字符。将字符放入一对单引号中就能得到字符常量，因此，&lsquo;a&rsquo;，&rsquo;;&lsquo;和'0&rsquo;都是合法的字符常量。</p>
+<p>不要把字符常量和字符串混为一谈，字符常量是放在单引号中的单个字符，而字符串则是放在双引号的任意个数的字符。</p>
+<p>字符常量&rsquo;\n&rsquo;（换行符）是一个合法的字符常量，将官它似乎与前面提到规则矛盾。出现这种情况的原因是反斜杠符号是objc系统中的特殊符号，实际上并不把它看成一个字符。换句话说，objc编译器将字符&rsquo;\n&rsquo;看作单个字符，尽管它实际上由两个字符组成。</p>
+<p>我们总结下前面的数据类型，如下代码</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-objc" data-lang="objc"><span class="line"><span class="cl"><span class="cp">#import &lt;Foundation/Foundation.h&gt;
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>
+</span></span><span class="line"><span class="cl"><span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span><span class="kt">char</span><span class="o">*</span> <span class="n">argv</span><span class="p">[])</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl"><span class="n">NSAutoreleasePool</span><span class="o">*</span> <span class="n">pool</span> <span class="o">=</span> <span class="p">[[</span><span class="n">NSAutoreleasePool</span> <span class="n">alloc</span><span class="p">]</span> <span class="n">init</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl"><span class="kt">int</span> <span class="n">integerVar</span> <span class="o">=</span> <span class="mi">100</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="kt">float</span> <span class="n">floatingVar</span> <span class="o">=</span> <span class="mf">331.79</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="kt">double</span> <span class="n">doubleVar</span> <span class="o">=</span> <span class="mf">8.44e+11</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="kt">char</span> <span class="n">charVar</span> <span class="o">=</span> <span class="sc">&#39;W&#39;</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="n">NSLog</span><span class="p">(</span><span class="s">@&#34;integerVar=%i&#34;</span><span class="p">,</span><span class="n">integerVar</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="n">NSLog</span><span class="p">(</span><span class="s">@&#34;floatingVar=%f&#34;</span><span class="p">;,</span><span class="n">floatingVar</span> <span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="n">NSLog</span><span class="p">(</span><span class="s">@&#34;doubleVar =%e&#34;</span><span class="p">;,</span><span class="n">doubleVar</span> <span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="n">NSLog</span><span class="p">(</span><span class="s">@&#34;doubleVar =%g&#34;</span><span class="p">;,</span><span class="n">doubleVar</span> <span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="n">NSLog</span><span class="p">(</span><span class="s">@&#34;charVar =%c&#34;</span><span class="p">;,</span><span class="n">charVar</span> <span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="p">[</span><span class="n">pool</span> <span class="n">drain</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl"><span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><p>输出结果是：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-objc" data-lang="objc"><span class="line"><span class="cl"><span class="n">integerVar</span><span class="o">=</span><span class="mi">100</span>
+</span></span><span class="line"><span class="cl"><span class="n">floatingVar</span><span class="o">=</span><span class="mf">331.790009</span>
+</span></span><span class="line"><span class="cl"><span class="n">doubleVar</span><span class="o">=</span><span class="mf">8.440000e+11</span>
+</span></span><span class="line"><span class="cl"><span class="n">doubleVar</span><span class="o">=</span><span class="mf">8.44e+11</span>
+</span></span><span class="line"><span class="cl"><span class="n">charVar</span><span class="o">=</span><span class="sc">&#39;w&#39;</span>
+</span></span></code></pre></div><p>在程序输出的第二行，你会注意到指派给floatingVar的值331.79，实际显示成了331.790009。事实上，实际显示的值是由使用的特定计算机系统决定的。出现这种不准确值的原因是：计算机内部使用特殊的方式表示数字。使用计算器处理数字时，很可能遇到相同的不准确性。如果用计算器计算1除以3，将得到结果.33333333，很可能结尾带有一些附加的3.这串3是计算器计算1/3的近似值。理论上，应该存在无限个3。然而计算器只能保存这些位的数字，这就是计算机的不确定性。</p>
+<p>在计算机内存中不能精确地表示一些浮点值。</p></div><div class="post-footer">
         <a href="/post/2013/12/25/objective-c%E8%AF%AD%E6%B3%95%E5%AD%A6%E4%B9%A0-%E6%95%B0%E6%8D%AE%E7%B1%BB%E5%9E%8B%E5%92%8C%E8%A1%A8%E8%BE%BE%E5%BC%8F/">Read More</a><div class="post-tags">
                 <i class="fas fa-tags fa-fw" aria-hidden="true"></i>&nbsp;<a href="/tags/android/">Android</a>,&nbsp;<a href="/tags/objective-c/">Objective-C</a></div></div>
 </article><article class="single summary" itemscope itemtype="http://schema.org/Article"><h1 class="single-title" itemprop="name headline">
@@ -193,7 +253,49 @@ long double US_deficit_2004;
         data-srcset="http://my.csdn.net/uploads/201206/06/1338944767_4464.png, http://my.csdn.net/uploads/201206/06/1338944767_4464.png 1.5x, http://my.csdn.net/uploads/201206/06/1338944767_4464.png 2x"
         data-sizes="auto"
         alt="http://my.csdn.net/uploads/201206/06/1338944767_4464.png"
-        title="http://my.csdn.net/uploads/201206/06/1338944767_4464.png" /> **</p></div><div class="post-footer">
+        title="http://my.csdn.net/uploads/201206/06/1338944767_4464.png" /> **</p>
+<p>实现文件， 类似于C++的.cpp文件：</p>
+<p>**<img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="http://my.csdn.net/uploads/201206/06/1338944788_1528.png"
+        data-srcset="http://my.csdn.net/uploads/201206/06/1338944788_1528.png, http://my.csdn.net/uploads/201206/06/1338944788_1528.png 1.5x, http://my.csdn.net/uploads/201206/06/1338944788_1528.png 2x"
+        data-sizes="auto"
+        alt="http://my.csdn.net/uploads/201206/06/1338944788_1528.png"
+        title="http://my.csdn.net/uploads/201206/06/1338944788_1528.png" />
+**</p>
+<p>** **</p>
+<p>**
+一、函数的对比**
+helloworld方法
+Java 语言：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">helloWorld</span><span class="p">(</span><span class="kt">boolean</span><span class="w"> </span><span class="n">ishelloworld</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="c1">//干点啥</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="p">}</span><span class="w">
+</span></span></span></code></pre></div><p>C++语言：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="line"><span class="cl"><span class="kt">void</span> <span class="nf">helloWorld</span><span class="p">(</span><span class="kt">bool</span> <span class="n">ishelloworld</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="c1">//干点啥
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="p">}</span>
+</span></span></code></pre></div><p>Objective-C语言：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-objc" data-lang="objc"><span class="line"><span class="cl"><span class="p">-(</span><span class="kt">void</span><span class="p">)</span> <span class="nf">HelloWorld:</span><span class="p">(</span><span class="kt">BOOL</span><span class="p">)</span><span class="nv">ishelloworld</span><span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="c1">//干点啥
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="p">}</span>
+</span></span></code></pre></div><p>前面带有减号(-) 的方法为实例方法，必须使用类的实例才可以调用的。对应的有+号， 代表是类的静态方法，不需要实例化即可调用。</p>
+<p><strong>二、消息。</strong><br>
+消息的定义：向对象发送信息。
+消息是ios的运行时环境特有的机制。 和C++,Java下的类，或实例调用类或实例的方法类似。我这说的是类似，他们的机制实际上是有很大的差别。
+例子：</p>
+<p><em>[object  message]</em></p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-objc" data-lang="objc"><span class="line"><span class="cl"><span class="p">[</span><span class="n">object</span>  <span class="nl">message</span><span class="p">:</span><span class="n">param1</span> <span class="nl">withParameter</span><span class="p">:</span><span class="n">param2</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl"><span class="n">NSString</span> <span class="o">*</span><span class="n">string</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="n">string</span> <span class="o">=</span> <span class="p">[[</span><span class="n">NSString</span> <span class="n">alloc</span><span class="p">]</span> <span class="nl">initWithString</span><span class="p">:@</span><span class="o">&amp;</span><span class="n">quot</span><span class="p">;</span><span class="n">Hello</span><span class="o">&amp;</span><span class="n">quot</span><span class="p">;];</span>
+</span></span></code></pre></div><p>上面的代码类似于：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">java/c++: object.message()  
+</span></span><span class="line"><span class="cl">java/c++: object.message(param1,param2)
+</span></span><span class="line"><span class="cl">java/c++: 
+</span></span><span class="line"><span class="cl">string *str ;
+</span></span><span class="line"><span class="cl">str = new string(&#34;Hello&#34;);
+</span></span></code></pre></div><p><strong>三、Import</strong></p></div><div class="post-footer">
         <a href="/post/2013/12/22/%E8%BD%AC%E5%8D%81%E5%88%86%E9%92%9F%E8%AE%A9%E4%BD%A0%E6%98%8E%E7%99%BDobjective-c%E7%9A%84%E8%AF%AD%E6%B3%95%E5%92%8Cjavac-%E7%9A%84%E5%AF%B9%E6%AF%94/">Read More</a><div class="post-tags">
                 <i class="fas fa-tags fa-fw" aria-hidden="true"></i>&nbsp;<a href="/tags/objective-c/">Objective-C</a>,&nbsp;<a href="/tags/java/">Java</a>,&nbsp;<a href="/tags/c&#43;&#43;/">C&#43;&#43;</a></div></div>
 </article><article class="single summary" itemscope itemtype="http://schema.org/Article"><h1 class="single-title" itemprop="name headline">
@@ -228,7 +330,14 @@ long double US_deficit_2004;
 <!-- raw HTML omitted -->
 <h2 id="public-methods">Public Methods</h2>
 <hr>
-<p><!-- raw HTML omitted --><!-- raw HTML omitted --></p></div><div class="post-footer">
+<p><!-- raw HTML omitted --><!-- raw HTML omitted --></p>
+<!-- raw HTML omitted -->
+<h4 id="public-staticintenthttpdeveloperandroidcomreferenceandroidcontentintenthtmlgetparentactivityintentcontexthttpdeveloperandroidcomreferenceandroidcontentcontexthtmlcontextclasshttpdeveloperandroidcomreferencejavalangclasshtmlltgt-sourceactivityclass">public static <a href="http://developer.android.com/reference/android/content/Intent.html" target="_blank" rel="noopener noreffer">Intent</a>
+ getParentActivityIntent (<a href="http://developer.android.com/reference/android/content/Context.html" target="_blank" rel="noopener noreffer">Context</a>
+ context, <a href="http://developer.android.com/reference/java/lang/Class.html" target="_blank" rel="noopener noreffer">Class</a>
+&lt;?&gt; sourceActivityClass)</h4>
+<!-- raw HTML omitted -->
+<p>Obtain an <code>[Intent](http://developer.android.com/reference/android/content/Intent.html)</code> that will launch an explicit target activity specified by sourceActivityClass&rsquo;s <code>[PARENT_ACTIVITY](http://developer.android.com/reference/android/support/v4/app/NavUtils.html#PARENT_ACTIVITY)</code> &lt;meta-data&gt; element in the application&rsquo;s manifest.</p></div><div class="post-footer">
         <a href="/post/2013/12/19/android.support.v4.app/">Read More</a><div class="post-tags">
                 <i class="fas fa-tags fa-fw" aria-hidden="true"></i>&nbsp;<a href="/tags/navutils/">NavUtils</a></div></div>
 </article><ul class="pagination"><li class="page-item ">

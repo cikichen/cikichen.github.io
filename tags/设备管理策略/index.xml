@@ -32,7 +32,38 @@
 <p>每个声明的策略都对应<a href="http://developer.android.com/reference/android/app/admin/DevicePolicyManager.html" target="_blank" rel="noopener noreffer">DevicePolicyManager</a>
 类中的一个或者几个相关的函数。如果一个程序尝试调用一个没有在XML文件中声明过的策略函数，会抛出一个 <a href="http://developer.android.com/reference/java/lang/SecurityException.html" target="_blank" rel="noopener noreffer">SecurityException</a>
  异常。如果程序想管理其他类型的策略，可以使用其他的权限 — 比如 <strong>force-lock</strong>。在后面您会看到，在设备管理器的激活流程中会有一个系统界面告诉用户您所声明的策略集合列表。</p>
-<p>下面的代码在<strong>res/xml/device_admin.xml</strong>文件中定义了limit password 策略：</p>]]></description>
+<p>下面的代码在<strong>res/xml/device_admin.xml</strong>文件中定义了limit password 策略：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-xml" data-lang="xml"><span class="line"><span class="cl"><span class="nt">&lt;device-admin</span> <span class="na">xmlns:android=</span><span class="s">&#34;http://schemas.android.com/apk/res/android&#34;</span><span class="nt">&gt;</span>
+</span></span><span class="line"><span class="cl">    <span class="nt">&lt;uses-policies&gt;</span>
+</span></span><span class="line"><span class="cl">        <span class="nt">&lt;limit-password</span> <span class="nt">/&gt;</span>
+</span></span><span class="line"><span class="cl">    <span class="nt">&lt;/uses-policies&gt;</span>
+</span></span><span class="line"><span class="cl"><span class="nt">&lt;/device-admin&gt;</span>
+</span></span></code></pre></div><p>在 manifest 文件中引用定义的策略：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-xml" data-lang="xml"><span class="line"><span class="cl"><span class="nt">&lt;receiver</span> <span class="na">android:name=</span><span class="s">&#34;.Policy$PolicyAdmin&#34;</span> <span class="na">android:permission=</span><span class="s">&#34;android.permission.BIND_DEVICE_ADMIN&#34;</span><span class="nt">&gt;</span>
+</span></span><span class="line"><span class="cl">    <span class="nt">&lt;strong&gt;&lt;meta-data</span> <span class="na">android:name=</span><span class="s">&#34;android.app.device_admin&#34;</span>
+</span></span><span class="line"><span class="cl">        <span class="na">android:resource=</span><span class="s">&#34;@xml/device_admin&#34;</span> <span class="nt">/&gt;&lt;/strong&gt;</span>
+</span></span><span class="line"><span class="cl">    <span class="nt">&lt;intent-filter&gt;</span>
+</span></span><span class="line"><span class="cl">        <span class="nt">&lt;action</span> <span class="na">android:name=</span><span class="s">&#34;android.app.action.DEVICE_ADMIN_ENABLED&#34;</span> <span class="nt">/&gt;</span>
+</span></span><span class="line"><span class="cl">    <span class="nt">&lt;/intent-filter&gt;</span>
+</span></span><span class="line"><span class="cl"><span class="nt">&lt;/receiver&gt;</span>
+</span></span></code></pre></div><h2 id="创建-device-administration-receiver">创建 Device Administration Receiver</h2>
+<p>当您定义的策略事件发生的时候会通知您创建的这个设备管理器Receiver。可以根据情况覆盖(Override)需要的回调函数。</p>
+<p>在Device Admin这个示例程序中，如果用户撤销了设备管理器，示例程序所配置的策略信息将会清除。您需要考虑实现符合您的使用情况的业务逻辑。例如，程序可以删除一些敏感信息来减轻安全风险、还可以禁用远程同步功能 等。</p>
+<p>不要忘了在manifest文件中注册您的Receiver。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kd">static</span><span class="w"> </span><span class="kd">class</span> <span class="nc">PolicyAdmin</span><span class="w"> </span><span class="kd">extends</span><span class="w"> </span><span class="n">DeviceAdminReceiver</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nd">@Override</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">onDisabled</span><span class="p">(</span><span class="n">Context</span><span class="w"> </span><span class="n">context</span><span class="p">,</span><span class="w"> </span><span class="n">Intent</span><span class="w"> </span><span class="n">intent</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="c1">// Called when the app is about to be deactivated as a device administrator.</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="c1">// Deletes previously stored password policy.</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="kd">super</span><span class="p">.</span><span class="na">onDisabled</span><span class="p">(</span><span class="n">context</span><span class="p">,</span><span class="w"> </span><span class="n">intent</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">SharedPreferences</span><span class="w"> </span><span class="n">prefs</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">context</span><span class="p">.</span><span class="na">getSharedPreferences</span><span class="p">(</span><span class="n">APP_PREF</span><span class="p">,</span><span class="w"> </span><span class="n">Activity</span><span class="p">.</span><span class="na">MODE_PRIVATE</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">prefs</span><span class="p">.</span><span class="na">edit</span><span class="p">().</span><span class="na">clear</span><span class="p">().</span><span class="na">commit</span><span class="p">();</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="p">}</span><span class="w">
+</span></span></span></code></pre></div><h2 id="激活设备管理器">激活设备管理器</h2>
+<p>在执行任何策略之前，用户需要手工的激活设备管理器。下面的代码演示了如何触发设置界面来让用户激活您的设备管理器程序。包含一个介绍文本内容告诉用户为啥您的程序需要激活为设备管理器是个不错的选择， 通过在Intent中设置 <a href="http://developer.android.com/reference/android/app/admin/DevicePolicyManager.html#EXTRA_ADD_EXPLANATION" target="_blank" rel="noopener noreffer">EXTRA_ADD_EXPLANATION</a>
+ 字段。</p>]]></description>
 </item>
 </channel>
 </rss>
