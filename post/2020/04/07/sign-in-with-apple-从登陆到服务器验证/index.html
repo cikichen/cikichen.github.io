@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="robots" content="noodp" />
+        <title>Sign in With Apple 从登陆到服务器验证 - 编程心语</title><meta name="Description" content="Sign in With Apple[default](media/default.md)"><meta property="og:url" content="https://www.ithome.me/post/2020/04/07/sign-in-with-apple-%E4%BB%8E%E7%99%BB%E9%99%86%E5%88%B0%E6%9C%8D%E5%8A%A1%E5%99%A8%E9%AA%8C%E8%AF%81/">
+  <meta property="og:site_name" content="编程心语">
+  <meta property="og:title" content="Sign in With Apple 从登陆到服务器验证">
+  <meta property="og:description" content="Sign in With Apple[default](media/default.md)">
+  <meta property="og:locale" content="zh_CN">
+  <meta property="og:type" content="article">
+    <meta property="article:section" content="posts">
+    <meta property="article:published_time" content="2020-04-07T14:11:29+08:00">
+    <meta property="article:modified_time" content="2020-04-07T14:11:29+08:00">
+
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Sign in With Apple 从登陆到服务器验证">
+  <meta name="twitter:description" content="Sign in With Apple[default](media/default.md)">
+      <meta name="twitter:site" content="@https://twitter.com/ChenCiki">
+<meta name="application-name" content="My KeepIt site">
+<meta name="apple-mobile-web-app-title" content="My KeepIt site"><meta name="theme-color" content="#ffffff"><meta name="msapplication-TileColor" content="#da532c"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5"><link rel="manifest" href="/site.webmanifest"><link rel="canonical" href="https://www.ithome.me/post/2020/04/07/sign-in-with-apple-%E4%BB%8E%E7%99%BB%E9%99%86%E5%88%B0%E6%9C%8D%E5%8A%A1%E5%99%A8%E9%AA%8C%E8%AF%81/" /><link rel="prev" href="https://www.ithome.me/post/2020/03/30/anaconda3-pip%E5%AE%89%E8%A3%85%E5%BA%93%E5%90%8E%E5%87%BA%E7%8E%B0command-not-found%E8%A7%A3%E5%86%B3%E5%8A%9E%E6%B3%95/" /><link rel="next" href="https://www.ithome.me/post/2020/04/09/hexo%E8%BF%81%E7%A7%BB%E5%88%B0hugo/" /><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/normalize.css@8.0.1/normalize.min.css"><link rel="stylesheet" href="/css/style.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css"><script type="application/ld+json">
+    {
+        "@context": "http://schema.org",
+        "@type": "BlogPosting",
+        "headline": "Sign in With Apple 从登陆到服务器验证",
+        "inLanguage": "zh-CN",
+        "mainEntityOfPage": {
+            "@type": "WebPage",
+            "@id": "https:\/\/www.ithome.me\/post\/2020\/04\/07\/sign-in-with-apple-%E4%BB%8E%E7%99%BB%E9%99%86%E5%88%B0%E6%9C%8D%E5%8A%A1%E5%99%A8%E9%AA%8C%E8%AF%81\/"
+        },"genre": "posts","wordcount":  671 ,
+        "url": "https:\/\/www.ithome.me\/post\/2020\/04\/07\/sign-in-with-apple-%E4%BB%8E%E7%99%BB%E9%99%86%E5%88%B0%E6%9C%8D%E5%8A%A1%E5%99%A8%E9%AA%8C%E8%AF%81\/","datePublished": "2020-04-07T14:11:29+08:00","dateModified": "2020-04-07T14:11:29+08:00","license": "©{year}, All Rights Reserved. Simon Chen","publisher": {
+            "@type": "Organization",
+            "name": ""},"author": {
+                "@type": "Person",
+                "name": "张龙"
+            },"description": "Sign in With Apple[default](media/default.md)"
+    }
+    </script></head>
+    <body data-header-desktop="fixed" data-header-mobile="auto"><script type="text/javascript">(window.localStorage && localStorage.getItem('theme') ? localStorage.getItem('theme') === 'dark' : ('auto' === 'auto' ? window.matchMedia('(prefers-color-scheme: dark)').matches : 'auto' === 'dark')) && document.body.setAttribute('theme', 'dark');</script>
+
+        <div id="mask"></div><div class="wrapper"><header class="desktop" id="header-desktop">
+    <div class="header-wrapper">
+        <div class="header-title">
+            <a href="/" title="编程心语">编程心语</a>
+        </div>
+        <div class="menu">
+            <div class="menu-inner"><a class="menu-item" href="/posts/"> 文章 </a><a class="menu-item" href="/categories/"> 分类 </a><a class="menu-item" href="/tags/"> 标签 </a><a class="menu-item" href="/about-me/"> 关于 </a><span class="menu-item delimiter"></span><span class="menu-item search" id="search-desktop">
+                        <input type="text" placeholder="搜索文章标题或内容..." id="search-input-desktop">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-desktop" title="搜索">
+                            <i class="fas fa-search fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-desktop" title="清空">
+                            <i class="fas fa-times-circle fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-desktop">
+                            <i class="fas fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+                        </span>
+                    </span><a href="javascript:void(0);" class="menu-item theme-switch" title="切换主题">
+                    <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</header><header class="mobile" id="header-mobile">
+    <div class="header-container">
+        <div class="header-wrapper">
+            <div class="header-title">
+                <a href="/" title="编程心语">编程心语</a>
+            </div>
+            <div class="menu-toggle" id="menu-toggle-mobile">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+        <div class="menu" id="menu-mobile"><div class="search-wrapper">
+                    <div class="search mobile" id="search-mobile">
+                        <input type="text" placeholder="搜索文章标题或内容..." id="search-input-mobile">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-mobile" title="搜索">
+                            <i class="fas fa-search fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-mobile" title="清空">
+                            <i class="fas fa-times-circle fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-mobile">
+                            <i class="fas fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+                        </span>
+                    </div>
+                    <a href="javascript:void(0);" class="search-cancel" id="search-cancel-mobile">
+                        取消
+                    </a>
+                </div><a class="menu-item" href="/posts/" title="">文章</a><a class="menu-item" href="/categories/" title="">分类</a><a class="menu-item" href="/tags/" title="">标签</a><a class="menu-item" href="/about-me/" title="">关于</a><a href="javascript:void(0);" class="menu-item theme-switch" title="切换主题">
+                <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
+            </a></div>
+    </div>
+</header><div class="search-dropdown desktop">
+        <div id="search-dropdown-desktop"></div>
+    </div>
+    <div class="search-dropdown mobile">
+        <div id="search-dropdown-mobile"></div>
+    </div><main class="main">
+                <div class="container"><div class="toc" id="toc-auto">
+            <h2 class="toc-title">目录</h2>
+            <div class="toc-content" id="toc-content-auto"></div>
+        </div><article class="page single"><h1 class="single-title animate__animated animate__flipInX">Sign in With Apple 从登陆到服务器验证</h1><div class="post-meta">
+            <div class="post-meta-line"><span class="post-author"><a href="/" title="Author" rel=" author" class="author"><i class="fas fa-user-circle fa-fw" aria-hidden="true"></i>张龙</a>
+</span>&nbsp;<span class="post-category">收录于 <a href="/categories/%E7%A7%BB%E5%8A%A8%E5%BC%80%E5%8F%91/"><i class="far fa-folder fa-fw" aria-hidden="true"></i>移动开发</a></span></div>
+            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw" aria-hidden="true"></i>&nbsp;<time datetime="2020-04-07">2020-04-07</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden="true"></i>&nbsp;约 671 字&nbsp;
+                <i class="far fa-clock fa-fw" aria-hidden="true"></i>&nbsp;预计阅读 4 分钟&nbsp;</div>
+        </div><div class="details toc" id="toc-static"  data-kept="">
+                <div class="details-summary toc-title">
+                    <span>目录</span>
+                    <span><i class="details-icon fas fa-angle-right" aria-hidden="true"></i></span>
+                </div>
+                <div class="details-content toc-content" id="toc-content-static"><nav id="TableOfContents">
+  <ul>
+    <li>
+      <ul>
+        <li><a href="#1-首先手机端先做一个验证">1. 首先手机端先做一个验证</a></li>
+        <li><a href="#2-服务端像苹果请求验证">2. 服务端像苹果请求验证</a></li>
+        <li><a href="#关于apple文档中的-public-key">关于Apple文档中的 <code>Public Key</code></a></li>
+        <li><a href="#参考链接">参考链接</a></li>
+      </ul>
+    </li>
+  </ul>
+</nav></div>
+            </div><div class="content" id="content"><p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="https://img.ibook8.club/15862407395820.jpg"
+        data-srcset="https://img.ibook8.club/15862407395820.jpg, https://img.ibook8.club/15862407395820.jpg 1.5x, https://img.ibook8.club/15862407395820.jpg 2x"
+        data-sizes="auto"
+        alt="https://img.ibook8.club/15862407395820.jpg"
+        title="https://img.ibook8.club/15862407395820.jpg" /></p>
+<p>关于手机端登录的代码，这里不做多余介绍，我们看下登录成功后， <code>Apple</code>返回给手机端的一些参数</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-swift" data-lang="swift"><span style="display:flex;"><span>open <span style="color:#66d9ef">var</span> user: String { <span style="color:#66d9ef">get</span> }
+</span></span><span style="display:flex;"><span>open <span style="color:#66d9ef">var</span> state: String? { <span style="color:#66d9ef">get</span> }
+</span></span><span style="display:flex;"><span>open <span style="color:#66d9ef">var</span> authorizedScopes: [ASAuthorization.Scope] { <span style="color:#66d9ef">get</span> }
+</span></span><span style="display:flex;"><span>open <span style="color:#66d9ef">var</span> authorizationCode: Data? { <span style="color:#66d9ef">get</span> }
+</span></span><span style="display:flex;"><span>open <span style="color:#66d9ef">var</span> identityToken: Data? { <span style="color:#66d9ef">get</span> }
+</span></span><span style="display:flex;"><span>open <span style="color:#66d9ef">var</span> email: String? { <span style="color:#66d9ef">get</span> }
+</span></span><span style="display:flex;"><span>open <span style="color:#66d9ef">var</span> fullName: PersonNameComponents? { <span style="color:#66d9ef">get</span> }
+</span></span><span style="display:flex;"><span>open <span style="color:#66d9ef">var</span> realUserStatus: ASUserDetectionStatus
+</span></span></code></pre></div><p>这里初步登录成功，从 <code>Apple</code> 拿到 <code>user</code> 、 <code>identityToken</code> 、 <code>authorizationCode</code> 等相关信息。</p>
+<h3 id="1-首先手机端先做一个验证">1. 首先手机端先做一个验证</h3>
+<p><code>identityToken</code> 是一个 <code>JWT</code> 格式的加密数据 （JWT相关知识介绍 <a href="http://www.ruanyifeng.com/blog/2018/07/json_web_token-tutorial.html" target="_blank" rel="noopener noreffer">JSON Web Token</a>
+），我们通过如下代码拿到 <code>header</code> 和 <code>payload</code> 中的数据</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-swift" data-lang="swift"><span style="display:flex;"><span><span style="color:#66d9ef">guard</span> <span style="color:#66d9ef">let</span> _ = identityToken <span style="color:#66d9ef">else</span> { <span style="color:#66d9ef">return</span> }
+</span></span><span style="display:flex;"><span>            
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">let</span> token = String(data: identityToken!, encoding: .utf8)
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">let</span> arr = token?.components(separatedBy: <span style="color:#e6db74">&#34;.&#34;</span>)
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">let</span> header = arr?[<span style="color:#ae81ff">0</span>]
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">let</span> payload = arr?[<span style="color:#ae81ff">1</span>]
+</span></span></code></pre></div><p><code>header</code> 及 <code>payload</code> 均是base64编码的字符串，通过如下代码进行解码</p>
+<blockquote>
+<p>注意：swift中需要用NSData进行转换，用Data进行转换会失败</p>
+</blockquote>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-swift" data-lang="swift"><span style="display:flex;"><span><span style="color:#75715e">// 这里为了方便，均采用 ! 强行解包</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">let</span> headerData = NSData(base64EncodedString: payload!)
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">let</span> decodeHeader = String(data: (headerData! <span style="color:#66d9ef">as</span> Data), encoding: .utf8)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">let</span> payloadData = NSData(base64EncodedString: payload!)
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">let</span> decodePayload = String(data: (payloadData! <span style="color:#66d9ef">as</span> Data), encoding: .utf8)
+</span></span></code></pre></div><p>得到结果如下</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-json" data-lang="json"><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">header:</span>
+</span></span><span style="display:flex;"><span>{<span style="color:#f92672">&#34;kid&#34;</span>:<span style="color:#e6db74">&#34;AIDOPK1&#34;</span>,<span style="color:#f92672">&#34;alg&#34;</span>:<span style="color:#e6db74">&#34;RS256&#34;</span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">payload:</span>
+</span></span><span style="display:flex;"><span>{<span style="color:#f92672">&#34;iss&#34;</span>:<span style="color:#e6db74">&#34;https://appleid.apple.com&#34;</span>,<span style="color:#f92672">&#34;aud&#34;</span>:<span style="color:#e6db74">&#34;这个是你的app的bundle identifier&#34;</span>,<span style="color:#f92672">&#34;exp&#34;</span>:<span style="color:#ae81ff">1567482337</span>,<span style="color:#f92672">&#34;iat&#34;</span>:<span style="color:#ae81ff">1567481737</span>,<span style="color:#f92672">&#34;sub&#34;</span>:<span style="color:#e6db74">&#34;这个字段和上面获取的 user 字段是完全一样的&#34;</span>,<span style="color:#f92672">&#34;c_hash&#34;</span>:<span style="color:#e6db74">&#34;8KDzfalU5kygg5zxXiX7dA&#34;</span>,<span style="color:#f92672">&#34;auth_time&#34;</span>:<span style="color:#ae81ff">1567481737</span>}
+</span></span></code></pre></div><p>通过如上操作，我们可以获取到 <code>payload</code> 中的 <code>sub</code> 字段，然后与上面的 <code>user</code> 字段做一个对比，如果对比通过，则第一步完成</p>
+<p>把 base64 data 转化成字符串之后，也可以去 <a href="https://jwt.io/" target="_blank" rel="noopener noreffer">JWT官网</a>
+ 把字符串粘贴进去，获取 header 及 payload 信息</p>
+<h5 id="python-decode-base64-字符串示例代码如下"><code>python</code> decode base64 字符串示例代码如下：</h5>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#f92672">import</span> base64
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>token <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c&#39;</span>
+</span></span><span style="display:flex;"><span>arr <span style="color:#f92672">=</span> token<span style="color:#f92672">.</span>split(<span style="color:#e6db74">&#39;.&#39;</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>header <span style="color:#f92672">=</span> arr[<span style="color:#ae81ff">0</span>]
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>data <span style="color:#f92672">=</span> header<span style="color:#f92672">.</span>encode()
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>missing_padding <span style="color:#f92672">=</span> len(data) <span style="color:#f92672">%</span> <span style="color:#ae81ff">4</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> missing_padding <span style="color:#f92672">!=</span> <span style="color:#ae81ff">0</span>:
+</span></span><span style="display:flex;"><span>    data <span style="color:#f92672">+=</span> <span style="color:#e6db74">b</span><span style="color:#e6db74">&#39;=&#39;</span><span style="color:#f92672">*</span> (<span style="color:#ae81ff">4</span> <span style="color:#f92672">-</span> missing_padding)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>bStr <span style="color:#f92672">=</span> base64<span style="color:#f92672">.</span>decodebytes(data)
+</span></span><span style="display:flex;"><span>decode_header <span style="color:#f92672">=</span> bStr<span style="color:#f92672">.</span>decode()
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>print(decode_header) <span style="color:#75715e"># 结果 {&#34;alg&#34;: &#34;HS256&#34;,&#34;typ&#34;: &#34;JWT&#34;}</span>
+</span></span></code></pre></div><h3 id="2-服务端像苹果请求验证">2. 服务端像苹果请求验证</h3>
+<p>手机端需要提交 <code>user</code>  、<code>authorizationCode</code> 、 <code>identityToken</code>  字段信息（code和token字段苹果返回的是 <code>base64 Data</code> 形式，手机端可以先转换 base64 字符串之后在给服务器）到服务器。然后服务器通过 <code>https://appleid.apple.com/auth/token</code> 该接口，并拼接对应参数去验证，接口相关信息苹果有提供 <a href="https://developer.apple.com/documentation/signinwithapplerestapi/generate_and_validate_tokens" target="_blank" rel="noopener noreffer">Generate and validate tokens</a>
+ 。</p>
+<p>下面着重介绍几个参数及其获取方法。首先先看下该接口需要的参数，如下</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-json" data-lang="json"><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">client_id：</span> <span style="color:#960050;background-color:#1e0010">string</span> <span style="color:#960050;background-color:#1e0010">(Required)</span> <span style="color:#960050;background-color:#1e0010">(Authorization</span> <span style="color:#960050;background-color:#1e0010">and</span> <span style="color:#960050;background-color:#1e0010">Validation)</span> <span style="color:#960050;background-color:#1e0010">The</span> <span style="color:#960050;background-color:#1e0010">application</span> <span style="color:#960050;background-color:#1e0010">identifier</span> <span style="color:#960050;background-color:#1e0010">for</span> <span style="color:#960050;background-color:#1e0010">your</span> <span style="color:#960050;background-color:#1e0010">app</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">client_secret：</span> <span style="color:#960050;background-color:#1e0010">string</span> <span style="color:#960050;background-color:#1e0010">(Required)</span> <span style="color:#960050;background-color:#1e0010">(Authorization</span> <span style="color:#960050;background-color:#1e0010">and</span> <span style="color:#960050;background-color:#1e0010">Validation)</span> <span style="color:#960050;background-color:#1e0010">A</span> <span style="color:#960050;background-color:#1e0010">secret</span> <span style="color:#960050;background-color:#1e0010">generated</span> <span style="color:#960050;background-color:#1e0010">as</span> <span style="color:#960050;background-color:#1e0010">a</span> <span style="color:#960050;background-color:#1e0010">JSON</span> <span style="color:#960050;background-color:#1e0010">Web</span> <span style="color:#960050;background-color:#1e0010">Token</span> <span style="color:#960050;background-color:#1e0010">that</span> <span style="color:#960050;background-color:#1e0010">uses</span> <span style="color:#960050;background-color:#1e0010">the</span> <span style="color:#960050;background-color:#1e0010">secret</span> <span style="color:#960050;background-color:#1e0010">key</span> <span style="color:#960050;background-color:#1e0010">generated</span> <span style="color:#960050;background-color:#1e0010">by</span> <span style="color:#960050;background-color:#1e0010">the</span> <span style="color:#960050;background-color:#1e0010">WWDR</span> <span style="color:#960050;background-color:#1e0010">portal.</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">code：</span> <span style="color:#960050;background-color:#1e0010">string</span> <span style="color:#960050;background-color:#1e0010">(Authorization)</span> <span style="color:#960050;background-color:#1e0010">The</span> <span style="color:#960050;background-color:#1e0010">authorization</span> <span style="color:#960050;background-color:#1e0010">code</span> <span style="color:#960050;background-color:#1e0010">received</span> <span style="color:#960050;background-color:#1e0010">from</span> <span style="color:#960050;background-color:#1e0010">your</span> <span style="color:#960050;background-color:#1e0010">application’s</span> <span style="color:#960050;background-color:#1e0010">user</span> <span style="color:#960050;background-color:#1e0010">agent.</span> <span style="color:#960050;background-color:#1e0010">The</span> <span style="color:#960050;background-color:#1e0010">code</span> <span style="color:#960050;background-color:#1e0010">is</span> <span style="color:#960050;background-color:#1e0010">single</span> <span style="color:#960050;background-color:#1e0010">use</span> <span style="color:#960050;background-color:#1e0010">only</span> <span style="color:#960050;background-color:#1e0010">and</span> <span style="color:#960050;background-color:#1e0010">valid</span> <span style="color:#960050;background-color:#1e0010">for</span> <span style="color:#960050;background-color:#1e0010">five</span> <span style="color:#960050;background-color:#1e0010">minutes.</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">grant_type：</span> <span style="color:#960050;background-color:#1e0010">string</span> <span style="color:#960050;background-color:#1e0010">(Required)</span> <span style="color:#960050;background-color:#1e0010">(Authorization</span> <span style="color:#960050;background-color:#1e0010">and</span> <span style="color:#960050;background-color:#1e0010">Validation)</span> <span style="color:#960050;background-color:#1e0010">The</span> <span style="color:#960050;background-color:#1e0010">grant</span> <span style="color:#960050;background-color:#1e0010">type</span> <span style="color:#960050;background-color:#1e0010">that</span> <span style="color:#960050;background-color:#1e0010">determines</span> <span style="color:#960050;background-color:#1e0010">how</span> <span style="color:#960050;background-color:#1e0010">the</span> <span style="color:#960050;background-color:#1e0010">client</span> <span style="color:#960050;background-color:#1e0010">interacts</span> <span style="color:#960050;background-color:#1e0010">with</span> <span style="color:#960050;background-color:#1e0010">the</span> <span style="color:#960050;background-color:#1e0010">server.</span> <span style="color:#960050;background-color:#1e0010">For</span> <span style="color:#960050;background-color:#1e0010">authorization</span> <span style="color:#960050;background-color:#1e0010">code</span> <span style="color:#960050;background-color:#1e0010">validation,</span> <span style="color:#960050;background-color:#1e0010">use</span> <span style="color:#960050;background-color:#1e0010">authorization_code.</span> <span style="color:#960050;background-color:#1e0010">For</span> <span style="color:#960050;background-color:#1e0010">refresh</span> <span style="color:#960050;background-color:#1e0010">token</span> <span style="color:#960050;background-color:#1e0010">validation</span> <span style="color:#960050;background-color:#1e0010">requests,</span> <span style="color:#960050;background-color:#1e0010">use</span> <span style="color:#960050;background-color:#1e0010">refresh_token.</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">refresh_token：</span> <span style="color:#960050;background-color:#1e0010">string</span> <span style="color:#960050;background-color:#1e0010">(Validation)</span> <span style="color:#960050;background-color:#1e0010">The</span> <span style="color:#960050;background-color:#1e0010">refresh</span> <span style="color:#960050;background-color:#1e0010">token</span> <span style="color:#960050;background-color:#1e0010">received</span> <span style="color:#960050;background-color:#1e0010">during</span> <span style="color:#960050;background-color:#1e0010">the</span> <span style="color:#960050;background-color:#1e0010">authorization</span> <span style="color:#960050;background-color:#1e0010">request.</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">redirect_uri：</span> <span style="color:#960050;background-color:#1e0010">string</span> <span style="color:#960050;background-color:#1e0010">(Authorization)</span> <span style="color:#960050;background-color:#1e0010">The</span> <span style="color:#960050;background-color:#1e0010">destination</span> <span style="color:#960050;background-color:#1e0010">URI</span> <span style="color:#960050;background-color:#1e0010">the</span> <span style="color:#960050;background-color:#1e0010">code</span> <span style="color:#960050;background-color:#1e0010">was</span> <span style="color:#960050;background-color:#1e0010">originally</span> <span style="color:#960050;background-color:#1e0010">sent</span> <span style="color:#960050;background-color:#1e0010">to.</span>
+</span></span></code></pre></div><p>其中 <code>client_id</code> 为app的 <code>bundle identifier</code> ， <code>code</code> 即为手机端获取到的 <code>authorizationCode</code> 信息， <code>grant_type</code> 传入固定字符串 <code>authorization_code</code>  即可。还剩下一个必要参数 <code>client_secret</code> 那么这个参数相对麻烦点，需要我们自己生成。<code>client_secret</code>参数是一个JWT，<code>singature</code>部分使用非对称加密 RSASSA【RSA签名算法】 和 ECDSA【椭圆曲线数据签名算法】。</p>
+<h5 id="生成-client_secret-之前我们需要做如下工作">生成 <code>client_secret</code> 之前，我们需要做如下工作</h5>
+<ul>
+<li>获取 APP 的 bundleID</li>
+<li>获取开发者账号的TeamID
+<img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="https://img.ibook8.club/15862415893004.jpg"
+        data-srcset="https://img.ibook8.club/15862415893004.jpg, https://img.ibook8.club/15862415893004.jpg 1.5x, https://img.ibook8.club/15862415893004.jpg 2x"
+        data-sizes="auto"
+        alt="https://img.ibook8.club/15862415893004.jpg"
+        title="https://img.ibook8.club/15862415893004.jpg" /></li>
+<li>创建 privateKey，获取到 Key ID 和 私钥
+<img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="https://img.ibook8.club/15862416489149.jpg"
+        data-srcset="https://img.ibook8.club/15862416489149.jpg, https://img.ibook8.club/15862416489149.jpg 1.5x, https://img.ibook8.club/15862416489149.jpg 2x"
+        data-sizes="auto"
+        alt="https://img.ibook8.club/15862416489149.jpg"
+        title="https://img.ibook8.club/15862416489149.jpg" />
+<img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="https://img.ibook8.club/15862416557401.jpg"
+        data-srcset="https://img.ibook8.club/15862416557401.jpg, https://img.ibook8.club/15862416557401.jpg 1.5x, https://img.ibook8.club/15862416557401.jpg 2x"
+        data-sizes="auto"
+        alt="https://img.ibook8.club/15862416557401.jpg"
+        title="https://img.ibook8.club/15862416557401.jpg" />
+创建完之后把私钥下载下来，并保存好，<em><strong>注意，私钥只能下载一次。</strong></em></li>
+</ul>
+<p>拿到上面所有信息之后，可以通过如下代码生成 <code>client_secret</code> ，代码为 <code>Ruby</code> 代码，确保已安装ruby环境。</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-ruby" data-lang="ruby"><span style="display:flex;"><span>require <span style="color:#e6db74">&#34;jwt&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>key_file <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;Path to the private key&#34;</span>
+</span></span><span style="display:flex;"><span>team_id <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;Your Team ID&#34;</span>
+</span></span><span style="display:flex;"><span>client_id <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;Your App Bundle ID&#34;</span>
+</span></span><span style="display:flex;"><span>key_id <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;The Key ID of the private key&#34;</span>
+</span></span><span style="display:flex;"><span>validity_period <span style="color:#f92672">=</span> <span style="color:#ae81ff">180</span> <span style="color:#75715e"># In days. Max 180 (6 months) according to Apple docs.</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>private_key <span style="color:#f92672">=</span> <span style="color:#66d9ef">OpenSSL</span><span style="color:#f92672">::</span><span style="color:#66d9ef">PKey</span><span style="color:#f92672">::</span><span style="color:#66d9ef">EC</span><span style="color:#f92672">.</span>new <span style="color:#66d9ef">IO</span><span style="color:#f92672">.</span>read key_file
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>token <span style="color:#f92672">=</span> <span style="color:#66d9ef">JWT</span><span style="color:#f92672">.</span>encode(
+</span></span><span style="display:flex;"><span>	{
+</span></span><span style="display:flex;"><span>		<span style="color:#e6db74">iss</span>: team_id,
+</span></span><span style="display:flex;"><span>		<span style="color:#e6db74">iat</span>: <span style="color:#66d9ef">Time</span><span style="color:#f92672">.</span>now<span style="color:#f92672">.</span>to_i,
+</span></span><span style="display:flex;"><span>		<span style="color:#e6db74">exp</span>: <span style="color:#66d9ef">Time</span><span style="color:#f92672">.</span>now<span style="color:#f92672">.</span>to_i <span style="color:#f92672">+</span> <span style="color:#ae81ff">86400</span> <span style="color:#f92672">*</span> validity_period,
+</span></span><span style="display:flex;"><span>		<span style="color:#e6db74">aud</span>: <span style="color:#e6db74">&#34;https://appleid.apple.com&#34;</span>,
+</span></span><span style="display:flex;"><span>		sub: client_id
+</span></span><span style="display:flex;"><span>	},
+</span></span><span style="display:flex;"><span>	private_key,
+</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;ES256&#34;</span>,
+</span></span><span style="display:flex;"><span>	header_fields<span style="color:#f92672">=</span>
+</span></span><span style="display:flex;"><span>	{
+</span></span><span style="display:flex;"><span>		<span style="color:#e6db74">kid</span>: key_id 
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>)
+</span></span><span style="display:flex;"><span>puts token
+</span></span></code></pre></div><p>创建文件 <code>secret_gen.rb</code> ，把上面代码粘贴进去，执行 <code>ruby secret_gen.rb</code> 即可生成 <code>client_secret</code></p>
+<p>代码中这个 <code>key_file</code> 需要指定刚才下载的文件的地址
+到这里， <code>https://appleid.apple.com/auth/token</code>  的三个必需参数已经全部获得，进行请求，获得请求结果如下</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-json" data-lang="json"><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">&#34;access_token&#34;</span>: <span style="color:#e6db74">&#34;一个token，此处省略&#34;</span>,
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">&#34;token_type&#34;</span>: <span style="color:#e6db74">&#34;Bearer&#34;</span>,
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">&#34;expires_in&#34;</span>: <span style="color:#ae81ff">3600</span>,
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">&#34;refresh_token&#34;</span>: <span style="color:#e6db74">&#34;一个token，此处省略&#34;</span>,
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">&#34;id_token&#34;</span>: <span style="color:#e6db74">&#34;结果是JWT，字符串形式，此处省略&#34;</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>参数解释看这个<a href="https://developer.apple.com/documentation/signinwithapplerestapi/tokenresponse" target="_blank" rel="noopener noreffer">文档</a>
+
+服务器拿到相应结果，其中 <code>id_token</code> 也是 <code>JWT</code> 数据，decode 出 <code>payload</code> 部分如下
+<img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="https://img.ibook8.club/15862419091232.jpg"
+        data-srcset="https://img.ibook8.club/15862419091232.jpg, https://img.ibook8.club/15862419091232.jpg 1.5x, https://img.ibook8.club/15862419091232.jpg 2x"
+        data-sizes="auto"
+        alt="https://img.ibook8.club/15862419091232.jpg"
+        title="https://img.ibook8.club/15862419091232.jpg" />
+其中 <code>aud</code> 部分与你的app的bundleID一致， <code>sub</code> 部分即与手机端获得的 <code>user</code> 一致，服务器端通过对比 <code>sub</code> 字段信息是否与手机端上传的 <code>user</code> 信息一致来确定是否成功登录。</p>
+<h3 id="关于apple文档中的-public-key">关于Apple文档中的 <code>Public Key</code></h3>
+<p><code>Apple</code> 在服务器验证时候给的<a href="https://developer.apple.com/documentation/signinwithapplerestapi" target="_blank" rel="noopener noreffer">文档</a>
+有两个接口，一个是获取 <code>Public Key</code> 的，另一个便是验证token的。 <code>Public Key</code> 是一个固定的接口 <code>https://appleid.apple.com/auth/keys</code> ，直接调用便会获取到一个 <code>JWK</code> ，信息如下</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-json" data-lang="json"><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">&#34;keys&#34;</span>: [
+</span></span><span style="display:flex;"><span>    {
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">&#34;kty&#34;</span>: <span style="color:#e6db74">&#34;RSA&#34;</span>,
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">&#34;kid&#34;</span>: <span style="color:#e6db74">&#34;AIDOPK1&#34;</span>,
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">&#34;use&#34;</span>: <span style="color:#e6db74">&#34;sig&#34;</span>,
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">&#34;alg&#34;</span>: <span style="color:#e6db74">&#34;RS256&#34;</span>,
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">&#34;n&#34;</span>: <span style="color:#e6db74">&#34;lxrwmuYSAsTfn-lUu4goZSXBD9ackM9OJuwUVQHmbZo6GW4Fu_auUdN5zI7Y1dEDfgt7m7QXWbHuMD01HLnD4eRtY-RNwCWdjNfEaY_esUPY3OVMrNDI15Ns13xspWS3q-13kdGv9jHI28P87RvMpjz_JCpQ5IM44oSyRnYtVJO-320SB8E2Bw92pmrenbp67KRUzTEVfGU4-obP5RZ09OxvCr1io4KJvEOjDJuuoClF66AT72WymtoMdwzUmhINjR0XSqK6H0MdWsjw7ysyd_JhmqX5CAaT9Pgi0J8lU_pcl215oANqjy7Ob-VMhug9eGyxAWVfu_1u6QJKePlE-w&#34;</span>,
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">&#34;e&#34;</span>: <span style="color:#e6db74">&#34;AQAB&#34;</span>
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>  ]
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>我们可以通过这个 <code>Public Key</code> 去对手机端获取到的 <code>identityToken</code> (JWT 信息)进行解码，以获取 <code>header</code> 及 <code>payload</code></p>
+<p>我这里是通过 python 进行验证的。</p>
+<ul>
+<li>首先我们需要将 <code>Public Key</code> 转为 <code>pem</code> （可通过这个<a href="https://8gwifi.org/jwkconvertfunctions.jsp" target="_blank" rel="noopener noreffer">网址</a>
+进行转换）
+转换结果如下，我们创建一个文件名为 <code>publicKey.pem</code> 并把下面内容添加进去保存。</li>
+</ul>
+<pre tabindex="0"><code>-----BEGIN PUBLIC KEY-----
+MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAlxrwmuYSAsTfn+lUu4go
+ZSXBD9ackM9OJuwUVQHmbZo6GW4Fu/auUdN5zI7Y1dEDfgt7m7QXWbHuMD01HLnD
+4eRtY+RNwCWdjNfEaY/esUPY3OVMrNDI15Ns13xspWS3q+13kdGv9jHI28P87RvM
+pjz/JCpQ5IM44oSyRnYtVJO+320SB8E2Bw92pmrenbp67KRUzTEVfGU4+obP5RZ0
+9OxvCr1io4KJvEOjDJuuoClF66AT72WymtoMdwzUmhINjR0XSqK6H0MdWsjw7ysy
+d/JhmqX5CAaT9Pgi0J8lU/pcl215oANqjy7Ob+VMhug9eGyxAWVfu/1u6QJKePlE
++wIDAQAB
+-----END PUBLIC KEY-----
+</code></pre><ul>
+<li>安装库 <code>pip install authlib</code>  (其他各种语言对应的库都可从<a href="https://jwt.io/" target="_blank" rel="noopener noreffer">JWT官网</a>
+查找获取)</li>
+</ul>
+<p>脚本文件内容如下</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#f92672">from</span> authlib.jose <span style="color:#f92672">import</span> jwt
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>identityToken <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;这个是手机端获取到的identityToken&#39;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 这个publicKey.pem即刚才创建的文件，放在 py 文件同目录下即可</span>
+</span></span><span style="display:flex;"><span>dec <span style="color:#f92672">=</span> jwt<span style="color:#f92672">.</span>decode(identityToken, open(<span style="color:#e6db74">&#34;publicKey.pem&#34;</span>)<span style="color:#f92672">.</span>read())
+</span></span><span style="display:flex;"><span>print(dec)
+</span></span></code></pre></div><p>这里打印出decode信息如下</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-json" data-lang="json"><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">&#34;iss&#34;</span>: <span style="color:#e6db74">&#34;https://appleid.apple.com&#34;</span>,
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">&#34;aud&#34;</span>: <span style="color:#e6db74">&#34;这个对应app的bundleid&#34;</span>,
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">&#34;exp&#34;</span>: <span style="color:#ae81ff">1567494694</span>,
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">&#34;iat&#34;</span>: <span style="color:#ae81ff">1567494094</span>,
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">&#34;sub&#34;</span>: <span style="color:#e6db74">&#34;这个字段和手机端获取的user信息相同&#34;</span>,
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">&#34;c_hash&#34;</span>: <span style="color:#e6db74">&#34;nRYP2wGXBGT0bIYWibx4Yg&#34;</span>,
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">&#34;auth_time&#34;</span>: <span style="color:#ae81ff">1567494094</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>到这里我们可以看到，通过 <code>Public Key</code> 饶了一大圈decode出来的payload信息，和我们直接将 <code>identityToken</code> 转换为base64字符串，在将base64字符串解码成普通字符串得到的信息是一样的。同样需要比对 <code>sub</code> 字段是否与 <code>user</code> 字段内容相同。</p>
+<p>绕一大圈去decode 相对于 直接转换，麻烦太多，但也可以从第一步去防止伪造信息登录，因为 <code>identityToken</code> 第三部分不正确的话，通过 <code>Public Key</code> 是解析不成功的。所以上面提到的第一步验证也可以放到服务器端去做。</p>
+<p>原文： <a href="https://www.yuque.com/zhanglong/bb0s5d/cxbh7n" target="_blank" rel="noopener noreffer">https://www.yuque.com/zhanglong/bb0s5d/cxbh7n</a>
+</p>
+<h3 id="参考链接">参考链接</h3>
+<p><a href="https://blog.curtisherbert.com/so-theyve-signed-in-with-apple-now-what/" target="_blank" rel="noopener noreffer">So They&rsquo;ve Signed in with Apple, Now What?</a>
+</p>
+<p><a href="https://medium.com/identity-beyond-borders/adding-sign-in-with-apple-to-your-app-in-under-5mins-with-zero-code-ce36966b03f0" target="_blank" rel="noopener noreffer">Adding Sign In with Apple to your app in under 5mins with ZERO code</a>
+</p>
+<p><a href="https://medium.com/identity-beyond-borders/how-to-configure-sign-in-with-apple-77c61e336003" target="_blank" rel="noopener noreffer">How to configure Sign In with Apple</a>
+</p>
+</div><div class="post-footer" id="post-footer">
+    <div class="post-info">
+        <div class="post-info-line">
+            <div class="post-info-mod">
+                <span>更新于 2020-04-07</span>
+            </div></div>
+        <div class="post-info-line">
+            <div class="post-info-md"></div>
+            <div class="post-info-share">
+                <span><a href="javascript:void(0);" title="分享到 Twitter" data-sharer="twitter" data-url="https://www.ithome.me/post/2020/04/07/sign-in-with-apple-%E4%BB%8E%E7%99%BB%E9%99%86%E5%88%B0%E6%9C%8D%E5%8A%A1%E5%99%A8%E9%AA%8C%E8%AF%81/" data-title="Sign in With Apple 从登陆到服务器验证" data-via="https://twitter.com/ChenCiki"><i class="fab fa-twitter fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="分享到 Facebook" data-sharer="facebook" data-url="https://www.ithome.me/post/2020/04/07/sign-in-with-apple-%E4%BB%8E%E7%99%BB%E9%99%86%E5%88%B0%E6%9C%8D%E5%8A%A1%E5%99%A8%E9%AA%8C%E8%AF%81/"><i class="fab fa-facebook-square fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="分享到 Hacker News" data-sharer="hackernews" data-url="https://www.ithome.me/post/2020/04/07/sign-in-with-apple-%E4%BB%8E%E7%99%BB%E9%99%86%E5%88%B0%E6%9C%8D%E5%8A%A1%E5%99%A8%E9%AA%8C%E8%AF%81/" data-title="Sign in With Apple 从登陆到服务器验证"><i class="fab fa-hacker-news fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="分享到 Line" data-sharer="line" data-url="https://www.ithome.me/post/2020/04/07/sign-in-with-apple-%E4%BB%8E%E7%99%BB%E9%99%86%E5%88%B0%E6%9C%8D%E5%8A%A1%E5%99%A8%E9%AA%8C%E8%AF%81/" data-title="Sign in With Apple 从登陆到服务器验证"><i data-svg-src="https://cdn.jsdelivr.net/npm/simple-icons@6.20.0/icons/line.svg" aria-hidden="true"></i></a><a href="javascript:void(0);" title="分享到 微博" data-sharer="weibo" data-url="https://www.ithome.me/post/2020/04/07/sign-in-with-apple-%E4%BB%8E%E7%99%BB%E9%99%86%E5%88%B0%E6%9C%8D%E5%8A%A1%E5%99%A8%E9%AA%8C%E8%AF%81/" data-title="Sign in With Apple 从登陆到服务器验证" data-ralateuid="xxx"><i class="fab fa-weibo fa-fw" aria-hidden="true"></i></a></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="post-info-more">
+        <section class="post-tags"></section>
+        <section>
+            <span><a href="javascript:void(0);" onclick="window.history.back();">返回</a></span>&nbsp;|&nbsp;<span><a href="/">主页</a></span>
+        </section>
+    </div>
+
+    <div class="post-nav"><a href="/post/2020/03/30/anaconda3-pip%E5%AE%89%E8%A3%85%E5%BA%93%E5%90%8E%E5%87%BA%E7%8E%B0command-not-found%E8%A7%A3%E5%86%B3%E5%8A%9E%E6%B3%95/" class="prev" rel="prev" title="anaconda3 pip安装scf后出现command not found scf解决办法"><i class="fas fa-angle-left fa-fw" aria-hidden="true"></i>anaconda3 pip安装scf后出现command not found scf解决办法</a>
+            <a href="/post/2020/04/09/hexo%E8%BF%81%E7%A7%BB%E5%88%B0hugo/" class="next" rel="next" title="Hexo迁移到hugo">Hexo迁移到hugo<i class="fas fa-angle-right fa-fw" aria-hidden="true"></i></a></div>
+</div>
+</article></div>
+            </main><footer class="footer">
+        <div class="footer-container"><div class="footer-line" itemscope itemtype="http://schema.org/CreativeWork"><i class="far fa-copyright fa-fw" aria-hidden="true"></i><span itemprop="copyrightYear">2011 - 2026</span><span class="author" itemprop="copyrightHolder">&nbsp;<a href="/" target="_blank">Simon Chen</a></span></div>
+        </div>
+    </footer></div>
+
+        <div id="fixed-buttons"><a href="#" id="back-to-top" class="fixed-button" title="回到顶部">
+                <i class="fas fa-arrow-up fa-fw" aria-hidden="true"></i>
+            </a><a href="#" id="view-comments" class="fixed-button" title="查看评论">
+                <i class="fas fa-comment fa-fw" aria-hidden="true"></i>
+            </a>
+        </div><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/autocomplete.js@0.38.1/dist/autocomplete.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lunr@2.3.9/lunr.min.js"></script><script type="text/javascript" src="/lib/lunr/lunr.stemmer.support.min.js"></script><script type="text/javascript" src="/lib/lunr/lunr.zh.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lazysizes@5.3.1/lazysizes.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/clipboard@2.0.11/dist/clipboard.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/sharer.js@0.5.1/sharer.min.js"></script><script type="text/javascript">window.config={"code":{"copyTitle":"复制到剪贴板","maxShownLines":50},"comment":{},"search":{"highlightTag":"em","lunrLanguageCode":"zh","lunrSegmentitURL":"/lib/lunr/lunr.segmentit.js","maxResultLength":10,"noResultsFound":"没有找到结果","snippetLength":30}};</script><script type="text/javascript" src="/js/theme.min.js"></script></body>
+</html>

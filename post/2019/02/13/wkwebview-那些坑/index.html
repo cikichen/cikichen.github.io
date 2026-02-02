@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="robots" content="noodp" />
+        <title>WKWebView 那些坑 - 编程心语</title><meta name="Description" content="WKWebView 那些坑"><meta property="og:url" content="https://www.ithome.me/post/2019/02/13/wkwebview-%E9%82%A3%E4%BA%9B%E5%9D%91/">
+  <meta property="og:site_name" content="编程心语">
+  <meta property="og:title" content="WKWebView 那些坑">
+  <meta property="og:description" content="WKWebView 那些坑">
+  <meta property="og:locale" content="zh_CN">
+  <meta property="og:type" content="article">
+    <meta property="article:section" content="posts">
+    <meta property="article:published_time" content="2019-02-13T11:09:57+08:00">
+    <meta property="article:modified_time" content="2019-02-13T11:09:57+08:00">
+    <meta property="article:tag" content="WKWebView">
+
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="WKWebView 那些坑">
+  <meta name="twitter:description" content="WKWebView 那些坑">
+      <meta name="twitter:site" content="@https://twitter.com/ChenCiki">
+<meta name="application-name" content="My KeepIt site">
+<meta name="apple-mobile-web-app-title" content="My KeepIt site"><meta name="theme-color" content="#ffffff"><meta name="msapplication-TileColor" content="#da532c"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5"><link rel="manifest" href="/site.webmanifest"><link rel="canonical" href="https://www.ithome.me/post/2019/02/13/wkwebview-%E9%82%A3%E4%BA%9B%E5%9D%91/" /><link rel="prev" href="https://www.ithome.me/post/2018/12/25/2019%E6%96%B0%E4%B8%AA%E7%A8%8E%E6%89%A3%E9%99%A4%E7%BB%86%E5%88%99%E5%9B%BE%E4%BE%8B/" /><link rel="next" href="https://www.ithome.me/post/2019/02/14/wwdc2018-web%E5%AE%89%E5%85%A8%E7%AD%96%E7%95%A5-strategies-for-securing-web-content/" /><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/normalize.css@8.0.1/normalize.min.css"><link rel="stylesheet" href="/css/style.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css"><script type="application/ld+json">
+    {
+        "@context": "http://schema.org",
+        "@type": "BlogPosting",
+        "headline": "WKWebView 那些坑",
+        "inLanguage": "zh-CN",
+        "mainEntityOfPage": {
+            "@type": "WebPage",
+            "@id": "https:\/\/www.ithome.me\/post\/2019\/02\/13\/wkwebview-%E9%82%A3%E4%BA%9B%E5%9D%91\/"
+        },"genre": "posts","keywords": "WKWebView","wordcount":  978 ,
+        "url": "https:\/\/www.ithome.me\/post\/2019\/02\/13\/wkwebview-%E9%82%A3%E4%BA%9B%E5%9D%91\/","datePublished": "2019-02-13T11:09:57+08:00","dateModified": "2019-02-13T11:09:57+08:00","license": "©{year}, All Rights Reserved. Simon Chen","publisher": {
+            "@type": "Organization",
+            "name": ""},"author": {
+                "@type": "Person",
+                "name": "Simon Chen"
+            },"description": "WKWebView 那些坑"
+    }
+    </script></head>
+    <body data-header-desktop="fixed" data-header-mobile="auto"><script type="text/javascript">(window.localStorage && localStorage.getItem('theme') ? localStorage.getItem('theme') === 'dark' : ('auto' === 'auto' ? window.matchMedia('(prefers-color-scheme: dark)').matches : 'auto' === 'dark')) && document.body.setAttribute('theme', 'dark');</script>
+
+        <div id="mask"></div><div class="wrapper"><header class="desktop" id="header-desktop">
+    <div class="header-wrapper">
+        <div class="header-title">
+            <a href="/" title="编程心语">编程心语</a>
+        </div>
+        <div class="menu">
+            <div class="menu-inner"><a class="menu-item" href="/posts/"> 文章 </a><a class="menu-item" href="/categories/"> 分类 </a><a class="menu-item" href="/tags/"> 标签 </a><a class="menu-item" href="/about-me/"> 关于 </a><span class="menu-item delimiter"></span><span class="menu-item search" id="search-desktop">
+                        <input type="text" placeholder="搜索文章标题或内容..." id="search-input-desktop">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-desktop" title="搜索">
+                            <i class="fas fa-search fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-desktop" title="清空">
+                            <i class="fas fa-times-circle fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-desktop">
+                            <i class="fas fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+                        </span>
+                    </span><a href="javascript:void(0);" class="menu-item theme-switch" title="切换主题">
+                    <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</header><header class="mobile" id="header-mobile">
+    <div class="header-container">
+        <div class="header-wrapper">
+            <div class="header-title">
+                <a href="/" title="编程心语">编程心语</a>
+            </div>
+            <div class="menu-toggle" id="menu-toggle-mobile">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+        <div class="menu" id="menu-mobile"><div class="search-wrapper">
+                    <div class="search mobile" id="search-mobile">
+                        <input type="text" placeholder="搜索文章标题或内容..." id="search-input-mobile">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-mobile" title="搜索">
+                            <i class="fas fa-search fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-mobile" title="清空">
+                            <i class="fas fa-times-circle fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-mobile">
+                            <i class="fas fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+                        </span>
+                    </div>
+                    <a href="javascript:void(0);" class="search-cancel" id="search-cancel-mobile">
+                        取消
+                    </a>
+                </div><a class="menu-item" href="/posts/" title="">文章</a><a class="menu-item" href="/categories/" title="">分类</a><a class="menu-item" href="/tags/" title="">标签</a><a class="menu-item" href="/about-me/" title="">关于</a><a href="javascript:void(0);" class="menu-item theme-switch" title="切换主题">
+                <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
+            </a></div>
+    </div>
+</header><div class="search-dropdown desktop">
+        <div id="search-dropdown-desktop"></div>
+    </div>
+    <div class="search-dropdown mobile">
+        <div id="search-dropdown-mobile"></div>
+    </div><main class="main">
+                <div class="container"><div class="toc" id="toc-auto">
+            <h2 class="toc-title">目录</h2>
+            <div class="toc-content" id="toc-content-auto"></div>
+        </div><article class="page single"><h1 class="single-title animate__animated animate__flipInX">WKWebView 那些坑</h1><div class="post-meta">
+            <div class="post-meta-line"><span class="post-author"><a href="/" title="Author" rel=" author" class="author"><i class="fas fa-user-circle fa-fw" aria-hidden="true"></i>Simon Chen</a>
+</span>&nbsp;<span class="post-category">收录于 <a href="/categories/%E7%A7%BB%E5%8A%A8%E5%BC%80%E5%8F%91/"><i class="far fa-folder fa-fw" aria-hidden="true"></i>移动开发</a></span></div>
+            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw" aria-hidden="true"></i>&nbsp;<time datetime="2019-02-13">2019-02-13</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden="true"></i>&nbsp;约 978 字&nbsp;
+                <i class="far fa-clock fa-fw" aria-hidden="true"></i>&nbsp;预计阅读 5 分钟&nbsp;</div>
+        </div><div class="details toc" id="toc-static"  data-kept="">
+                <div class="details-summary toc-title">
+                    <span>目录</span>
+                    <span><i class="details-icon fas fa-angle-right" aria-hidden="true"></i></span>
+                </div>
+                <div class="details-content toc-content" id="toc-content-static"><nav id="TableOfContents">
+  <ul>
+    <li>
+      <ul>
+        <li><a href="#导语">导语</a></li>
+        <li><a href="#1wkwebview-白屏问题">1、WKWebView 白屏问题</a></li>
+        <li><a href="#2wkwebview-cookie-问题">2、WKWebView Cookie 问题</a></li>
+        <li><a href="#3wkwebview-nsurlprotocol问题">3、WKWebView NSURLProtocol问题</a></li>
+        <li><a href="#4wkwebview-loadrequest-问题">4、WKWebView loadRequest 问题</a></li>
+        <li><a href="#5wkwebview-页面样式问题">5、WKWebView 页面样式问题</a></li>
+        <li><a href="#6wkwebview-截屏问题">6、WKWebView 截屏问题</a></li>
+        <li><a href="#7wkwebview-crash问题">7、WKWebView crash问题</a></li>
+        <li><a href="#8其它问题">8、其它问题</a></li>
+        <li><a href="#9结语">9、结语</a></li>
+      </ul>
+    </li>
+  </ul>
+</nav></div>
+            </div><div class="content" id="content"><blockquote>
+<p>本文出处“腾讯Bugly(<a href="http://bugly.qq.com" target="_blank" rel="noopener noreffer">http://bugly.qq.com</a>
+),作者林泽水”</p>
+</blockquote>
+<h3 id="导语">导语</h3>
+<p>WKWebView 是苹果在 WWDC 2014 上推出的新一代 webView 组件，用以替代 UIKit 中笨重难用、内存泄漏的 UIWebView。WKWebView 拥有60fps滚动刷新率、和 safari 相同的 JavaScript 引擎等优势。</p>
+<p>简单的适配方法本文不再赘述，主要来说说适配 WKWebView 过程中填过的坑以及善待解决的技术难题。</p>
+<h3 id="1wkwebview-白屏问题">1、WKWebView 白屏问题</h3>
+<p>WKWebView 自诩拥有更快的加载速度，更低的内存占用，但实际上 WKWebView 是一个多进程组件，Network Loading 以及 UI Rendering 在其它进程中执行。初次适配 WKWebView 的时候，我们也惊讶于打开 WKWebView 后，App 进程内存消耗反而大幅下降，但是仔细观察会发现，Other Process 的内存占用会增加。在一些用 webGL 渲染的复杂页面，使用 WKWebView 总体的内存占用（App Process Memory + Other Process Memory）不见得比 UIWebView 少很多。</p>
+<p>在 UIWebView 上当内存占用太大的时候，App Process 会 crash；而在 WKWebView 上当总体的内存占用比较大的时候，WebContent Process 会 crash，从而出现白屏现象。在 WKWebView 中加载下面的测试链接可以稳定重现白屏现象:</p>
+<blockquote>
+<p><a href="http://people.mozilla.org/~rnewman/fennec/mem.html" target="_blank" rel="noopener noreffer">http://people.mozilla.org/~rnewman/fennec/mem.html</a>
+</p>
+</blockquote>
+<p>这个时候 WKWebView.URL 会变为 nil, 简单的 reload 刷新操作已经失效，对于一些长驻的H5页面影响比较大。</p>
+<p><strong>我们最后的解决方案是：</strong></p>
+<h4 id="a借助-wknavigtiondelegate">A、借助 WKNavigtionDelegate</h4>
+<p>iOS 9以后 WKNavigtionDelegate 新增了一个回调函数：</p>
+<pre tabindex="0"><code>- (void)webViewWebContentProcessDidTerminate:(WKWebView *)webView API_AVAILABLE(macosx(10.11), ios(9.0));
+</code></pre><p>当 WKWebView 总体内存占用过大，页面即将白屏的时候，系统会调用上面的回调函数，我们在该函数里执行<code>[webView reload]</code>(这个时候 webView.URL 取值尚不为 nil）解决白屏问题。在一些高内存消耗的页面可能会频繁刷新当前页面，H5侧也要做相应的适配操作。</p>
+<h4 id="b检测-webviewtitle-是否为空">B、检测 webView.title 是否为空</h4>
+<p>并不是所有H5页面白屏的时候都会调用上面的回调函数，比如，最近遇到在一个高内存消耗的H5页面上 present 系统相机，拍照完毕后返回原来页面的时候出现白屏现象（拍照过程消耗了大量内存，导致内存紧张，WebContent Process 被系统挂起），但上面的回调函数并没有被调用。在WKWebView白屏的时候，另一种现象是 webView.titile 会被置空, 因此，可以在 viewWillAppear 的时候检测 webView.title 是否为空来 reload 页面。</p>
+<p>综合以上两种方法可以解决绝大多数的白屏问题。</p>
+<h3 id="2wkwebview-cookie-问题">2、WKWebView Cookie 问题</h3>
+<p>Cookie 问题是目前 WKWebView 的一大短板</p>
+<h4 id="21wkwebview-cookie存储">2.1、WKWebView Cookie存储</h4>
+<p>业界普遍认为 WKWebView 拥有自己的私有存储，不会将 Cookie 存入到标准的 Cookie 容器 <strong>NSHTTPCookieStorage</strong> 中。</p>
+<p>实践发现 WKWebView 实例其实也会将 Cookie 存储于 NSHTTPCookieStorage 中，但存储时机有延迟，在iOS 8上，当页面跳转的时候，当前页面的 Cookie 会写入 NSHTTPCookieStorage 中，而在 iOS 10 上，JS 执行 document.cookie 或服务器 set-cookie 注入的 Cookie 会很快同步到 NSHTTPCookieStorage 中，FireFox 工程师曾建议通过 reset WKProcessPool 来触发 Cookie 同步到 NSHTTPCookieStorage 中，实践发现不起作用，并可能会引发当前页面 session cookie 丢失等问题。</p>
+<p><strong>WKWebView Cookie 问题在于 WKWebView 发起的请求不会自动带上存储于 NSHTTPCookieStorage 容器中的 Cookie。</strong></p>
+<p>比如，NSHTTPCookieStorage 中存储了一个 Cookie:</p>
+<pre tabindex="0"><code>name=Nicholas;value=test;domain=y.qq.com;expires=Sat, 02 May 2019 23:38:25 GMT；
+</code></pre><p>通过 UIWebView 发起请求http://y.qq.com， 则请求头会自动带上 cookie: Nicholas=test；
+而通过 WKWebView发起请求http://y.qq.com， 请求头不会自动带上 cookie: Nicholas=test。</p>
+<h4 id="22wkprocesspool">2.2、WKProcessPool</h4>
+<p>苹果开发者文档对 WKProcessPool 的定义是：<strong>A WKProcessPool object represents a pool of Web Content process.</strong> 通过让所有 WKWebView 共享同一个 WKProcessPool 实例，可以**实现多个 WKWebView 之间共享 Cookie（session Cookie and persistent Cookie）数据。**不过 WKWebView WKProcessPool 实例在 app 杀进程重启后会被重置，导致 WKProcessPool 中的 Cookie、session Cookie 数据丢失，目前也无法实现 WKProcessPool 实例本地化保存。</p>
+<h4 id="23workaround">2.3、Workaround</h4>
+<p>由于许多 H5 业务都依赖于 Cookie 作登录态校验，而 WKWebView 上请求不会自动携带 Cookie, 目前的主要解决方案是：</p>
+<h4 id="awkwebview-loadrequest-前在-request-header-中设置-cookie-解决首个请求-cookie-带不上的问题">a、WKWebView loadRequest 前，在 request header 中设置 Cookie, 解决首个请求 Cookie 带不上的问题；</h4>
+<pre tabindex="0"><code>WKWebView * webView = [WKWebView new]; 
+NSMutableURLRequest * request = [NSMutableURLRequest requestWithURL:[NSURL URLWithString:@&#34;http://h5.qzone.qq.com/mqzone/index&#34;]]; 
+
+[request addValue:@&#34;skey=skeyValue&#34; forHTTPHeaderField:@&#34;Cookie&#34;]; 
+[webView loadRequest:request];
+</code></pre><h4 id="b通过-documentcookie-设置-cookie-解决后续页面同域ajaxiframe-请求的-cookie-问题">b、通过 document.cookie 设置 Cookie 解决后续页面(同域)Ajax、iframe 请求的 Cookie 问题；</h4>
+<p><code>注意：document.cookie()无法跨域设置 cookie</code></p>
+<pre tabindex="0"><code>WKUserContentController* userContentController = [WKUserContentController new]; 
+WKUserScript * cookieScript = [[WKUserScript alloc] initWithSource: @&#34;document.cookie = &#39;skey=skeyValue&#39;;&#34; injectionTime:WKUserScriptInjectionTimeAtDocumentStart forMainFrameOnly:NO]; 
+
+[userContentController addUserScript:cookieScript];
+</code></pre><p>这种方案无法解决302请求的 Cookie 问题，比如，第一个请求是 <a href="https://www.a.com" target="_blank" rel="noopener noreffer">www.a.com</a>
+，我们通过在 request header 里带上 Cookie 解决该请求的 Cookie 问题，接着页面302跳转到 <a href="https://www.b.com" target="_blank" rel="noopener noreffer">www.b.com</a>
+，这个时候 <a href="https://www.b.com" target="_blank" rel="noopener noreffer">www.b.com</a>
+ 这个请求就可能因为没有携带 cookie 而无法访问。当然，由于每一次页面跳转前都会调用回调函数：</p>
+<pre tabindex="0"><code>- (void)webView:(WKWebView *)webView decidePolicyForNavigationAction:(WKNavigationAction *)navigationAction decisionHandler:(void (^)(WKNavigationActionPolicy))decisionHandler;
+</code></pre><p>可以在该回调函数里拦截302请求，copy request，在 request header 中带上 cookie 并重新 loadRequest。不过这种方法依然解决不了页面 iframe 跨域请求的 Cookie 问题，毕竟-[WKWebView loadRequest:]只适合加载 mainFrame 请求。</p>
+<h3 id="3wkwebview-nsurlprotocol问题">3、WKWebView NSURLProtocol问题</h3>
+<p>WKWebView 在独立于 app 进程之外的进程中执行网络请求，请求数据不经过主进程，因此，在 WKWebView 上直接使用 NSURLProtocol 无法拦截请求。苹果开源的 webKit2 源码暴露了私有API：</p>
+<pre tabindex="0"><code>+ [WKBrowsingContextController registerSchemeForCustomProtocol:]
+</code></pre><p>通过注册 http(s) scheme 后 WKWebView 将可以使用 NSURLProtocol 拦截 http(s) 请求：</p>
+<pre tabindex="0"><code>Class cls = NSClassFromString(@&#34;WKBrowsingContextController”); 
+SEL sel = NSSelectorFromString(@&#34;registerSchemeForCustomProtocol:&#34;); 
+if ([(id)cls respondsToSelector:sel]) { 
+           // 注册http(s) scheme, 把 http和https请求交给 NSURLProtocol处理 
+           [(id)cls performSelector:sel withObject:@&#34;http&#34;]; 
+           [(id)cls performSelector:sel withObject:@&#34;https&#34;]; 
+}
+</code></pre><p>**但是这种方案目前存在两个严重缺陷： **</p>
+<h4 id="apost-请求-body-数据被清空">a、post 请求 body 数据被清空</h4>
+<p>由于 WKWebView 在独立进程里执行网络请求。一旦注册 http(s) scheme 后，网络请求将从 Network Process 发送到 App Process，这样 NSURLProtocol 才能拦截网络请求。在 webkit2 的设计里使用 MessageQueue 进行进程之间的通信，Network Process 会将请求 encode 成一个 Message,然后通过 IPC 发送给 App Process。出于性能的原因，encode 的时候 HTTPBody 和 HTTPBodyStream 这两个字段被丢弃掉了</p>
+<p>参考苹果源码：</p>
+<blockquote>
+<p><a href="https://github.com/WebKit/webkit/blob/fe39539b83d28751e86077b173abd5b7872ce3f9/Source/WebKit2/Shared/mac/WebCoreArgumentCodersMac.mm#L61-L88" target="_blank" rel="noopener noreffer">https://github.com/WebKit/webkit/blob/fe39539b83d28751e86077b173abd5b7872ce3f9/Source/WebKit2/Shared/mac/WebCoreArgumentCodersMac.mm#L61-L88</a>
+ （复制链接到浏览器中打开）</p>
+</blockquote>
+<p>及bug report:</p>
+<blockquote>
+<p><a href="https://bugs.webkit.org/show_bug.cgi?id=138169" target="_blank" rel="noopener noreffer">https://bugs.webkit.org/show_bug.cgi?id=138169</a>
+ （复制链接到浏览器中打开）</p>
+</blockquote>
+<p>因此，<strong>如果通过 registerSchemeForCustomProtocol 注册了 http(s) scheme, 那么由 WKWebView 发起的所有 http(s)请求都会通过 IPC 传给主进程 NSURLProtocol 处理，导致 post 请求 body 被清空；</strong></p>
+<h4 id="b对ats支持不足">b、对ATS支持不足</h4>
+<p>测试发现一旦打开ATS开关：<strong>Allow Arbitrary Loads 选项设置为NO，<strong>同时通过 registerSchemeForCustomProtocol 注册了 http(s) scheme，WKWebView 发起的所有 http 网络请求将被阻塞（即便将</strong>Allow Arbitrary Loads in Web Content 选项设置为YES</strong>）；</p>
+<p>WKWebView 可以注册 customScheme, 比如 dynamic://, 因此希望使用离线功能又不使用 post 方式的请求可以通过 customScheme 发起请求，比如 dynamic://www.dynamicalbumlocalimage.com/，然后在 app 进程 NSURLProtocol 拦截这个请求并加载离线数据。不足：使用 post 方式的请求该方案依然不适用，同时需要 H5 侧修改请求 scheme 以及 CSP 规则；</p>
+<h3 id="4wkwebview-loadrequest-问题">4、WKWebView loadRequest 问题</h3>
+<p>在 WKWebView 上通过 loadRequest 发起的 post 请求 body 数据会丢失：</p>
+<pre tabindex="0"><code>//同样是由于进程间通信性能问题，HTTPBody字段被丢弃
+[request setHTTPMethod:@&#34;POST&#34;];
+[request setHTTPBody:[@&#34;bodyData&#34; dataUsingEncoding:NSUTF8StringEncoding]];
+[wkwebview loadRequest: request];
+</code></pre><h4 id="workaround">workaround:</h4>
+<p>假如想通过-[WKWebView loadRequest:]加载 post 请求 request1: <strong><a href="http://h5.qzone.qq.com/mqzone/index" target="_blank" rel="noopener noreffer">http://h5.qzone.qq.com/mqzone/index</a>
+</strong>,可以通过以下步骤实现：</p>
+<ol>
+<li>
+<p>替换请求 scheme，生成新的 post 请求 request2: <strong>post://h5.qzone.qq.com/mqzone/index,</strong> 同时将 request1 的 body 字段复制到 request2 的 header 中（WebKit 不会丢弃 header 字段）;</p>
+</li>
+<li>
+<p>通过-[WKWebView loadRequest:]加载新的 post 请求 request2;</p>
+</li>
+<li>
+<p>通过 +[WKBrowsingContextController registerSchemeForCustomProtocol:]注册 scheme: post://;</p>
+</li>
+<li>
+<p>注册 NSURLProtocol 拦截请求post://h5.qzone.qq.com/mqzone/index ,替换请求 scheme, 生成新的请求 request3: <a href="http://h5.qzone.qq.com/mqzone/index" target="_blank" rel="noopener noreffer">http://h5.qzone.qq.com/mqzone/index</a>
+，将 request2 header的body 字段复制到 request3 的 body 中，并使用 NSURLConnection 加载 request3，最后通过 NSURLProtocolClient 将加载结果返回 WKWebView;</p>
+</li>
+</ol>
+<h3 id="5wkwebview-页面样式问题">5、WKWebView 页面样式问题</h3>
+<p>在 WKWebView 适配过程中，我们发现部分H5页面<strong>元素位置向下偏移</strong>或<strong>被拉伸变形</strong>，追踪后发现主要是H5页面高度值异常导致：</p>
+<p>a. 空间H5页面有透明导航、透明导航下拉刷新、全屏等需求，因此之前 webView 整个是从（0, 0）开始布局，通过调整<code>webView.scrollView.contentInset</code> 来适配特殊导航栏需求。而在 WKWebView 上对 contentInset 的调整会反馈到<code>webView.scrollView.contentSize.height</code>的变化上，比如设置 <code>webView.scrollView.contentInset.top = a</code>，那么<code>contentSize.height</code>的值会增加a,导致H5页面长度增加，页面元素位置向下偏移；</p>
+<p>解决方案是：<strong>调整WKWebView布局方式，避免调整<code>webView.scrollView.contentInset</code></strong>。实际上，即便在 UIWebView 上也不建议直接调整<code>webView.scrollView.contentInset</code>的值，这确实会带来一些奇怪的问题。如果某些特殊情况下非得调整 contentInset 不可的话，可以通过下面方式让H5页面恢复正常显示：</p>
+<pre tabindex="0"><code>/**设置contentInset值后通过调整webView.frame让页面恢复正常显示 *参考：http://km.oa.com/articles/show/277372 */ 
+webView.scrollView.contentInset = UIEdgeInsetsMake(a, 0, 0, 0); 
+webView.frame = CGRectMake(webView.frame.origin.x, webView.frame.origin.y, webView.frame.size.width, webView.frame.size.height - a);
+</code></pre><p>b. 在接入 now 直播的时候，我们发现在 iOS 9 上 WKWebView 会出现页面被拉伸变形的情况，最后发现是<code>window.innerHeight</code>值不准确导致（在WKWebView上返回了一个非常大的值），而H5同学通过获取<code>window.innerHeight</code>来设置页面高度，导致页面整体被拉伸。通过查阅相关资料发现，这个bug只在 iOS 9 的几个系统版本上出现，苹果后来fix了这个bug。我们最后的解决方案是：<em>延迟调用window.innerHeight</em></p>
+<pre tabindex="0"><code>setTimeout(function(){height = window.innerHeight},0);
+</code></pre><p>or</p>
+<pre tabindex="0"><code>Use shrink-to-fit meta-tag 
+&lt;meta name=&#34;viewport&#34; content=&#34;width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1, shrink-to-fit=no&#34;&gt;
+</code></pre><h3 id="6wkwebview-截屏问题">6、WKWebView 截屏问题</h3>
+<p>空间玩吧H5小游戏有截屏分享的功能，WKWebView 下通过 -[CALayer renderInContext:]实现截屏的方式失效，需要通过以下方式实现截屏功能：</p>
+<pre tabindex="0"><code>@implementation UIView (ImageSnapshot) 
+- (UIImage*)imageSnapshot { 
+    UIGraphicsBeginImageContextWithOptions(self.bounds.size,YES,self.contentScaleFactor); 
+    [self drawViewHierarchyInRect:self.bounds afterScreenUpdates:YES]; 
+    UIImage* newImage = UIGraphicsGetImageFromCurrentImageContext(); 
+    UIGraphicsEndImageContext(); 
+    return newImage; 
+} 
+@end
+</code></pre><p>然而这种方式依然解决不了 webGL 页面的截屏问题，笔者已经翻遍苹果文档，研究过 webKit2 源码里的<strong>截屏私有API</strong>，依然没有找到合适的解决方案，同时发现 Safari 以及 Chrome 这两个全量切换到 WKWebView 的浏览器也存在同样的问题：**对webGL 页面的截屏结果不是空白就是纯黑图片。**无奈之下，我们只能约定一个JS接口，让游戏开发商实现该接口，具体是通过 <code>canvas getImageData()</code>方法取得图片数据后返回 base64 格式的数据，客户端在需要截图的时候，调用这个JS接口获取 base64 String 并转换成 UIImage。</p>
+<h3 id="7wkwebview-crash问题">7、WKWebView crash问题</h3>
+<p>WKWebView 放量后，外网新增了一些 crash, 其中一类 crash 的主要堆栈如下：</p>
+<pre tabindex="0"><code>... 
+28 UIKit 0x0000000190513360 UIApplicationMain + 208 
+29 Qzone 0x0000000101380570 main (main.m:181) 
+30 libdyld.dylib 0x00000001895205b8 _dyld_process_info_notify_release + 36 
+Completion handler passed to -[QZWebController webView:runJavaScriptAlertPanelWithMessage:initiatedByFrame:completionHandler:] was not called
+</code></pre><p>主要是JS调用<code>window.alert()</code>函数引起的，从 crash 堆栈可以看出是 WKWebView 回调函数:</p>
+<pre tabindex="0"><code>+ (void) presentAlertOnController:(nonnull UIViewController*)parentController title:(nullable NSString*)title message:(nullable NSString *)message handler:(nonnull void (^)())completionHandler;
+</code></pre><p>completionHandler 没有被调用导致的。在适配 WKWebView 的时候，我们需要自己实现该回调函数，<code>window.alert()</code>才能调起 alert 框，我们最初的实现是这样的：</p>
+<pre tabindex="0"><code>- (void)webView:(WKWebView *)webView runJavaScriptAlertPanelWithMessage:(NSString *)message initiatedByFrame:(WKFrameInfo *)frame completionHandler:(void (^)(void))completionHandler 
+{ 
+    UIAlertController *alertController = [UIAlertController alertControllerWithTitle:@&#34;&#34; message:message preferredStyle:UIAlertControllerStyleAlert]; 
+    [alertController addAction:[UIAlertAction actionWithTitle:@&#34;确认&#34; style:UIAlertActionStyleCancel handler:^(UIAlertAction *action) { completionHandler(); }]]; 
+    [self presentViewController:alertController animated:YES completion:^{}]; 
+}
+</code></pre><p>如果 WKWebView 退出的时候，JS刚好执行了<code>window.alert()</code>, alert 框可能弹不出来，completionHandler 最后没有被执行，导致 crash；另一种情况是在 WKWebView 一打开，JS就执行<code>window.alert()</code>，这个时候由于 WKWebView 所在的 UIViewController 出现（push或present）的动画尚未结束，alert 框可能弹不出来，completionHandler 最后没有被执行，导致 crash。我们最终的实现大致是这样的：</p>
+<pre tabindex="0"><code>- (void)webView:(WKWebView *)webView runJavaScriptAlertPanelWithMessage:(NSString *)message initiatedByFrame:(WKFrameInfo *)frame completionHandler:(void (^)(void))completionHandler 
+{ 
+    if (/*UIViewController of WKWebView has finish push or present animation*/) { 
+        completionHandler(); 
+        return; 
+    } 
+    UIAlertController *alertController = [UIAlertController alertControllerWithTitle:@&#34;&#34; message:message preferredStyle:UIAlertControllerStyleAlert]; 
+    [alertController addAction:[UIAlertAction actionWithTitle:@&#34;确认&#34; style:UIAlertActionStyleCancel handler:^(UIAlertAction *action) { completionHandler(); }]]; 
+    if (/*UIViewController of WKWebView is visible*/) 
+        [self presentViewController:alertController animated:YES completion:^{}]; 
+    else        completionHandler(); 
+}
+</code></pre><p>确保上面两种情况下 completionHandler 都能被执行，消除了 WKWebView 下弹 alert 框的 crash，WKWebView 下弹 confirm 框的 crash 的原因与解决方式与 alert 类似。</p>
+<p>另一个 crash 发生在 WKWebView 退出前调用：</p>
+<pre tabindex="0"><code> -[WKWebView evaluateJavaScript: completionHandler:]
+</code></pre><p>执行JS代码的情况下。WKWebView 退出并被释放后导致<code>completionHandler</code>变成野指针，而此时 javaScript Core 还在执行JS代码，待 javaScript Core 执行完毕后会调用<code>completionHandler()</code>，导致 crash。这个 crash 只发生在 iOS 8 系统上，参考Apple Open Source，在iOS9及以后系统苹果已经修复了这个bug，主要是对<code>completionHandler block</code>做了copy（refer: <a href="https://trac.webkit.org/changeset/179160" target="_blank" rel="noopener noreffer">https://trac.webkit.org/changeset/179160</a>
+）；对于iOS 8系统，可以通过在 completionHandler 里 retain WKWebView 防止 completionHandler 被过早释放。我们最后用 methodSwizzle hook 了这个系统方法：</p>
+<pre tabindex="0"><code>+ (void) load 
+{ 
+     [self jr_swizzleMethod:NSSelectorFromString(@&#34;evaluateJavaScript:completionHandler:&#34;) withMethod:@selector(altEvaluateJavaScript:completionHandler:) error:nil]; 
+} 
+/* * fix: WKWebView crashes on deallocation if it has pending JavaScript evaluation */ 
+- (void)altEvaluateJavaScript:(NSString *)javaScriptString completionHandler:(void (^)(id, NSError *))completionHandler 
+{ 
+    id strongSelf = self; 
+    [self altEvaluateJavaScript:javaScriptString completionHandler:^(id r, NSError *e) { 
+        [strongSelf title]; 
+        if (completionHandler) { 
+            completionHandler(r, e); 
+        } 
+    }]; 
+}
+</code></pre><h3 id="8其它问题">8、其它问题</h3>
+<h4 id="81视频自动播放">8.1、视频自动播放</h4>
+<p>WKWebView 需要通过<code>WKWebViewConfiguration.mediaPlaybackRequiresUserAction</code>设置是否允许自动播放，但一定要在 WKWebView 初始化之前设置，在 WKWebView 初始化之后设置无效。</p>
+<h4 id="82goback-api问题">8.2、goBack API问题</h4>
+<p>WKWebView 上调用 -[WKWebView goBack], 回退到上一个页面后不会触发<code>window.onload()</code>函数、不会执行JS。</p>
+<h4 id="83页面滚动速率">8.3、页面滚动速率</h4>
+<p>WKWebView 需要通过<code>scrollView delegate</code>调整滚动速率：</p>
+<pre tabindex="0"><code>- (void)scrollViewWillBeginDragging:(UIScrollView *)scrollView {
+     scrollView.decelerationRate = UIScrollViewDecelerationRateNormal;
+}
+</code></pre><h3 id="9结语">9、结语</h3>
+<p>本文总结了在 WKWebView 上踩过的一些坑。虽然 WKWebView 坑比较多，但是相对 UIWebView 在内存消耗、稳定性方面还是有很大的优势。尽管苹果对 WKWebView 的开发进度过于缓慢，但相信 WKWebView 才是未来。</p>
+</div><div class="post-footer" id="post-footer">
+    <div class="post-info">
+        <div class="post-info-line">
+            <div class="post-info-mod">
+                <span>更新于 2019-02-13</span>
+            </div></div>
+        <div class="post-info-line">
+            <div class="post-info-md"></div>
+            <div class="post-info-share">
+                <span><a href="javascript:void(0);" title="分享到 Twitter" data-sharer="twitter" data-url="https://www.ithome.me/post/2019/02/13/wkwebview-%E9%82%A3%E4%BA%9B%E5%9D%91/" data-title="WKWebView 那些坑" data-via="https://twitter.com/ChenCiki" data-hashtags="WKWebView"><i class="fab fa-twitter fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="分享到 Facebook" data-sharer="facebook" data-url="https://www.ithome.me/post/2019/02/13/wkwebview-%E9%82%A3%E4%BA%9B%E5%9D%91/" data-hashtag="WKWebView"><i class="fab fa-facebook-square fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="分享到 Hacker News" data-sharer="hackernews" data-url="https://www.ithome.me/post/2019/02/13/wkwebview-%E9%82%A3%E4%BA%9B%E5%9D%91/" data-title="WKWebView 那些坑"><i class="fab fa-hacker-news fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="分享到 Line" data-sharer="line" data-url="https://www.ithome.me/post/2019/02/13/wkwebview-%E9%82%A3%E4%BA%9B%E5%9D%91/" data-title="WKWebView 那些坑"><i data-svg-src="https://cdn.jsdelivr.net/npm/simple-icons@6.20.0/icons/line.svg" aria-hidden="true"></i></a><a href="javascript:void(0);" title="分享到 微博" data-sharer="weibo" data-url="https://www.ithome.me/post/2019/02/13/wkwebview-%E9%82%A3%E4%BA%9B%E5%9D%91/" data-title="WKWebView 那些坑" data-ralateuid="xxx"><i class="fab fa-weibo fa-fw" aria-hidden="true"></i></a></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="post-info-more">
+        <section class="post-tags"><i class="fas fa-tags fa-fw" aria-hidden="true"></i>&nbsp;<a href="/tags/wkwebview/">WKWebView</a></section>
+        <section>
+            <span><a href="javascript:void(0);" onclick="window.history.back();">返回</a></span>&nbsp;|&nbsp;<span><a href="/">主页</a></span>
+        </section>
+    </div>
+
+    <div class="post-nav"><a href="/post/2018/12/25/2019%E6%96%B0%E4%B8%AA%E7%A8%8E%E6%89%A3%E9%99%A4%E7%BB%86%E5%88%99%E5%9B%BE%E4%BE%8B/" class="prev" rel="prev" title="2019新个税扣除细则图例"><i class="fas fa-angle-left fa-fw" aria-hidden="true"></i>2019新个税扣除细则图例</a>
+            <a href="/post/2019/02/14/wwdc2018-web%E5%AE%89%E5%85%A8%E7%AD%96%E7%95%A5-strategies-for-securing-web-content/" class="next" rel="next" title="[ WWDC2018 ] - Web安全策略 Strategies for Securing Web Content">[ WWDC2018 ] - Web安全策略 Strategies for Securing Web Content<i class="fas fa-angle-right fa-fw" aria-hidden="true"></i></a></div>
+</div>
+</article></div>
+            </main><footer class="footer">
+        <div class="footer-container"><div class="footer-line" itemscope itemtype="http://schema.org/CreativeWork"><i class="far fa-copyright fa-fw" aria-hidden="true"></i><span itemprop="copyrightYear">2011 - 2026</span><span class="author" itemprop="copyrightHolder">&nbsp;<a href="/" target="_blank">Simon Chen</a></span></div>
+        </div>
+    </footer></div>
+
+        <div id="fixed-buttons"><a href="#" id="back-to-top" class="fixed-button" title="回到顶部">
+                <i class="fas fa-arrow-up fa-fw" aria-hidden="true"></i>
+            </a><a href="#" id="view-comments" class="fixed-button" title="查看评论">
+                <i class="fas fa-comment fa-fw" aria-hidden="true"></i>
+            </a>
+        </div><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/autocomplete.js@0.38.1/dist/autocomplete.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lunr@2.3.9/lunr.min.js"></script><script type="text/javascript" src="/lib/lunr/lunr.stemmer.support.min.js"></script><script type="text/javascript" src="/lib/lunr/lunr.zh.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lazysizes@5.3.1/lazysizes.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/clipboard@2.0.11/dist/clipboard.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/sharer.js@0.5.1/sharer.min.js"></script><script type="text/javascript">window.config={"code":{"copyTitle":"复制到剪贴板","maxShownLines":50},"comment":{},"search":{"highlightTag":"em","lunrLanguageCode":"zh","lunrSegmentitURL":"/lib/lunr/lunr.segmentit.js","maxResultLength":10,"noResultsFound":"没有找到结果","snippetLength":30}};</script><script type="text/javascript" src="/js/theme.min.js"></script></body>
+</html>

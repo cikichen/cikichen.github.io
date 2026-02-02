@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="robots" content="noodp" />
+        <title>[转]使用和版本关联的组件 - 编程心语</title><meta name="Description" content="This is my KeepIt site"><meta property="og:url" content="https://www.ithome.me/post/2013/07/17/%E8%BD%AC%E4%BD%BF%E7%94%A8%E5%92%8C%E7%89%88%E6%9C%AC%E5%85%B3%E8%81%94%E7%9A%84%E7%BB%84%E4%BB%B6/">
+  <meta property="og:site_name" content="编程心语">
+  <meta property="og:title" content="[转]使用和版本关联的组件">
+  <meta property="og:description" content="课程内容 添加选择逻辑 创建一个版本感知的Activity Layout 在Activity中使用 TabHelper 动手试试 Download the sample app TabCompat.zip 这节内容介绍如何添加选择不同实现的逻辑以及如何在对应的版本中选择对应的实现方式，如何创建版本感知的布局。
+添加选择逻辑 TabHelpe 抽象类作为factory工厂方法 类来创建版本相关的TabHelper 和 CompatTab 实例。
+public abstract class TabHelper { ... // Usage is TabHelper.createInstance(activity) public static TabHelper createInstance(FragmentActivity activity) { if (Build.VERSION.SDK_INT &gt;= Build.VERSION_CODES.HONEYCOMB) { return new TabHelperHoneycomb(activity); } else { return new TabHelperEclair(activity); } } // Usage is mTabHelper.newTab(&#34;tag&#34;) public CompatTab newTab(String tag) { if (Build.VERSION.SDK_INT &gt;= Build.VERSION_CODES.HONEYCOMB) { return new CompatTabHoneycomb(mActivity, tag); } else { return new CompatTabEclair(mActivity, tag); } } ... } 创建一个版本感知的Activity Layout 然后是创建一个支持两种tab实现的布局。对于旧的实现方式 (TabHelperEclair)，布局中包含 TabWidget 和 TabHost ，和一个包含tab的容器:">
+  <meta property="og:locale" content="zh_CN">
+  <meta property="og:type" content="article">
+    <meta property="article:section" content="posts">
+    <meta property="article:published_time" content="2013-07-17T17:06:49+08:00">
+    <meta property="article:modified_time" content="2013-07-17T17:06:49+08:00">
+    <meta property="article:tag" content="Android">
+    <meta property="article:tag" content="版本关联">
+    <meta property="article:tag" content="组件">
+
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="[转]使用和版本关联的组件">
+  <meta name="twitter:description" content="课程内容 添加选择逻辑 创建一个版本感知的Activity Layout 在Activity中使用 TabHelper 动手试试 Download the sample app TabCompat.zip 这节内容介绍如何添加选择不同实现的逻辑以及如何在对应的版本中选择对应的实现方式，如何创建版本感知的布局。
+添加选择逻辑 TabHelpe 抽象类作为factory工厂方法 类来创建版本相关的TabHelper 和 CompatTab 实例。
+public abstract class TabHelper { ... // Usage is TabHelper.createInstance(activity) public static TabHelper createInstance(FragmentActivity activity) { if (Build.VERSION.SDK_INT &gt;= Build.VERSION_CODES.HONEYCOMB) { return new TabHelperHoneycomb(activity); } else { return new TabHelperEclair(activity); } } // Usage is mTabHelper.newTab(&#34;tag&#34;) public CompatTab newTab(String tag) { if (Build.VERSION.SDK_INT &gt;= Build.VERSION_CODES.HONEYCOMB) { return new CompatTabHoneycomb(mActivity, tag); } else { return new CompatTabEclair(mActivity, tag); } } ... } 创建一个版本感知的Activity Layout 然后是创建一个支持两种tab实现的布局。对于旧的实现方式 (TabHelperEclair)，布局中包含 TabWidget 和 TabHost ，和一个包含tab的容器:">
+      <meta name="twitter:site" content="@https://twitter.com/ChenCiki">
+<meta name="application-name" content="My KeepIt site">
+<meta name="apple-mobile-web-app-title" content="My KeepIt site"><meta name="theme-color" content="#ffffff"><meta name="msapplication-TileColor" content="#da532c"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5"><link rel="manifest" href="/site.webmanifest"><link rel="canonical" href="https://www.ithome.me/post/2013/07/17/%E8%BD%AC%E4%BD%BF%E7%94%A8%E5%92%8C%E7%89%88%E6%9C%AC%E5%85%B3%E8%81%94%E7%9A%84%E7%BB%84%E4%BB%B6/" /><link rel="prev" href="https://www.ithome.me/post/2013/07/17/%E8%BD%AC%E4%BD%BF%E7%94%A8%E6%97%A7%E7%9A%84api%E6%9D%A5%E5%AE%9E%E7%8E%B0%E6%8E%A5%E5%8F%A3/" /><link rel="next" href="https://www.ithome.me/post/2013/07/17/%E8%BD%AC%E9%80%9A%E8%BF%87%E4%BB%A3%E7%90%86%E4%BD%BF%E7%94%A8%E6%96%B0api/" /><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/normalize.css@8.0.1/normalize.min.css"><link rel="stylesheet" href="/css/style.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css"><script type="application/ld+json">
+    {
+        "@context": "http://schema.org",
+        "@type": "BlogPosting",
+        "headline": "[转]使用和版本关联的组件",
+        "inLanguage": "zh-CN",
+        "mainEntityOfPage": {
+            "@type": "WebPage",
+            "@id": "https:\/\/www.ithome.me\/post\/2013\/07\/17\/%E8%BD%AC%E4%BD%BF%E7%94%A8%E5%92%8C%E7%89%88%E6%9C%AC%E5%85%B3%E8%81%94%E7%9A%84%E7%BB%84%E4%BB%B6\/"
+        },"genre": "posts","keywords": "android, 版本关联, 组件","wordcount":  154 ,
+        "url": "https:\/\/www.ithome.me\/post\/2013\/07\/17\/%E8%BD%AC%E4%BD%BF%E7%94%A8%E5%92%8C%E7%89%88%E6%9C%AC%E5%85%B3%E8%81%94%E7%9A%84%E7%BB%84%E4%BB%B6\/","datePublished": "2013-07-17T17:06:49+08:00","dateModified": "2013-07-17T17:06:49+08:00","license": "©{year}, All Rights Reserved. Simon Chen","publisher": {
+            "@type": "Organization",
+            "name": ""},"author": {
+                "@type": "Person",
+                "name": "Simon Chen"
+            },"description": ""
+    }
+    </script></head>
+    <body data-header-desktop="fixed" data-header-mobile="auto"><script type="text/javascript">(window.localStorage && localStorage.getItem('theme') ? localStorage.getItem('theme') === 'dark' : ('auto' === 'auto' ? window.matchMedia('(prefers-color-scheme: dark)').matches : 'auto' === 'dark')) && document.body.setAttribute('theme', 'dark');</script>
+
+        <div id="mask"></div><div class="wrapper"><header class="desktop" id="header-desktop">
+    <div class="header-wrapper">
+        <div class="header-title">
+            <a href="/" title="编程心语">编程心语</a>
+        </div>
+        <div class="menu">
+            <div class="menu-inner"><a class="menu-item" href="/posts/"> 文章 </a><a class="menu-item" href="/categories/"> 分类 </a><a class="menu-item" href="/tags/"> 标签 </a><a class="menu-item" href="/about-me/"> 关于 </a><span class="menu-item delimiter"></span><span class="menu-item search" id="search-desktop">
+                        <input type="text" placeholder="搜索文章标题或内容..." id="search-input-desktop">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-desktop" title="搜索">
+                            <i class="fas fa-search fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-desktop" title="清空">
+                            <i class="fas fa-times-circle fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-desktop">
+                            <i class="fas fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+                        </span>
+                    </span><a href="javascript:void(0);" class="menu-item theme-switch" title="切换主题">
+                    <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</header><header class="mobile" id="header-mobile">
+    <div class="header-container">
+        <div class="header-wrapper">
+            <div class="header-title">
+                <a href="/" title="编程心语">编程心语</a>
+            </div>
+            <div class="menu-toggle" id="menu-toggle-mobile">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+        <div class="menu" id="menu-mobile"><div class="search-wrapper">
+                    <div class="search mobile" id="search-mobile">
+                        <input type="text" placeholder="搜索文章标题或内容..." id="search-input-mobile">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-mobile" title="搜索">
+                            <i class="fas fa-search fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-mobile" title="清空">
+                            <i class="fas fa-times-circle fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-mobile">
+                            <i class="fas fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+                        </span>
+                    </div>
+                    <a href="javascript:void(0);" class="search-cancel" id="search-cancel-mobile">
+                        取消
+                    </a>
+                </div><a class="menu-item" href="/posts/" title="">文章</a><a class="menu-item" href="/categories/" title="">分类</a><a class="menu-item" href="/tags/" title="">标签</a><a class="menu-item" href="/about-me/" title="">关于</a><a href="javascript:void(0);" class="menu-item theme-switch" title="切换主题">
+                <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
+            </a></div>
+    </div>
+</header><div class="search-dropdown desktop">
+        <div id="search-dropdown-desktop"></div>
+    </div>
+    <div class="search-dropdown mobile">
+        <div id="search-dropdown-mobile"></div>
+    </div><main class="main">
+                <div class="container"><div class="toc" id="toc-auto">
+            <h2 class="toc-title">目录</h2>
+            <div class="toc-content" id="toc-content-auto"></div>
+        </div><article class="page single"><h1 class="single-title animate__animated animate__flipInX">[转]使用和版本关联的组件</h1><div class="post-meta">
+            <div class="post-meta-line"><span class="post-author"><a href="/" title="Author" rel=" author" class="author"><i class="fas fa-user-circle fa-fw" aria-hidden="true"></i>Simon Chen</a>
+</span></div>
+            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw" aria-hidden="true"></i>&nbsp;<time datetime="2013-07-17">2013-07-17</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden="true"></i>&nbsp;约 154 字&nbsp;
+                <i class="far fa-clock fa-fw" aria-hidden="true"></i>&nbsp;预计阅读 1 分钟&nbsp;</div>
+        </div><div class="details toc" id="toc-static"  data-kept="">
+                <div class="details-summary toc-title">
+                    <span>目录</span>
+                    <span><i class="details-icon fas fa-angle-right" aria-hidden="true"></i></span>
+                </div>
+                <div class="details-content toc-content" id="toc-content-static"><nav id="TableOfContents">
+  <ul>
+    <li><a href="#课程内容">课程内容</a></li>
+    <li><a href="#动手试试">动手试试</a></li>
+    <li><a href="#添加选择逻辑">添加选择逻辑</a></li>
+    <li><a href="#创建一个版本感知的activity-layout">创建一个版本感知的Activity Layout</a></li>
+    <li><a href="#在activity中使用-tabhelper">在Activity中使用 TabHelper</a></li>
+  </ul>
+</nav></div>
+            </div><div class="content" id="content"><h2 id="课程内容">课程内容</h2>
+<ol>
+<li>添加选择逻辑</li>
+<li>创建一个版本感知的Activity Layout</li>
+<li>在Activity中使用 TabHelper</li>
+</ol>
+<h2 id="动手试试">动手试试</h2>
+<p>Download the sample app  <a href="http://developer.android.com/shareables/training/TabCompat.zip" target="_blank" rel="noopener noreffer">TabCompat.zip</a>
+</p>
+<p>这节内容介绍如何添加选择不同实现的逻辑以及如何在对应的版本中选择对应的实现方式，如何创建版本感知的布局。</p>
+<h2 id="添加选择逻辑">添加选择逻辑</h2>
+<p>TabHelpe 抽象类作为<a href="http://en.wikipedia.org/wiki/Factory_%28software_concept%29" target="_blank" rel="noopener noreffer">factory工厂方法</a>
+类来创建版本相关的<span style="color: #0000ff;">TabHelper</span> 和 <span style="color: #0000ff;">CompatTab</span> 实例。</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">abstract</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">TabHelper</span> {
+</span></span><span style="display:flex;"><span>...
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// Usage is TabHelper.createInstance(activity)</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">static</span> TabHelper <span style="color:#a6e22e">createInstance</span>(FragmentActivity activity) {
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> (Build.<span style="color:#a6e22e">VERSION</span>.<span style="color:#a6e22e">SDK_INT</span> <span style="color:#f92672">&gt;=</span> Build.<span style="color:#a6e22e">VERSION_CODES</span>.<span style="color:#a6e22e">HONEYCOMB</span>) {
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">return</span> <span style="color:#66d9ef">new</span> TabHelperHoneycomb(activity);
+</span></span><span style="display:flex;"><span>} <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">return</span> <span style="color:#66d9ef">new</span> TabHelperEclair(activity);
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// Usage is mTabHelper.newTab(&#34;tag&#34;)</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">public</span> CompatTab <span style="color:#a6e22e">newTab</span>(String tag) {
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> (Build.<span style="color:#a6e22e">VERSION</span>.<span style="color:#a6e22e">SDK_INT</span> <span style="color:#f92672">&gt;=</span> Build.<span style="color:#a6e22e">VERSION_CODES</span>.<span style="color:#a6e22e">HONEYCOMB</span>) {
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">return</span> <span style="color:#66d9ef">new</span> CompatTabHoneycomb(mActivity, tag);
+</span></span><span style="display:flex;"><span>} <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">return</span> <span style="color:#66d9ef">new</span> CompatTabEclair(mActivity, tag);
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>...
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><h2 id="创建一个版本感知的activity-layout">创建一个版本感知的Activity Layout</h2>
+<p>然后是创建一个支持两种tab实现的布局。对于旧的实现方式 (TabHelperEclair)，布局中包含 <a href="https://developer.android.com/reference/android/widget/TabWidget.html" target="_blank" rel="noopener noreffer">TabWidget</a>
+ 和 <a href="https://developer.android.com/reference/android/widget/TabHost.html" target="_blank" rel="noopener noreffer">TabHost</a>
+，和一个包含tab的容器:</p>
+<p><strong>res/layout/main.xml:</strong></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#f92672">&lt;!--</span> This layout is <span style="color:#66d9ef">for</span> API level 5<span style="color:#f92672">-</span>10 only. <span style="color:#f92672">--&gt;</span>
+</span></span></code></pre></div><p>而对于 <strong>TabHelperHoneycomb</strong> 实现，需要使用 FrameLayout 作为tab的容器。</p>
+<p><strong>res/layout-v11/main.xml:</strong></p>
+<p>在程序运行的时候， Android会根据系统的版本来选择对应的 main.xml 布局文件。 和前面用来选择TabHelper 实现的逻辑是一样的。</p>
+<h2 id="在activity中使用-tabhelper">在Activity中使用 TabHelper</h2>
+<p>在activity的 <a href="https://developer.android.com/reference/android/app/Activity.html#onCreate%28android.os.Bundle%29" target="_blank" rel="noopener noreffer">onCreate()</a>
+函数中，创建一个TabHelper 对象：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#a6e22e">@Override</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">onCreate</span>(Bundle savedInstanceState) {
+</span></span><span style="display:flex;"><span>setContentView(R.<span style="color:#a6e22e">layout</span>.<span style="color:#a6e22e">main</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>TabHelper tabHelper <span style="color:#f92672">=</span> TabHelper.<span style="color:#a6e22e">createInstance</span>(<span style="color:#66d9ef">this</span>);
+</span></span><span style="display:flex;"><span>tabHelper.<span style="color:#a6e22e">setUp</span>();
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>CompatTab photosTab <span style="color:#f92672">=</span> tabHelper.<span style="color:#a6e22e">newTab</span>(<span style="color:#e6db74">&#34;photos&#34;</span>).<span style="color:#a6e22e">setText</span>(R.<span style="color:#a6e22e">string</span>.<span style="color:#a6e22e">tab_photos</span>);
+</span></span><span style="display:flex;"><span>tabHelper.<span style="color:#a6e22e">addTab</span>(photosTab);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>CompatTab videosTab <span style="color:#f92672">=</span> tabHelper.<span style="color:#a6e22e">newTab</span>(<span style="color:#e6db74">&#34;videos&#34;</span>).<span style="color:#a6e22e">setText</span>(R.<span style="color:#a6e22e">string</span>.<span style="color:#a6e22e">tab_videos</span>);
+</span></span><span style="display:flex;"><span>tabHelper.<span style="color:#a6e22e">addTab</span>(videosTab);
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>当运行程序的时候，系统选择正确的布局文件并实例化对应的 TabHelperHoneycomb 实现或者 TabHelperEclair实现。由于 TabHelper的存在，隔离了activity对每个实现的感知。</p>
+<p>下面是运行在 Android 2.3 和 Android 4.0 中的截图。</p>
+<p><a href="http://www.ithome.me/wp-content/uploads/2013/07/backward-compatible-ui-gb.png" target="_blank" rel="noopener noreffer"><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="http://www.ithome.me/wp-content/uploads/2013/07/backward-compatible-ui-gb.png"
+        data-srcset="http://www.ithome.me/wp-content/uploads/2013/07/backward-compatible-ui-gb.png, http://www.ithome.me/wp-content/uploads/2013/07/backward-compatible-ui-gb.png 1.5x, http://www.ithome.me/wp-content/uploads/2013/07/backward-compatible-ui-gb.png 2x"
+        data-sizes="auto"
+        alt="http://www.ithome.me/wp-content/uploads/2013/07/backward-compatible-ui-gb.png"
+        title="backward-compatible-ui-gb" /></a>
+ <a href="http://www.ithome.me/wp-content/uploads/2013/07/backward-compatible-ui-ics.png" target="_blank" rel="noopener noreffer"><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="http://www.ithome.me/wp-content/uploads/2013/07/backward-compatible-ui-ics.png"
+        data-srcset="http://www.ithome.me/wp-content/uploads/2013/07/backward-compatible-ui-ics.png, http://www.ithome.me/wp-content/uploads/2013/07/backward-compatible-ui-ics.png 1.5x, http://www.ithome.me/wp-content/uploads/2013/07/backward-compatible-ui-ics.png 2x"
+        data-sizes="auto"
+        alt="http://www.ithome.me/wp-content/uploads/2013/07/backward-compatible-ui-ics.png"
+        title="backward-compatible-ui-ics" /></a>
+</p>
+<blockquote>
+<p>原文：http://blog.chengyunfeng.com/?p=405</p>
+</blockquote>
+</div><div class="post-footer" id="post-footer">
+    <div class="post-info">
+        <div class="post-info-line">
+            <div class="post-info-mod">
+                <span>更新于 2013-07-17</span>
+            </div></div>
+        <div class="post-info-line">
+            <div class="post-info-md"></div>
+            <div class="post-info-share">
+                <span><a href="javascript:void(0);" title="分享到 Twitter" data-sharer="twitter" data-url="https://www.ithome.me/post/2013/07/17/%E8%BD%AC%E4%BD%BF%E7%94%A8%E5%92%8C%E7%89%88%E6%9C%AC%E5%85%B3%E8%81%94%E7%9A%84%E7%BB%84%E4%BB%B6/" data-title="[转]使用和版本关联的组件" data-via="https://twitter.com/ChenCiki" data-hashtags="android,版本关联,组件"><i class="fab fa-twitter fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="分享到 Facebook" data-sharer="facebook" data-url="https://www.ithome.me/post/2013/07/17/%E8%BD%AC%E4%BD%BF%E7%94%A8%E5%92%8C%E7%89%88%E6%9C%AC%E5%85%B3%E8%81%94%E7%9A%84%E7%BB%84%E4%BB%B6/" data-hashtag="android"><i class="fab fa-facebook-square fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="分享到 Hacker News" data-sharer="hackernews" data-url="https://www.ithome.me/post/2013/07/17/%E8%BD%AC%E4%BD%BF%E7%94%A8%E5%92%8C%E7%89%88%E6%9C%AC%E5%85%B3%E8%81%94%E7%9A%84%E7%BB%84%E4%BB%B6/" data-title="[转]使用和版本关联的组件"><i class="fab fa-hacker-news fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="分享到 Line" data-sharer="line" data-url="https://www.ithome.me/post/2013/07/17/%E8%BD%AC%E4%BD%BF%E7%94%A8%E5%92%8C%E7%89%88%E6%9C%AC%E5%85%B3%E8%81%94%E7%9A%84%E7%BB%84%E4%BB%B6/" data-title="[转]使用和版本关联的组件"><i data-svg-src="https://cdn.jsdelivr.net/npm/simple-icons@6.20.0/icons/line.svg" aria-hidden="true"></i></a><a href="javascript:void(0);" title="分享到 微博" data-sharer="weibo" data-url="https://www.ithome.me/post/2013/07/17/%E8%BD%AC%E4%BD%BF%E7%94%A8%E5%92%8C%E7%89%88%E6%9C%AC%E5%85%B3%E8%81%94%E7%9A%84%E7%BB%84%E4%BB%B6/" data-title="[转]使用和版本关联的组件" data-ralateuid="xxx"><i class="fab fa-weibo fa-fw" aria-hidden="true"></i></a></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="post-info-more">
+        <section class="post-tags"><i class="fas fa-tags fa-fw" aria-hidden="true"></i>&nbsp;<a href="/tags/android/">Android</a>,&nbsp;<a href="/tags/%E7%89%88%E6%9C%AC%E5%85%B3%E8%81%94/">版本关联</a>,&nbsp;<a href="/tags/%E7%BB%84%E4%BB%B6/">组件</a></section>
+        <section>
+            <span><a href="javascript:void(0);" onclick="window.history.back();">返回</a></span>&nbsp;|&nbsp;<span><a href="/">主页</a></span>
+        </section>
+    </div>
+
+    <div class="post-nav"><a href="/post/2013/07/17/%E8%BD%AC%E4%BD%BF%E7%94%A8%E6%97%A7%E7%9A%84api%E6%9D%A5%E5%AE%9E%E7%8E%B0%E6%8E%A5%E5%8F%A3/" class="prev" rel="prev" title="[转]使用旧的API来实现接口"><i class="fas fa-angle-left fa-fw" aria-hidden="true"></i>[转]使用旧的API来实现接口</a>
+            <a href="/post/2013/07/17/%E8%BD%AC%E9%80%9A%E8%BF%87%E4%BB%A3%E7%90%86%E4%BD%BF%E7%94%A8%E6%96%B0api/" class="next" rel="next" title="[转]Android通过代理使用新API">[转]Android通过代理使用新API<i class="fas fa-angle-right fa-fw" aria-hidden="true"></i></a></div>
+</div>
+</article></div>
+            </main><footer class="footer">
+        <div class="footer-container"><div class="footer-line" itemscope itemtype="http://schema.org/CreativeWork"><i class="far fa-copyright fa-fw" aria-hidden="true"></i><span itemprop="copyrightYear">2011 - 2026</span><span class="author" itemprop="copyrightHolder">&nbsp;<a href="/" target="_blank">Simon Chen</a></span></div>
+        </div>
+    </footer></div>
+
+        <div id="fixed-buttons"><a href="#" id="back-to-top" class="fixed-button" title="回到顶部">
+                <i class="fas fa-arrow-up fa-fw" aria-hidden="true"></i>
+            </a><a href="#" id="view-comments" class="fixed-button" title="查看评论">
+                <i class="fas fa-comment fa-fw" aria-hidden="true"></i>
+            </a>
+        </div><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/autocomplete.js@0.38.1/dist/autocomplete.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lunr@2.3.9/lunr.min.js"></script><script type="text/javascript" src="/lib/lunr/lunr.stemmer.support.min.js"></script><script type="text/javascript" src="/lib/lunr/lunr.zh.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lazysizes@5.3.1/lazysizes.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/clipboard@2.0.11/dist/clipboard.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/sharer.js@0.5.1/sharer.min.js"></script><script type="text/javascript">window.config={"code":{"copyTitle":"复制到剪贴板","maxShownLines":50},"comment":{},"search":{"highlightTag":"em","lunrLanguageCode":"zh","lunrSegmentitURL":"/lib/lunr/lunr.segmentit.js","maxResultLength":10,"noResultsFound":"没有找到结果","snippetLength":30}};</script><script type="text/javascript" src="/js/theme.min.js"></script></body>
+</html>

@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="robots" content="noodp" />
+        <title>[转]DD-WRT路由器迅雷离线脱机下载 - 编程心语</title><meta name="Description" content="This is my KeepIt site"><meta property="og:url" content="https://www.ithome.me/post/2013/06/23/%E8%BD%ACdd-wrt%E8%B7%AF%E7%94%B1%E5%99%A8%E8%BF%85%E9%9B%B7%E7%A6%BB%E7%BA%BF%E8%84%B1%E6%9C%BA%E4%B8%8B%E8%BD%BD/">
+  <meta property="og:site_name" content="编程心语">
+  <meta property="og:title" content="[转]DD-WRT路由器迅雷离线脱机下载">
+  <meta property="og:description" content="1、首先请确认你拥有一个迅雷 VIP 帐号，非会员无法使用离线下载。
+2、到 https://github.com/iambus/xunlei-lixian/downloads 下载 xunlei-lixian 代码，并解压到本地
+3、打开解压后的文件夹，找到 lixian_cli.py ，将第1行的
+#!/usr/bin/env python 修改为
+#!/opt/bin/python2.7 然后将 lixian_download_tools.py 第22行的
+wget_opts = [&#39;wget&#39;, &#39;--header=Cookie: gdriveid=&#39;&#43;gdriveid, download_url, &#39;-O&#39;, filename] 修改为
+wget_opts = [&#39;/opt/bin/wget&#39;, &#39;--header=Cookie: gdriveid=&#39;&#43;gdriveid, download_url, &#39;-O&#39;, filename] 保存后将目录中的文件全部复制到路由器的 /opt/bin/lixian 目录（tests目录、.gitignore 和 README.md 无需复制）
+4、为 lixian_cli.py 创建别名
+使用 ssh 客户端连接至路由器，键入如下命令：
+ln -s /opt/bin/lixian/lixian_cli.py /opt/bin/xunlei 之后就可以在 /opt 目录下使用 xunlei 来调用 xunlei-lixian 了。
+5、建立配置文件
+使用 ssh 客户端连接至路由器，键入如下命令：
+xunlei config username 你的迅雷帐号 xunlei config password 你的迅雷密码 xunlei config no-hash #关闭校验功能 xunlei config continue xunlei config -- aria2-opts &#34;--event-poll=select --max-tries=0&#34; xunlei config -- wget-opts &#34;--tries=0 --retry-connrefused&#34; 完成后将 /tmp/root/.xunlei.lixian.config 复制到 /opt/bin/lixian 目录下。">
+  <meta property="og:locale" content="zh_CN">
+  <meta property="og:type" content="article">
+    <meta property="article:section" content="posts">
+    <meta property="article:published_time" content="2013-06-23T19:52:45+08:00">
+    <meta property="article:modified_time" content="2013-06-23T19:52:45+08:00">
+    <meta property="article:tag" content="Dd-Wrt">
+    <meta property="article:tag" content="离线下载">
+    <meta property="article:tag" content="脱机下载">
+
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="[转]DD-WRT路由器迅雷离线脱机下载">
+  <meta name="twitter:description" content="1、首先请确认你拥有一个迅雷 VIP 帐号，非会员无法使用离线下载。
+2、到 https://github.com/iambus/xunlei-lixian/downloads 下载 xunlei-lixian 代码，并解压到本地
+3、打开解压后的文件夹，找到 lixian_cli.py ，将第1行的
+#!/usr/bin/env python 修改为
+#!/opt/bin/python2.7 然后将 lixian_download_tools.py 第22行的
+wget_opts = [&#39;wget&#39;, &#39;--header=Cookie: gdriveid=&#39;&#43;gdriveid, download_url, &#39;-O&#39;, filename] 修改为
+wget_opts = [&#39;/opt/bin/wget&#39;, &#39;--header=Cookie: gdriveid=&#39;&#43;gdriveid, download_url, &#39;-O&#39;, filename] 保存后将目录中的文件全部复制到路由器的 /opt/bin/lixian 目录（tests目录、.gitignore 和 README.md 无需复制）
+4、为 lixian_cli.py 创建别名
+使用 ssh 客户端连接至路由器，键入如下命令：
+ln -s /opt/bin/lixian/lixian_cli.py /opt/bin/xunlei 之后就可以在 /opt 目录下使用 xunlei 来调用 xunlei-lixian 了。
+5、建立配置文件
+使用 ssh 客户端连接至路由器，键入如下命令：
+xunlei config username 你的迅雷帐号 xunlei config password 你的迅雷密码 xunlei config no-hash #关闭校验功能 xunlei config continue xunlei config -- aria2-opts &#34;--event-poll=select --max-tries=0&#34; xunlei config -- wget-opts &#34;--tries=0 --retry-connrefused&#34; 完成后将 /tmp/root/.xunlei.lixian.config 复制到 /opt/bin/lixian 目录下。">
+      <meta name="twitter:site" content="@https://twitter.com/ChenCiki">
+<meta name="application-name" content="My KeepIt site">
+<meta name="apple-mobile-web-app-title" content="My KeepIt site"><meta name="theme-color" content="#ffffff"><meta name="msapplication-TileColor" content="#da532c"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5"><link rel="manifest" href="/site.webmanifest"><link rel="canonical" href="https://www.ithome.me/post/2013/06/23/%E8%BD%ACdd-wrt%E8%B7%AF%E7%94%B1%E5%99%A8%E8%BF%85%E9%9B%B7%E7%A6%BB%E7%BA%BF%E8%84%B1%E6%9C%BA%E4%B8%8B%E8%BD%BD/" /><link rel="prev" href="https://www.ithome.me/post/2013/05/23/showcaseview-%E5%8A%9F%E8%83%BD%E5%BC%95%E5%AF%BC%E7%B1%BB%E5%BA%93/" /><link rel="next" href="https://www.ithome.me/post/2013/07/17/%E8%BD%AC%E6%8A%BD%E8%B1%A1%E6%96%B0%E7%9A%84api/" /><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/normalize.css@8.0.1/normalize.min.css"><link rel="stylesheet" href="/css/style.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css"><script type="application/ld+json">
+    {
+        "@context": "http://schema.org",
+        "@type": "BlogPosting",
+        "headline": "[转]DD-WRT路由器迅雷离线脱机下载",
+        "inLanguage": "zh-CN",
+        "mainEntityOfPage": {
+            "@type": "WebPage",
+            "@id": "https:\/\/www.ithome.me\/post\/2013\/06\/23\/%E8%BD%ACdd-wrt%E8%B7%AF%E7%94%B1%E5%99%A8%E8%BF%85%E9%9B%B7%E7%A6%BB%E7%BA%BF%E8%84%B1%E6%9C%BA%E4%B8%8B%E8%BD%BD\/"
+        },"genre": "posts","keywords": "dd-wrt, 离线下载, 脱机下载","wordcount":  130 ,
+        "url": "https:\/\/www.ithome.me\/post\/2013\/06\/23\/%E8%BD%ACdd-wrt%E8%B7%AF%E7%94%B1%E5%99%A8%E8%BF%85%E9%9B%B7%E7%A6%BB%E7%BA%BF%E8%84%B1%E6%9C%BA%E4%B8%8B%E8%BD%BD\/","datePublished": "2013-06-23T19:52:45+08:00","dateModified": "2013-06-23T19:52:45+08:00","license": "©{year}, All Rights Reserved. Simon Chen","publisher": {
+            "@type": "Organization",
+            "name": ""},"author": {
+                "@type": "Person",
+                "name": "Simon Chen"
+            },"description": ""
+    }
+    </script></head>
+    <body data-header-desktop="fixed" data-header-mobile="auto"><script type="text/javascript">(window.localStorage && localStorage.getItem('theme') ? localStorage.getItem('theme') === 'dark' : ('auto' === 'auto' ? window.matchMedia('(prefers-color-scheme: dark)').matches : 'auto' === 'dark')) && document.body.setAttribute('theme', 'dark');</script>
+
+        <div id="mask"></div><div class="wrapper"><header class="desktop" id="header-desktop">
+    <div class="header-wrapper">
+        <div class="header-title">
+            <a href="/" title="编程心语">编程心语</a>
+        </div>
+        <div class="menu">
+            <div class="menu-inner"><a class="menu-item" href="/posts/"> 文章 </a><a class="menu-item" href="/categories/"> 分类 </a><a class="menu-item" href="/tags/"> 标签 </a><a class="menu-item" href="/about-me/"> 关于 </a><span class="menu-item delimiter"></span><span class="menu-item search" id="search-desktop">
+                        <input type="text" placeholder="搜索文章标题或内容..." id="search-input-desktop">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-desktop" title="搜索">
+                            <i class="fas fa-search fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-desktop" title="清空">
+                            <i class="fas fa-times-circle fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-desktop">
+                            <i class="fas fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+                        </span>
+                    </span><a href="javascript:void(0);" class="menu-item theme-switch" title="切换主题">
+                    <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</header><header class="mobile" id="header-mobile">
+    <div class="header-container">
+        <div class="header-wrapper">
+            <div class="header-title">
+                <a href="/" title="编程心语">编程心语</a>
+            </div>
+            <div class="menu-toggle" id="menu-toggle-mobile">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+        <div class="menu" id="menu-mobile"><div class="search-wrapper">
+                    <div class="search mobile" id="search-mobile">
+                        <input type="text" placeholder="搜索文章标题或内容..." id="search-input-mobile">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-mobile" title="搜索">
+                            <i class="fas fa-search fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-mobile" title="清空">
+                            <i class="fas fa-times-circle fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-mobile">
+                            <i class="fas fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+                        </span>
+                    </div>
+                    <a href="javascript:void(0);" class="search-cancel" id="search-cancel-mobile">
+                        取消
+                    </a>
+                </div><a class="menu-item" href="/posts/" title="">文章</a><a class="menu-item" href="/categories/" title="">分类</a><a class="menu-item" href="/tags/" title="">标签</a><a class="menu-item" href="/about-me/" title="">关于</a><a href="javascript:void(0);" class="menu-item theme-switch" title="切换主题">
+                <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
+            </a></div>
+    </div>
+</header><div class="search-dropdown desktop">
+        <div id="search-dropdown-desktop"></div>
+    </div>
+    <div class="search-dropdown mobile">
+        <div id="search-dropdown-mobile"></div>
+    </div><main class="main">
+                <div class="container"><div class="toc" id="toc-auto">
+            <h2 class="toc-title">目录</h2>
+            <div class="toc-content" id="toc-content-auto"></div>
+        </div><article class="page single"><h1 class="single-title animate__animated animate__flipInX">[转]DD-WRT路由器迅雷离线脱机下载</h1><div class="post-meta">
+            <div class="post-meta-line"><span class="post-author"><a href="/" title="Author" rel=" author" class="author"><i class="fas fa-user-circle fa-fw" aria-hidden="true"></i>Simon Chen</a>
+</span></div>
+            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw" aria-hidden="true"></i>&nbsp;<time datetime="2013-06-23">2013-06-23</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden="true"></i>&nbsp;约 130 字&nbsp;
+                <i class="far fa-clock fa-fw" aria-hidden="true"></i>&nbsp;预计阅读 1 分钟&nbsp;</div>
+        </div><div class="details toc" id="toc-static"  data-kept="">
+                <div class="details-summary toc-title">
+                    <span>目录</span>
+                    <span><i class="details-icon fas fa-angle-right" aria-hidden="true"></i></span>
+                </div>
+                <div class="details-content toc-content" id="toc-content-static"><nav id="TableOfContents"></nav></div>
+            </div><div class="content" id="content"><p>1、首先请确认你拥有一个迅雷 VIP 帐号，非会员无法使用离线下载。</p>
+<p>2、到 <a href="https://github.com/iambus/xunlei-lixian/downloads" target="_blank" rel="noopener noreffer">https://github.com/iambus/xunlei-lixian/downloads</a>
+ 下载 <a href="https://github.com/iambus/xunlei-lixian" title="xunlei-lixian" target="_blank" rel="noopener noreffer">xunlei-lixian</a>
+ 代码，并解压到本地</p>
+<p>3、打开解压后的文件夹，找到 lixian_cli.py ，将第1行的</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e">#!/usr/bin/env python
+</span></span></span></code></pre></div><p>修改为</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e">#!/opt/bin/python2.7
+</span></span></span></code></pre></div><p>然后将 lixian_download_tools.py 第22行的</p>
+<pre>wget_opts = ['wget', '--header=Cookie: gdriveid='+gdriveid, download_url, '-O', filename]</pre>
+<p>修改为</p>
+<pre>wget_opts = ['/opt/bin/wget', '--header=Cookie: gdriveid='+gdriveid, download_url, '-O', filename]</pre>
+<p>保存后将目录中的文件全部复制到路由器的 /opt/bin/lixian 目录（tests目录、.gitignore 和 README.md 无需复制）</p>
+<p>4、为 lixian_cli.py 创建别名</p>
+<p>使用 ssh 客户端连接至路由器，键入如下命令：</p>
+<pre>ln -s /opt/bin/lixian/lixian_cli.py /opt/bin/xunlei</pre>
+<p>之后就可以在 /opt 目录下使用 xunlei 来调用 <a href="https://github.com/iambus/xunlei-lixian" title="xunlei-lixian" target="_blank" rel="noopener noreffer">xunlei-lixian</a>
+ 了。</p>
+<p>5、建立配置文件</p>
+<p>使用 ssh 客户端连接至路由器，键入如下命令：</p>
+<pre>xunlei config username 你的迅雷帐号
+xunlei config password 你的迅雷密码
+xunlei config no-hash #关闭校验功能
+xunlei config continue
+xunlei config -- aria2-opts "--event-poll=select --max-tries=0"
+xunlei config -- wget-opts "--tries=0 --retry-connrefused"</pre>
+<p>完成后将 /tmp/root/.xunlei.lixian.config 复制到 /opt/bin/lixian 目录下。</p>
+<p>6、开始离线下载之旅</p>
+<p>最简单的指令：</p>
+<pre>xunlei download http://somewhere
+xunlei download ed2k://somefile
+xunlei download bt://info-hash</pre>
+<p>如果你的帐号只有你一个人使用，你可以直接使用</p>
+<pre>xunlei download --all</pre>
+<p>来下载列表中的全部任务，如果是多人共用的帐号，可以在创建任务时加上诸如 “user1” 之类的前缀，然后使用</p>
+<pre>xunlei download user1</pre>
+<p>来下载全部以“user1”开头的任务。</p>
+<p>如果想要实现真正的脱机下载，即希望断开 ssh 后路由器还能继续下载，请在下载前执行</p>
+<pre>screen</pre>
+<p>输入完下载指令后，直接断开 ssh 即可，如需查看下载进度等，可执行以下命令：</p>
+<pre>screen -r</pre>
+<p>其他命令和用法请参考 xunlei-lixian 项目主页：<a href="https://github.com/iambus/xunlei-lixian" target="_blank" rel="noopener noreffer">https://github.com/iambus/xunlei-lixian</a>
+ ，或者在本文下方留言寻求帮助。</p>
+<p>原文地址：<a href="http://blog.liukangxu.info/?p=278" target="_blank" rel="noopener noreffer">http://blog.liukangxu.info/?p=278</a>
+</p>
+</div><div class="post-footer" id="post-footer">
+    <div class="post-info">
+        <div class="post-info-line">
+            <div class="post-info-mod">
+                <span>更新于 2013-06-23</span>
+            </div></div>
+        <div class="post-info-line">
+            <div class="post-info-md"></div>
+            <div class="post-info-share">
+                <span><a href="javascript:void(0);" title="分享到 Twitter" data-sharer="twitter" data-url="https://www.ithome.me/post/2013/06/23/%E8%BD%ACdd-wrt%E8%B7%AF%E7%94%B1%E5%99%A8%E8%BF%85%E9%9B%B7%E7%A6%BB%E7%BA%BF%E8%84%B1%E6%9C%BA%E4%B8%8B%E8%BD%BD/" data-title="[转]DD-WRT路由器迅雷离线脱机下载" data-via="https://twitter.com/ChenCiki" data-hashtags="dd-wrt,离线下载,脱机下载"><i class="fab fa-twitter fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="分享到 Facebook" data-sharer="facebook" data-url="https://www.ithome.me/post/2013/06/23/%E8%BD%ACdd-wrt%E8%B7%AF%E7%94%B1%E5%99%A8%E8%BF%85%E9%9B%B7%E7%A6%BB%E7%BA%BF%E8%84%B1%E6%9C%BA%E4%B8%8B%E8%BD%BD/" data-hashtag="dd-wrt"><i class="fab fa-facebook-square fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="分享到 Hacker News" data-sharer="hackernews" data-url="https://www.ithome.me/post/2013/06/23/%E8%BD%ACdd-wrt%E8%B7%AF%E7%94%B1%E5%99%A8%E8%BF%85%E9%9B%B7%E7%A6%BB%E7%BA%BF%E8%84%B1%E6%9C%BA%E4%B8%8B%E8%BD%BD/" data-title="[转]DD-WRT路由器迅雷离线脱机下载"><i class="fab fa-hacker-news fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="分享到 Line" data-sharer="line" data-url="https://www.ithome.me/post/2013/06/23/%E8%BD%ACdd-wrt%E8%B7%AF%E7%94%B1%E5%99%A8%E8%BF%85%E9%9B%B7%E7%A6%BB%E7%BA%BF%E8%84%B1%E6%9C%BA%E4%B8%8B%E8%BD%BD/" data-title="[转]DD-WRT路由器迅雷离线脱机下载"><i data-svg-src="https://cdn.jsdelivr.net/npm/simple-icons@6.20.0/icons/line.svg" aria-hidden="true"></i></a><a href="javascript:void(0);" title="分享到 微博" data-sharer="weibo" data-url="https://www.ithome.me/post/2013/06/23/%E8%BD%ACdd-wrt%E8%B7%AF%E7%94%B1%E5%99%A8%E8%BF%85%E9%9B%B7%E7%A6%BB%E7%BA%BF%E8%84%B1%E6%9C%BA%E4%B8%8B%E8%BD%BD/" data-title="[转]DD-WRT路由器迅雷离线脱机下载" data-ralateuid="xxx"><i class="fab fa-weibo fa-fw" aria-hidden="true"></i></a></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="post-info-more">
+        <section class="post-tags"><i class="fas fa-tags fa-fw" aria-hidden="true"></i>&nbsp;<a href="/tags/dd-wrt/">Dd-Wrt</a>,&nbsp;<a href="/tags/%E7%A6%BB%E7%BA%BF%E4%B8%8B%E8%BD%BD/">离线下载</a>,&nbsp;<a href="/tags/%E8%84%B1%E6%9C%BA%E4%B8%8B%E8%BD%BD/">脱机下载</a></section>
+        <section>
+            <span><a href="javascript:void(0);" onclick="window.history.back();">返回</a></span>&nbsp;|&nbsp;<span><a href="/">主页</a></span>
+        </section>
+    </div>
+
+    <div class="post-nav"><a href="/post/2013/05/23/showcaseview-%E5%8A%9F%E8%83%BD%E5%BC%95%E5%AF%BC%E7%B1%BB%E5%BA%93/" class="prev" rel="prev" title="showcaseview-功能引导类库"><i class="fas fa-angle-left fa-fw" aria-hidden="true"></i>showcaseview-功能引导类库</a>
+            <a href="/post/2013/07/17/%E8%BD%AC%E6%8A%BD%E8%B1%A1%E6%96%B0%E7%9A%84api/" class="next" rel="next" title="[转]抽象新的API">[转]抽象新的API<i class="fas fa-angle-right fa-fw" aria-hidden="true"></i></a></div>
+</div>
+</article></div>
+            </main><footer class="footer">
+        <div class="footer-container"><div class="footer-line" itemscope itemtype="http://schema.org/CreativeWork"><i class="far fa-copyright fa-fw" aria-hidden="true"></i><span itemprop="copyrightYear">2011 - 2026</span><span class="author" itemprop="copyrightHolder">&nbsp;<a href="/" target="_blank">Simon Chen</a></span></div>
+        </div>
+    </footer></div>
+
+        <div id="fixed-buttons"><a href="#" id="back-to-top" class="fixed-button" title="回到顶部">
+                <i class="fas fa-arrow-up fa-fw" aria-hidden="true"></i>
+            </a><a href="#" id="view-comments" class="fixed-button" title="查看评论">
+                <i class="fas fa-comment fa-fw" aria-hidden="true"></i>
+            </a>
+        </div><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/autocomplete.js@0.38.1/dist/autocomplete.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lunr@2.3.9/lunr.min.js"></script><script type="text/javascript" src="/lib/lunr/lunr.stemmer.support.min.js"></script><script type="text/javascript" src="/lib/lunr/lunr.zh.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lazysizes@5.3.1/lazysizes.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/clipboard@2.0.11/dist/clipboard.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/sharer.js@0.5.1/sharer.min.js"></script><script type="text/javascript">window.config={"code":{"copyTitle":"复制到剪贴板","maxShownLines":50},"comment":{},"search":{"highlightTag":"em","lunrLanguageCode":"zh","lunrSegmentitURL":"/lib/lunr/lunr.segmentit.js","maxResultLength":10,"noResultsFound":"没有找到结果","snippetLength":30}};</script><script type="text/javascript" src="/js/theme.min.js"></script></body>
+</html>

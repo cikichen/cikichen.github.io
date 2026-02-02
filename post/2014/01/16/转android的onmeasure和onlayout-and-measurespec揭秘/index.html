@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="robots" content="noodp" />
+        <title>[转]Android的onMeasure和onLayout And MeasureSpec揭秘 - 编程心语</title><meta name="Description" content="This is my KeepIt site"><meta property="og:url" content="https://www.ithome.me/post/2014/01/16/%E8%BD%ACandroid%E7%9A%84onmeasure%E5%92%8Conlayout-and-measurespec%E6%8F%AD%E7%A7%98/">
+  <meta property="og:site_name" content="编程心语">
+  <meta property="og:title" content="[转]Android的onMeasure和onLayout And MeasureSpec揭秘">
+  <meta property="og:description" content="Android中自定义ViewGroup最重要的就是onMeasure和onLayout方法，都需要重写这两个方法，ViewGroup绘制 的过程是这样的：
+onMeasure → onLayout → DispatchDraw
+其实我觉得官方文档解释有大大的问题，刚开始一直很疑惑onMeasure和onLayout是什么意思，看了很多资料后豁然开朗，总结如下
+首先要知道ViewGroup是继承View的，后面的解释跟View有关。ViewGourp可以包含很多个View，View就是它的孩子，比如LinearLayout布局是一个ViewGroup，在布局内可以放TextEdit、ImageView等等常用的控件，这些叫子View，当然不限于这个固定的控件。
+onMeasure → onLayout → DispatchDraw：onMeasure负责测量这个ViewGroup和子View的大小，onLayout负责设置子View的布局，DispatchDraw就是真正画上去了。
+onMeasure
+官方解释：
+protected void onMeasure (int widthMeasureSpec, int heightMeasureSpec)
+Measure the view and its content to determine the measured width and the measured height. 即 测量View和它的内容决定宽度和高度。
+说实在的，官方文档说测量我刚开始很疑惑，onMeasure翻译过来是测量，根本不知道它的意图，其实它有两方面作用：①获得ViewGroup和子View的宽和高 ②设置子ViewGroup的宽和高，注意，只是宽和高。其实，追踪onMeasure方法会发现，它继承自View。
+典型的onMeasure的一个实现
+@Override protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) { int width = MeasureSpec.getSize(widthMeasureSpec); //获取ViewGroup宽度 int height = MeasureSpec.getSize(heightMeasureSpec); //获取ViewGroup高度 setMeasuredDimension(width, height); //设置ViewGroup的宽高 int childCount = getChildCount(); //获得子View的个数，下面遍历这些子View设置宽高 for (int i = 0; i &amp;lt; childCount; i&#43;&#43;) { View child = getChildAt(i); child.measure(viewWidth, viewHeight); //设置子View宽高 } } 很明显，先获取到了宽高再设置。顺序是先设置ViewGroup的，再设置子View。
+其中，设置ViewGroup宽高的方法是 setMeasureDimension(),查看这个方法的源代码，它在view.class下">
+  <meta property="og:locale" content="zh_CN">
+  <meta property="og:type" content="article">
+    <meta property="article:section" content="posts">
+    <meta property="article:published_time" content="2014-01-16T14:01:43+08:00">
+    <meta property="article:modified_time" content="2014-01-16T14:01:43+08:00">
+    <meta property="article:tag" content="OnMeasure">
+    <meta property="article:tag" content="OnLayout">
+
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="[转]Android的onMeasure和onLayout And MeasureSpec揭秘">
+  <meta name="twitter:description" content="Android中自定义ViewGroup最重要的就是onMeasure和onLayout方法，都需要重写这两个方法，ViewGroup绘制 的过程是这样的：
+onMeasure → onLayout → DispatchDraw
+其实我觉得官方文档解释有大大的问题，刚开始一直很疑惑onMeasure和onLayout是什么意思，看了很多资料后豁然开朗，总结如下
+首先要知道ViewGroup是继承View的，后面的解释跟View有关。ViewGourp可以包含很多个View，View就是它的孩子，比如LinearLayout布局是一个ViewGroup，在布局内可以放TextEdit、ImageView等等常用的控件，这些叫子View，当然不限于这个固定的控件。
+onMeasure → onLayout → DispatchDraw：onMeasure负责测量这个ViewGroup和子View的大小，onLayout负责设置子View的布局，DispatchDraw就是真正画上去了。
+onMeasure
+官方解释：
+protected void onMeasure (int widthMeasureSpec, int heightMeasureSpec)
+Measure the view and its content to determine the measured width and the measured height. 即 测量View和它的内容决定宽度和高度。
+说实在的，官方文档说测量我刚开始很疑惑，onMeasure翻译过来是测量，根本不知道它的意图，其实它有两方面作用：①获得ViewGroup和子View的宽和高 ②设置子ViewGroup的宽和高，注意，只是宽和高。其实，追踪onMeasure方法会发现，它继承自View。
+典型的onMeasure的一个实现
+@Override protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) { int width = MeasureSpec.getSize(widthMeasureSpec); //获取ViewGroup宽度 int height = MeasureSpec.getSize(heightMeasureSpec); //获取ViewGroup高度 setMeasuredDimension(width, height); //设置ViewGroup的宽高 int childCount = getChildCount(); //获得子View的个数，下面遍历这些子View设置宽高 for (int i = 0; i &amp;lt; childCount; i&#43;&#43;) { View child = getChildAt(i); child.measure(viewWidth, viewHeight); //设置子View宽高 } } 很明显，先获取到了宽高再设置。顺序是先设置ViewGroup的，再设置子View。
+其中，设置ViewGroup宽高的方法是 setMeasureDimension(),查看这个方法的源代码，它在view.class下">
+      <meta name="twitter:site" content="@https://twitter.com/ChenCiki">
+<meta name="application-name" content="My KeepIt site">
+<meta name="apple-mobile-web-app-title" content="My KeepIt site"><meta name="theme-color" content="#ffffff"><meta name="msapplication-TileColor" content="#da532c"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5"><link rel="manifest" href="/site.webmanifest"><link rel="canonical" href="https://www.ithome.me/post/2014/01/16/%E8%BD%ACandroid%E7%9A%84onmeasure%E5%92%8Conlayout-and-measurespec%E6%8F%AD%E7%A7%98/" /><link rel="prev" href="https://www.ithome.me/post/2014/01/16/%E8%AE%A9edittext%E4%B8%8D%E8%87%AA%E5%8A%A8%E8%8E%B7%E5%BE%97%E7%84%A6%E7%82%B9/" /><link rel="next" href="https://www.ithome.me/post/2014/07/05/google%E5%85%AC%E5%B8%83android-l%E9%A2%84%E8%A7%88%E7%89%88%E6%9C%AC%E6%BA%90%E4%BB%A3%E7%A0%81/" /><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/normalize.css@8.0.1/normalize.min.css"><link rel="stylesheet" href="/css/style.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css"><script type="application/ld+json">
+    {
+        "@context": "http://schema.org",
+        "@type": "BlogPosting",
+        "headline": "[转]Android的onMeasure和onLayout And MeasureSpec揭秘",
+        "inLanguage": "zh-CN",
+        "mainEntityOfPage": {
+            "@type": "WebPage",
+            "@id": "https:\/\/www.ithome.me\/post\/2014\/01\/16\/%E8%BD%ACandroid%E7%9A%84onmeasure%E5%92%8Conlayout-and-measurespec%E6%8F%AD%E7%A7%98\/"
+        },"genre": "posts","keywords": "onMeasure, onLayout","wordcount":  445 ,
+        "url": "https:\/\/www.ithome.me\/post\/2014\/01\/16\/%E8%BD%ACandroid%E7%9A%84onmeasure%E5%92%8Conlayout-and-measurespec%E6%8F%AD%E7%A7%98\/","datePublished": "2014-01-16T14:01:43+08:00","dateModified": "2014-01-16T14:01:43+08:00","license": "©{year}, All Rights Reserved. Simon Chen","publisher": {
+            "@type": "Organization",
+            "name": ""},"author": {
+                "@type": "Person",
+                "name": "Simon Chen"
+            },"description": ""
+    }
+    </script></head>
+    <body data-header-desktop="fixed" data-header-mobile="auto"><script type="text/javascript">(window.localStorage && localStorage.getItem('theme') ? localStorage.getItem('theme') === 'dark' : ('auto' === 'auto' ? window.matchMedia('(prefers-color-scheme: dark)').matches : 'auto' === 'dark')) && document.body.setAttribute('theme', 'dark');</script>
+
+        <div id="mask"></div><div class="wrapper"><header class="desktop" id="header-desktop">
+    <div class="header-wrapper">
+        <div class="header-title">
+            <a href="/" title="编程心语">编程心语</a>
+        </div>
+        <div class="menu">
+            <div class="menu-inner"><a class="menu-item" href="/posts/"> 文章 </a><a class="menu-item" href="/categories/"> 分类 </a><a class="menu-item" href="/tags/"> 标签 </a><a class="menu-item" href="/about-me/"> 关于 </a><span class="menu-item delimiter"></span><span class="menu-item search" id="search-desktop">
+                        <input type="text" placeholder="搜索文章标题或内容..." id="search-input-desktop">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-desktop" title="搜索">
+                            <i class="fas fa-search fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-desktop" title="清空">
+                            <i class="fas fa-times-circle fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-desktop">
+                            <i class="fas fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+                        </span>
+                    </span><a href="javascript:void(0);" class="menu-item theme-switch" title="切换主题">
+                    <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</header><header class="mobile" id="header-mobile">
+    <div class="header-container">
+        <div class="header-wrapper">
+            <div class="header-title">
+                <a href="/" title="编程心语">编程心语</a>
+            </div>
+            <div class="menu-toggle" id="menu-toggle-mobile">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+        <div class="menu" id="menu-mobile"><div class="search-wrapper">
+                    <div class="search mobile" id="search-mobile">
+                        <input type="text" placeholder="搜索文章标题或内容..." id="search-input-mobile">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-mobile" title="搜索">
+                            <i class="fas fa-search fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-mobile" title="清空">
+                            <i class="fas fa-times-circle fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-mobile">
+                            <i class="fas fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+                        </span>
+                    </div>
+                    <a href="javascript:void(0);" class="search-cancel" id="search-cancel-mobile">
+                        取消
+                    </a>
+                </div><a class="menu-item" href="/posts/" title="">文章</a><a class="menu-item" href="/categories/" title="">分类</a><a class="menu-item" href="/tags/" title="">标签</a><a class="menu-item" href="/about-me/" title="">关于</a><a href="javascript:void(0);" class="menu-item theme-switch" title="切换主题">
+                <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
+            </a></div>
+    </div>
+</header><div class="search-dropdown desktop">
+        <div id="search-dropdown-desktop"></div>
+    </div>
+    <div class="search-dropdown mobile">
+        <div id="search-dropdown-mobile"></div>
+    </div><main class="main">
+                <div class="container"><div class="toc" id="toc-auto">
+            <h2 class="toc-title">目录</h2>
+            <div class="toc-content" id="toc-content-auto"></div>
+        </div><article class="page single"><h1 class="single-title animate__animated animate__flipInX">[转]Android的onMeasure和onLayout And MeasureSpec揭秘</h1><div class="post-meta">
+            <div class="post-meta-line"><span class="post-author"><a href="/" title="Author" rel=" author" class="author"><i class="fas fa-user-circle fa-fw" aria-hidden="true"></i>Simon Chen</a>
+</span></div>
+            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw" aria-hidden="true"></i>&nbsp;<time datetime="2014-01-16">2014-01-16</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden="true"></i>&nbsp;约 445 字&nbsp;
+                <i class="far fa-clock fa-fw" aria-hidden="true"></i>&nbsp;预计阅读 3 分钟&nbsp;</div>
+        </div><div class="details toc" id="toc-static"  data-kept="">
+                <div class="details-summary toc-title">
+                    <span>目录</span>
+                    <span><i class="details-icon fas fa-angle-right" aria-hidden="true"></i></span>
+                </div>
+                <div class="details-content toc-content" id="toc-content-static"><nav id="TableOfContents"></nav></div>
+            </div><div class="content" id="content"><p>Android中自定义ViewGroup最重要的就是onMeasure和onLayout方法，都需要重写这两个方法，ViewGroup绘制 的过程是这样的：</p>
+<blockquote>
+<p>onMeasure → onLayout → DispatchDraw</p>
+</blockquote>
+<p>其实我觉得官方文档解释有大大的问题，刚开始一直很疑惑onMeasure和onLayout是什么意思，看了很多资料后豁然开朗，总结如下</p>
+<p>首先要知道ViewGroup是继承View的，后面的解释跟View有关。ViewGourp可以包含很多个View，View就是它的孩子，比如LinearLayout布局是一个ViewGroup，在布局内可以放TextEdit、ImageView等等常用的控件，这些叫子View，当然不限于这个固定的控件。</p>
+<p>onMeasure → onLayout → DispatchDraw：onMeasure负责测量这个ViewGroup和子View的大小，onLayout负责设置子View的布局，DispatchDraw就是真正画上去了。</p>
+<p><strong>onMeasure</strong></p>
+<p>官方解释：</p>
+<blockquote>
+<p>protected void onMeasure (int widthMeasureSpec, int heightMeasureSpec)</p>
+</blockquote>
+<p>Measure the view and its content to determine the measured width and the measured height. 即 测量View和它的内容决定宽度和高度。</p>
+<p>说实在的，官方文档说测量我刚开始很疑惑，onMeasure翻译过来是测量，根本不知道它的意图，其实它有两方面作用：①获得ViewGroup和子View的宽和高 ②设置子ViewGroup的宽和高，注意，只是宽和高。其实，追踪onMeasure方法会发现，它继承自View。<br>
+典型的onMeasure的一个实现</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#a6e22e">@Override</span>  
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">protected</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">onMeasure</span>(<span style="color:#66d9ef">int</span> widthMeasureSpec, <span style="color:#66d9ef">int</span> heightMeasureSpec) {  
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">int</span> width <span style="color:#f92672">=</span> MeasureSpec.<span style="color:#a6e22e">getSize</span>(widthMeasureSpec);   <span style="color:#75715e">//获取ViewGroup宽度  </span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">int</span> height <span style="color:#f92672">=</span> MeasureSpec.<span style="color:#a6e22e">getSize</span>(heightMeasureSpec);  <span style="color:#75715e">//获取ViewGroup高度  </span>
+</span></span><span style="display:flex;"><span>    setMeasuredDimension(width, height);    <span style="color:#75715e">//设置ViewGroup的宽高  </span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">int</span> childCount <span style="color:#f92672">=</span> getChildCount();   <span style="color:#75715e">//获得子View的个数，下面遍历这些子View设置宽高  </span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> (<span style="color:#66d9ef">int</span> i <span style="color:#f92672">=</span> 0; i <span style="color:#f92672">&amp;</span>lt; childCount; i<span style="color:#f92672">++</span>) {  
+</span></span><span style="display:flex;"><span>        View child <span style="color:#f92672">=</span> getChildAt(i);  
+</span></span><span style="display:flex;"><span>            child.<span style="color:#a6e22e">measure</span>(viewWidth, viewHeight);  <span style="color:#75715e">//设置子View宽高  </span>
+</span></span><span style="display:flex;"><span>        }  
+</span></span><span style="display:flex;"><span> }
+</span></span></code></pre></div><p>很明显，先获取到了宽高再设置。顺序是先设置ViewGroup的，再设置子View。<br>
+其中，设置ViewGroup宽高的方法是 setMeasureDimension(),查看这个方法的源代码，它在view.class下</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#66d9ef">protected</span> <span style="color:#66d9ef">final</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">setMeasuredDimension</span>(<span style="color:#66d9ef">int</span> measuredWidth, <span style="color:#66d9ef">int</span> measuredHeight) {  
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">boolean</span> optical <span style="color:#f92672">=</span> isLayoutModeOptical(<span style="color:#66d9ef">this</span>);  
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> (optical <span style="color:#f92672">!=</span> isLayoutModeOptical(mParent)) {  
+</span></span><span style="display:flex;"><span>            Insets insets <span style="color:#f92672">=</span> getOpticalInsets();  
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">int</span> opticalWidth  <span style="color:#f92672">=</span> insets.<span style="color:#a6e22e">left</span> <span style="color:#f92672">+</span> insets.<span style="color:#a6e22e">right</span>;  
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">int</span> opticalHeight <span style="color:#f92672">=</span> insets.<span style="color:#a6e22e">top</span>  <span style="color:#f92672">+</span> insets.<span style="color:#a6e22e">bottom</span>;  
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>            measuredWidth  <span style="color:#f92672">+=</span> optical <span style="color:#f92672">?</span> opticalWidth  : <span style="color:#f92672">-</span>opticalWidth;  
+</span></span><span style="display:flex;"><span>            measuredHeight <span style="color:#f92672">+=</span> optical <span style="color:#f92672">?</span> opticalHeight : <span style="color:#f92672">-</span>opticalHeight;  
+</span></span><span style="display:flex;"><span>        }  
+</span></span><span style="display:flex;"><span>        mMeasuredWidth <span style="color:#f92672">=</span> measuredWidth;  <span style="color:#75715e">//这就是保存到类变量</span>
+</span></span><span style="display:flex;"><span>        mMeasuredHeight <span style="color:#f92672">=</span> measuredHeight;  
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        mPrivateFlags <span style="color:#f92672">|=</span> PFLAG_MEASURED_DIMENSION_SET;  
+</span></span><span style="display:flex;"><span> }
+</span></span></code></pre></div><p>setMeasureDimension方法必须由onMeasure调用，上上的代码刚好是在onMeasure中调用，所以才符合要求。那设置的这个宽高保存在哪里呢？源代码中也可以看出，它保存在ViewGroup中：mMeasuredWidth，mMeasuredHeight是View这个类中的变量。<br>
+接下来是设置子View的宽高，每个子View都会分别设置，这个宽高当然是自己定义的。child.measure(viewWidth, viewHeight);调用的是measure方法，注意这个方法是属于子View的方法，那设置的高度保存在哪里呢？对了，就是每个子View中，而不是ViewGroup中，这点要分清楚。<br>
+<strong>再来看看measure的实现</strong></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">final</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">measure</span>(<span style="color:#66d9ef">int</span> widthMeasureSpec, <span style="color:#66d9ef">int</span> heightMeasureSpec) {
+</span></span><span style="display:flex;"><span>.........  
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// measure ourselves, this should set the measured dimension flag back  </span>
+</span></span><span style="display:flex;"><span>    onMeasure(widthMeasureSpec, heightMeasureSpec);  
+</span></span><span style="display:flex;"><span>..........  
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>其实它又调用了View类中的onMeasure方法，在看View.class的onMeasure方法</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#66d9ef">protected</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">onMeasure</span>(<span style="color:#66d9ef">int</span> widthMeasureSpec, <span style="color:#66d9ef">int</span> heightMeasureSpec) {  
+</span></span><span style="display:flex;"><span>        setMeasuredDimension(getDefaultSize(getSuggestedMinimumWidth(), widthMeasureSpec),  
+</span></span><span style="display:flex;"><span>                getDefaultSize(getSuggestedMinimumHeight(), heightMeasureSpec));  
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>很奇怪吧，又绕回了原来的setMeasureDimension方法，说到底，真正设置ViewGroup和子View宽高的都是setMeasureDimension方法，但是为什么上面child.measure(viewWidth, viewHeight);不直接调用child.setMeasureDimension(viewWidth,viewHeight)呢，多方便啊。因为setMeasureDimension()只能由onMeasure()方法调用。<br>
+所以onMeasure没什么神奇之处，就是测量(Measure)和设置(determine)宽高，现在终于理解API文档所解释的。</p>
+<p><strong>onLayout</strong></p>
+<p>官方解释:</p>
+<blockquote>
+<p>protected abstract void onLayout (boolean changed, int l, int t, int r, int b)<br>
+Called from layout when this view should assign a size and position to each of its children.</p>
+</blockquote>
+<p>它才是设置子View的大小和位置。onMeasure只是获得宽高并且存储在它各自的View中，这时ViewGroup根本就不知道子View的大小，onLayout告诉ViewGroup，子View在它里面中的大小和应该放在哪里。注意两个的区别，我当时也被搞得一头雾水。<br>
+参数int l, int t, int r, int b不用多说，就是ViewGroup在屏幕的位置。</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#a6e22e">@Override</span>    
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">protected</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">onLayout</span>(<span style="color:#66d9ef">boolean</span> changed, <span style="color:#66d9ef">int</span> left, <span style="color:#66d9ef">int</span> top, <span style="color:#66d9ef">int</span> right, <span style="color:#66d9ef">int</span> bottom) {    
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">int</span> mTotalHeight <span style="color:#f92672">=</span> 0;    
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// 当然，也是遍历子View，每个都要告诉ViewGroup    </span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">int</span> childCount <span style="color:#f92672">=</span> getChildCount();    
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> (<span style="color:#66d9ef">int</span> i <span style="color:#f92672">=</span> 0; i <span style="color:#f92672">&lt;</span> childCount; i<span style="color:#f92672">++</span>) {    
+</span></span><span style="display:flex;"><span>        View childView <span style="color:#f92672">=</span> getChildAt(i);    
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// 获取在onMeasure中计算的视图尺寸    </span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">int</span> measureHeight <span style="color:#f92672">=</span> childView.<span style="color:#a6e22e">getMeasuredHeight</span>();    
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">int</span> measuredWidth <span style="color:#f92672">=</span> childView.<span style="color:#a6e22e">getMeasuredWidth</span>();    
+</span></span><span style="display:flex;"><span>        childView.<span style="color:#a6e22e">layout</span>(left, mTotalHeight, measuredWidth, mTotalHeight <span style="color:#f92672">+</span> measureHeight);        
+</span></span><span style="display:flex;"><span>        mTotalHeight <span style="color:#f92672">+=</span> measureHeight;    
+</span></span><span style="display:flex;"><span>    }    
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>接下来就是DispatchDraw。。。<br>
+好了，现在的理解只能是这样</p>
+<p>ADD：<strong><em>关于</em>****<em>MeasureSpec</em></strong></p>
+<p>MeasureSpec是View中的一个内部类，A MeasureSpec encapsulates the layout requirements passed from parent to child. 即封装了布局传递的参数。它代表Height和Width，先贴一段使用情况的代码：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#a6e22e">@Override</span>  
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">protected</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">onMeasure</span>(<span style="color:#66d9ef">int</span> widthMeasureSpec, <span style="color:#66d9ef">int</span> heightMeasureSpec) {  
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">super</span>.<span style="color:#a6e22e">onMeasure</span>(widthMeasureSpec, heightMeasureSpec);  
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">int</span> width <span style="color:#f92672">=</span> MeasureSpec.<span style="color:#a6e22e">getSize</span>(widthMeasureSpec);  <span style="color:#75715e">//获取真实width</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">int</span> height <span style="color:#f92672">=</span> MeasureSpec.<span style="color:#a6e22e">getSize</span>(heightMeasureSpec);   <span style="color:#75715e">//获取真实height</span>
+</span></span><span style="display:flex;"><span>    setMeasuredDimension(width, height);   <span style="color:#75715e">//设置ViewGroup的宽高</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> (<span style="color:#66d9ef">int</span> i <span style="color:#f92672">=</span> 0; i <span style="color:#f92672">&lt;</span> getChildCount(); i<span style="color:#f92672">++</span>) {     
+</span></span><span style="display:flex;"><span>        getChildAt(i).<span style="color:#a6e22e">measure</span>(widthMeasureSpec, heightMeasureSpec);    <span style="color:#75715e">//遍历孩子设置宽高  </span>
+</span></span><span style="display:flex;"><span>    }  
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>为什么onMeasure的参数widthMeasureSpec和heightMeasure要经过getSize()方法才得到真实的宽高 ，既然参数是int类型为什么不直接传递真实宽高，其实这暗藏玄机。我们当然是直接找到MeasureSpec的源码来看咯</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">static</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">MeasureSpec</span> {  
+</span></span><span style="display:flex;"><span>       <span style="color:#66d9ef">private</span> <span style="color:#66d9ef">static</span> <span style="color:#66d9ef">final</span> <span style="color:#66d9ef">int</span> MODE_SHIFT <span style="color:#f92672">=</span> 30;    <span style="color:#75715e">//  </span>
+</span></span><span style="display:flex;"><span>       <span style="color:#66d9ef">private</span> <span style="color:#66d9ef">static</span> <span style="color:#66d9ef">final</span> <span style="color:#66d9ef">int</span> MODE_MASK  <span style="color:#f92672">=</span> 0x3 <span style="color:#f92672">&lt;&lt;</span> MODE_SHIFT;  
+</span></span><span style="display:flex;"><span>       <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">static</span> <span style="color:#66d9ef">int</span> <span style="color:#a6e22e">getMode</span>(<span style="color:#66d9ef">int</span> measureSpec) {  
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">return</span> (measureSpec <span style="color:#f92672">&amp;</span> MODE_MASK);  
+</span></span><span style="display:flex;"><span>       }  
+</span></span><span style="display:flex;"><span>       <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">static</span> <span style="color:#66d9ef">int</span> <span style="color:#a6e22e">getSize</span>(<span style="color:#66d9ef">int</span> measureSpec) {  
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">return</span> (measureSpec <span style="color:#f92672">&amp;</span> <span style="color:#f92672">~</span>MODE_MASK);  
+</span></span><span style="display:flex;"><span>       }  
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>看getSize方法，他是利用传递进来的参数来解析的。其实直接这么看会很晕，根本不知所云，所以回头看看onMeasure方法，调试onMeasure方法，里面的widthMeasureSpec、heightMeasureSpec和解析出来的值width、height的值如下：</p>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="http://img.blog.csdn.net/20131012234138765?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQveXVsaW55aWdl/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/SouthEast"
+        data-srcset="http://img.blog.csdn.net/20131012234138765?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQveXVsaW55aWdl/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/SouthEast, http://img.blog.csdn.net/20131012234138765?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQveXVsaW55aWdl/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/SouthEast 1.5x, http://img.blog.csdn.net/20131012234138765?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQveXVsaW55aWdl/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/SouthEast 2x"
+        data-sizes="auto"
+        alt="http://img.blog.csdn.net/20131012234138765?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQveXVsaW55aWdl/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/SouthEast"
+        title="http://img.blog.csdn.net/20131012234138765?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQveXVsaW55aWdl/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/SouthEast" /></p>
+<p>发现解析前后的值差很远，再结合源代码 widthMeasureSpec &amp; ~MODE_MASK，运算后刚好匹配得到width。运算方法：0x3=0011, 它向左移位30位，得到1100 0000 &hellip;..(1后面一共有30个0.) ~取反后就是0011 1111……(0后面有30个1). 上面的widthMeasureSpec是1073742304，转换成二进制是 0100 0000 0000 0000 0000 0001 1110 0000，和前面那个 ~MODE_MASK &amp;之后(注意MODE_MASK要先取反再与widthMeasureSpec)，最前面那个2个1就去掉了，widthMeasureSpec只留下了后面一段有1，即得到0000 …(省略16个0)… 0001 1110 0000，得到的值转换成 十进制刚好是480，完美，转换后得到了真实的width。手机的屏幕刚好是480*854，这是小米1的屏幕。</p>
+<p>PS：<em>但是为什么要费这么大的周折呢？为什么要移位向左移位30呢？</em>
+仔细看getMode()方法，它也是使用和getSize()同样的参数来解析，其实getSize只是用了measureSpec中的一部分来代表width or height，剩下的高位用来代表getMode的值。
+且看widthMeasureSpec的值，它左边最高两位是01，然后和MODE_MASK &amp; 了之后，得到0100……(1后省了30个0)，即0x40000000，查看MeasureSpec中的几个常量：
+_AT_MOST = 0x80000000
+_
+_EXACTLY = 0x40000000
+_
+<em>UPSPECIFIED = 0x00000000</em></p>
+<p>getMode解析之后得到EXACTILY。所以说一个measureSpec参数就得到了两个值，一个是具体的大小值，一个是模式的值，再看看官方文档的解释，终于明白为什么叫encapsulates 了，不得不说Google工程师牛。</p>
+<p>我们通常在XML布局中使用的layout_width或layout_height可以指定两种值，一种是具体的，比如100dp，一种是Math_Parent之类的，就是封装到这里来了&hellip; 对应两个值哦~</p>
+<p>回到前面的为什么要左移30位的问题。因为int类型是32位，原始值0x3左移30位后使用最高两位来表示MODE值，我们传递的measureSpec是正数的时候，怎么也不会用到最高两位表示getSize要解析的真实值。也就是即使真实值使用到了3221225471，也可以正确解析出真实值，不用担心真实值会溢出。地球上也没那么大分辨率的屏幕哦！不过这是我个人的猜测而已。</p>
+<p>原文地址：http://blog.csdn.net/yuliyige/article/details/12656751</p>
+</div><div class="post-footer" id="post-footer">
+    <div class="post-info">
+        <div class="post-info-line">
+            <div class="post-info-mod">
+                <span>更新于 2014-01-16</span>
+            </div></div>
+        <div class="post-info-line">
+            <div class="post-info-md"></div>
+            <div class="post-info-share">
+                <span><a href="javascript:void(0);" title="分享到 Twitter" data-sharer="twitter" data-url="https://www.ithome.me/post/2014/01/16/%E8%BD%ACandroid%E7%9A%84onmeasure%E5%92%8Conlayout-and-measurespec%E6%8F%AD%E7%A7%98/" data-title="[转]Android的onMeasure和onLayout And MeasureSpec揭秘" data-via="https://twitter.com/ChenCiki" data-hashtags="onMeasure,onLayout"><i class="fab fa-twitter fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="分享到 Facebook" data-sharer="facebook" data-url="https://www.ithome.me/post/2014/01/16/%E8%BD%ACandroid%E7%9A%84onmeasure%E5%92%8Conlayout-and-measurespec%E6%8F%AD%E7%A7%98/" data-hashtag="onMeasure"><i class="fab fa-facebook-square fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="分享到 Hacker News" data-sharer="hackernews" data-url="https://www.ithome.me/post/2014/01/16/%E8%BD%ACandroid%E7%9A%84onmeasure%E5%92%8Conlayout-and-measurespec%E6%8F%AD%E7%A7%98/" data-title="[转]Android的onMeasure和onLayout And MeasureSpec揭秘"><i class="fab fa-hacker-news fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="分享到 Line" data-sharer="line" data-url="https://www.ithome.me/post/2014/01/16/%E8%BD%ACandroid%E7%9A%84onmeasure%E5%92%8Conlayout-and-measurespec%E6%8F%AD%E7%A7%98/" data-title="[转]Android的onMeasure和onLayout And MeasureSpec揭秘"><i data-svg-src="https://cdn.jsdelivr.net/npm/simple-icons@6.20.0/icons/line.svg" aria-hidden="true"></i></a><a href="javascript:void(0);" title="分享到 微博" data-sharer="weibo" data-url="https://www.ithome.me/post/2014/01/16/%E8%BD%ACandroid%E7%9A%84onmeasure%E5%92%8Conlayout-and-measurespec%E6%8F%AD%E7%A7%98/" data-title="[转]Android的onMeasure和onLayout And MeasureSpec揭秘" data-ralateuid="xxx"><i class="fab fa-weibo fa-fw" aria-hidden="true"></i></a></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="post-info-more">
+        <section class="post-tags"><i class="fas fa-tags fa-fw" aria-hidden="true"></i>&nbsp;<a href="/tags/onmeasure/">OnMeasure</a>,&nbsp;<a href="/tags/onlayout/">OnLayout</a></section>
+        <section>
+            <span><a href="javascript:void(0);" onclick="window.history.back();">返回</a></span>&nbsp;|&nbsp;<span><a href="/">主页</a></span>
+        </section>
+    </div>
+
+    <div class="post-nav"><a href="/post/2014/01/16/%E8%AE%A9edittext%E4%B8%8D%E8%87%AA%E5%8A%A8%E8%8E%B7%E5%BE%97%E7%84%A6%E7%82%B9/" class="prev" rel="prev" title="让edittext不自动获得焦点"><i class="fas fa-angle-left fa-fw" aria-hidden="true"></i>让edittext不自动获得焦点</a>
+            <a href="/post/2014/07/05/google%E5%85%AC%E5%B8%83android-l%E9%A2%84%E8%A7%88%E7%89%88%E6%9C%AC%E6%BA%90%E4%BB%A3%E7%A0%81/" class="next" rel="next" title="Google公布Android L预览版本源代码">Google公布Android L预览版本源代码<i class="fas fa-angle-right fa-fw" aria-hidden="true"></i></a></div>
+</div>
+</article></div>
+            </main><footer class="footer">
+        <div class="footer-container"><div class="footer-line" itemscope itemtype="http://schema.org/CreativeWork"><i class="far fa-copyright fa-fw" aria-hidden="true"></i><span itemprop="copyrightYear">2011 - 2026</span><span class="author" itemprop="copyrightHolder">&nbsp;<a href="/" target="_blank">Simon Chen</a></span></div>
+        </div>
+    </footer></div>
+
+        <div id="fixed-buttons"><a href="#" id="back-to-top" class="fixed-button" title="回到顶部">
+                <i class="fas fa-arrow-up fa-fw" aria-hidden="true"></i>
+            </a><a href="#" id="view-comments" class="fixed-button" title="查看评论">
+                <i class="fas fa-comment fa-fw" aria-hidden="true"></i>
+            </a>
+        </div><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/autocomplete.js@0.38.1/dist/autocomplete.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lunr@2.3.9/lunr.min.js"></script><script type="text/javascript" src="/lib/lunr/lunr.stemmer.support.min.js"></script><script type="text/javascript" src="/lib/lunr/lunr.zh.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lazysizes@5.3.1/lazysizes.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/clipboard@2.0.11/dist/clipboard.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/sharer.js@0.5.1/sharer.min.js"></script><script type="text/javascript">window.config={"code":{"copyTitle":"复制到剪贴板","maxShownLines":50},"comment":{},"search":{"highlightTag":"em","lunrLanguageCode":"zh","lunrSegmentitURL":"/lib/lunr/lunr.segmentit.js","maxResultLength":10,"noResultsFound":"没有找到结果","snippetLength":30}};</script><script type="text/javascript" src="/js/theme.min.js"></script></body>
+</html>

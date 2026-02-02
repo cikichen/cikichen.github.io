@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="robots" content="noodp" />
+        <title>为iPhone 6设计自适应布局 - 编程心语</title><meta name="Description" content="This is my KeepIt site"><meta property="og:url" content="https://www.ithome.me/post/2014/12/15/%E4%B8%BAiphone-6%E8%AE%BE%E8%AE%A1%E8%87%AA%E9%80%82%E5%BA%94%E5%B8%83%E5%B1%80/">
+  <meta property="og:site_name" content="编程心语">
+  <meta property="og:title" content="为iPhone 6设计自适应布局">
+  <meta property="og:description" content="为iPhone 6设计自适应布局 Apple从iOS 6加入了Auto Layout后开始就比较委婉的开始鼓励、建议开发者使用自适应布局，但是到目前为止，我感觉大多数开发者一直在回避这个问题，不管是不是由于历史原因造成的，至少他们在心底还坚守着固定布局的老传统思想。
+随着iPhone6、iPhone6 Plus的到来，使用自适应布局更是迫在眉睫的事，固定布局的老传统思想脆弱的不堪一击。现在的iPhone有4种尺寸，如果算上iPad，现在Apple的iOS设备有5种尺寸。我们在准备使用自适应布局设计应用界面之前，可以把这5种尺寸划分为3种分辨率和屏幕方向，这样在设计时分类会更加清晰一些。
+我们先来看一张自适应布局的效果图：
+当你们学习完这篇文章后，你们应该会比较自如的使用 storyboard、constaints、size classes 这三个Apple在Xcode里提供的工具，去探索和构建巧妙的自适应布局。
+Storyboards
+在Xcode中，storyboard是一个可以让我们对应用界面进行可视化布局的工具，你首先可以在storyboard文件中看到一个或若干个iOS设备屏幕大小的布局区，然后你可以从组件库（Object Library）中拖拽组件到屏幕布局区中进行布局（比如按钮、图片、文本框、labels等），你还可以定义屏幕布局区之间的连接关系。
+用Xcode的术语来说，人们可以看到、触碰到或以其他方式（按钮、图片、文本框、labels等）进行交互的用户界面被称为views。屏幕中包含和管理这些views的容器称为view controller。
+当我们在storyboard中添加一个view controller后，我们所看到的并不是一个我们熟知的屏幕尺寸，而是一个600X600的正方形：
+从上图我们可以很明显的看出，storyboard中显示的屏幕尺寸不是实际设备的尺寸。Apple这样做的目的是将屏幕尺寸进行了抽象化，也就是说你可以将这个正方形的屏幕看成iphone4的屏幕，也可以将它看成iphone6的屏幕。
+模拟器的尺寸
+当你习惯了600X600的屏幕后，你可能会用着很爽，但是有些时候，我们也需要将它改成实际的屏幕尺寸来设计一些东西。
+我们可以很方便的在Xcode中改变view controller的模拟屏幕尺寸和屏幕方向：
+布局约束
+介绍布局约束的最好、最直观的方法就是向你们展示一个示例。
+首先我们将storyboard中的屏幕布局区域的尺寸调整为iphone5s的尺寸，也就是4寸屏幕，然后添加两个正方形的view，并排放置在屏幕顶部，一个设置为蓝色，一个设置为粉色。
+我们选择iPhone5s模拟器设备并编译运行应用，可以看到一蓝一粉这两个方块按照我们设定的那样杵在竖屏方向的屏幕上，没有问题。当我们把设备调整为横屏时，这两个方块像拥护党一样拥护着他们的坐标位置，所以在横屏的时候看着就不是那么完美：">
+  <meta property="og:locale" content="zh_CN">
+  <meta property="og:type" content="article">
+    <meta property="article:section" content="posts">
+    <meta property="article:published_time" content="2014-12-15T22:37:16+08:00">
+    <meta property="article:modified_time" content="2014-12-15T22:37:16+08:00">
+    <meta property="article:tag" content="IOS">
+    <meta property="article:tag" content="约束">
+
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="为iPhone 6设计自适应布局">
+  <meta name="twitter:description" content="为iPhone 6设计自适应布局 Apple从iOS 6加入了Auto Layout后开始就比较委婉的开始鼓励、建议开发者使用自适应布局，但是到目前为止，我感觉大多数开发者一直在回避这个问题，不管是不是由于历史原因造成的，至少他们在心底还坚守着固定布局的老传统思想。
+随着iPhone6、iPhone6 Plus的到来，使用自适应布局更是迫在眉睫的事，固定布局的老传统思想脆弱的不堪一击。现在的iPhone有4种尺寸，如果算上iPad，现在Apple的iOS设备有5种尺寸。我们在准备使用自适应布局设计应用界面之前，可以把这5种尺寸划分为3种分辨率和屏幕方向，这样在设计时分类会更加清晰一些。
+我们先来看一张自适应布局的效果图：
+当你们学习完这篇文章后，你们应该会比较自如的使用 storyboard、constaints、size classes 这三个Apple在Xcode里提供的工具，去探索和构建巧妙的自适应布局。
+Storyboards
+在Xcode中，storyboard是一个可以让我们对应用界面进行可视化布局的工具，你首先可以在storyboard文件中看到一个或若干个iOS设备屏幕大小的布局区，然后你可以从组件库（Object Library）中拖拽组件到屏幕布局区中进行布局（比如按钮、图片、文本框、labels等），你还可以定义屏幕布局区之间的连接关系。
+用Xcode的术语来说，人们可以看到、触碰到或以其他方式（按钮、图片、文本框、labels等）进行交互的用户界面被称为views。屏幕中包含和管理这些views的容器称为view controller。
+当我们在storyboard中添加一个view controller后，我们所看到的并不是一个我们熟知的屏幕尺寸，而是一个600X600的正方形：
+从上图我们可以很明显的看出，storyboard中显示的屏幕尺寸不是实际设备的尺寸。Apple这样做的目的是将屏幕尺寸进行了抽象化，也就是说你可以将这个正方形的屏幕看成iphone4的屏幕，也可以将它看成iphone6的屏幕。
+模拟器的尺寸
+当你习惯了600X600的屏幕后，你可能会用着很爽，但是有些时候，我们也需要将它改成实际的屏幕尺寸来设计一些东西。
+我们可以很方便的在Xcode中改变view controller的模拟屏幕尺寸和屏幕方向：
+布局约束
+介绍布局约束的最好、最直观的方法就是向你们展示一个示例。
+首先我们将storyboard中的屏幕布局区域的尺寸调整为iphone5s的尺寸，也就是4寸屏幕，然后添加两个正方形的view，并排放置在屏幕顶部，一个设置为蓝色，一个设置为粉色。
+我们选择iPhone5s模拟器设备并编译运行应用，可以看到一蓝一粉这两个方块按照我们设定的那样杵在竖屏方向的屏幕上，没有问题。当我们把设备调整为横屏时，这两个方块像拥护党一样拥护着他们的坐标位置，所以在横屏的时候看着就不是那么完美：">
+      <meta name="twitter:site" content="@https://twitter.com/ChenCiki">
+<meta name="application-name" content="My KeepIt site">
+<meta name="apple-mobile-web-app-title" content="My KeepIt site"><meta name="theme-color" content="#ffffff"><meta name="msapplication-TileColor" content="#da532c"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5"><link rel="manifest" href="/site.webmanifest"><link rel="canonical" href="https://www.ithome.me/post/2014/12/15/%E4%B8%BAiphone-6%E8%AE%BE%E8%AE%A1%E8%87%AA%E9%80%82%E5%BA%94%E5%B8%83%E5%B1%80/" /><link rel="prev" href="https://www.ithome.me/post/2014/12/03/%E8%BD%ACgoogle-java%E7%BC%96%E7%A8%8B%E9%A3%8E%E6%A0%BC%E6%8C%87%E5%8D%97/" /><link rel="next" href="https://www.ithome.me/post/2014/12/15/ios8-xcode6%E4%B8%ADsize-classes%E7%AE%80%E5%8D%95%E4%BD%BF%E7%94%A8%E6%95%99%E7%A8%8B/" /><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/normalize.css@8.0.1/normalize.min.css"><link rel="stylesheet" href="/css/style.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css"><script type="application/ld+json">
+    {
+        "@context": "http://schema.org",
+        "@type": "BlogPosting",
+        "headline": "为iPhone 6设计自适应布局",
+        "inLanguage": "zh-CN",
+        "mainEntityOfPage": {
+            "@type": "WebPage",
+            "@id": "https:\/\/www.ithome.me\/post\/2014\/12\/15\/%E4%B8%BAiphone-6%E8%AE%BE%E8%AE%A1%E8%87%AA%E9%80%82%E5%BA%94%E5%B8%83%E5%B1%80\/"
+        },"genre": "posts","keywords": "iOS, 约束","wordcount":  233 ,
+        "url": "https:\/\/www.ithome.me\/post\/2014\/12\/15\/%E4%B8%BAiphone-6%E8%AE%BE%E8%AE%A1%E8%87%AA%E9%80%82%E5%BA%94%E5%B8%83%E5%B1%80\/","datePublished": "2014-12-15T22:37:16+08:00","dateModified": "2014-12-15T22:37:16+08:00","license": "©{year}, All Rights Reserved. Simon Chen","publisher": {
+            "@type": "Organization",
+            "name": ""},"author": {
+                "@type": "Person",
+                "name": "Simon Chen"
+            },"description": ""
+    }
+    </script></head>
+    <body data-header-desktop="fixed" data-header-mobile="auto"><script type="text/javascript">(window.localStorage && localStorage.getItem('theme') ? localStorage.getItem('theme') === 'dark' : ('auto' === 'auto' ? window.matchMedia('(prefers-color-scheme: dark)').matches : 'auto' === 'dark')) && document.body.setAttribute('theme', 'dark');</script>
+
+        <div id="mask"></div><div class="wrapper"><header class="desktop" id="header-desktop">
+    <div class="header-wrapper">
+        <div class="header-title">
+            <a href="/" title="编程心语">编程心语</a>
+        </div>
+        <div class="menu">
+            <div class="menu-inner"><a class="menu-item" href="/posts/"> 文章 </a><a class="menu-item" href="/categories/"> 分类 </a><a class="menu-item" href="/tags/"> 标签 </a><a class="menu-item" href="/about-me/"> 关于 </a><span class="menu-item delimiter"></span><span class="menu-item search" id="search-desktop">
+                        <input type="text" placeholder="搜索文章标题或内容..." id="search-input-desktop">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-desktop" title="搜索">
+                            <i class="fas fa-search fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-desktop" title="清空">
+                            <i class="fas fa-times-circle fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-desktop">
+                            <i class="fas fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+                        </span>
+                    </span><a href="javascript:void(0);" class="menu-item theme-switch" title="切换主题">
+                    <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</header><header class="mobile" id="header-mobile">
+    <div class="header-container">
+        <div class="header-wrapper">
+            <div class="header-title">
+                <a href="/" title="编程心语">编程心语</a>
+            </div>
+            <div class="menu-toggle" id="menu-toggle-mobile">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+        <div class="menu" id="menu-mobile"><div class="search-wrapper">
+                    <div class="search mobile" id="search-mobile">
+                        <input type="text" placeholder="搜索文章标题或内容..." id="search-input-mobile">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-mobile" title="搜索">
+                            <i class="fas fa-search fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-mobile" title="清空">
+                            <i class="fas fa-times-circle fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-mobile">
+                            <i class="fas fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+                        </span>
+                    </div>
+                    <a href="javascript:void(0);" class="search-cancel" id="search-cancel-mobile">
+                        取消
+                    </a>
+                </div><a class="menu-item" href="/posts/" title="">文章</a><a class="menu-item" href="/categories/" title="">分类</a><a class="menu-item" href="/tags/" title="">标签</a><a class="menu-item" href="/about-me/" title="">关于</a><a href="javascript:void(0);" class="menu-item theme-switch" title="切换主题">
+                <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
+            </a></div>
+    </div>
+</header><div class="search-dropdown desktop">
+        <div id="search-dropdown-desktop"></div>
+    </div>
+    <div class="search-dropdown mobile">
+        <div id="search-dropdown-mobile"></div>
+    </div><main class="main">
+                <div class="container"><div class="toc" id="toc-auto">
+            <h2 class="toc-title">目录</h2>
+            <div class="toc-content" id="toc-content-auto"></div>
+        </div><article class="page single"><h1 class="single-title animate__animated animate__flipInX">为iPhone 6设计自适应布局</h1><div class="post-meta">
+            <div class="post-meta-line"><span class="post-author"><a href="/" title="Author" rel=" author" class="author"><i class="fas fa-user-circle fa-fw" aria-hidden="true"></i>Simon Chen</a>
+</span></div>
+            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw" aria-hidden="true"></i>&nbsp;<time datetime="2014-12-15">2014-12-15</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden="true"></i>&nbsp;约 233 字&nbsp;
+                <i class="far fa-clock fa-fw" aria-hidden="true"></i>&nbsp;预计阅读 2 分钟&nbsp;</div>
+        </div><div class="details toc" id="toc-static"  data-kept="">
+                <div class="details-summary toc-title">
+                    <span>目录</span>
+                    <span><i class="details-icon fas fa-angle-right" aria-hidden="true"></i></span>
+                </div>
+                <div class="details-content toc-content" id="toc-content-static"><nav id="TableOfContents"></nav></div>
+            </div><div class="content" id="content"><h1 id="为iphone-6设计自适应布局">为iPhone 6设计自适应布局</h1>
+<p>Apple从iOS 6加入了Auto Layout后开始就比较委婉的开始鼓励、建议开发者使用自适应布局，但是到目前为止，我感觉大多数开发者一直在回避这个问题，不管是不是由于历史原因造成的，至少他们在心底还坚守着固定布局的老传统思想。</p>
+<p>随着iPhone6、iPhone6 Plus的到来，使用自适应布局更是迫在眉睫的事，固定布局的老传统思想脆弱的不堪一击。现在的iPhone有4种尺寸，如果算上iPad，现在Apple的iOS设备有5种尺寸。我们在准备使用自适应布局设计应用界面之前，可以把这5种尺寸划分为3种分辨率和屏幕方向，这样在设计时分类会更加清晰一些。</p>
+<p>我们先来看一张自适应布局的效果图：</p>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="http://www.webrube.com/pics/99/4199_1.gif"
+        data-srcset="http://www.webrube.com/pics/99/4199_1.gif, http://www.webrube.com/pics/99/4199_1.gif 1.5x, http://www.webrube.com/pics/99/4199_1.gif 2x"
+        data-sizes="auto"
+        alt="http://www.webrube.com/pics/99/4199_1.gif"
+        title="http://www.webrube.com/pics/99/4199_1.gif" /></p>
+<p>当你们学习完这篇文章后，你们应该会比较自如的使用 storyboard、constaints、size classes 这三个Apple在Xcode里提供的工具，去探索和构建巧妙的自适应布局。</p>
+<p><strong>Storyboards</strong></p>
+<p>在Xcode中，storyboard是一个可以让我们对应用界面进行可视化布局的工具，你首先可以在storyboard文件中看到一个或若干个iOS设备屏幕大小的布局区，然后你可以从组件库（Object Library）中拖拽组件到屏幕布局区中进行布局（比如按钮、图片、文本框、labels等），你还可以定义屏幕布局区之间的连接关系。</p>
+<p>用Xcode的术语来说，人们可以看到、触碰到或以其他方式（按钮、图片、文本框、labels等）进行交互的用户界面被称为views。屏幕中包含和管理这些views的容器称为view controller。</p>
+<p>当我们在storyboard中添加一个view controller后，我们所看到的并不是一个我们熟知的屏幕尺寸，而是一个600X600的正方形：</p>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="http://www.webrube.com/pics/99/4199_2.jpg"
+        data-srcset="http://www.webrube.com/pics/99/4199_2.jpg, http://www.webrube.com/pics/99/4199_2.jpg 1.5x, http://www.webrube.com/pics/99/4199_2.jpg 2x"
+        data-sizes="auto"
+        alt="http://www.webrube.com/pics/99/4199_2.jpg"
+        title="http://www.webrube.com/pics/99/4199_2.jpg" /></p>
+<p>从上图我们可以很明显的看出，storyboard中显示的屏幕尺寸不是实际设备的尺寸。Apple这样做的目的是将屏幕尺寸进行了抽象化，也就是说你可以将这个正方形的屏幕看成iphone4的屏幕，也可以将它看成iphone6的屏幕。</p>
+<p><strong>模拟器的尺寸</strong></p>
+<p>当你习惯了600X600的屏幕后，你可能会用着很爽，但是有些时候，我们也需要将它改成实际的屏幕尺寸来设计一些东西。</p>
+<p>我们可以很方便的在Xcode中改变view controller的模拟屏幕尺寸和屏幕方向：</p>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="http://www.webrube.com/pics/99/4199_3.gif"
+        data-srcset="http://www.webrube.com/pics/99/4199_3.gif, http://www.webrube.com/pics/99/4199_3.gif 1.5x, http://www.webrube.com/pics/99/4199_3.gif 2x"
+        data-sizes="auto"
+        alt="http://www.webrube.com/pics/99/4199_3.gif"
+        title="http://www.webrube.com/pics/99/4199_3.gif" /></p>
+<p><strong>布局约束</strong></p>
+<p>介绍布局约束的最好、最直观的方法就是向你们展示一个示例。</p>
+<p>首先我们将storyboard中的屏幕布局区域的尺寸调整为iphone5s的尺寸，也就是4寸屏幕，然后添加两个正方形的view，并排放置在屏幕顶部，一个设置为蓝色，一个设置为粉色。</p>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="http://www.webrube.com/pics/99/4199_4.jpg"
+        data-srcset="http://www.webrube.com/pics/99/4199_4.jpg, http://www.webrube.com/pics/99/4199_4.jpg 1.5x, http://www.webrube.com/pics/99/4199_4.jpg 2x"
+        data-sizes="auto"
+        alt="http://www.webrube.com/pics/99/4199_4.jpg"
+        title="http://www.webrube.com/pics/99/4199_4.jpg" /></p>
+<p>我们选择iPhone5s模拟器设备并编译运行应用，可以看到一蓝一粉这两个方块按照我们设定的那样杵在竖屏方向的屏幕上，没有问题。当我们把设备调整为横屏时，这两个方块像拥护党一样拥护着他们的坐标位置，所以在横屏的时候看着就不是那么完美：</p>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="http://www.webrube.com/pics/99/4199_5.gif"
+        data-srcset="http://www.webrube.com/pics/99/4199_5.gif, http://www.webrube.com/pics/99/4199_5.gif 1.5x, http://www.webrube.com/pics/99/4199_5.gif 2x"
+        data-sizes="auto"
+        alt="http://www.webrube.com/pics/99/4199_5.gif"
+        title="http://www.webrube.com/pics/99/4199_5.gif" /></p>
+<p>我们再将模拟器改为iPhone6，然后编译运行，此时在竖屏的时候就已经感觉无法再爱了。这两个方块并没有按照我们设置或设想的那样在屏幕顶部中间，而是偏向了左边，在右边有一块留白区域。</p>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="http://www.webrube.com/pics/99/4199_6.jpg"
+        data-srcset="http://www.webrube.com/pics/99/4199_6.jpg, http://www.webrube.com/pics/99/4199_6.jpg 1.5x, http://www.webrube.com/pics/99/4199_6.jpg 2x"
+        data-sizes="auto"
+        alt="http://www.webrube.com/pics/99/4199_6.jpg"
+        title="http://www.webrube.com/pics/99/4199_6.jpg" /></p>
+<p>这是就是没有布局约束而导致的，蓝色粉色方块的大小、坐标位置都是固定的，都是在4寸屏幕的参照下设置的，不论在哪种尺寸的屏幕下，它们都在固定的那个坐标位置和固定的大小，所以就会出现上面的情况。</p>
+<p>那么接下来让我们给这两个方块添加一些布局约束，再看看会有什么神奇的事情发生。</p>
+<p><strong>页边间距约束（Leading and Trailing space）</strong></p>
+<p>页边间距约束分前部间距约束（Leading space constaint）和尾部间距约束（Trailing space constaint）。从屏幕上说就是左边距和右边距。我们给蓝色方块添加左边距约束，其值设置为10，给粉色方块设置右边距约束，其值也设置为10。</p>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="http://www.webrube.com/pics/99/4199_7.png"
+        data-srcset="http://www.webrube.com/pics/99/4199_7.png, http://www.webrube.com/pics/99/4199_7.png 1.5x, http://www.webrube.com/pics/99/4199_7.png 2x"
+        data-sizes="auto"
+        alt="http://www.webrube.com/pics/99/4199_7.png"
+        title="http://www.webrube.com/pics/99/4199_7.png" /></p>
+<p>我们再次在iPhone5s模拟器中运行应用，当横屏时蓝色方块被左边距约束拉到了屏幕左边，粉色方块被右边距约束拉到了屏幕右边。</p>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="http://www.webrube.com/pics/99/4199_8.gif"
+        data-srcset="http://www.webrube.com/pics/99/4199_8.gif, http://www.webrube.com/pics/99/4199_8.gif 1.5x, http://www.webrube.com/pics/99/4199_8.gif 2x"
+        data-sizes="auto"
+        alt="http://www.webrube.com/pics/99/4199_8.gif"
+        title="http://www.webrube.com/pics/99/4199_8.gif" /></p>
+<p><strong>水平间距约束（Horizontal space constaint）</strong></p>
+<p>给蓝色方块和粉色方块添加水平间距约束，其值设置为10。这个约束会使这两个方块之间的距离永远约束为10。</p>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="http://www.webrube.com/pics/99/4199_9.png"
+        data-srcset="http://www.webrube.com/pics/99/4199_9.png, http://www.webrube.com/pics/99/4199_9.png 1.5x, http://www.webrube.com/pics/99/4199_9.png 2x"
+        data-sizes="auto"
+        alt="http://www.webrube.com/pics/99/4199_9.png"
+        title="http://www.webrube.com/pics/99/4199_9.png" /></p>
+<p>我们再来运行应用，现在横屏时两个方块之间的间距、它们与屏幕边缘的间距都和竖屏时显示的一样了。但是其中粉色方块为了满足水平间距约束自行增加了方块的宽度，变成了长方形。简直是一只老鼠坏了一锅汤有木有。</p>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="http://www.webrube.com/pics/99/4199_10.gif"
+        data-srcset="http://www.webrube.com/pics/99/4199_10.gif, http://www.webrube.com/pics/99/4199_10.gif 1.5x, http://www.webrube.com/pics/99/4199_10.gif 2x"
+        data-sizes="auto"
+        alt="http://www.webrube.com/pics/99/4199_10.gif"
+        title="http://www.webrube.com/pics/99/4199_10.gif" /></p>
+<p>从上面这个效果我们可以得知，除非我们特别限制了view的尺寸，否则的话iOS会为满足布局约束而改变view的尺寸，也就是保持一个自然的尺寸。</p>
+<p><strong>等宽约束（Equal widths constaint）</strong></p>
+<p>我们给这两个方块添加一个等宽约束来改善上面的情况。</p>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="http://www.webrube.com/pics/99/4199_11.png"
+        data-srcset="http://www.webrube.com/pics/99/4199_11.png, http://www.webrube.com/pics/99/4199_11.png 1.5x, http://www.webrube.com/pics/99/4199_11.png 2x"
+        data-sizes="auto"
+        alt="http://www.webrube.com/pics/99/4199_11.png"
+        title="http://www.webrube.com/pics/99/4199_11.png" /></p>
+<p>再次运行应用，现在在横屏时由于等宽约束的作用，两个方块的宽度保持了一致。我们已经非常接近完美了。</p>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="http://www.webrube.com/pics/99/4199_12.gif"
+        data-srcset="http://www.webrube.com/pics/99/4199_12.gif, http://www.webrube.com/pics/99/4199_12.gif 1.5x, http://www.webrube.com/pics/99/4199_12.gif 2x"
+        data-sizes="auto"
+        alt="http://www.webrube.com/pics/99/4199_12.gif"
+        title="http://www.webrube.com/pics/99/4199_12.gif" /></p>
+<p><strong>方向比例约束（Aspect ratio constaint）</strong></p>
+<p>从上面的运行情况来看各个约束都工作正常，但唯一不足的是本来在竖屏是两个正方形方块，在横屏时缺变成了长方形方块，由范爷变成了凤姐这是人类无法接受的。</p>
+<p>我们给这两个方块添加方向比例约束来解决这个问题。这个约束使方块在满足其他约束的前提下始终保持高和宽的比例相同。所以在横屏时就会以方块的宽度为比例标准，将高度的比例改为宽度的比例。</p>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="http://www.webrube.com/pics/99/4199_13.png"
+        data-srcset="http://www.webrube.com/pics/99/4199_13.png, http://www.webrube.com/pics/99/4199_13.png 1.5x, http://www.webrube.com/pics/99/4199_13.png 2x"
+        data-sizes="auto"
+        alt="http://www.webrube.com/pics/99/4199_13.png"
+        title="http://www.webrube.com/pics/99/4199_13.png" /></p>
+<p>用iPhone5s模拟器编译运行应用，现在在横屏状态下两个正方形方块完美的呈现在我们眼前。</p>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="http://www.webrube.com/pics/99/4199_14.gif"
+        data-srcset="http://www.webrube.com/pics/99/4199_14.gif, http://www.webrube.com/pics/99/4199_14.gif 1.5x, http://www.webrube.com/pics/99/4199_14.gif 2x"
+        data-sizes="auto"
+        alt="http://www.webrube.com/pics/99/4199_14.gif"
+        title="http://www.webrube.com/pics/99/4199_14.gif" /></p>
+<p>我们在iPhone6模拟器上再编译运行应用，从下面的图中我们可以很清晰的看到添加约束之前和之后的变化。布局约束根据多出的空间大小将方块放大到合适的尺寸以满足约束。</p>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="http://www.webrube.com/pics/99/4199_15.png"
+        data-srcset="http://www.webrube.com/pics/99/4199_15.png, http://www.webrube.com/pics/99/4199_15.png 1.5x, http://www.webrube.com/pics/99/4199_15.png 2x"
+        data-sizes="auto"
+        alt="http://www.webrube.com/pics/99/4199_15.png"
+        title="http://www.webrube.com/pics/99/4199_15.png" /></p>
+<p><strong>实践布局约束</strong></p>
+<p>到目前为止，你们已经看到布局约束神奇的作用和效果。是时候让你们在你们自己的storyboard文件中添加布局约束了。</p>
+<p>熟练布局约束最好的方法就是多练习，从添加少量的布局约束开始，一步步达到自己想要的效果。</p>
+<p>另外有一点，我始终不认为添加过多的布局约束会对应用的性能产生影响。但是我们也不能滥用约束布局，好钢要用在刀刃上，我们尽可能用最节俭的约束布局达到我们想要的效果。</p>
+<p><strong>添加布局约束的方式</strong></p>
+<p>这里向大家介绍三种在storyboard中添加约束的方式：</p>
+<p>1.底部布局约束按钮</p>
+<p>这种方式可能是最简单直观的一种方式，在屏幕上选择一个或多个对象，然后点击底部的布局约束按钮添加一个或多个需要的约束。它的好处是可以直观的看到当前选择的对象已经添加了该类中的那些约束。</p>
+<p>如果你指选择了一个对象想要添加某个约束，但发现该约束是不可选的，那么就意味着这个约束是适用于两个以上对象的约束。</p>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="http://www.webrube.com/pics/99/4199_16.gif"
+        data-srcset="http://www.webrube.com/pics/99/4199_16.gif, http://www.webrube.com/pics/99/4199_16.gif 1.5x, http://www.webrube.com/pics/99/4199_16.gif 2x"
+        data-sizes="auto"
+        alt="http://www.webrube.com/pics/99/4199_16.gif"
+        title="http://www.webrube.com/pics/99/4199_16.gif" /></p>
+<p>2.按住Control键拖拽鼠标</p>
+<p>你也可以选择一个对象，然后按住Control键和鼠标左键，拖拽鼠标到另一个对象（容器对象，也就是父对象或者选中对象自己），松开鼠标后会弹出适用的约束菜单，你可以选择约束进行添加。</p>
+<p>这是我偏爱的一种方式，因为它比上面那种方式来的快多了。</p>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="http://www.webrube.com/pics/99/4199_17.gif"
+        data-srcset="http://www.webrube.com/pics/99/4199_17.gif, http://www.webrube.com/pics/99/4199_17.gif 1.5x, http://www.webrube.com/pics/99/4199_17.gif 2x"
+        data-sizes="auto"
+        alt="http://www.webrube.com/pics/99/4199_17.gif"
+        title="http://www.webrube.com/pics/99/4199_17.gif" /></p>
+<p>3.菜单/绑定快捷键</p>
+<p>你也可以通过菜单选项editor —&gt; pin给一个或多个对象添加布局约束。这是效率最低的一种方式。如果你发现有些约束你会一遍遍的反复添加，那么你就可以给该约束绑定一个快捷键来提高效率。</p>
+<p><strong>检查和编辑已添加的布局约束</strong></p>
+<p>检查约束最简单的方式就是选中一个对象，然后打开右侧工具栏，选择Size Inspector面板。或者在storyboard界面左侧的结构树中查看约束。</p>
+<p>通过这两种方式，你都可以选择某个约束，然后编辑它。</p>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="http://www.webrube.com/pics/99/4199_18.gif"
+        data-srcset="http://www.webrube.com/pics/99/4199_18.gif, http://www.webrube.com/pics/99/4199_18.gif 1.5x, http://www.webrube.com/pics/99/4199_18.gif 2x"
+        data-sizes="auto"
+        alt="http://www.webrube.com/pics/99/4199_18.gif"
+        title="http://www.webrube.com/pics/99/4199_18.gif" /></p>
+<p><strong>移除布局约束</strong></p>
+<p>布局约束可以添加自然也就可以删除。选中某个约束使其高亮显示，然后按下Delete键移除该约束。</p>
+<p>如果想移除某个对象上所有的约束，有一个快捷的方式。选择该对象，然后在底部点击Resolve Auto Layout Issues按钮，选择Clear Constaints。</p>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="http://www.webrube.com/pics/99/4199_19.gif"
+        data-srcset="http://www.webrube.com/pics/99/4199_19.gif, http://www.webrube.com/pics/99/4199_19.gif 1.5x, http://www.webrube.com/pics/99/4199_19.gif 2x"
+        data-sizes="auto"
+        alt="http://www.webrube.com/pics/99/4199_19.gif"
+        title="http://www.webrube.com/pics/99/4199_19.gif" /></p>
+<p><strong>布局出现的问题和冲突</strong></p>
+<p>我们在添加约束时，经常伴随有警告或者错误出现。虽然有些警告是因为我们还没有添加完约束出现的，当我们添加完我们设想的约束后警告就会自然消失。但大多数的警告还是指明我们的约束确实存在问题，需要我们修复。</p>
+<p>查看警告或错误最方便的方式就是在storyboard左侧的结构树中，在view controller的右边会出现一个红色或黄色的小图标，向我们指明这里存在问题：</p>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="http://www.webrube.com/pics/99/4199_20.gif"
+        data-srcset="http://www.webrube.com/pics/99/4199_20.gif, http://www.webrube.com/pics/99/4199_20.gif 1.5x, http://www.webrube.com/pics/99/4199_20.gif 2x"
+        data-sizes="auto"
+        alt="http://www.webrube.com/pics/99/4199_20.gif"
+        title="http://www.webrube.com/pics/99/4199_20.gif" /></p>
+<p><strong>错误摆放view的警告</strong></p>
+<p>view位置的错误摆放是一个很常见的警告。当一个view没有摆放在约束规定的位置的时候，会出现该警告。</p>
+<p>这些问题会在你切换不同设备的模拟器或鼠标不小心移动了某个对象时出现。</p>
+<p>选中一个错误摆放的对象，在屏幕上会出现布局约束给你提示的正确的摆放位置。</p>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="http://www.webrube.com/pics/99/4199_21.gif"
+        data-srcset="http://www.webrube.com/pics/99/4199_21.gif, http://www.webrube.com/pics/99/4199_21.gif 1.5x, http://www.webrube.com/pics/99/4199_21.gif 2x"
+        data-sizes="auto"
+        alt="http://www.webrube.com/pics/99/4199_21.gif"
+        title="http://www.webrube.com/pics/99/4199_21.gif" /></p>
+<p>点击左侧出现的黄色警告图片，会弹出一个菜单，你可以选择让Xcode改变约束，以适应当前该对象的位置，但通常情况下我们都选择让Xcode将该对象移动到约束规定的位置。</p>
+<p><strong>缺少布局约束的错误</strong></p>
+<p>我们回到早些时候的示例中。这时候我们没有给方块添加Y坐标位置的约束。在运行时没有问题，因为iOS会假设方块的位置就是我们在storyboard中摆放的那个位置。但是Xcode会提示我们一个缺失约束的错误，为了避免意外发生（更换设备尺寸），我还是要根据Xcode的提示添加缺失的约束。</p>
+<p>我们给这两个方块添加一个top space to to layout guide约束使方块的位置更加清晰，并消除Xcode的错误提示。</p>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="http://www.webrube.com/pics/99/4199_22.gif"
+        data-srcset="http://www.webrube.com/pics/99/4199_22.gif, http://www.webrube.com/pics/99/4199_22.gif 1.5x, http://www.webrube.com/pics/99/4199_22.gif 2x"
+        data-sizes="auto"
+        alt="http://www.webrube.com/pics/99/4199_22.gif"
+        title="http://www.webrube.com/pics/99/4199_22.gif" /></p>
+<p><strong>Size Classes</strong></p>
+<p>自适应布局的布局约束自然是好东西，但也不是万能的，有时候我们也需要使用最基本的布局，所以使用size classes将它们两者结合起来才能碰撞出更有激情的火花。</p>
+<p>Size Classes并不代表真正的尺寸，而是我们从感官上感觉尺寸的种类，通过这种种类的组合，表示出不同屏幕尺寸设备的横屏及竖屏。</p>
+<p>我们在给storyboard中的对象添加约束时可以选择给某一个size class添加约束，所以在你选择特定的size class时，只能看到你添加的只适用于该size class的约束。</p>
+<p>这些特性能使我们有效的在不同的设备和屏幕方向中定义、设计不同的用户界面。</p>
+<p><strong>Size Classes中的高和宽</strong></p>
+<p>Size Classes为高和宽分别提供了三种类型：紧凑型（compact）、普通型（regular）、任意型（any）。用这三种高和宽的类型就可以组合出9种size class，来表示不同的设备屏幕。</p>
+<p>在实际运用中，我们发现并不是所有的尺寸都能在Size Classes中找到明确的组合（比如没有组合可以明确表示iPhone6 Plus的竖屏，iPad的横竖屏也不好区分），但是我们可以使用表示这个尺寸范围的组合。比如我们可以用Compact Width | Regular Height来表示iPhone6 Plus的竖屏。</p>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="http://www.webrube.com/pics/99/4199_23.png"
+        data-srcset="http://www.webrube.com/pics/99/4199_23.png, http://www.webrube.com/pics/99/4199_23.png 1.5x, http://www.webrube.com/pics/99/4199_23.png 2x"
+        data-sizes="auto"
+        alt="http://www.webrube.com/pics/99/4199_23.png"
+        title="http://www.webrube.com/pics/99/4199_23.png" /></p>
+<p>接下来还是用一个活生生的示例来向大家介绍Size Classes。</p>
+<p><strong>我们的目标</strong></p>
+<p>这个示例是实现Instagram的一个详细信息页面，并让它自适应更大的屏幕尺寸，在竖屏和横屏中都展现出最合适的布局。</p>
+<p>我们的目标是让布局自适应iPhone6的屏幕（这里需要注意一下，我所说的自适应是指图片、文字信息的布局排版，对于个人信息的头像不会根据布局的变化而变化），在竖屏中各个信息按照堆栈方式从上到下布局，在横屏时各元素按照大小进行有序排列，而不再是堆栈的方式：</p>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="http://www.webrube.com/pics/99/4199_24.png"
+        data-srcset="http://www.webrube.com/pics/99/4199_24.png, http://www.webrube.com/pics/99/4199_24.png 1.5x, http://www.webrube.com/pics/99/4199_24.png 2x"
+        data-sizes="auto"
+        alt="http://www.webrube.com/pics/99/4199_24.png"
+        title="http://www.webrube.com/pics/99/4199_24.png" /></p>
+<p><strong>给通用的size class添加约束</strong></p>
+<p>在这个示例中，我们不会像上个示例那样使用模拟器的实际尺寸来设计布局，我们使用Size Classes提供的抽象的屏幕尺寸，这里我们先使用通用的尺寸来设计布局，也就是w Any | h Any尺寸。我们要注意的是，在这个尺寸下添加的view或者约束必须是一些公用的，也就是说在任何尺寸，任何屏幕方向的情况下都适用的。</p>
+<p>这些约束包括：</p>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="http://www.webrube.com/pics/99/4199_25.png"
+        data-srcset="http://www.webrube.com/pics/99/4199_25.png, http://www.webrube.com/pics/99/4199_25.png 1.5x, http://www.webrube.com/pics/99/4199_25.png 2x"
+        data-sizes="auto"
+        alt="http://www.webrube.com/pics/99/4199_25.png"
+        title="http://www.webrube.com/pics/99/4199_25.png" /></p>
+<p>除了之前介绍过的页边间距约束、水平间距约束、等高等宽约束、方向比例约束外还有顶部、底部间距约束。</p>
+<p>添加完上述的view和约束后，storyboard里应该是这番景象：</p>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="http://www.webrube.com/pics/99/4199_26.jpg"
+        data-srcset="http://www.webrube.com/pics/99/4199_26.jpg, http://www.webrube.com/pics/99/4199_26.jpg 1.5x, http://www.webrube.com/pics/99/4199_26.jpg 2x"
+        data-sizes="auto"
+        alt="http://www.webrube.com/pics/99/4199_26.jpg"
+        title="http://www.webrube.com/pics/99/4199_26.jpg" /></p>
+<p>这里要注意一下，目前这个界面的布局还有很多关键点需要考虑横屏和竖屏的布局，但是这些工作不会在w Any | h Any尺寸下进行。大伙接着往下看。</p>
+<p><strong>为iPhone的竖屏添加布局约束</strong></p>
+<p>现在在Size Classes选择器中选择w Compact | h Regular尺寸，这个size class适用于所有iPhone设备的竖屏界面，不论尺寸是多少。</p>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="http://www.webrube.com/pics/99/4199_27.gif"
+        data-srcset="http://www.webrube.com/pics/99/4199_27.gif, http://www.webrube.com/pics/99/4199_27.gif 1.5x, http://www.webrube.com/pics/99/4199_27.gif 2x"
+        data-sizes="auto"
+        alt="http://www.webrube.com/pics/99/4199_27.gif"
+        title="http://www.webrube.com/pics/99/4199_27.gif" /></p>
+<p>当你在Size Classes选择器中选择某一个size class后，storyboard 中的view controller会实时的反映出你改变后的尺寸大小。</p>
+<p>现在你就可以为iPhone的竖屏状态重新设计view的位置和添加新的布局约束了。下图中说明了我在竖屏状态下添加的约束：</p>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="http://www.webrube.com/pics/99/4199_28.png"
+        data-srcset="http://www.webrube.com/pics/99/4199_28.png, http://www.webrube.com/pics/99/4199_28.png 1.5x, http://www.webrube.com/pics/99/4199_28.png 2x"
+        data-sizes="auto"
+        alt="http://www.webrube.com/pics/99/4199_28.png"
+        title="http://www.webrube.com/pics/99/4199_28.png" /></p>
+<p>我的storyboard中看起来是这样的：</p>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="http://www.webrube.com/pics/99/4199_29.jpg"
+        data-srcset="http://www.webrube.com/pics/99/4199_29.jpg, http://www.webrube.com/pics/99/4199_29.jpg 1.5x, http://www.webrube.com/pics/99/4199_29.jpg 2x"
+        data-sizes="auto"
+        alt="http://www.webrube.com/pics/99/4199_29.jpg"
+        title="http://www.webrube.com/pics/99/4199_29.jpg" /></p>
+<p>在这个阶段，你可以在3.5、4、4.7、5.5这几个尺寸的模拟器中编译运行应用，在竖屏状态下看看它们的运行情况，尽管在横屏状态表现的还很糟糕。</p>
+<p>这里要注意的是我们并没有定义图片的宽度，我们只是给图片添加了相对父容器的左右边间距，并将其值设为了0。所以当屏幕尺寸增大的时候图片的宽度在布局约束的作用下也会增加，这时又因为我们给图片添加了高宽比例约束，所以图片的高度也会随之增加。</p>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="http://www.webrube.com/pics/99/4199_30.jpg"
+        data-srcset="http://www.webrube.com/pics/99/4199_30.jpg, http://www.webrube.com/pics/99/4199_30.jpg 1.5x, http://www.webrube.com/pics/99/4199_30.jpg 2x"
+        data-sizes="auto"
+        alt="http://www.webrube.com/pics/99/4199_30.jpg"
+        title="http://www.webrube.com/pics/99/4199_30.jpg" /></p>
+<p><strong>为iPhone的横屏添加布局约束</strong></p>
+<p>打开Size Classes选择器，选择w Any | h Compact，这个size class适用于任何一个尺寸的横屏状态。我们将在这个size class下设计我们希望在iPhone横屏时显示的用户界面。</p>
+<p>此时图片的顶部、左侧、底部都添加了相对于父容器的边界约束。在显示评论的label上添加了右侧边界约束。</p>
+<p>当设备横屏时，图片在布局约束的作用下移到了左侧，个人信息label和评论label在约束的作用下被挤到了右侧，并且评论label的高度增加，宽度减少。</p>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="http://www.webrube.com/pics/99/4199_31.png"
+        data-srcset="http://www.webrube.com/pics/99/4199_31.png, http://www.webrube.com/pics/99/4199_31.png 1.5x, http://www.webrube.com/pics/99/4199_31.png 2x"
+        data-sizes="auto"
+        alt="http://www.webrube.com/pics/99/4199_31.png"
+        title="http://www.webrube.com/pics/99/4199_31.png" /></p>
+<p>现在来看看我的storyboard中显示的内容。大家注意左侧的对象结构树中有很多个约束，但是有些是灰色的。那是因为这些灰色的约束在当前的size class下是禁用的，或者说不适用、不起作用。那些是竖屏时用到的约束。</p>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="http://www.webrube.com/pics/99/4199_32.jpg"
+        data-srcset="http://www.webrube.com/pics/99/4199_32.jpg, http://www.webrube.com/pics/99/4199_32.jpg 1.5x, http://www.webrube.com/pics/99/4199_32.jpg 2x"
+        data-sizes="auto"
+        alt="http://www.webrube.com/pics/99/4199_32.jpg"
+        title="http://www.webrube.com/pics/99/4199_32.jpg" /></p>
+<p>现在在storyboard中切换size class时布局也会随之变化，更新非常及时和平滑。</p>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="http://www.webrube.com/pics/99/4199_33.gif"
+        data-srcset="http://www.webrube.com/pics/99/4199_33.gif, http://www.webrube.com/pics/99/4199_33.gif 1.5x, http://www.webrube.com/pics/99/4199_33.gif 2x"
+        data-sizes="auto"
+        alt="http://www.webrube.com/pics/99/4199_33.gif"
+        title="http://www.webrube.com/pics/99/4199_33.gif" /></p>
+<p>我们在模拟器中编译运行应用，切换横竖屏，可以看到布局切换的效果，过度非常自然平滑。</p>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="http://www.webrube.com/pics/99/4199_34.gif"
+        data-srcset="http://www.webrube.com/pics/99/4199_34.gif, http://www.webrube.com/pics/99/4199_34.gif 1.5x, http://www.webrube.com/pics/99/4199_34.gif 2x"
+        data-sizes="auto"
+        alt="http://www.webrube.com/pics/99/4199_34.gif"
+        title="http://www.webrube.com/pics/99/4199_34.gif" /></p>
+<p>为了能让大家看清楚布局变化过度的细节，我放慢了这个git动画。大家注意，在布局变化时屏幕上的组件有一个层级关系，从该示例中我们可以看到图片view的层级高于个人信息label和评论label。所以我们在设计布局的时候就要考虑如何给view分层，包括在普通布局中不会被覆盖的view。这是一个细节问题。</p>
+<p><strong>屏幕预览助手编辑器</strong></p>
+<p>Xcode6中另一个值得关注的功能是屏幕预览助手。它可以避免你一遍遍的在不同屏幕尺寸的模拟器中编译运行应用来检查布局的正确与否。你可以在屏幕预览编辑器中添加一个或多个你想查看的屏幕尺寸，并可以让他们呈现横屏或竖屏的状态。</p>
+<p>当然它也不是非常完美（因为在预览时导航栏的颜色会丢失），但是切换Double Length Pseudolanguage选项很方便，便于你检查问题。</p>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="http://www.webrube.com/pics/99/4199_35.gif"
+        data-srcset="http://www.webrube.com/pics/99/4199_35.gif, http://www.webrube.com/pics/99/4199_35.gif 1.5x, http://www.webrube.com/pics/99/4199_35.gif 2x"
+        data-sizes="auto"
+        alt="http://www.webrube.com/pics/99/4199_35.gif"
+        title="http://www.webrube.com/pics/99/4199_35.gif" /></p>
+<p>从上图中大家可以看到我在屏幕预览编辑器中显示了3.5寸屏幕的横屏和4寸屏幕的竖屏，整体布局没有问题，但是当选择Double Length Pseudolanguage使label中的文字都增加一倍时，问题就出现了，个人信息和评论的label长度没有自适应。</p>
+<p><strong>为iPad布局添加约束</strong></p>
+<p>现在我们将Sizae Classes调整为w Regular | h Regular，这个size class表示了iPad的横屏和竖屏大小。</p>
+<p>和往常一样，我们先调整图片和各个label的位置及大小，调整满意后，再添加相关的约束。在iPad布局中我打算将图片的尺寸设置为固定尺寸（不像iPhone中那样随着横屏和竖屏改变图片的尺寸），并将个人信息和评论label紧跟在图片下面。</p>
+<p>我的storyboard现在看起来是这样的：</p>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="http://www.webrube.com/pics/99/4199_36.jpg"
+        data-srcset="http://www.webrube.com/pics/99/4199_36.jpg, http://www.webrube.com/pics/99/4199_36.jpg 1.5x, http://www.webrube.com/pics/99/4199_36.jpg 2x"
+        data-sizes="auto"
+        alt="http://www.webrube.com/pics/99/4199_36.jpg"
+        title="http://www.webrube.com/pics/99/4199_36.jpg" /></p>
+<p>以往，我们都是在特定的size class中添加相关的约束，但在iPad布局中，我们不仅仅只添加一些约束。</p>
+<p>因为在iPad布局中有很大的空余空间，所以我们不只是重新排列一下组件的位置和大小，我们还要添加一些其他的组件。在这个示例中，我们再添加两个图片view（分别表示当前显示图片的上一张图片和下一张图片）。</p>
+<p>再来看看我的storyboard：</p>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="http://www.webrube.com/pics/99/4199_37.png"
+        data-srcset="http://www.webrube.com/pics/99/4199_37.png, http://www.webrube.com/pics/99/4199_37.png 1.5x, http://www.webrube.com/pics/99/4199_37.png 2x"
+        data-sizes="auto"
+        alt="http://www.webrube.com/pics/99/4199_37.png"
+        title="http://www.webrube.com/pics/99/4199_37.png" /></p>
+<p>我们不需要对这两个图片手动的设置高宽，而是给它们设置对于主显示图片的相对高宽即可。</p>
+<p>这样做的好处是当主显示图片的尺寸更改时，我们不需要自己手动计算和更改这两个图片的尺寸，相对高宽会自动针对主显示图片的尺寸调整这两个图片的尺寸。</p>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="http://www.webrube.com/pics/99/4199_38.gif"
+        data-srcset="http://www.webrube.com/pics/99/4199_38.gif, http://www.webrube.com/pics/99/4199_38.gif 1.5x, http://www.webrube.com/pics/99/4199_38.gif 2x"
+        data-sizes="auto"
+        alt="http://www.webrube.com/pics/99/4199_38.gif"
+        title="http://www.webrube.com/pics/99/4199_38.gif" /></p>
+<p>我没有制作在iPad上运行的gif动画，但这里有iPad横屏竖屏的运行图片，大家可以看看：</p>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="http://www.webrube.com/pics/99/4199_39.jpg"
+        data-srcset="http://www.webrube.com/pics/99/4199_39.jpg, http://www.webrube.com/pics/99/4199_39.jpg 1.5x, http://www.webrube.com/pics/99/4199_39.jpg 2x"
+        data-sizes="auto"
+        alt="http://www.webrube.com/pics/99/4199_39.jpg"
+        title="http://www.webrube.com/pics/99/4199_39.jpg" /></p>
+<p><strong>使用布局视图和间距视图</strong></p>
+<p>目前Xcode提供的布局约束可以满足大部分的布局需求，但是有些场景下需要变通的使用约束才能达到我们想要的效果。</p>
+<p>布局视图示例</p>
+<p>通过Xcode提供的约束，我们可以很容易设置组件与view controller view的边缘的间距，也可以很容易的让组件在view controller view中水平居中显示和垂直居中显示。但是却不太容易设置组件与view controller view的水平中线或垂直中线的间距。像这样：</p>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="http://www.webrube.com/pics/99/4199_40.jpg"
+        data-srcset="http://www.webrube.com/pics/99/4199_40.jpg, http://www.webrube.com/pics/99/4199_40.jpg 1.5x, http://www.webrube.com/pics/99/4199_40.jpg 2x"
+        data-sizes="auto"
+        alt="http://www.webrube.com/pics/99/4199_40.jpg"
+        title="http://www.webrube.com/pics/99/4199_40.jpg" /></p>
+<p>下面向大家介绍两种实现该需求的方法。首先我们先添加一个view，背景色设置为透明，让它在屏幕中垂直居中显示，它作为该需求中组件的父容器，因为父容器在屏幕中是垂直居中的，所以可以给组件添加相对于父容器的Center X约束，就可以达到我们的需求了：</p>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="http://www.webrube.com/pics/99/4199_41.jpg"
+        data-srcset="http://www.webrube.com/pics/99/4199_41.jpg, http://www.webrube.com/pics/99/4199_41.jpg 1.5x, http://www.webrube.com/pics/99/4199_41.jpg 2x"
+        data-sizes="auto"
+        alt="http://www.webrube.com/pics/99/4199_41.jpg"
+        title="http://www.webrube.com/pics/99/4199_41.jpg" /></p>
+<p>但是通过上述的方式未免会使我们的布局的层级关系太过复杂，我更希望布局比较扁平一些，不需要太多的层级关系。因为上述方法中的容器view主要是用于布局使用，所以这种view我称之为布局视图。</p>
+<p>我们来改进一下方法，首先也是在view controller view中添加一个布局视图，我习惯将高度设置为20（这个值随个人喜好或实际情况而定），然后将它和屏幕的顶部、左侧、右侧的间距设为0，这样的话这个布局视图就和状态栏重合了，我们将这个布局视图设置一个深一点的颜色，然后将它的hidden属性设置为true，这样布局视图的颜色就会变浅，也不太会影响我们的布局，而且在应用运行时是不会显示该视图的。现在我们的组件就可以设置相对于布局视图的Center X约束来实现我们的需求了。</p>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="http://www.webrube.com/pics/99/4199_42.jpg"
+        data-srcset="http://www.webrube.com/pics/99/4199_42.jpg, http://www.webrube.com/pics/99/4199_42.jpg 1.5x, http://www.webrube.com/pics/99/4199_42.jpg 2x"
+        data-sizes="auto"
+        alt="http://www.webrube.com/pics/99/4199_42.jpg"
+        title="http://www.webrube.com/pics/99/4199_42.jpg" /></p>
+<p><strong>间隔视图示例</strong></p>
+<p>之前我们学习了如何使用约束设置视图和视图边缘的间距，并且当屏幕尺寸增加时视图也会相应的改变大小，但它们的间距不会改变。</p>
+<p>但是如果我们希望当屏幕增加尺寸时，视图的大小保持不变，只是增加间距呢？</p>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="http://www.webrube.com/pics/99/4199_43.jpg"
+        data-srcset="http://www.webrube.com/pics/99/4199_43.jpg, http://www.webrube.com/pics/99/4199_43.jpg 1.5x, http://www.webrube.com/pics/99/4199_43.jpg 2x"
+        data-sizes="auto"
+        alt="http://www.webrube.com/pics/99/4199_43.jpg"
+        title="http://www.webrube.com/pics/99/4199_43.jpg" /></p>
+<p>从理论上讲，实现该需求可能可以使用类似等宽这样的约束，但是现实往往的是骨干感的。</p>
+<p>这时我们就需要间距视图出场了，和布局视图一样，间距视图可以设置一个深一点的颜色，hidden属性要设置为true。</p>
+<p>我们在每个视图与视图间距之间添加一个间距视图，设置每个视图与相邻间距视图的边缘间距约束，然后给所有的间距视图添加相对于view controller view的等宽约束，设置合适的比例即可。</p>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="http://www.webrube.com/pics/99/4199_44.jpg"
+        data-srcset="http://www.webrube.com/pics/99/4199_44.jpg, http://www.webrube.com/pics/99/4199_44.jpg 1.5x, http://www.webrube.com/pics/99/4199_44.jpg 2x"
+        data-sizes="auto"
+        alt="http://www.webrube.com/pics/99/4199_44.jpg"
+        title="http://www.webrube.com/pics/99/4199_44.jpg" /></p>
+<p>原文地址：http://www.cocoachina.com/ios/20141020/9978.html#rd</p>
+</div><div class="post-footer" id="post-footer">
+    <div class="post-info">
+        <div class="post-info-line">
+            <div class="post-info-mod">
+                <span>更新于 2014-12-15</span>
+            </div></div>
+        <div class="post-info-line">
+            <div class="post-info-md"></div>
+            <div class="post-info-share">
+                <span><a href="javascript:void(0);" title="分享到 Twitter" data-sharer="twitter" data-url="https://www.ithome.me/post/2014/12/15/%E4%B8%BAiphone-6%E8%AE%BE%E8%AE%A1%E8%87%AA%E9%80%82%E5%BA%94%E5%B8%83%E5%B1%80/" data-title="为iPhone 6设计自适应布局" data-via="https://twitter.com/ChenCiki" data-hashtags="iOS,约束"><i class="fab fa-twitter fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="分享到 Facebook" data-sharer="facebook" data-url="https://www.ithome.me/post/2014/12/15/%E4%B8%BAiphone-6%E8%AE%BE%E8%AE%A1%E8%87%AA%E9%80%82%E5%BA%94%E5%B8%83%E5%B1%80/" data-hashtag="iOS"><i class="fab fa-facebook-square fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="分享到 Hacker News" data-sharer="hackernews" data-url="https://www.ithome.me/post/2014/12/15/%E4%B8%BAiphone-6%E8%AE%BE%E8%AE%A1%E8%87%AA%E9%80%82%E5%BA%94%E5%B8%83%E5%B1%80/" data-title="为iPhone 6设计自适应布局"><i class="fab fa-hacker-news fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="分享到 Line" data-sharer="line" data-url="https://www.ithome.me/post/2014/12/15/%E4%B8%BAiphone-6%E8%AE%BE%E8%AE%A1%E8%87%AA%E9%80%82%E5%BA%94%E5%B8%83%E5%B1%80/" data-title="为iPhone 6设计自适应布局"><i data-svg-src="https://cdn.jsdelivr.net/npm/simple-icons@6.20.0/icons/line.svg" aria-hidden="true"></i></a><a href="javascript:void(0);" title="分享到 微博" data-sharer="weibo" data-url="https://www.ithome.me/post/2014/12/15/%E4%B8%BAiphone-6%E8%AE%BE%E8%AE%A1%E8%87%AA%E9%80%82%E5%BA%94%E5%B8%83%E5%B1%80/" data-title="为iPhone 6设计自适应布局" data-ralateuid="xxx"><i class="fab fa-weibo fa-fw" aria-hidden="true"></i></a></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="post-info-more">
+        <section class="post-tags"><i class="fas fa-tags fa-fw" aria-hidden="true"></i>&nbsp;<a href="/tags/ios/">IOS</a>,&nbsp;<a href="/tags/%E7%BA%A6%E6%9D%9F/">约束</a></section>
+        <section>
+            <span><a href="javascript:void(0);" onclick="window.history.back();">返回</a></span>&nbsp;|&nbsp;<span><a href="/">主页</a></span>
+        </section>
+    </div>
+
+    <div class="post-nav"><a href="/post/2014/12/03/%E8%BD%ACgoogle-java%E7%BC%96%E7%A8%8B%E9%A3%8E%E6%A0%BC%E6%8C%87%E5%8D%97/" class="prev" rel="prev" title="[转]Google Java编程风格指南"><i class="fas fa-angle-left fa-fw" aria-hidden="true"></i>[转]Google Java编程风格指南</a>
+            <a href="/post/2014/12/15/ios8-xcode6%E4%B8%ADsize-classes%E7%AE%80%E5%8D%95%E4%BD%BF%E7%94%A8%E6%95%99%E7%A8%8B/" class="next" rel="next" title="iOS8 Xcode6中Size Classes简单使用教程">iOS8 Xcode6中Size Classes简单使用教程<i class="fas fa-angle-right fa-fw" aria-hidden="true"></i></a></div>
+</div>
+</article></div>
+            </main><footer class="footer">
+        <div class="footer-container"><div class="footer-line" itemscope itemtype="http://schema.org/CreativeWork"><i class="far fa-copyright fa-fw" aria-hidden="true"></i><span itemprop="copyrightYear">2011 - 2026</span><span class="author" itemprop="copyrightHolder">&nbsp;<a href="/" target="_blank">Simon Chen</a></span></div>
+        </div>
+    </footer></div>
+
+        <div id="fixed-buttons"><a href="#" id="back-to-top" class="fixed-button" title="回到顶部">
+                <i class="fas fa-arrow-up fa-fw" aria-hidden="true"></i>
+            </a><a href="#" id="view-comments" class="fixed-button" title="查看评论">
+                <i class="fas fa-comment fa-fw" aria-hidden="true"></i>
+            </a>
+        </div><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/autocomplete.js@0.38.1/dist/autocomplete.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lunr@2.3.9/lunr.min.js"></script><script type="text/javascript" src="/lib/lunr/lunr.stemmer.support.min.js"></script><script type="text/javascript" src="/lib/lunr/lunr.zh.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lazysizes@5.3.1/lazysizes.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/clipboard@2.0.11/dist/clipboard.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/sharer.js@0.5.1/sharer.min.js"></script><script type="text/javascript">window.config={"code":{"copyTitle":"复制到剪贴板","maxShownLines":50},"comment":{},"search":{"highlightTag":"em","lunrLanguageCode":"zh","lunrSegmentitURL":"/lib/lunr/lunr.segmentit.js","maxResultLength":10,"noResultsFound":"没有找到结果","snippetLength":30}};</script><script type="text/javascript" src="/js/theme.min.js"></script></body>
+</html>
