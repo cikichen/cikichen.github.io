@@ -135,6 +135,7 @@
 <li><a href="http://www.chensiming.me/archives/android-material-design%e5%ad%a6%e4%b9%a0-%e4%b8%80/" target="_blank" rel="noopener noreffer">android material design学习(一)</a>
 </li>
 </ul>
+<!-- toc -->
 <h2 id="floatingactionbutton">FloatingActionButton</h2>
 <h3 id="简介">简介</h3>
 <p>浮动按钮 <a href="https://developer.android.com/reference/android/support/design/widget/FloatingActionButton.html" target="_blank" rel="noopener noreffer">FloatingActionButton</a>
@@ -149,94 +150,95 @@
         data-sizes="auto"
         alt="http://ww3.sinaimg.cn/mw690/62b0904dgw1ev27e4702yj20qq0fzq3e.jpg"
         title="http://ww3.sinaimg.cn/mw690/62b0904dgw1ev27e4702yj20qq0fzq3e.jpg" /></p>
+<!-- more -->
 <h3 id="实现">实现</h3>
 <p>确保已经加入了依赖库:</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">compile &#39;com.android.support:design:22.2.1&#39;
-</span></span></code></pre></div><p>FloatingActionButton一般需要结合<code>android.support.design.widget.CoordinatorLayout</code>来使用，主要是为了实现一些动效，比如动态的隐藏显示，新布局显示的时候自动位移等等。</p>
+<pre tabindex="0"><code>compile &#39;com.android.support:design:22.2.1&#39;
+</code></pre><p>FloatingActionButton一般需要结合<code>android.support.design.widget.CoordinatorLayout</code>来使用，主要是为了实现一些动效，比如动态的隐藏显示，新布局显示的时候自动位移等等。</p>
 <p>直接看布局代码：</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-xml" data-lang="xml"><span class="line"><span class="cl"><span class="cp">&lt;?xml version=&#34;1.0&#34; encoding=&#34;utf-8&#34;?&gt;</span>
-</span></span><span class="line"><span class="cl"><span class="nt">&lt;LinearLayout</span>
-</span></span><span class="line"><span class="cl">    <span class="na">android:id=</span><span class="s">&#34;@+id/drawer_layout&#34;</span>
-</span></span><span class="line"><span class="cl">    <span class="na">xmlns:android=</span><span class="s">&#34;http://schemas.android.com/apk/res/android&#34;</span>
-</span></span><span class="line"><span class="cl">    <span class="na">xmlns:app=</span><span class="s">&#34;http://schemas.android.com/apk/res-auto&#34;</span>
-</span></span><span class="line"><span class="cl">    <span class="na">android:layout_width=</span><span class="s">&#34;match_parent&#34;</span>
-</span></span><span class="line"><span class="cl">    <span class="na">android:layout_height=</span><span class="s">&#34;match_parent&#34;</span>
-</span></span><span class="line"><span class="cl">    <span class="na">android:fitsSystemWindows=</span><span class="s">&#34;true&#34;</span><span class="nt">&gt;</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">    <span class="nt">&lt;android.support.design.widget.CoordinatorLayout</span>
-</span></span><span class="line"><span class="cl">        <span class="na">android:id=</span><span class="s">&#34;@+id/snackbarPosition&#34;</span>
-</span></span><span class="line"><span class="cl">        <span class="na">android:layout_width=</span><span class="s">&#34;match_parent&#34;</span>
-</span></span><span class="line"><span class="cl">        <span class="na">android:layout_height=</span><span class="s">&#34;match_parent&#34;</span>
-</span></span><span class="line"><span class="cl">        <span class="na">android:layout_centerHorizontal=</span><span class="s">&#34;true&#34;</span><span class="nt">&gt;</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">        <span class="nt">&lt;android.support.design.widget.AppBarLayout</span>
-</span></span><span class="line"><span class="cl">            <span class="na">android:id=</span><span class="s">&#34;@+id/appbar&#34;</span>
-</span></span><span class="line"><span class="cl">            <span class="na">android:layout_width=</span><span class="s">&#34;match_parent&#34;</span>
-</span></span><span class="line"><span class="cl">            <span class="na">android:layout_height=</span><span class="s">&#34;wrap_content&#34;</span>
-</span></span><span class="line"><span class="cl">            <span class="na">android:theme=</span><span class="s">&#34;@style/ThemeOverlay.AppCompat.Dark.ActionBar&#34;</span><span class="nt">&gt;</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">            <span class="nt">&lt;android.support.v7.widget.Toolbar</span>
-</span></span><span class="line"><span class="cl">                <span class="na">android:id=</span><span class="s">&#34;@+id/toolbar&#34;</span>
-</span></span><span class="line"><span class="cl">                <span class="na">android:layout_width=</span><span class="s">&#34;match_parent&#34;</span>
-</span></span><span class="line"><span class="cl">                <span class="na">android:layout_height=</span><span class="s">&#34;?attr/actionBarSize&#34;</span>
-</span></span><span class="line"><span class="cl">                <span class="na">android:background=</span><span class="s">&#34;?attr/colorPrimary&#34;</span>
-</span></span><span class="line"><span class="cl">                <span class="na">android:layout_gravity=</span><span class="s">&#34;center&#34;</span>
-</span></span><span class="line"><span class="cl">                <span class="na">app:layout_collapseMode=</span><span class="s">&#34;parallax&#34;</span>
-</span></span><span class="line"><span class="cl">                <span class="na">app:layout_scrollFlags=</span><span class="s">&#34;scroll|enterAlways&#34;</span>
-</span></span><span class="line"><span class="cl">                <span class="na">app:popupTheme=</span><span class="s">&#34;@style/ThemeOverlay.AppCompat.Light&#34;</span><span class="nt">&gt;</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">                <span class="nt">&lt;TextView</span>
-</span></span><span class="line"><span class="cl">                    <span class="na">android:layout_width=</span><span class="s">&#34;wrap_content&#34;</span>
-</span></span><span class="line"><span class="cl">                    <span class="na">android:layout_height=</span><span class="s">&#34;wrap_content&#34;</span>
-</span></span><span class="line"><span class="cl">                    <span class="na">android:gravity=</span><span class="s">&#34;center&#34;</span>
-</span></span><span class="line"><span class="cl">                    <span class="na">android:layout_gravity=</span><span class="s">&#34;center&#34;</span>
-</span></span><span class="line"><span class="cl">                    <span class="na">android:textColor=</span><span class="s">&#34;@android:color/white&#34;</span>
-</span></span><span class="line"><span class="cl">                    <span class="na">android:textSize=</span><span class="s">&#34;20sp&#34;</span>
-</span></span><span class="line"><span class="cl">                    <span class="na">android:text=</span><span class="s">&#34;标题栏&#34;</span><span class="nt">/&gt;</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">            <span class="nt">&lt;/android.support.v7.widget.Toolbar&gt;</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">        <span class="nt">&lt;/android.support.design.widget.AppBarLayout&gt;</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">        <span class="nt">&lt;android.support.design.widget.FloatingActionButton</span>
-</span></span><span class="line"><span class="cl">            <span class="na">android:id=</span><span class="s">&#34;@+id/fab&#34;</span>
-</span></span><span class="line"><span class="cl">            <span class="na">android:layout_width=</span><span class="s">&#34;wrap_content&#34;</span>
-</span></span><span class="line"><span class="cl">            <span class="na">android:layout_height=</span><span class="s">&#34;wrap_content&#34;</span>
-</span></span><span class="line"><span class="cl">            <span class="na">android:layout_gravity=</span><span class="s">&#34;end|bottom&#34;</span>
-</span></span><span class="line"><span class="cl">            <span class="na">android:layout_margin=</span><span class="s">&#34;16dp&#34;</span>
-</span></span><span class="line"><span class="cl">            <span class="na">android:elevation=</span><span class="s">&#34;4dp&#34;</span>
-</span></span><span class="line"><span class="cl">            <span class="na">app:fabSize=</span><span class="s">&#34;normal&#34;</span>
-</span></span><span class="line"><span class="cl">            <span class="na">app:backgroundTint=</span><span class="s">&#34;#673AB7&#34;</span>
-</span></span><span class="line"><span class="cl">            <span class="na">android:src=</span><span class="s">&#34;@drawable/ic_add_white_24dp&#34;</span><span class="nt">/&gt;</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">        <span class="nt">&lt;android.support.design.widget.FloatingActionButton</span>
-</span></span><span class="line"><span class="cl">            <span class="na">android:id=</span><span class="s">&#34;@+id/fab2&#34;</span>
-</span></span><span class="line"><span class="cl">            <span class="na">android:layout_width=</span><span class="s">&#34;wrap_content&#34;</span>
-</span></span><span class="line"><span class="cl">            <span class="na">android:layout_height=</span><span class="s">&#34;wrap_content&#34;</span>
-</span></span><span class="line"><span class="cl">            <span class="na">android:layout_gravity=</span><span class="s">&#34;end|bottom&#34;</span>
-</span></span><span class="line"><span class="cl">            <span class="na">android:layout_marginRight=</span><span class="s">&#34;80dp&#34;</span>
-</span></span><span class="line"><span class="cl">            <span class="na">android:layout_marginBottom=</span><span class="s">&#34;16dp&#34;</span>
-</span></span><span class="line"><span class="cl">            <span class="na">android:elevation=</span><span class="s">&#34;10dp&#34;</span>
-</span></span><span class="line"><span class="cl">            <span class="na">android:background=</span><span class="s">&#34;@drawable/ic_android_purple_700_18dp&#34;</span>
-</span></span><span class="line"><span class="cl">            <span class="na">app:fabSize=</span><span class="s">&#34;normal&#34;</span>
-</span></span><span class="line"><span class="cl">            <span class="na">app:backgroundTint=</span><span class="s">&#34;#673AB7&#34;</span>
-</span></span><span class="line"><span class="cl">            <span class="na">app:borderWidth=</span><span class="s">&#34;0dp&#34;</span><span class="nt">/&gt;</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">        <span class="nt">&lt;android.support.design.widget.FloatingActionButton</span>
-</span></span><span class="line"><span class="cl">            <span class="na">android:id=</span><span class="s">&#34;@+id/fab3&#34;</span>
-</span></span><span class="line"><span class="cl">            <span class="na">android:layout_width=</span><span class="s">&#34;wrap_content&#34;</span>
-</span></span><span class="line"><span class="cl">            <span class="na">android:layout_height=</span><span class="s">&#34;wrap_content&#34;</span>
-</span></span><span class="line"><span class="cl">            <span class="na">android:layout_gravity=</span><span class="s">&#34;end|bottom&#34;</span>
-</span></span><span class="line"><span class="cl">            <span class="na">android:layout_marginBottom=</span><span class="s">&#34;20dp&#34;</span>
-</span></span><span class="line"><span class="cl">            <span class="na">android:layout_marginRight=</span><span class="s">&#34;150dp&#34;</span>
-</span></span><span class="line"><span class="cl">            <span class="na">android:elevation=</span><span class="s">&#34;4dp&#34;</span>
-</span></span><span class="line"><span class="cl">            <span class="na">app:fabSize=</span><span class="s">&#34;mini&#34;</span>
-</span></span><span class="line"><span class="cl">            <span class="na">app:backgroundTint=</span><span class="s">&#34;#673AB7&#34;</span>
-</span></span><span class="line"><span class="cl">            <span class="na">android:src=</span><span class="s">&#34;@drawable/ic_add_white_24dp&#34;</span><span class="nt">/&gt;</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">    <span class="nt">&lt;/android.support.design.widget.CoordinatorLayout&gt;</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="nt">&lt;/LinearLayout&gt;</span>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-xml" data-lang="xml"><span style="display:flex;"><span><span style="color:#75715e">&lt;?xml version=&#34;1.0&#34; encoding=&#34;utf-8&#34;?&gt;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">&lt;LinearLayout</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">android:id=</span><span style="color:#e6db74">&#34;@+id/drawer_layout&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">xmlns:android=</span><span style="color:#e6db74">&#34;http://schemas.android.com/apk/res/android&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">xmlns:app=</span><span style="color:#e6db74">&#34;http://schemas.android.com/apk/res-auto&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">android:layout_width=</span><span style="color:#e6db74">&#34;match_parent&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">android:layout_height=</span><span style="color:#e6db74">&#34;match_parent&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">android:fitsSystemWindows=</span><span style="color:#e6db74">&#34;true&#34;</span><span style="color:#f92672">&gt;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">&lt;android.support.design.widget.CoordinatorLayout</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">android:id=</span><span style="color:#e6db74">&#34;@+id/snackbarPosition&#34;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">android:layout_width=</span><span style="color:#e6db74">&#34;match_parent&#34;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">android:layout_height=</span><span style="color:#e6db74">&#34;match_parent&#34;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">android:layout_centerHorizontal=</span><span style="color:#e6db74">&#34;true&#34;</span><span style="color:#f92672">&gt;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">&lt;android.support.design.widget.AppBarLayout</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">android:id=</span><span style="color:#e6db74">&#34;@+id/appbar&#34;</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">android:layout_width=</span><span style="color:#e6db74">&#34;match_parent&#34;</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">android:layout_height=</span><span style="color:#e6db74">&#34;wrap_content&#34;</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">android:theme=</span><span style="color:#e6db74">&#34;@style/ThemeOverlay.AppCompat.Dark.ActionBar&#34;</span><span style="color:#f92672">&gt;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>            <span style="color:#f92672">&lt;android.support.v7.widget.Toolbar</span>
+</span></span><span style="display:flex;"><span>                <span style="color:#a6e22e">android:id=</span><span style="color:#e6db74">&#34;@+id/toolbar&#34;</span>
+</span></span><span style="display:flex;"><span>                <span style="color:#a6e22e">android:layout_width=</span><span style="color:#e6db74">&#34;match_parent&#34;</span>
+</span></span><span style="display:flex;"><span>                <span style="color:#a6e22e">android:layout_height=</span><span style="color:#e6db74">&#34;?attr/actionBarSize&#34;</span>
+</span></span><span style="display:flex;"><span>                <span style="color:#a6e22e">android:background=</span><span style="color:#e6db74">&#34;?attr/colorPrimary&#34;</span>
+</span></span><span style="display:flex;"><span>                <span style="color:#a6e22e">android:layout_gravity=</span><span style="color:#e6db74">&#34;center&#34;</span>
+</span></span><span style="display:flex;"><span>                <span style="color:#a6e22e">app:layout_collapseMode=</span><span style="color:#e6db74">&#34;parallax&#34;</span>
+</span></span><span style="display:flex;"><span>                <span style="color:#a6e22e">app:layout_scrollFlags=</span><span style="color:#e6db74">&#34;scroll|enterAlways&#34;</span>
+</span></span><span style="display:flex;"><span>                <span style="color:#a6e22e">app:popupTheme=</span><span style="color:#e6db74">&#34;@style/ThemeOverlay.AppCompat.Light&#34;</span><span style="color:#f92672">&gt;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>                <span style="color:#f92672">&lt;TextView</span>
+</span></span><span style="display:flex;"><span>                    <span style="color:#a6e22e">android:layout_width=</span><span style="color:#e6db74">&#34;wrap_content&#34;</span>
+</span></span><span style="display:flex;"><span>                    <span style="color:#a6e22e">android:layout_height=</span><span style="color:#e6db74">&#34;wrap_content&#34;</span>
+</span></span><span style="display:flex;"><span>                    <span style="color:#a6e22e">android:gravity=</span><span style="color:#e6db74">&#34;center&#34;</span>
+</span></span><span style="display:flex;"><span>                    <span style="color:#a6e22e">android:layout_gravity=</span><span style="color:#e6db74">&#34;center&#34;</span>
+</span></span><span style="display:flex;"><span>                    <span style="color:#a6e22e">android:textColor=</span><span style="color:#e6db74">&#34;@android:color/white&#34;</span>
+</span></span><span style="display:flex;"><span>                    <span style="color:#a6e22e">android:textSize=</span><span style="color:#e6db74">&#34;20sp&#34;</span>
+</span></span><span style="display:flex;"><span>                    <span style="color:#a6e22e">android:text=</span><span style="color:#e6db74">&#34;标题栏&#34;</span><span style="color:#f92672">/&gt;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>            <span style="color:#f92672">&lt;/android.support.v7.widget.Toolbar&gt;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">&lt;/android.support.design.widget.AppBarLayout&gt;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">&lt;android.support.design.widget.FloatingActionButton</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">android:id=</span><span style="color:#e6db74">&#34;@+id/fab&#34;</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">android:layout_width=</span><span style="color:#e6db74">&#34;wrap_content&#34;</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">android:layout_height=</span><span style="color:#e6db74">&#34;wrap_content&#34;</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">android:layout_gravity=</span><span style="color:#e6db74">&#34;end|bottom&#34;</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">android:layout_margin=</span><span style="color:#e6db74">&#34;16dp&#34;</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">android:elevation=</span><span style="color:#e6db74">&#34;4dp&#34;</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">app:fabSize=</span><span style="color:#e6db74">&#34;normal&#34;</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">app:backgroundTint=</span><span style="color:#e6db74">&#34;#673AB7&#34;</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">android:src=</span><span style="color:#e6db74">&#34;@drawable/ic_add_white_24dp&#34;</span><span style="color:#f92672">/&gt;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">&lt;android.support.design.widget.FloatingActionButton</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">android:id=</span><span style="color:#e6db74">&#34;@+id/fab2&#34;</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">android:layout_width=</span><span style="color:#e6db74">&#34;wrap_content&#34;</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">android:layout_height=</span><span style="color:#e6db74">&#34;wrap_content&#34;</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">android:layout_gravity=</span><span style="color:#e6db74">&#34;end|bottom&#34;</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">android:layout_marginRight=</span><span style="color:#e6db74">&#34;80dp&#34;</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">android:layout_marginBottom=</span><span style="color:#e6db74">&#34;16dp&#34;</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">android:elevation=</span><span style="color:#e6db74">&#34;10dp&#34;</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">android:background=</span><span style="color:#e6db74">&#34;@drawable/ic_android_purple_700_18dp&#34;</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">app:fabSize=</span><span style="color:#e6db74">&#34;normal&#34;</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">app:backgroundTint=</span><span style="color:#e6db74">&#34;#673AB7&#34;</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">app:borderWidth=</span><span style="color:#e6db74">&#34;0dp&#34;</span><span style="color:#f92672">/&gt;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">&lt;android.support.design.widget.FloatingActionButton</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">android:id=</span><span style="color:#e6db74">&#34;@+id/fab3&#34;</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">android:layout_width=</span><span style="color:#e6db74">&#34;wrap_content&#34;</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">android:layout_height=</span><span style="color:#e6db74">&#34;wrap_content&#34;</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">android:layout_gravity=</span><span style="color:#e6db74">&#34;end|bottom&#34;</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">android:layout_marginBottom=</span><span style="color:#e6db74">&#34;20dp&#34;</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">android:layout_marginRight=</span><span style="color:#e6db74">&#34;150dp&#34;</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">android:elevation=</span><span style="color:#e6db74">&#34;4dp&#34;</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">app:fabSize=</span><span style="color:#e6db74">&#34;mini&#34;</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">app:backgroundTint=</span><span style="color:#e6db74">&#34;#673AB7&#34;</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">android:src=</span><span style="color:#e6db74">&#34;@drawable/ic_add_white_24dp&#34;</span><span style="color:#f92672">/&gt;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">&lt;/android.support.design.widget.CoordinatorLayout&gt;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">&lt;/LinearLayout&gt;</span>
 </span></span></code></pre></div><p>我这里放了三个FloatingActionButton，显示效果就如上图所示。当然你也可以用一个父布局把三个FloatingActionButton包裹起来，实现你需要的布局。</p>
 <p>我们来分析下FloatingActionButton的一些属性。</p>
 <p>FloatingActionButton不设置任何属性的时候，默认是一个圆形按钮，如图</p>
@@ -259,20 +261,20 @@
 <h3 id="点击事件">点击事件</h3>
 <p>FlocatingActionButton的点击事件和其他控件一样，<code>setOnClickListener</code>就可以了。</p>
 <p>看代码片段:</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="n">fab</span><span class="p">.</span><span class="na">setOnClickListener</span><span class="p">(</span><span class="k">new</span><span class="w"> </span><span class="n">View</span><span class="p">.</span><span class="na">OnClickListener</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nd">@Override</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">onClick</span><span class="p">(</span><span class="n">View</span><span class="w"> </span><span class="n">v</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">Snackbar</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">                </span><span class="p">.</span><span class="na">make</span><span class="p">(</span><span class="n">drawerlayout</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;这是一个学习用的snackbar&#34;</span><span class="p">,</span><span class="w"> </span><span class="n">Snackbar</span><span class="p">.</span><span class="na">LENGTH_LONG</span><span class="p">)</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">                </span><span class="p">.</span><span class="na">setAction</span><span class="p">(</span><span class="s">&#34;取消&#34;</span><span class="p">,</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">View</span><span class="p">.</span><span class="na">OnClickListener</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">                  </span><span class="nd">@Override</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">                    </span><span class="kd">public</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">onClick</span><span class="p">(</span><span class="n">View</span><span class="w"> </span><span class="n">v</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">                    </span><span class="p">}</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">              </span><span class="p">}).</span><span class="na">show</span><span class="p">();</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="p">}</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">});</span><span class="w">
-</span></span></span></code></pre></div><p>我们点击按钮，弹出一个Snackbar。首先，我将Snackbar的 <code>view</code> 传入根布局 <code>LinearLayout</code>的引用。<br>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-java" data-lang="java"><span style="display:flex;"><span>fab.<span style="color:#a6e22e">setOnClickListener</span>(<span style="color:#66d9ef">new</span> View.<span style="color:#a6e22e">OnClickListener</span>() {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">@Override</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">onClick</span>(View v) {
+</span></span><span style="display:flex;"><span>        Snackbar
+</span></span><span style="display:flex;"><span>                .<span style="color:#a6e22e">make</span>(drawerlayout, <span style="color:#e6db74">&#34;这是一个学习用的snackbar&#34;</span>, Snackbar.<span style="color:#a6e22e">LENGTH_LONG</span>)
+</span></span><span style="display:flex;"><span>                .<span style="color:#a6e22e">setAction</span>(<span style="color:#e6db74">&#34;取消&#34;</span>, <span style="color:#66d9ef">new</span> View.<span style="color:#a6e22e">OnClickListener</span>() {
+</span></span><span style="display:flex;"><span>                  <span style="color:#a6e22e">@Override</span>
+</span></span><span style="display:flex;"><span>                    <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">onClick</span>(View v) {
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>                    }
+</span></span><span style="display:flex;"><span>              }).<span style="color:#a6e22e">show</span>();
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>    });
+</span></span></code></pre></div><p>我们点击按钮，弹出一个Snackbar。首先，我将Snackbar的 <code>view</code> 传入根布局 <code>LinearLayout</code>的引用。<br>
 运行效果：</p>
 <p><img
         class="lazyload"
@@ -284,20 +286,20 @@
         title="http://ww1.sinaimg.cn/mw690/62b0904dgw1ev2a3lm3sbj20ty0f1dgn.jpg" /></p>
 <p>发现我们的FlocatingActionButton被遮住了，我们修改 <code>Snackbar</code> 的 <code>view</code> 参数为 <code>android.support.design.widget.CoordinatorLayout</code> 或者它的子布局控件。</p>
 <p>修改代码：</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="w">        </span><span class="n">fab</span><span class="p">.</span><span class="na">setOnClickListener</span><span class="p">(</span><span class="k">new</span><span class="w"> </span><span class="n">View</span><span class="p">.</span><span class="na">OnClickListener</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="nd">@Override</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="kd">public</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">onClick</span><span class="p">(</span><span class="n">View</span><span class="w"> </span><span class="n">v</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">                </span><span class="n">Snackbar</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">                        </span><span class="p">.</span><span class="na">make</span><span class="p">(</span><span class="n">fab</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;这是一个学习用的snackbar&#34;</span><span class="p">,</span><span class="w"> </span><span class="n">Snackbar</span><span class="p">.</span><span class="na">LENGTH_LONG</span><span class="p">)</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">                        </span><span class="p">.</span><span class="na">setAction</span><span class="p">(</span><span class="s">&#34;取消&#34;</span><span class="p">,</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">View</span><span class="p">.</span><span class="na">OnClickListener</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">                            </span><span class="nd">@Override</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">                            </span><span class="kd">public</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">onClick</span><span class="p">(</span><span class="n">View</span><span class="w"> </span><span class="n">v</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">                            </span><span class="p">}</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">                        </span><span class="p">}).</span><span class="na">show</span><span class="p">();</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="p">}</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="p">});</span><span class="w">
-</span></span></span></code></pre></div><p>再次运行效果：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-java" data-lang="java"><span style="display:flex;"><span>        fab.<span style="color:#a6e22e">setOnClickListener</span>(<span style="color:#66d9ef">new</span> View.<span style="color:#a6e22e">OnClickListener</span>() {
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">@Override</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">onClick</span>(View v) {
+</span></span><span style="display:flex;"><span>                Snackbar
+</span></span><span style="display:flex;"><span>                        .<span style="color:#a6e22e">make</span>(fab, <span style="color:#e6db74">&#34;这是一个学习用的snackbar&#34;</span>, Snackbar.<span style="color:#a6e22e">LENGTH_LONG</span>)
+</span></span><span style="display:flex;"><span>                        .<span style="color:#a6e22e">setAction</span>(<span style="color:#e6db74">&#34;取消&#34;</span>, <span style="color:#66d9ef">new</span> View.<span style="color:#a6e22e">OnClickListener</span>() {
+</span></span><span style="display:flex;"><span>                            <span style="color:#a6e22e">@Override</span>
+</span></span><span style="display:flex;"><span>                            <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">onClick</span>(View v) {
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>                            }
+</span></span><span style="display:flex;"><span>                        }).<span style="color:#a6e22e">show</span>();
+</span></span><span style="display:flex;"><span>            }
+</span></span><span style="display:flex;"><span>        });
+</span></span></code></pre></div><p>再次运行效果：</p>
 <p><img
         class="lazyload"
         src="/svg/loading.min.svg"

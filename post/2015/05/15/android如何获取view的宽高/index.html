@@ -33,7 +33,7 @@ Now, it is all WRAP_CONTENT, FILL_PARENT/MATCH_PARENT. Yet, a developer sometime
         "mainEntityOfPage": {
             "@type": "WebPage",
             "@id": "https:\/\/www.ithome.me\/post\/2015\/05\/15\/android%E5%A6%82%E4%BD%95%E8%8E%B7%E5%8F%96view%E7%9A%84%E5%AE%BD%E9%AB%98\/"
-        },"genre": "posts","keywords": "android","wordcount":  183 ,
+        },"genre": "posts","keywords": "android","wordcount":  304 ,
         "url": "https:\/\/www.ithome.me\/post\/2015\/05\/15\/android%E5%A6%82%E4%BD%95%E8%8E%B7%E5%8F%96view%E7%9A%84%E5%AE%BD%E9%AB%98\/","datePublished": "2015-05-15T20:31:08+08:00","dateModified": "2015-05-15T20:31:08+08:00","license": "©{year}, All Rights Reserved. Simon Chen","publisher": {
             "@type": "Organization",
             "name": ""},"author": {
@@ -109,8 +109,8 @@ Now, it is all WRAP_CONTENT, FILL_PARENT/MATCH_PARENT. Yet, a developer sometime
         </div><article class="page single"><h1 class="single-title animate__animated animate__flipInX">android如何获取view的宽高</h1><div class="post-meta">
             <div class="post-meta-line"><span class="post-author"><a href="/" title="Author" rel=" author" class="author"><i class="fas fa-user-circle fa-fw" aria-hidden="true"></i>SimonChen</a>
 </span></div>
-            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw" aria-hidden="true"></i>&nbsp;<time datetime="2015-05-15">2015-05-15</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden="true"></i>&nbsp;约 183 字&nbsp;
-                <i class="far fa-clock fa-fw" aria-hidden="true"></i>&nbsp;预计阅读 1 分钟&nbsp;</div>
+            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw" aria-hidden="true"></i>&nbsp;<time datetime="2015-05-15">2015-05-15</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden="true"></i>&nbsp;约 304 字&nbsp;
+                <i class="far fa-clock fa-fw" aria-hidden="true"></i>&nbsp;预计阅读 2 分钟&nbsp;</div>
         </div><div class="details toc" id="toc-static"  data-kept="">
                 <div class="details-summary toc-title">
                     <span>目录</span>
@@ -120,7 +120,7 @@ Now, it is all WRAP_CONTENT, FILL_PARENT/MATCH_PARENT. Yet, a developer sometime
             </div><div class="content" id="content"><p>As the idea of the Android evolved, Android has received wide attention and deployed on a very wide range of devices. Android UI had to move and make developers&rsquo; life easier: AbsoluteLayout got deprecated. It is very logical because your app will be installed on very small devices and very large devices and all the devices in between.</p>
 <p>Now, it is all WRAP_CONTENT, FILL_PARENT/MATCH_PARENT. Yet, a developer sometimes needs to know the dimensions of his view to do some extra tweaks to perfect his ui.</p>
 <p>So, what is the best way to do so?
-<!-- raw HTML omitted --><!-- raw HTML omitted -->Well, there are several ways of getting the dimensions of a view. Most of them boil down to waiting the layout of the view hierarchy. In case you still have not gotten into the problem of getWidth() and getHeight() returning 0, well that is very normal in Android as the width and height of a view are zero until they are visible, measured, and part of the layout.</p>
+<a name="more"></a>Well, there are several ways of getting the dimensions of a view. Most of them boil down to waiting the layout of the view hierarchy. In case you still have not gotten into the problem of getWidth() and getHeight() returning 0, well that is very normal in Android as the width and height of a view are zero until they are visible, measured, and part of the layout.</p>
 <p>In the following I will assume that your View is called <em><strong>view</strong></em>.
 **
 **</p>
@@ -128,16 +128,44 @@ Now, it is all WRAP_CONTENT, FILL_PARENT/MATCH_PARENT. Yet, a developer sometime
 <p><a href="http://developer.android.com/reference/android/view/ViewTreeObserver.OnGlobalLayoutListener.html" target="_blank" rel="noopener noreffer">Global Layout Listener</a>
 </p>
 <p> </p>
-<!-- raw HTML omitted -->
+<div class="top-box hide"></div>
+<pre data-original-code="view.getViewTreeObserver().addOnGlobalLayoutListener(new OnGlobalLayoutListener() {  @SuppressLint(&quot;NewApi&quot;)  @SuppressWarnings(&quot;deprecation&quot;)  @Override   public void onGlobalLayout() {    //now we can retrieve the width and height    int width = view.getWidth();    int height = view.getHeight();    //...    //do whatever you want with them    //...    //this is an important step not to keep receiving callbacks:    //we should remove this listener" data-snippet-id="ext.563d77f7955347b4ec631f957c735369" data-snippet-saved="false" data-csrftoken="syKbAqG3-LMaCEc8EvOMsq2TwAVwDB7dp8Lw" data-codota-status="done">view.getViewTreeObserver().addOnGlobalLayoutListener(new OnGlobalLayoutListener() {
+ @SuppressLint("NewApi")
+ @SuppressWarnings("deprecation")
+ @Override
+  public void onGlobalLayout() {
+   //now we can retrieve the width and height
+   int width = view.getWidth();
+   int height = view.getHeight();
+   //...
+   //do whatever you want with them
+   //...
+   //this is an important step not to keep receiving callbacks:
+   //we should remove this listener</pre>
+<div class="top-box hide"></div>
+<pre>   //I use the function to remove it based on the api level!</pre>
+<pre data-original-code="   //I use the function to remove it based on the api level! if(android.os.Build.VERSION.SDK_INT &gt;= android.os.Build.VERSION_CODES.JELLY_BEAN)     view.getViewTreeObserver().removeOnGlobalLayoutListener(this);    else     view.getViewTreeObserver().removeGlobalOnLayoutListener(this);   }  }); " data-snippet-id="ext.04c4789d679c8d65ddefe65172e403b8" data-snippet-saved="false" data-csrftoken="PKx5Smbi-r1Ntw2kShc89IBhsLbTN3cs5vug" data-codota-status="done">if(android.os.Build.VERSION.SDK_INT &gt;= android.os.Build.VERSION_CODES.JELLY_BEAN) view.getViewTreeObserver().removeOnGlobalLayoutListener(this); else view.getViewTreeObserver().removeGlobalOnLayoutListener(this); } });</pre>
+&nbsp;
 <p> </p>
 <p><a href="http://stackoverflow.com/questions/13681024/how-to-manage-gridview/13835812#13835812" target="_blank" rel="noopener noreffer">How to manage GridView</a>
 </p>
 <p> </p>
-<!-- raw HTML omitted -->
+<div class="top-box hide"></div>
+<pre data-original-code="mGrid = new GridView(this) {     @Override     protected void onLayout(boolean changed, int l, int t, int r, int b) {         super.onLayout(changed, l, t, r, b);         //here you have the size of the view and you can do stuff     } };" data-snippet-id="ext.122cecf122f76312b72b23933bae4bad" data-snippet-saved="false" data-csrftoken="yJArqrTU-F98pnYyXeO49Cwife1l63B361Hs" data-codota-status="done">mGrid = new GridView(this) {
+    @Override
+    protected void onLayout(boolean changed, int l, int t, int r, int b) {
+        super.onLayout(changed, l, t, r, b);
+        //here you have the size of the view and you can do stuff
+    }
+};</pre>
+&nbsp;
 <p> </p>
 <p> </p>
-<!-- raw HTML omitted -->
-</div><div class="post-footer" id="post-footer">
+<div class="top-box hide"></div>
+<pre data-original-code="view.measure(MeasureSpec.UNSPECIFIED, MeasureSpec.UNSPECIFIED); int widht = view.getMeasuredWidth(); int height = view.getMeasuredHeight();" data-snippet-id="ext.09a9c8f8a6d446eecc8a68244ad4cfca" data-snippet-saved="false" data-csrftoken="VBPhrL70-wBU3b36nJvbUgC9EGcwjTpBfiec" data-codota-status="done">view.measure(MeasureSpec.UNSPECIFIED, MeasureSpec.UNSPECIFIED);
+int widht = view.getMeasuredWidth();
+int height = view.getMeasuredHeight();</pre>
+原文:http://www.sherif.mobi/2013/01/how-to-get-widthheight-of-view.html</div><div class="post-footer" id="post-footer">
     <div class="post-info">
         <div class="post-info-line">
             <div class="post-info-mod">

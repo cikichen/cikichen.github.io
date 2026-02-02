@@ -126,35 +126,35 @@
 类中的一个或者几个相关的函数。如果一个程序尝试调用一个没有在XML文件中声明过的策略函数，会抛出一个 <a href="http://developer.android.com/reference/java/lang/SecurityException.html" target="_blank" rel="noopener noreffer">SecurityException</a>
  异常。如果程序想管理其他类型的策略，可以使用其他的权限 — 比如 <strong>force-lock</strong>。在后面您会看到，在设备管理器的激活流程中会有一个系统界面告诉用户您所声明的策略集合列表。</p>
 <p>下面的代码在<strong>res/xml/device_admin.xml</strong>文件中定义了limit password 策略：</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-xml" data-lang="xml"><span class="line"><span class="cl"><span class="nt">&lt;device-admin</span> <span class="na">xmlns:android=</span><span class="s">&#34;http://schemas.android.com/apk/res/android&#34;</span><span class="nt">&gt;</span>
-</span></span><span class="line"><span class="cl">    <span class="nt">&lt;uses-policies&gt;</span>
-</span></span><span class="line"><span class="cl">        <span class="nt">&lt;limit-password</span> <span class="nt">/&gt;</span>
-</span></span><span class="line"><span class="cl">    <span class="nt">&lt;/uses-policies&gt;</span>
-</span></span><span class="line"><span class="cl"><span class="nt">&lt;/device-admin&gt;</span>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-xml" data-lang="xml"><span style="display:flex;"><span><span style="color:#f92672">&lt;device-admin</span> <span style="color:#a6e22e">xmlns:android=</span><span style="color:#e6db74">&#34;http://schemas.android.com/apk/res/android&#34;</span><span style="color:#f92672">&gt;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">&lt;uses-policies&gt;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">&lt;limit-password</span> <span style="color:#f92672">/&gt;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">&lt;/uses-policies&gt;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">&lt;/device-admin&gt;</span>
 </span></span></code></pre></div><p>在 manifest 文件中引用定义的策略：</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-xml" data-lang="xml"><span class="line"><span class="cl"><span class="nt">&lt;receiver</span> <span class="na">android:name=</span><span class="s">&#34;.Policy$PolicyAdmin&#34;</span> <span class="na">android:permission=</span><span class="s">&#34;android.permission.BIND_DEVICE_ADMIN&#34;</span><span class="nt">&gt;</span>
-</span></span><span class="line"><span class="cl">    <span class="nt">&lt;strong&gt;&lt;meta-data</span> <span class="na">android:name=</span><span class="s">&#34;android.app.device_admin&#34;</span>
-</span></span><span class="line"><span class="cl">        <span class="na">android:resource=</span><span class="s">&#34;@xml/device_admin&#34;</span> <span class="nt">/&gt;&lt;/strong&gt;</span>
-</span></span><span class="line"><span class="cl">    <span class="nt">&lt;intent-filter&gt;</span>
-</span></span><span class="line"><span class="cl">        <span class="nt">&lt;action</span> <span class="na">android:name=</span><span class="s">&#34;android.app.action.DEVICE_ADMIN_ENABLED&#34;</span> <span class="nt">/&gt;</span>
-</span></span><span class="line"><span class="cl">    <span class="nt">&lt;/intent-filter&gt;</span>
-</span></span><span class="line"><span class="cl"><span class="nt">&lt;/receiver&gt;</span>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-xml" data-lang="xml"><span style="display:flex;"><span><span style="color:#f92672">&lt;receiver</span> <span style="color:#a6e22e">android:name=</span><span style="color:#e6db74">&#34;.Policy$PolicyAdmin&#34;</span> <span style="color:#a6e22e">android:permission=</span><span style="color:#e6db74">&#34;android.permission.BIND_DEVICE_ADMIN&#34;</span><span style="color:#f92672">&gt;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">&lt;strong&gt;&lt;meta-data</span> <span style="color:#a6e22e">android:name=</span><span style="color:#e6db74">&#34;android.app.device_admin&#34;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">android:resource=</span><span style="color:#e6db74">&#34;@xml/device_admin&#34;</span> <span style="color:#f92672">/&gt;&lt;/strong&gt;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">&lt;intent-filter&gt;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">&lt;action</span> <span style="color:#a6e22e">android:name=</span><span style="color:#e6db74">&#34;android.app.action.DEVICE_ADMIN_ENABLED&#34;</span> <span style="color:#f92672">/&gt;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">&lt;/intent-filter&gt;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">&lt;/receiver&gt;</span>
 </span></span></code></pre></div><h2 id="创建-device-administration-receiver">创建 Device Administration Receiver</h2>
 <p>当您定义的策略事件发生的时候会通知您创建的这个设备管理器Receiver。可以根据情况覆盖(Override)需要的回调函数。</p>
 <p>在Device Admin这个示例程序中，如果用户撤销了设备管理器，示例程序所配置的策略信息将会清除。您需要考虑实现符合您的使用情况的业务逻辑。例如，程序可以删除一些敏感信息来减轻安全风险、还可以禁用远程同步功能 等。</p>
 <p>不要忘了在manifest文件中注册您的Receiver。</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kd">static</span><span class="w"> </span><span class="kd">class</span> <span class="nc">PolicyAdmin</span><span class="w"> </span><span class="kd">extends</span><span class="w"> </span><span class="n">DeviceAdminReceiver</span><span class="w"> </span><span class="p">{</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nd">@Override</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">onDisabled</span><span class="p">(</span><span class="n">Context</span><span class="w"> </span><span class="n">context</span><span class="p">,</span><span class="w"> </span><span class="n">Intent</span><span class="w"> </span><span class="n">intent</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="c1">// Called when the app is about to be deactivated as a device administrator.</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="c1">// Deletes previously stored password policy.</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="kd">super</span><span class="p">.</span><span class="na">onDisabled</span><span class="p">(</span><span class="n">context</span><span class="p">,</span><span class="w"> </span><span class="n">intent</span><span class="p">);</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">SharedPreferences</span><span class="w"> </span><span class="n">prefs</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">context</span><span class="p">.</span><span class="na">getSharedPreferences</span><span class="p">(</span><span class="n">APP_PREF</span><span class="p">,</span><span class="w"> </span><span class="n">Activity</span><span class="p">.</span><span class="na">MODE_PRIVATE</span><span class="p">);</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">prefs</span><span class="p">.</span><span class="na">edit</span><span class="p">().</span><span class="na">clear</span><span class="p">().</span><span class="na">commit</span><span class="p">();</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
-</span></span></span></code></pre></div><h2 id="激活设备管理器">激活设备管理器</h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">static</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">PolicyAdmin</span> <span style="color:#66d9ef">extends</span> DeviceAdminReceiver {
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">@Override</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">onDisabled</span>(Context context, Intent intent) {
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// Called when the app is about to be deactivated as a device administrator.</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// Deletes previously stored password policy.</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">super</span>.<span style="color:#a6e22e">onDisabled</span>(context, intent);
+</span></span><span style="display:flex;"><span>        SharedPreferences prefs <span style="color:#f92672">=</span> context.<span style="color:#a6e22e">getSharedPreferences</span>(APP_PREF, Activity.<span style="color:#a6e22e">MODE_PRIVATE</span>);
+</span></span><span style="display:flex;"><span>        prefs.<span style="color:#a6e22e">edit</span>().<span style="color:#a6e22e">clear</span>().<span style="color:#a6e22e">commit</span>();
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><h2 id="激活设备管理器">激活设备管理器</h2>
 <p>在执行任何策略之前，用户需要手工的激活设备管理器。下面的代码演示了如何触发设置界面来让用户激活您的设备管理器程序。包含一个介绍文本内容告诉用户为啥您的程序需要激活为设备管理器是个不错的选择， 通过在Intent中设置 <a href="http://developer.android.com/reference/android/app/admin/DevicePolicyManager.html#EXTRA_ADD_EXPLANATION" target="_blank" rel="noopener noreffer">EXTRA_ADD_EXPLANATION</a>
  字段。</p></div><div class="post-footer">
         <a href="/post/2013/07/19/%E8%BD%AC%E4%BD%BF%E7%94%A8%E8%AE%BE%E5%A4%87%E7%AE%A1%E7%90%86%E7%AD%96%E7%95%A5%E6%9D%A5%E5%8A%A0%E5%BC%BA%E4%BF%A1%E6%81%AF%E5%AE%89%E5%85%A8/">阅读全文</a><div class="post-tags">
@@ -197,27 +197,27 @@
 <h2 id="implement-compattabhoneycomb">Implement CompatTabHoneycomb</h2>
 <p>CompatTabHoneycomb 实现了 CompatTab 抽象类，该类的实现中只是把每个函数的调用委托给
 ActionBar.Tab对象，该对象从Activity中获取。</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kd">class</span> <span class="nc">CompatTabHoneycomb</span><span class="w"> </span><span class="kd">extends</span><span class="w"> </span><span class="n">CompatTab</span><span class="w"> </span><span class="p">{</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="c1">// The native tab object that this CompatTab acts as a proxy for.</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="n">ActionBar</span><span class="p">.</span><span class="na">Tab</span><span class="w"> </span><span class="n">mTab</span><span class="p">;</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">...</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">protected</span><span class="w"> </span><span class="nf">CompatTabHoneycomb</span><span class="p">(</span><span class="n">FragmentActivity</span><span class="w"> </span><span class="n">activity</span><span class="p">,</span><span class="w"> </span><span class="n">String</span><span class="w"> </span><span class="n">tag</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="p">...</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="c1">// Proxy to new ActionBar.newTab API</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">mTab</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">activity</span><span class="p">.</span><span class="na">getActionBar</span><span class="p">().</span><span class="na">newTab</span><span class="p">();</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="n">CompatTab</span><span class="w"> </span><span class="nf">setText</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">resId</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="c1">// Proxy to new ActionBar.Tab.setText API</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">mTab</span><span class="p">.</span><span class="na">setText</span><span class="p">(</span><span class="n">resId</span><span class="p">);</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="k">this</span><span class="p">;</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">...</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="c1">// Do the same for other properties (icon, callback, etc.)</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
-</span></span></span></code></pre></div><h2 id="implement-tabhelperhoneycomb">Implement TabHelperHoneycomb</h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">CompatTabHoneycomb</span> <span style="color:#66d9ef">extends</span> CompatTab {
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// The native tab object that this CompatTab acts as a proxy for.</span>
+</span></span><span style="display:flex;"><span>    ActionBar.<span style="color:#a6e22e">Tab</span> mTab;
+</span></span><span style="display:flex;"><span>    ...
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">protected</span> <span style="color:#a6e22e">CompatTabHoneycomb</span>(FragmentActivity activity, String tag) {
+</span></span><span style="display:flex;"><span>        ...
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// Proxy to new ActionBar.newTab API</span>
+</span></span><span style="display:flex;"><span>        mTab <span style="color:#f92672">=</span> activity.<span style="color:#a6e22e">getActionBar</span>().<span style="color:#a6e22e">newTab</span>();
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">public</span> CompatTab <span style="color:#a6e22e">setText</span>(<span style="color:#66d9ef">int</span> resId) {
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// Proxy to new ActionBar.Tab.setText API</span>
+</span></span><span style="display:flex;"><span>        mTab.<span style="color:#a6e22e">setText</span>(resId);
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">this</span>;
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    ...
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// Do the same for other properties (icon, callback, etc.)</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><h2 id="implement-tabhelperhoneycomb">Implement TabHelperHoneycomb</h2>
 <p>同样，TabHelperHoneycomb实现了TabHelper 抽象类。 函数的调用都委托给ActionBar对应的函数了。</p></div><div class="post-footer">
         <a href="/post/2013/07/17/%E8%BD%AC%E9%80%9A%E8%BF%87%E4%BB%A3%E7%90%86%E4%BD%BF%E7%94%A8%E6%96%B0api/">阅读全文</a><div class="post-tags">
                 <i class="fas fa-tags fa-fw" aria-hidden="true"></i>&nbsp;<a href="/tags/android/">Android</a>,&nbsp;<a href="/tags/%E4%BB%A3%E7%90%86/">代理</a>,&nbsp;<a href="/tags/api/">API</a></div></div>
@@ -236,29 +236,29 @@ ActionBar.Tab对象，该对象从Activity中获取。</p>
 <p>这节内容介绍如何添加选择不同实现的逻辑以及如何在对应的版本中选择对应的实现方式，如何创建版本感知的布局。</p>
 <h2 id="添加选择逻辑">添加选择逻辑</h2>
 <p>TabHelpe 抽象类作为<a href="http://en.wikipedia.org/wiki/Factory_%28software_concept%29" target="_blank" rel="noopener noreffer">factory工厂方法</a>
-类来创建版本相关的<!-- raw HTML omitted -->TabHelper<!-- raw HTML omitted --> 和 <!-- raw HTML omitted -->CompatTab<!-- raw HTML omitted --> 实例。</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kd">abstract</span><span class="w"> </span><span class="kd">class</span> <span class="nc">TabHelper</span><span class="w"> </span><span class="p">{</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="p">...</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="c1">// Usage is TabHelper.createInstance(activity)</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kd">static</span><span class="w"> </span><span class="n">TabHelper</span><span class="w"> </span><span class="nf">createInstance</span><span class="p">(</span><span class="n">FragmentActivity</span><span class="w"> </span><span class="n">activity</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">Build</span><span class="p">.</span><span class="na">VERSION</span><span class="p">.</span><span class="na">SDK_INT</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="n">Build</span><span class="p">.</span><span class="na">VERSION_CODES</span><span class="p">.</span><span class="na">HONEYCOMB</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="k">return</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">TabHelperHoneycomb</span><span class="p">(</span><span class="n">activity</span><span class="p">);</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="p">{</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="k">return</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">TabHelperEclair</span><span class="p">(</span><span class="n">activity</span><span class="p">);</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="c1">// Usage is mTabHelper.newTab(&#34;tag&#34;)</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="n">CompatTab</span><span class="w"> </span><span class="nf">newTab</span><span class="p">(</span><span class="n">String</span><span class="w"> </span><span class="n">tag</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">Build</span><span class="p">.</span><span class="na">VERSION</span><span class="p">.</span><span class="na">SDK_INT</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="n">Build</span><span class="p">.</span><span class="na">VERSION_CODES</span><span class="p">.</span><span class="na">HONEYCOMB</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="k">return</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">CompatTabHoneycomb</span><span class="p">(</span><span class="n">mActivity</span><span class="p">,</span><span class="w"> </span><span class="n">tag</span><span class="p">);</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="p">{</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="k">return</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">CompatTabEclair</span><span class="p">(</span><span class="n">mActivity</span><span class="p">,</span><span class="w"> </span><span class="n">tag</span><span class="p">);</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="p">...</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
-</span></span></span></code></pre></div><h2 id="创建一个版本感知的activity-layout">创建一个版本感知的Activity Layout</h2>
+类来创建版本相关的<span style="color: #0000ff;">TabHelper</span> 和 <span style="color: #0000ff;">CompatTab</span> 实例。</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">abstract</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">TabHelper</span> {
+</span></span><span style="display:flex;"><span>...
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// Usage is TabHelper.createInstance(activity)</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">static</span> TabHelper <span style="color:#a6e22e">createInstance</span>(FragmentActivity activity) {
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> (Build.<span style="color:#a6e22e">VERSION</span>.<span style="color:#a6e22e">SDK_INT</span> <span style="color:#f92672">&gt;=</span> Build.<span style="color:#a6e22e">VERSION_CODES</span>.<span style="color:#a6e22e">HONEYCOMB</span>) {
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">return</span> <span style="color:#66d9ef">new</span> TabHelperHoneycomb(activity);
+</span></span><span style="display:flex;"><span>} <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">return</span> <span style="color:#66d9ef">new</span> TabHelperEclair(activity);
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// Usage is mTabHelper.newTab(&#34;tag&#34;)</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">public</span> CompatTab <span style="color:#a6e22e">newTab</span>(String tag) {
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> (Build.<span style="color:#a6e22e">VERSION</span>.<span style="color:#a6e22e">SDK_INT</span> <span style="color:#f92672">&gt;=</span> Build.<span style="color:#a6e22e">VERSION_CODES</span>.<span style="color:#a6e22e">HONEYCOMB</span>) {
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">return</span> <span style="color:#66d9ef">new</span> CompatTabHoneycomb(mActivity, tag);
+</span></span><span style="display:flex;"><span>} <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">return</span> <span style="color:#66d9ef">new</span> CompatTabEclair(mActivity, tag);
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>...
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><h2 id="创建一个版本感知的activity-layout">创建一个版本感知的Activity Layout</h2>
 <p>然后是创建一个支持两种tab实现的布局。对于旧的实现方式 (TabHelperEclair)，布局中包含 <a href="https://developer.android.com/reference/android/widget/TabWidget.html" target="_blank" rel="noopener noreffer">TabWidget</a>
  和 <a href="https://developer.android.com/reference/android/widget/TabHost.html" target="_blank" rel="noopener noreffer">TabHost</a>
 ，和一个包含tab的容器:</p></div><div class="post-footer">
@@ -306,7 +306,8 @@ There generally isn’t a one-size-fits-all solution for backporting newer UI co
 </article><article class="single summary" itemscope itemtype="http://schema.org/Article"><h1 class="single-title" itemprop="name headline">
         <a href="/post/2013/07/17/%E8%BD%AC%E6%8A%BD%E8%B1%A1%E6%96%B0%E7%9A%84api/">[转]抽象新的API</a>
     </h1><div class="post-meta"><span class="post-author"><a href="/" title="Author" rel=" author" class="author"><i class="fas fa-user-circle fa-fw" aria-hidden="true"></i>SimonChen</a>
-</span>&nbsp;<span class="post-publish">发布于 <time datetime="2013-07-17">2013-07-17</time></span></div><div class="content"><!-- raw HTML omitted -->
+</span>&nbsp;<span class="post-publish">发布于 <time datetime="2013-07-17">2013-07-17</time></span></div><div class="content"><div id="tb-wrapper">
+<div id="tb">
 <h2 id="课程内容">课程内容</h2>
 <ol>
 <li>研究抽象接口</li>
@@ -322,11 +323,15 @@ There generally isn’t a one-size-fits-all solution for backporting newer UI co
 </li>
 </ul>
 <h2 id="动手试试">动手试试</h2>
-<!-- raw HTML omitted -->
+<div>
 <p><a href="http://developer.android.com/shareables/training/TabCompat.zip" target="_blank" rel="noopener noreffer">下载示例代码</a>
 </p>
 <p>TabCompat.zip</p>
-<!-- raw HTML omitted -->
+</div>
+</div>
+</div>
+假设您想在程序中使用[action bar tabs](http://developer.android.com/guide/topics/ui/actionbar.html#Tabs)作为主要的导航方式。
+不幸的是，ActionBar API只有在3.0+版本中才能使用。所以如果您想让您的应用也能运行到旧的设备中，您需要想办法支持旧的系统。
 <p>在本示例中，您将创建一个tab UI控件接口，该接口在不同的Android版本中使用不同的实现方式。本课程介绍如何创建这样一个抽象接口。</p>
 <h2 id="研究抽象接口">研究抽象接口</h2>
 <p><a href="http://en.wikipedia.org/wiki/Abstraction_%28computer_science%29" target="_blank" rel="noopener noreffer">Abstraction</a>
@@ -354,7 +359,9 @@ There generally isn’t a one-size-fits-all solution for backporting newer UI co
         data-sizes="auto"
         alt="http://www.ithome.me/wp-content/uploads/2013/07/backward-compatible-ui-classes1-300x114.png"
         title="backward-compatible-ui-classes" /></a>
-</p></div><div class="post-footer">
+</p>
+<h2 id="抽象-actionbartab">抽象 ActionBar.Tab</h2>
+<p>创建您的抽象tab类，该类的函数基本和 <code>[ActionBar.Tab](http://developer.android.com/reference/android/app/ActionBar.Tab.html)</code> 接口一样:</p></div><div class="post-footer">
         <a href="/post/2013/07/17/%E8%BD%AC%E6%8A%BD%E8%B1%A1%E6%96%B0%E7%9A%84api/">阅读全文</a></div>
 </article><article class="single summary" itemscope itemtype="http://schema.org/Article"><h1 class="single-title" itemprop="name headline">
         <a href="/post/2013/06/23/%E8%BD%ACdd-wrt%E8%B7%AF%E7%94%B1%E5%99%A8%E8%BF%85%E9%9B%B7%E7%A6%BB%E7%BA%BF%E8%84%B1%E6%9C%BA%E4%B8%8B%E8%BD%BD/">[转]DD-WRT路由器迅雷离线脱机下载</a>
@@ -364,23 +371,27 @@ There generally isn’t a one-size-fits-all solution for backporting newer UI co
  下载 <a href="https://github.com/iambus/xunlei-lixian" title="xunlei-lixian" target="_blank" rel="noopener noreffer">xunlei-lixian</a>
  代码，并解压到本地</p>
 <p>3、打开解压后的文件夹，找到 lixian_cli.py ，将第1行的</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl"><span class="cp">#!/usr/bin/env python
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e">#!/usr/bin/env python
 </span></span></span></code></pre></div><p>修改为</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl"><span class="cp">#!/opt/bin/python2.7
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e">#!/opt/bin/python2.7
 </span></span></span></code></pre></div><p>然后将 lixian_download_tools.py 第22行的</p>
-<!-- raw HTML omitted -->
+<pre>wget_opts = ['wget', '--header=Cookie: gdriveid='+gdriveid, download_url, '-O', filename]</pre>
 <p>修改为</p>
-<!-- raw HTML omitted -->
+<pre>wget_opts = ['/opt/bin/wget', '--header=Cookie: gdriveid='+gdriveid, download_url, '-O', filename]</pre>
 <p>保存后将目录中的文件全部复制到路由器的 /opt/bin/lixian 目录（tests目录、.gitignore 和 README.md 无需复制）</p>
 <p>4、为 lixian_cli.py 创建别名</p>
 <p>使用 ssh 客户端连接至路由器，键入如下命令：</p>
-<!-- raw HTML omitted -->
+<pre>ln -s /opt/bin/lixian/lixian_cli.py /opt/bin/xunlei</pre>
 <p>之后就可以在 /opt 目录下使用 xunlei 来调用 <a href="https://github.com/iambus/xunlei-lixian" title="xunlei-lixian" target="_blank" rel="noopener noreffer">xunlei-lixian</a>
  了。</p>
 <p>5、建立配置文件</p>
 <p>使用 ssh 客户端连接至路由器，键入如下命令：</p>
-<!-- raw HTML omitted -->
-<!-- raw HTML omitted -->
+<pre>xunlei config username 你的迅雷帐号
+xunlei config password 你的迅雷密码
+xunlei config no-hash #关闭校验功能
+xunlei config continue
+xunlei config -- aria2-opts "--event-poll=select --max-tries=0"
+xunlei config -- wget-opts "--tries=0 --retry-connrefused"</pre>
 <p>完成后将 /tmp/root/.xunlei.lixian.config 复制到 /opt/bin/lixian 目录下。</p></div><div class="post-footer">
         <a href="/post/2013/06/23/%E8%BD%ACdd-wrt%E8%B7%AF%E7%94%B1%E5%99%A8%E8%BF%85%E9%9B%B7%E7%A6%BB%E7%BA%BF%E8%84%B1%E6%9C%BA%E4%B8%8B%E8%BD%BD/">阅读全文</a><div class="post-tags">
                 <i class="fas fa-tags fa-fw" aria-hidden="true"></i>&nbsp;<a href="/tags/dd-wrt/">Dd-Wrt</a>,&nbsp;<a href="/tags/%E7%A6%BB%E7%BA%BF%E4%B8%8B%E8%BD%BD/">离线下载</a>,&nbsp;<a href="/tags/%E8%84%B1%E6%9C%BA%E4%B8%8B%E8%BD%BD/">脱机下载</a></div></div>

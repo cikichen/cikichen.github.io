@@ -189,45 +189,45 @@ HTTPS和WSS（webSocket Secure） Http Strict Transport Security（HSTS）遵循
 <p>web的内容可以来自任何站点，例如，webView上的一张图片可以来自任何服务器，也可以从任意服务器上加载一个脚本或iframe。需要注意的是要当心来自其它服务器的资源。跨域的保护已经有20多年的历史，并且形成了基本原则&ndash;同源策略：只有和页面来源相同的脚本才会被该页面执行。例如iframe来自不同的域名，同源策略不允许加载这个iframe。仅仅靠同源策略还是不够的，还需要采取其它的防御措施。</p>
 <h3 id="1-subresource-integrity">1. Subresource Integrity</h3>
 <p>服务器可能会发生异常导致下发错误的资源使得web发生crash，但是开发者通常是知道所要请求哪个资源的，在脚本里面增加一个检查签名。如果签名匹配则认为是下发了正确的资源，如果不匹配仍然可以正常工作，此时尝试从页面的资源里查找或者从自己的服务器重新加载。这样做虽然降低了性能，但是提升了安全性。</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-gdscript3" data-lang="gdscript3"><span class="line"><span class="cl"><span class="o">&lt;</span><span class="n">script</span> <span class="n">src</span><span class="o">=</span><span class="s2">&#34;https://cdn.example/framework.js&#34;</span>  
-</span></span><span class="line"><span class="cl"> <span class="n">integrity</span><span class="o">=</span><span class="s2">&#34;sha256-8WqyJLuWKRB...oZkCnxQbWwJVw=&#34;</span><span class="o">&gt;</span>
-</span></span><span class="line"><span class="cl"><span class="o">&lt;/</span><span class="n">script</span><span class="o">&gt;</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="n">window</span><span class="o">.</span><span class="n">framwork</span> <span class="o">||</span> <span class="o">//</span> <span class="n">reload</span> <span class="n">from</span> <span class="n">own</span> <span class="n">domain</span>  
-</span></span></code></pre></div><h3 id="2-content-security-policy">2. Content Security Policy</h3>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">HTTP response：  
-</span></span><span class="line"><span class="cl">:status:200
-</span></span><span class="line"><span class="cl">Content-Security-Policy:  
-</span></span><span class="line"><span class="cl">    default &#39;self&#39;;  // No inline
-</span></span><span class="line"><span class="cl">    script-src cdn.example;
-</span></span><span class="line"><span class="cl">    frame-src social.example;
-</span></span><span class="line"><span class="cl">    frame-ancestors news.example;
-</span></span></code></pre></div><p>HTTP response的Header里面，default设置成自己，默认只能加载同源的资源；script-src和frame-src 分别指定可信任的脚本和iframe的来源；frame-ancestor设置成news.example，指定只有news.example可以iframe我们的web。</p>
+<pre tabindex="0"><code>&lt;script src=&#34;https://cdn.example/framework.js&#34;  
+ integrity=&#34;sha256-8WqyJLuWKRB...oZkCnxQbWwJVw=&#34;&gt;
+&lt;/script&gt;
+
+window.framwork || // reload from own domain  
+</code></pre><h3 id="2-content-security-policy">2. Content Security Policy</h3>
+<pre tabindex="0"><code>HTTP response：  
+:status:200
+Content-Security-Policy:  
+    default &#39;self&#39;;  // No inline
+    script-src cdn.example;
+    frame-src social.example;
+    frame-ancestors news.example;
+</code></pre><p>HTTP response的Header里面，default设置成自己，默认只能加载同源的资源；script-src和frame-src 分别指定可信任的脚本和iframe的来源；frame-ancestor设置成news.example，指定只有news.example可以iframe我们的web。</p>
 <p>另外不使用inline属性的脚本也是一种防御措施，不使用inline脚本，只从文件加载脚本，这么做分离了逻辑和文件，更加安全。</p>
 <h3 id="3-httponly-cookies">3. HttpOnly cookies</h3>
 <p>HTTPOnly cookies作为一种安全措施，已经有至少15年的使用历史。在这之前script通过document.cookie这个强大的api能拿到文档的cookie，留下安全隐患。HTTPOnly cookies能够阻止这种情况，只允许HTTP请求访问cookie，禁止使用script访问cookie。它的使用方式很简单，只需要在HTTP response的Header里面加上<strong>HttpOnly</strong>这一项，如下</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">HTTP response：  
-</span></span><span class="line"><span class="cl">:status:200
-</span></span><span class="line"><span class="cl">Set-Cookie:  
-</span></span><span class="line"><span class="cl">    auth = abc...123; HttpOnly;
-</span></span></code></pre></div><h3 id="4-samesite-cookies">4. SameSite cookies</h3>
+<pre tabindex="0"><code>HTTP response：  
+:status:200
+Set-Cookie:  
+    auth = abc...123; HttpOnly;
+</code></pre><h3 id="4-samesite-cookies">4. SameSite cookies</h3>
 <p>在HTTP response的Header里面将SameSite cookies这一项设置为Strict，那么将不允许把cookie从一个域名发送到另一个域名。例如其他人的web里面嵌入了我们的web，如果我们的服务器HTTP response的Header里面SameSite cookies = Strict，那么其他人将无法使用他的cookie来访问我们的服务器。</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">HTTP response：  
-</span></span><span class="line"><span class="cl">:status:200
-</span></span><span class="line"><span class="cl">Set-Cookie:  
-</span></span><span class="line"><span class="cl">    auth = abc...123; HttpOnly;
-</span></span><span class="line"><span class="cl">    SameSite=strict
-</span></span></code></pre></div><h3 id="5-cross-origin-resource-policy">5. Cross-Origin-Resource-Policy</h3>
+<pre tabindex="0"><code>HTTP response：  
+:status:200
+Set-Cookie:  
+    auth = abc...123; HttpOnly;
+    SameSite=strict
+</code></pre><h3 id="5-cross-origin-resource-policy">5. Cross-Origin-Resource-Policy</h3>
 <p>Cross-Origin-Resource-Policy是推出的新功能。之前web可以加载任意web中的资源，例如图片或者script。在HTTP response的Header里面将Cross-Origin-Resource-Policy这一项设置为<strong>Same</strong>，将不允许别人的web向我们的服务器请求图片或者script，但是我们自己的web可以。</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">HTTP response：  
-</span></span><span class="line"><span class="cl">:status:200
-</span></span><span class="line"><span class="cl">Cross-Origin-Resource-Policy:Same
-</span></span></code></pre></div><h3 id="6-cross-origin-window-policy">6. Cross-Origin-Window-Policy</h3>
+<pre tabindex="0"><code>HTTP response：  
+:status:200
+Cross-Origin-Resource-Policy:Same
+</code></pre><h3 id="6-cross-origin-window-policy">6. Cross-Origin-Window-Policy</h3>
 <p>Cross-Origin-Window-Policy也是新推出的功能。之前通过window.open这个强大的api，其他人的web可以在新窗口中打开我们域名下的web，通过一些手段可以修改我们的web，导航到攻击者指定的页面。在HTTP response的Header里面将Cross-Origin-Resource-Policy这一项设置为<strong>Deny</strong>，将阻止其他人修改我们web中的内容，当然别人仍然还是可以打开我们的web。Cross-Origin-Resource-Policy适用于希望使用post message 进行窗口间通信，但是不想让别人控制我们自己web内容的情况。</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">HTTP response：  
-</span></span><span class="line"><span class="cl">:status:200
-</span></span><span class="line"><span class="cl">Cross-Origin-Window-Policy:Deny
-</span></span></code></pre></div><h2 id="常见的web攻击及防御手段">常见的web攻击及防御手段</h2>
+<pre tabindex="0"><code>HTTP response：  
+:status:200
+Cross-Origin-Window-Policy:Deny
+</code></pre><h2 id="常见的web攻击及防御手段">常见的web攻击及防御手段</h2>
 <h3 id="1-cross-origin-attacks">1. Cross-Origin Attacks</h3>
 <ul>
 <li>Cross-Site Scripting</li>
@@ -245,11 +245,11 @@ HTTPS和WSS（webSocket Secure） Http Strict Transport Security（HSTS）遵循
         alt="http://img.ibook8.club/2019-02-14-15501162917254.jpg"
         title="http://img.ibook8.club/2019-02-14-15501162917254.jpg" />
 在HTTP response的Header中添加<strong>HTTPOnly</strong>这一项，就能阻止脚本访问文档的cookie，从而防御跨域脚本攻击。 另外一种防御手段是Content-Security-Policy，如下</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">HTTP response：  
-</span></span><span class="line"><span class="cl">:status:200
-</span></span><span class="line"><span class="cl">Content-Security-Policy:  
-</span></span><span class="line"><span class="cl">    default-src &#39;self&#39;;  // No inline
-</span></span></code></pre></div><p>Content-Security-Policy能保证拒绝加载外部来源的脚本，并且不使用inline属性的脚本，只从文件中加载脚本。</p>
+<pre tabindex="0"><code>HTTP response：  
+:status:200
+Content-Security-Policy:  
+    default-src &#39;self&#39;;  // No inline
+</code></pre><p>Content-Security-Policy能保证拒绝加载外部来源的脚本，并且不使用inline属性的脚本，只从文件中加载脚本。</p>
 <h4 id="2-compromised-cdn">2. Compromised CDN</h4>
 <p>例如我们的web需要从某个外部资源装载一个framework，攻击者可能拦截这个请求，并把它重定向到自己的攻击脚本上，如下图
 <img
@@ -262,18 +262,18 @@ HTTPS和WSS（webSocket Secure） Http Strict Transport Security（HSTS）遵循
         title="http://img.ibook8.club/2019-02-14-15501228740659.jpg" />
 使用Content-Security-Policy中script-src这个属性可以指定信任的脚本来源，并且在引用资源的时候指定来源和校验签名，如下</p>
 <p>在HTTP response中：</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">HTTP response：  
-</span></span><span class="line"><span class="cl">:status:200
-</span></span><span class="line"><span class="cl">Content-Security-Policy:  
-</span></span><span class="line"><span class="cl">    default-src &#39;self&#39;;  
-</span></span><span class="line"><span class="cl">    script-src cdn.example;
-</span></span></code></pre></div><p>在HTML中：</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-gdscript3" data-lang="gdscript3"><span class="line"><span class="cl"><span class="o">&lt;</span><span class="n">script</span> <span class="n">src</span><span class="o">=</span><span class="s2">&#34;https://cdn.example/framework.js&#34;</span>  
-</span></span><span class="line"><span class="cl"> <span class="n">integrity</span><span class="o">=</span><span class="s2">&#34;sha256-8WqyJLuWKRB...oZkCnxQbWwJVw=&#34;</span><span class="o">&gt;</span>
-</span></span><span class="line"><span class="cl"><span class="o">&lt;/</span><span class="n">script</span><span class="o">&gt;</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="n">window</span><span class="o">.</span><span class="n">framwork</span> <span class="o">||</span> <span class="o">//</span> <span class="n">reload</span> <span class="n">from</span> <span class="n">own</span> <span class="n">domain</span>  
-</span></span></code></pre></div><h4 id="3-cross-site-request-forgeries">3. Cross-Site Request Forgeries</h4>
+<pre tabindex="0"><code>HTTP response：  
+:status:200
+Content-Security-Policy:  
+    default-src &#39;self&#39;;  
+    script-src cdn.example;
+</code></pre><p>在HTML中：</p>
+<pre tabindex="0"><code>&lt;script src=&#34;https://cdn.example/framework.js&#34;  
+ integrity=&#34;sha256-8WqyJLuWKRB...oZkCnxQbWwJVw=&#34;&gt;
+&lt;/script&gt;
+
+window.framwork || // reload from own domain  
+</code></pre><h4 id="3-cross-site-request-forgeries">3. Cross-Site Request Forgeries</h4>
 <p>攻击者可能在自己的web中嵌入我们的web，然后向我们的服务器发起一个伪造的网络请求（使用的是攻击者网站的cookie），如下图
 <img
         class="lazyload"
@@ -284,11 +284,11 @@ HTTPS和WSS（webSocket Secure） Http Strict Transport Security（HSTS）遵循
         alt="http://img.ibook8.club/2019-02-14-15501230297157.jpg"
         title="http://img.ibook8.club/2019-02-14-15501230297157.jpg" />
 如果采取了防御措施，将HTTP response的Header里面的SameSite设置为strict，那么就会禁止攻击者网站的cookie发动到我们的服务器上面，如下</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">HTTP response：  
-</span></span><span class="line"><span class="cl">:status:200
-</span></span><span class="line"><span class="cl">Set-Cookie:  
-</span></span><span class="line"><span class="cl">    auth=abc...123; SameSite=strict
-</span></span></code></pre></div><h3 id="2-speculative-execution-attacks-spectre">2. Speculative execution attacks (Spectre)</h3>
+<pre tabindex="0"><code>HTTP response：  
+:status:200
+Set-Cookie:  
+    auth=abc...123; SameSite=strict
+</code></pre><h3 id="2-speculative-execution-attacks-spectre">2. Speculative execution attacks (Spectre)</h3>
 <p>防御措施有：</p>
 <ul>
 <li>WKWebView</li>
@@ -321,14 +321,14 @@ HTTPS和WSS（webSocket Secure） Http Strict Transport Security（HSTS）遵循
 <h4 id="2-content-security-policy-1">2. Content security policy</h4>
 <p>Content security policy的封锁功能是处于Network线程中，和web线程是分离的，因此可以防御预测执行攻击手段。
 例如web要加载一个广告iframe，但是这个广告iframe被重定向到了一个攻击脚本，如果使用了Content security policy，如下，因为攻击脚本不在信任的frame-src里面，所以会禁止加载。还有一种情况，攻击者的web引入了我们的web，因为设置了frame-ancestors为none，所以会禁止攻击者网站引入我们的web，从而防御攻击。</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">HTTP response：  
-</span></span><span class="line"><span class="cl">:status:200
-</span></span><span class="line"><span class="cl">Content-Security-Policy:  
-</span></span><span class="line"><span class="cl">    default-src &#39;self&#39;;  
-</span></span><span class="line"><span class="cl">    frame-src ad.example
-</span></span><span class="line"><span class="cl">                social.example
-</span></span><span class="line"><span class="cl">    frame-ancestors &#39;none&#39;
-</span></span></code></pre></div><h4 id="3-httponly-cookies-和-samesite-cookies">3. HttpOnly cookies 和 SameSite cookies</h4>
+<pre tabindex="0"><code>HTTP response：  
+:status:200
+Content-Security-Policy:  
+    default-src &#39;self&#39;;  
+    frame-src ad.example
+                social.example
+    frame-ancestors &#39;none&#39;
+</code></pre><h4 id="3-httponly-cookies-和-samesite-cookies">3. HttpOnly cookies 和 SameSite cookies</h4>
 <p>HttpOnly cookies 和 SameSite cookies的封锁功能也是处于Network线程中，和web线程是分离的，因此可以防御预测执行攻击手段。<strong>HttpOnly</strong> cookies能够禁止攻击者通过脚本拿到cookie。SameSite cookies设为strict能够禁止cookie从一个域发送到另一个域。</p>
 <h4 id="4-cross-origin-resource-policy">4. Cross-Origin-Resource-Policy</h4>
 <p>Cross-Origin-Resource-Policy的封锁功能也是处于Network线程中，和web线程是分离的，因此可以防御预测执行攻击手段。Cross-Origin-Resource-Policy设置成<strong>Same</strong>能禁止攻击者的web加载我们网站的资源。</p>

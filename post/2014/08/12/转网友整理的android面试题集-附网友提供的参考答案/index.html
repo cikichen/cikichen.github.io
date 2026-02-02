@@ -176,10 +176,10 @@ onStart() 根据保存的状态恢复现场. mediaplayer.start();</p>
 <p>这个时候B覆盖了窗体, A会调用onStop()方法. 如果B呢 是个透明的,或者是对话框的样式, 就不会调用onStop()方法</p>
 <p><strong>4. 横竖屏切换时候Activity的生命周期。</strong></p>
 <p>这个生命周期跟清单文件里的配置有关系
-<!-- raw HTML omitted -->_ 1、不设置Activity的android:configChanges时，切屏会重新调用各个生命周期_<!-- raw HTML omitted -->
+<span style="text-decoration: underline;">_ 1、不设置Activity的android:configChanges时，切屏会重新调用各个生命周期_</span>
 默认首先销毁当前activity,然后重新加载
 Onpause onstop ondestory oncreate onstart onresume</p>
-<p><!-- raw HTML omitted -->_ 2、设置Activity的android:configChanges=”orientation|keyboardHidden”时_<!-- raw HTML omitted -->，切屏不会重新调用各个生命周期，只会执行onConfigurationChanged方法</p>
+<p><span style="text-decoration: underline;">_ 2、设置Activity的android:configChanges=”orientation|keyboardHidden”时_</span>，切屏不会重新调用各个生命周期，只会执行onConfigurationChanged方法</p>
 <p>游戏开发中, 屏幕的朝向都是写死的.</p>
 <p><strong>5. 如何将一个Activity设置成窗口的样式。</strong></p>
 <p>可以自定义一个activity的样式,继承自dialog样式
@@ -198,11 +198,11 @@ super.onCreate(savedInstanceState);
 <p><strong>7. 如何退出Activity？如何安全退出已调用多个Activity的Application？</strong></p>
 <p>退出activity 直接调用 finish () 方法 . //用户点击back键 就是退出一个activity
 退出activity 会执行 onDestroy()方法 .
-<!-- raw HTML omitted -->1、抛异常强制退出：<!-- raw HTML omitted -->
+<span style="text-decoration: underline;">1、抛异常强制退出：</span>
 该方法通过抛异常，使程序Force Close。
 验证可以，但是，需要解决的问题是，如何使程序结束掉，而不弹出Force Close的窗口。
 //安全结束进程 android.os.Process.killProcess(android.os.Process.myPid());</p>
-<p><!-- raw HTML omitted -->2、记录打开的Activity：<!-- raw HTML omitted -->
+<p><span style="text-decoration: underline;">2、记录打开的Activity：</span>
 每打开一个Activity，就记录下来。在需要退出时，关闭每一个Activity即可。</p>
 <p>List lists ; 在application 全集的环境里面
 lists = new ArrayList();
@@ -213,12 +213,12 @@ lists.add(activity);</p>
 {
 activity.finish();
 }</p>
-<p><!-- raw HTML omitted -->3、发送特定广播：<!-- raw HTML omitted -->
+<p><span style="text-decoration: underline;">3、发送特定广播：</span>
 在需要结束应用时，发送一个特定的广播，每个Activity收到广播后，关闭即可。
 //给某个activity 注册接受接受广播的意图
 registerReceiver(receiver, filter)</p>
 <p>//如果过接受到的是 关闭activity的广播 就调用finish()方法 把当前的activity finish()掉</p>
-<p><!-- raw HTML omitted -->4、递归退出<!-- raw HTML omitted -->
+<p><span style="text-decoration: underline;">4、递归退出</span>
 在打开新的Activity时使用startActivityForResult，然后自己加标志，在onActivityResult中处理，递归关闭。OnActivityResult();</p>
 <p><strong>8. service是否在main thread中执行, service里面是否能执行耗时的操作?</strong></p>
 <p>默认情况,如果没有显示的指定service所运行的进程, Service和activity是运行在当前app所在进程的main thread(UI主线程)里面
@@ -226,7 +226,7 @@ service里面不能执行耗时的操作(网络请求,拷贝数据库,大文件 
 在子线程中执行 new Thread(){}.start();</p>
 <p>特殊情况 ,可以在清单文件配置 service 执行所在的进程 ,
 让service在另外的进程中执行</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-xml" data-lang="xml"><span class="line"><span class="cl"><span class="nt">&lt;service</span> <span class="na">android:process=</span><span class="s">”cn.itcast.xxx”</span><span class="nt">&gt;&lt;/service&gt;</span>;
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-xml" data-lang="xml"><span style="display:flex;"><span><span style="color:#f92672">&lt;service</span> <span style="color:#a6e22e">android:process=</span><span style="color:#e6db74">”cn.itcast.xxx”</span><span style="color:#f92672">&gt;&lt;/service&gt;</span>;
 </span></span></code></pre></div><p><strong>9. 两个Activity之间怎么传递数据？</strong></p>
 <p>基本数据类型可以通过. Intent 传递数据
 extras.putDouble(key, value)
@@ -310,7 +310,7 @@ Service会运行onCreate，然后是调用onBind， 这个时候调用者和Serv
 <p>如果service运行期间调用了bindService，这时候再调用stopService的话，service是不会调用onDestroy方法的，service就stop不掉了，只能调用UnbindService, service就会被销毁
 如果一个service通过startService 被start之后，多次调用startService 的话，service会多次调用onStart方法。多次调用stopService的话，service只会调用一次onDestroyed方法。
 如果一个service通过bindService被start之后，多次调用bindService的话，service只会调用一次onBind方法。</p>
-<p><!-- raw HTML omitted -->多次调用unbindService的话会抛出异常。<!-- raw HTML omitted --></p>
+<p><span style="text-decoration: underline;">多次调用unbindService的话会抛出异常。</span></p>
 <p><strong>15. 不用service，B页面为音乐播放，从A跳转到B，再返回，如何使音乐继续播放？</strong></p>
 <p>这个问题问的很山寨.默认不做任何处理,B里面的音乐都能播放.
 遇到问题, 可以随机应变,灵活发挥,多考虑些细节,比如说这个题就可以这样说,说说你对startActivityForResult的理解()
@@ -344,11 +344,11 @@ Data: 数据uri uri mime
 Category : 而外的附加信息
 Action 匹配
 Action 是一个用户定义的字符串，用于描述一个 Android 应用程序组件，一个 Intent Filter 可以包含多个 Action。在 AndroidManifest.xml 的 Activity 定义时可以在其 节点指定一个 Action 列表用于标示 Activity 所能接受的“动作”，例如：
-<!-- raw HTML omitted -->&lt;intent-filter &gt;<!-- raw HTML omitted -->
-<!-- raw HTML omitted -->&lt;action android:name=”android.intent.action.MAIN” /&gt;<!-- raw HTML omitted -->
-<!-- raw HTML omitted -->&lt;action android:name=”cn.itcast.action” /&gt;<!-- raw HTML omitted -->
-<!-- raw HTML omitted -->……<!-- raw HTML omitted -->
-<!-- raw HTML omitted -->&lt;/intent-filter&gt;<!-- raw HTML omitted --></p>
+<span style="color: #333333;">&lt;intent-filter &gt;</span>
+<span style="color: #333333;">&lt;action android:name=”android.intent.action.MAIN” /&gt;</span>
+<span style="color: #333333;">&lt;action android:name=”cn.itcast.action” /&gt;</span>
+<span style="color: #333333;">……</span>
+<span style="color: #333333;">&lt;/intent-filter&gt;</span></p>
 <p>如果我们在启动一个 Activity 时使用这样的 Intent 对象：
 Intent intent =new Intent();
 intent.setAction(“cn.itcast.action”);</p>
@@ -399,9 +399,9 @@ Wifi设置
 sms_received</p>
 <p>来获取短信到来的广播, 根据黑名单来判断是否拦截该短信.</p>
 <p>画画板生成图片后,发送一个sd挂载的通知,通知系统的gallery去获取到新的图片.</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="n">Intent</span><span class="w"> </span><span class="n">intent</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">Intent</span><span class="p">(</span><span class="n">Intent</span><span class="p">.</span><span class="na">ACTION_MEDIA_MOUNTED</span><span class="p">,</span><span class="n">Uri</span><span class="p">.</span><span class="na">parse</span><span class="p">(</span><span class="err">“</span><span class="n">file</span><span class="p">:</span><span class="c1">//”+Environment.getExternalStorageDirectory()));</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="n">sendBroadcast</span><span class="p">(</span><span class="n">intent</span><span class="p">);</span><span class="w">
-</span></span></span></code></pre></div><p><strong>22. 在manifest和代码中如何注册和使 用 broadcast receiver 。</strong>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-java" data-lang="java"><span style="display:flex;"><span>Intent intent <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> Intent(Intent.<span style="color:#a6e22e">ACTION_MEDIA_MOUNTED</span>,Uri.<span style="color:#a6e22e">parse</span>(<span style="color:#960050;background-color:#1e0010">“</span>file:<span style="color:#75715e">//”+Environment.getExternalStorageDirectory()));</span>
+</span></span><span style="display:flex;"><span>sendBroadcast(intent);
+</span></span></code></pre></div><p><strong>22. 在manifest和代码中如何注册和使 用 broadcast receiver 。</strong>
 设置广播接收者的优先级,设置广播接受者的action名字 等…
 详细见工程代码.</p>
 <p>代码中注册,如果代码没有执行,就接受不到广播事件
@@ -410,16 +410,16 @@ registerReceiver(receiver, filter);</p>
 把自己的数据通过uri的形式共享出去
 android 系统下不同程序数据默认是不能共享访问</p>
 <p>需要去实现一个类去继承ContentProvider</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kd">class</span> <span class="nc">PersonContentProvider</span><span class="w"> </span><span class="kd">extends</span><span class="w"> </span><span class="n">ContentProvider</span><span class="p">{</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kt">boolean</span><span class="w"> </span><span class="nf">onCreate</span><span class="p">(){</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="c1">//..</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="n">Query</span><span class="w"> </span><span class="p">(</span><span class="n">Uri</span><span class="p">,</span><span class="w"> </span><span class="n">String</span><span class="o">[]</span><span class="p">,</span><span class="w"> </span><span class="n">String</span><span class="p">,</span><span class="w"> </span><span class="n">String</span><span class="o">[]</span><span class="p">,</span><span class="w"> </span><span class="n">String</span><span class="p">)</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="n">insert</span><span class="p">(</span><span class="n">Uri</span><span class="p">,</span><span class="w"> </span><span class="n">ContentValues</span><span class="p">)</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="n">update</span><span class="p">(</span><span class="n">Uri</span><span class="p">,</span><span class="w"> </span><span class="n">ContentValues</span><span class="p">,</span><span class="w"> </span><span class="n">String</span><span class="p">,</span><span class="w"> </span><span class="n">String</span><span class="o">[]</span><span class="p">)</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="n">delete</span><span class="p">(</span><span class="n">Uri</span><span class="p">,</span><span class="w"> </span><span class="n">String</span><span class="p">,</span><span class="w"> </span><span class="n">String</span><span class="o">[]</span><span class="p">)</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
-</span></span></span></code></pre></div><p>content:// 代表contentprovider
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">PersonContentProvider</span> <span style="color:#66d9ef">extends</span> ContentProvider{
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">boolean</span> <span style="color:#a6e22e">onCreate</span>(){
+</span></span><span style="display:flex;"><span><span style="color:#75715e">//..</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>Query (Uri, String<span style="color:#f92672">[]</span>, String, String<span style="color:#f92672">[]</span>, String)
+</span></span><span style="display:flex;"><span>insert(Uri, ContentValues)
+</span></span><span style="display:flex;"><span>update(Uri, ContentValues, String, String<span style="color:#f92672">[]</span>)
+</span></span><span style="display:flex;"><span>delete(Uri, String, String<span style="color:#f92672">[]</span>)
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>content:// 代表contentprovider
 技巧:</p>
 <ol>
 <li>看urlmarcher.</li>
@@ -678,13 +678,13 @@ opencv (人脸识别) , ffmpeg , rmvb mp5 avi 高清解码. ffmpeg, opencore.</p
 检测内存泄露 工具
 导致内存泄漏主要的原因是，先前申请了内存空间而忘记了释放。如果程序中存在对无用对象的引用，那么这些对象就会驻留内存，消耗内存，因为无法让垃圾回收器GC验证这些对象是否不再需要。如果存在对象的引用，这个对象就被定义为”有效的活动”，同时不会被释放。要确定对象所占内存将被回收，我们就要务必确认该对象不再会被使用。典型的做法就是把对象数据成员设为null或者从集合中移除该对象。但当局部变量不需要时，不需明显的设为null，因为一个方法执行完毕时，这些引用会自动被清理。
 Java带垃圾回收的机制,为什么还会内存泄露呢?</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="n">Vector</span><span class="w"> </span><span class="n">v</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">Vector</span><span class="p">(</span><span class="n">10</span><span class="p">);</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">1</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">100</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="n">Object</span><span class="w"> </span><span class="n">o</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">Object</span><span class="p">();</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="n">v</span><span class="p">.</span><span class="na">add</span><span class="p">(</span><span class="n">o</span><span class="p">);</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="n">o</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">null</span><span class="p">;</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="c1">//此时，所有的Object对象都没有被释放，因为变量v引用这些对象。</span><span class="w">
-</span></span></span></code></pre></div><p>Java 内存泄露的根本原因就是 保存了不可能再被访问的变量类型的引用
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-java" data-lang="java"><span style="display:flex;"><span>Vector v <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> Vector(10);
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">for</span> (<span style="color:#66d9ef">int</span> i <span style="color:#f92672">=</span> 1; i <span style="color:#f92672">&lt;</span> 100; i<span style="color:#f92672">++</span>) {
+</span></span><span style="display:flex;"><span>Object o <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> Object();
+</span></span><span style="display:flex;"><span>v.<span style="color:#a6e22e">add</span>(o);
+</span></span><span style="display:flex;"><span>o <span style="color:#f92672">=</span> <span style="color:#66d9ef">null</span>;
+</span></span><span style="display:flex;"><span>}<span style="color:#75715e">//此时，所有的Object对象都没有被释放，因为变量v引用这些对象。</span>
+</span></span></code></pre></div><p>Java 内存泄露的根本原因就是 保存了不可能再被访问的变量类型的引用
 Jni 开发可能会出现内存泄露</p>
 <p><strong>56. Android UI中的View如何刷新。</strong></p>
 <p>在主线程中 拿到view调用Invalide()方法,查看画画板里面更新imageview的方法</p>
@@ -794,181 +794,181 @@ splash界面不能超过5秒
 <ol>
 <li>重构前的代码Bmi.java：</li>
 </ol>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kn">package</span><span class="w"> </span><span class="nn">com.demo.android.bmi</span><span class="p">;</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="kn">import</span><span class="w"> </span><span class="nn">java.text.DecimalFormat</span><span class="p">;</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="kn">import</span><span class="w"> </span><span class="nn">android.app.Activity</span><span class="p">;</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="kn">import</span><span class="w"> </span><span class="nn">android.os.Bundle</span><span class="p">;</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="kn">import</span><span class="w"> </span><span class="nn">android.view.View</span><span class="p">;</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="kn">import</span><span class="w"> </span><span class="nn">android.view.View.OnClickListener</span><span class="p">;</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="kn">import</span><span class="w"> </span><span class="nn">android.widget.Button</span><span class="p">;</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="kn">import</span><span class="w"> </span><span class="nn">android.widget.EditText</span><span class="p">;</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="kn">import</span><span class="w"> </span><span class="nn">android.widget.TextView</span><span class="p">;</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kd">class</span> <span class="nc">Bmi</span><span class="w"> </span><span class="kd">extends</span><span class="w"> </span><span class="n">Activity</span><span class="w"> </span><span class="p">{</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="cm">/** Called when the activity is first created. */</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="nd">@Override</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">onCreate</span><span class="p">(</span><span class="n">Bundle</span><span class="w"> </span><span class="n">savedInstanceState</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="kd">super</span><span class="p">.</span><span class="na">onCreate</span><span class="p">(</span><span class="n">savedInstanceState</span><span class="p">);</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="n">setContentView</span><span class="p">(</span><span class="n">R</span><span class="p">.</span><span class="na">layout</span><span class="p">.</span><span class="na">main</span><span class="p">);</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="c1">// Listen for button clicks</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="n">Button</span><span class="w"> </span><span class="n">button</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">Button</span><span class="p">)</span><span class="w"> </span><span class="n">findViewById</span><span class="p">(</span><span class="n">R</span><span class="p">.</span><span class="na">id</span><span class="p">.</span><span class="na">submit</span><span class="p">);</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="n">button</span><span class="p">.</span><span class="na">setOnClickListener</span><span class="p">(</span><span class="n">calcBMI</span><span class="p">);</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="kd">private</span><span class="w"> </span><span class="n">OnClickListener</span><span class="w"> </span><span class="n">calcBMI</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">OnClickListener</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="nd">@Override</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">onClick</span><span class="p">(</span><span class="n">View</span><span class="w"> </span><span class="n">v</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="n">DecimalFormat</span><span class="w"> </span><span class="n">nf</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">DecimalFormat</span><span class="p">(</span><span class="err">“</span><span class="n">0</span><span class="p">.</span><span class="na">00</span><span class="err">″</span><span class="p">);</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="n">EditText</span><span class="w"> </span><span class="n">fieldheight</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">EditText</span><span class="p">)</span><span class="w"> </span><span class="n">findViewById</span><span class="p">(</span><span class="n">R</span><span class="p">.</span><span class="na">id</span><span class="p">.</span><span class="na">height</span><span class="p">);</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="n">EditText</span><span class="w"> </span><span class="n">fieldweight</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">EditText</span><span class="p">)</span><span class="w"> </span><span class="n">findViewById</span><span class="p">(</span><span class="n">R</span><span class="p">.</span><span class="na">id</span><span class="p">.</span><span class="na">weight</span><span class="p">);</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="kt">double</span><span class="w"> </span><span class="n">height</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Double</span><span class="p">.</span><span class="na">parseDouble</span><span class="p">(</span><span class="n">fieldheight</span><span class="p">.</span><span class="na">getText</span><span class="p">().</span><span class="na">toString</span><span class="p">())</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">100</span><span class="p">;</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="kt">double</span><span class="w"> </span><span class="n">weight</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Double</span><span class="p">.</span><span class="na">parseDouble</span><span class="p">(</span><span class="n">fieldweight</span><span class="p">.</span><span class="na">getText</span><span class="p">().</span><span class="na">toString</span><span class="p">());</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="kt">double</span><span class="w"> </span><span class="n">BMI</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">weight</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="p">(</span><span class="n">height</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">height</span><span class="p">);</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="n">TextView</span><span class="w"> </span><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">TextView</span><span class="p">)</span><span class="w"> </span><span class="n">findViewById</span><span class="p">(</span><span class="n">R</span><span class="p">.</span><span class="na">id</span><span class="p">.</span><span class="na">result</span><span class="p">);</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="n">result</span><span class="p">.</span><span class="na">setText</span><span class="p">(</span><span class="err">“</span><span class="n">Your</span><span class="w"> </span><span class="n">BMI</span><span class="w"> </span><span class="n">is</span><span class="w"> </span><span class="err">”</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">nf</span><span class="p">.</span><span class="na">format</span><span class="p">(</span><span class="n">BMI</span><span class="p">));</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="c1">// Give health advice</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="n">TextView</span><span class="w"> </span><span class="n">fieldsuggest</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">TextView</span><span class="p">)</span><span class="w"> </span><span class="n">findViewById</span><span class="p">(</span><span class="n">R</span><span class="p">.</span><span class="na">id</span><span class="p">.</span><span class="na">suggest</span><span class="p">);</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">BMI</span><span class="w"> </span><span class="o">&amp;</span><span class="n">gt</span><span class="p">;</span><span class="w"> </span><span class="n">25</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="n">fieldsuggest</span><span class="p">.</span><span class="na">setText</span><span class="p">(</span><span class="n">R</span><span class="p">.</span><span class="na">string</span><span class="p">.</span><span class="na">advice_heavy</span><span class="p">);</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">BMI</span><span class="w"> </span><span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="w"> </span><span class="n">20</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="n">fieldsuggest</span><span class="p">.</span><span class="na">setText</span><span class="p">(</span><span class="n">R</span><span class="p">.</span><span class="na">string</span><span class="p">.</span><span class="na">advice_light</span><span class="p">);</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="p">{</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="n">fieldsuggest</span><span class="p">.</span><span class="na">setText</span><span class="p">(</span><span class="n">R</span><span class="p">.</span><span class="na">string</span><span class="p">.</span><span class="na">advice_average</span><span class="p">);</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="p">};</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
-</span></span></span></code></pre></div><p>Step1：抽取所有界面元件的声明和定义，整合到单独一个函数findViews()中；</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="c1">// 声明 view</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="kd">private</span><span class="w"> </span><span class="n">Button</span><span class="w"> </span><span class="n">button_calc</span><span class="p">;</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="kd">private</span><span class="w"> </span><span class="n">EditText</span><span class="w"> </span><span class="n">field_height</span><span class="p">;</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="kd">private</span><span class="w"> </span><span class="n">EditText</span><span class="w"> </span><span class="n">field_weight</span><span class="p">;</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="kd">private</span><span class="w"> </span><span class="n">TextView</span><span class="w"> </span><span class="n">view_result</span><span class="p">;</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="kd">private</span><span class="w"> </span><span class="n">TextView</span><span class="w"> </span><span class="n">view_suggest</span><span class="p">;</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="c1">// 定义</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="kd">private</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">findViews</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="n">button_calc</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">Button</span><span class="p">)</span><span class="w"> </span><span class="n">findViewById</span><span class="p">(</span><span class="n">R</span><span class="p">.</span><span class="na">id</span><span class="p">.</span><span class="na">submit</span><span class="p">);</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="n">field_height</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">EditText</span><span class="p">)</span><span class="w"> </span><span class="n">findViewById</span><span class="p">(</span><span class="n">R</span><span class="p">.</span><span class="na">id</span><span class="p">.</span><span class="na">height</span><span class="p">);</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="n">field_weight</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">EditText</span><span class="p">)</span><span class="w"> </span><span class="n">findViewById</span><span class="p">(</span><span class="n">R</span><span class="p">.</span><span class="na">id</span><span class="p">.</span><span class="na">weight</span><span class="p">);</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="n">view_result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">TextView</span><span class="p">)</span><span class="w"> </span><span class="n">findViewById</span><span class="p">(</span><span class="n">R</span><span class="p">.</span><span class="na">id</span><span class="p">.</span><span class="na">result</span><span class="p">);</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="n">view_suggest</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">TextView</span><span class="p">)</span><span class="w"> </span><span class="n">findViewById</span><span class="p">(</span><span class="n">R</span><span class="p">.</span><span class="na">id</span><span class="p">.</span><span class="na">suggest</span><span class="p">);</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="n">此部分即是MVC中的V</span><span class="err">：</span><span class="n">View视图</span><span class="err">。</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="n">Step2</span><span class="err">：</span><span class="n">抽取程序的逻辑</span><span class="err">（</span><span class="n">即界面元件的处理逻辑</span><span class="err">），</span><span class="n">整合到函数setListensers</span><span class="p">()</span><span class="n">中</span><span class="err">；</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="c1">//Listen for button clicks</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="kd">private</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">setListensers</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="n">button_calc</span><span class="p">.</span><span class="na">setOnClickListener</span><span class="p">(</span><span class="n">calcBMI</span><span class="p">);</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="n">此部分即是MVC中的C</span><span class="err">：</span><span class="n">Controller控制器</span><span class="err">。</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="n">接着</span><span class="err">，</span><span class="n">onCreate</span><span class="p">()</span><span class="n">就显得非常简洁</span><span class="err">、</span><span class="n">明了了</span><span class="err">：</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">onCreate</span><span class="p">(</span><span class="n">Bundle</span><span class="w"> </span><span class="n">savedInstanceState</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="kd">super</span><span class="p">.</span><span class="na">onCreate</span><span class="p">(</span><span class="n">savedInstanceState</span><span class="p">);</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="n">setContentView</span><span class="p">(</span><span class="n">R</span><span class="p">.</span><span class="na">layout</span><span class="p">.</span><span class="na">main</span><span class="p">);</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="n">findViews</span><span class="p">();</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="n">setListensers</span><span class="p">();</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="n">Step3</span><span class="err">：</span><span class="n">修改按钮监听器calcBMI中相应的部分</span><span class="err">（</span><span class="n">主要是变量已经在视图部分定义了</span><span class="err">）；</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="kd">private</span><span class="w"> </span><span class="n">OnClickListener</span><span class="w"> </span><span class="n">calcBMI</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">OnClickListener</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="nd">@Override</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">onClick</span><span class="p">(</span><span class="n">View</span><span class="w"> </span><span class="n">v</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="n">DecimalFormat</span><span class="w"> </span><span class="n">nf</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">DecimalFormat</span><span class="p">(</span><span class="err">“</span><span class="n">0</span><span class="p">.</span><span class="na">00</span><span class="err">″</span><span class="p">);</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="kt">double</span><span class="w"> </span><span class="n">height</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Double</span><span class="p">.</span><span class="na">parseDouble</span><span class="p">(</span><span class="n">field_height</span><span class="p">.</span><span class="na">getText</span><span class="p">().</span><span class="na">toString</span><span class="p">())</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">100</span><span class="p">;</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="kt">double</span><span class="w"> </span><span class="n">weight</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Double</span><span class="p">.</span><span class="na">parseDouble</span><span class="p">(</span><span class="n">field_weight</span><span class="p">.</span><span class="na">getText</span><span class="p">().</span><span class="na">toString</span><span class="p">());</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="kt">double</span><span class="w"> </span><span class="n">BMI</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">weight</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="p">(</span><span class="n">height</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">height</span><span class="p">);</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="c1">// Present result</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="n">view_result</span><span class="p">.</span><span class="na">setText</span><span class="p">(</span><span class="err">“</span><span class="n">Your</span><span class="w"> </span><span class="n">BMI</span><span class="w"> </span><span class="n">is</span><span class="w"> </span><span class="err">”</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">nf</span><span class="p">.</span><span class="na">format</span><span class="p">(</span><span class="n">BMI</span><span class="p">));</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="c1">// Give health advice</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">BMI</span><span class="w"> </span><span class="o">&amp;</span><span class="n">gt</span><span class="p">;</span><span class="w"> </span><span class="n">25</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="n">view_suggest</span><span class="p">.</span><span class="na">setText</span><span class="p">(</span><span class="n">R</span><span class="p">.</span><span class="na">string</span><span class="p">.</span><span class="na">advice_heavy</span><span class="p">);</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">BMI</span><span class="w"> </span><span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="w"> </span><span class="n">20</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="n">view_suggest</span><span class="p">.</span><span class="na">setText</span><span class="p">(</span><span class="n">R</span><span class="p">.</span><span class="na">string</span><span class="p">.</span><span class="na">advice_light</span><span class="p">);</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="p">{</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="n">view_suggest</span><span class="p">.</span><span class="na">setText</span><span class="p">(</span><span class="n">R</span><span class="p">.</span><span class="na">string</span><span class="p">.</span><span class="na">advice_average</span><span class="p">);</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="p">};</span><span class="w">
-</span></span></span></code></pre></div><p>总之，此重构的目的无非是使程序的脉络更加清晰，即让人一眼望去，就能很容易地分辨出界面（View）应该写在哪里，程序逻辑（Controller）应该写在哪里，最终使维护和扩展代码变得更加容易！
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#f92672">package</span> com.demo.android.bmi;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> java.text.DecimalFormat;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> android.app.Activity;
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> android.os.Bundle;
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> android.view.View;
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> android.view.View.OnClickListener;
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> android.widget.Button;
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> android.widget.EditText;
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> android.widget.TextView;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">Bmi</span> <span style="color:#66d9ef">extends</span> Activity {
+</span></span><span style="display:flex;"><span><span style="color:#75715e">/** Called when the activity is first created. */</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">@Override</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">onCreate</span>(Bundle savedInstanceState) {
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">super</span>.<span style="color:#a6e22e">onCreate</span>(savedInstanceState);
+</span></span><span style="display:flex;"><span>setContentView(R.<span style="color:#a6e22e">layout</span>.<span style="color:#a6e22e">main</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// Listen for button clicks</span>
+</span></span><span style="display:flex;"><span>Button button <span style="color:#f92672">=</span> (Button) findViewById(R.<span style="color:#a6e22e">id</span>.<span style="color:#a6e22e">submit</span>);
+</span></span><span style="display:flex;"><span>button.<span style="color:#a6e22e">setOnClickListener</span>(calcBMI);
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">private</span> OnClickListener calcBMI <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> OnClickListener() {
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">@Override</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">onClick</span>(View v) {
+</span></span><span style="display:flex;"><span>DecimalFormat nf <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> DecimalFormat(<span style="color:#960050;background-color:#1e0010">“</span>0.<span style="color:#a6e22e">00</span><span style="color:#960050;background-color:#1e0010">″</span>);
+</span></span><span style="display:flex;"><span>EditText fieldheight <span style="color:#f92672">=</span> (EditText) findViewById(R.<span style="color:#a6e22e">id</span>.<span style="color:#a6e22e">height</span>);
+</span></span><span style="display:flex;"><span>EditText fieldweight <span style="color:#f92672">=</span> (EditText) findViewById(R.<span style="color:#a6e22e">id</span>.<span style="color:#a6e22e">weight</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">double</span> height <span style="color:#f92672">=</span> Double.<span style="color:#a6e22e">parseDouble</span>(fieldheight.<span style="color:#a6e22e">getText</span>().<span style="color:#a6e22e">toString</span>()) <span style="color:#f92672">/</span> 100;
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">double</span> weight <span style="color:#f92672">=</span> Double.<span style="color:#a6e22e">parseDouble</span>(fieldweight.<span style="color:#a6e22e">getText</span>().<span style="color:#a6e22e">toString</span>());
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">double</span> BMI <span style="color:#f92672">=</span> weight <span style="color:#f92672">/</span> (height <span style="color:#f92672">*</span> height);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>TextView result <span style="color:#f92672">=</span> (TextView) findViewById(R.<span style="color:#a6e22e">id</span>.<span style="color:#a6e22e">result</span>);
+</span></span><span style="display:flex;"><span>result.<span style="color:#a6e22e">setText</span>(<span style="color:#960050;background-color:#1e0010">“</span>Your BMI is <span style="color:#960050;background-color:#1e0010">”</span> <span style="color:#f92672">+</span> nf.<span style="color:#a6e22e">format</span>(BMI));
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// Give health advice</span>
+</span></span><span style="display:flex;"><span>TextView fieldsuggest <span style="color:#f92672">=</span> (TextView) findViewById(R.<span style="color:#a6e22e">id</span>.<span style="color:#a6e22e">suggest</span>);
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> (BMI <span style="color:#f92672">&amp;</span>gt; 25) {
+</span></span><span style="display:flex;"><span>fieldsuggest.<span style="color:#a6e22e">setText</span>(R.<span style="color:#a6e22e">string</span>.<span style="color:#a6e22e">advice_heavy</span>);
+</span></span><span style="display:flex;"><span>} <span style="color:#66d9ef">else</span> <span style="color:#66d9ef">if</span> (BMI <span style="color:#f92672">&amp;</span>lt; 20) {
+</span></span><span style="display:flex;"><span>fieldsuggest.<span style="color:#a6e22e">setText</span>(R.<span style="color:#a6e22e">string</span>.<span style="color:#a6e22e">advice_light</span>);
+</span></span><span style="display:flex;"><span>} <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>fieldsuggest.<span style="color:#a6e22e">setText</span>(R.<span style="color:#a6e22e">string</span>.<span style="color:#a6e22e">advice_average</span>);
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>};
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Step1：抽取所有界面元件的声明和定义，整合到单独一个函数findViews()中；</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#75715e">// 声明 view</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">private</span> Button button_calc;
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">private</span> EditText field_height;
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">private</span> EditText field_weight;
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">private</span> TextView view_result;
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">private</span> TextView view_suggest;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// 定义</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">private</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">findViews</span>() {
+</span></span><span style="display:flex;"><span>button_calc <span style="color:#f92672">=</span> (Button) findViewById(R.<span style="color:#a6e22e">id</span>.<span style="color:#a6e22e">submit</span>);
+</span></span><span style="display:flex;"><span>field_height <span style="color:#f92672">=</span> (EditText) findViewById(R.<span style="color:#a6e22e">id</span>.<span style="color:#a6e22e">height</span>);
+</span></span><span style="display:flex;"><span>field_weight <span style="color:#f92672">=</span> (EditText) findViewById(R.<span style="color:#a6e22e">id</span>.<span style="color:#a6e22e">weight</span>);
+</span></span><span style="display:flex;"><span>view_result <span style="color:#f92672">=</span> (TextView) findViewById(R.<span style="color:#a6e22e">id</span>.<span style="color:#a6e22e">result</span>);
+</span></span><span style="display:flex;"><span>view_suggest <span style="color:#f92672">=</span> (TextView) findViewById(R.<span style="color:#a6e22e">id</span>.<span style="color:#a6e22e">suggest</span>);
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>此部分即是MVC中的V<span style="color:#960050;background-color:#1e0010">：</span>View视图<span style="color:#960050;background-color:#1e0010">。</span>
+</span></span><span style="display:flex;"><span>Step2<span style="color:#960050;background-color:#1e0010">：</span>抽取程序的逻辑<span style="color:#960050;background-color:#1e0010">（</span>即界面元件的处理逻辑<span style="color:#960050;background-color:#1e0010">），</span>整合到函数setListensers()中<span style="color:#960050;background-color:#1e0010">；</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">//Listen for button clicks</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">private</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">setListensers</span>() {
+</span></span><span style="display:flex;"><span>button_calc.<span style="color:#a6e22e">setOnClickListener</span>(calcBMI);
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>此部分即是MVC中的C<span style="color:#960050;background-color:#1e0010">：</span>Controller控制器<span style="color:#960050;background-color:#1e0010">。</span>
+</span></span><span style="display:flex;"><span>接着<span style="color:#960050;background-color:#1e0010">，</span>onCreate()就显得非常简洁<span style="color:#960050;background-color:#1e0010">、</span>明了了<span style="color:#960050;background-color:#1e0010">：</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">onCreate</span>(Bundle savedInstanceState) {
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">super</span>.<span style="color:#a6e22e">onCreate</span>(savedInstanceState);
+</span></span><span style="display:flex;"><span>setContentView(R.<span style="color:#a6e22e">layout</span>.<span style="color:#a6e22e">main</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>findViews();
+</span></span><span style="display:flex;"><span>setListensers();
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>Step3<span style="color:#960050;background-color:#1e0010">：</span>修改按钮监听器calcBMI中相应的部分<span style="color:#960050;background-color:#1e0010">（</span>主要是变量已经在视图部分定义了<span style="color:#960050;background-color:#1e0010">）；</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">private</span> OnClickListener calcBMI <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> OnClickListener() {
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">@Override</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">onClick</span>(View v) {
+</span></span><span style="display:flex;"><span>DecimalFormat nf <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> DecimalFormat(<span style="color:#960050;background-color:#1e0010">“</span>0.<span style="color:#a6e22e">00</span><span style="color:#960050;background-color:#1e0010">″</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">double</span> height <span style="color:#f92672">=</span> Double.<span style="color:#a6e22e">parseDouble</span>(field_height.<span style="color:#a6e22e">getText</span>().<span style="color:#a6e22e">toString</span>()) <span style="color:#f92672">/</span> 100;
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">double</span> weight <span style="color:#f92672">=</span> Double.<span style="color:#a6e22e">parseDouble</span>(field_weight.<span style="color:#a6e22e">getText</span>().<span style="color:#a6e22e">toString</span>());
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">double</span> BMI <span style="color:#f92672">=</span> weight <span style="color:#f92672">/</span> (height <span style="color:#f92672">*</span> height);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// Present result</span>
+</span></span><span style="display:flex;"><span>view_result.<span style="color:#a6e22e">setText</span>(<span style="color:#960050;background-color:#1e0010">“</span>Your BMI is <span style="color:#960050;background-color:#1e0010">”</span> <span style="color:#f92672">+</span> nf.<span style="color:#a6e22e">format</span>(BMI));
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// Give health advice</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> (BMI <span style="color:#f92672">&amp;</span>gt; 25) {
+</span></span><span style="display:flex;"><span>view_suggest.<span style="color:#a6e22e">setText</span>(R.<span style="color:#a6e22e">string</span>.<span style="color:#a6e22e">advice_heavy</span>);
+</span></span><span style="display:flex;"><span>} <span style="color:#66d9ef">else</span> <span style="color:#66d9ef">if</span> (BMI <span style="color:#f92672">&amp;</span>lt; 20) {
+</span></span><span style="display:flex;"><span>view_suggest.<span style="color:#a6e22e">setText</span>(R.<span style="color:#a6e22e">string</span>.<span style="color:#a6e22e">advice_light</span>);
+</span></span><span style="display:flex;"><span>} <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>view_suggest.<span style="color:#a6e22e">setText</span>(R.<span style="color:#a6e22e">string</span>.<span style="color:#a6e22e">advice_average</span>);
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>};
+</span></span></code></pre></div><p>总之，此重构的目的无非是使程序的脉络更加清晰，即让人一眼望去，就能很容易地分辨出界面（View）应该写在哪里，程序逻辑（Controller）应该写在哪里，最终使维护和扩展代码变得更加容易！
 其实，重构很简单，通读代码，感觉哪边不太爽，就改那边吧！（我目前的感受）
 一个良好的代码应该是能让人感到舒服的！</p>
 <ol start="2">
 <li>重构后的代码Bmi.java：</li>
 </ol>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kn">package</span><span class="w"> </span><span class="nn">com.demo.android.bmi</span><span class="p">;</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="kn">import</span><span class="w"> </span><span class="nn">java.text.DecimalFormat</span><span class="p">;</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="kn">import</span><span class="w"> </span><span class="nn">android.app.Activity</span><span class="p">;</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="kn">import</span><span class="w"> </span><span class="nn">android.os.Bundle</span><span class="p">;</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="kn">import</span><span class="w"> </span><span class="nn">android.view.View</span><span class="p">;</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="kn">import</span><span class="w"> </span><span class="nn">android.widget.Button</span><span class="p">;</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="kn">import</span><span class="w"> </span><span class="nn">android.widget.EditText</span><span class="p">;</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="kn">import</span><span class="w"> </span><span class="nn">android.widget.TextView</span><span class="p">;</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kd">class</span> <span class="nc">Bmi</span><span class="w"> </span><span class="kd">extends</span><span class="w"> </span><span class="n">Activity</span><span class="w"> </span><span class="p">{</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="kd">private</span><span class="w"> </span><span class="n">Button</span><span class="w"> </span><span class="n">button_calc</span><span class="p">;</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="kd">private</span><span class="w"> </span><span class="n">EditText</span><span class="w"> </span><span class="n">field_height</span><span class="p">;</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="kd">private</span><span class="w"> </span><span class="n">EditText</span><span class="w"> </span><span class="n">field_weight</span><span class="p">;</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="kd">private</span><span class="w"> </span><span class="n">TextView</span><span class="w"> </span><span class="n">view_result</span><span class="p">;</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="kd">private</span><span class="w"> </span><span class="n">TextView</span><span class="w"> </span><span class="n">view_suggest</span><span class="p">;</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="cm">/** Called when the activity is first created. */</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="nd">@Override</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">onCreate</span><span class="p">(</span><span class="n">Bundle</span><span class="w"> </span><span class="n">savedInstanceState</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="kd">super</span><span class="p">.</span><span class="na">onCreate</span><span class="p">(</span><span class="n">savedInstanceState</span><span class="p">);</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="n">setContentView</span><span class="p">(</span><span class="n">R</span><span class="p">.</span><span class="na">layout</span><span class="p">.</span><span class="na">main</span><span class="p">);</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="n">findViews</span><span class="p">();</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="n">setListensers</span><span class="p">();</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="c1">// 定义</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="kd">private</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">findViews</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="n">button_calc</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">Button</span><span class="p">)</span><span class="w"> </span><span class="n">findViewById</span><span class="p">(</span><span class="n">R</span><span class="p">.</span><span class="na">id</span><span class="p">.</span><span class="na">submit</span><span class="p">);</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="n">field_height</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">EditText</span><span class="p">)</span><span class="w"> </span><span class="n">findViewById</span><span class="p">(</span><span class="n">R</span><span class="p">.</span><span class="na">id</span><span class="p">.</span><span class="na">height</span><span class="p">);</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="n">field_weight</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">EditText</span><span class="p">)</span><span class="w"> </span><span class="n">findViewById</span><span class="p">(</span><span class="n">R</span><span class="p">.</span><span class="na">id</span><span class="p">.</span><span class="na">weight</span><span class="p">);</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="n">view_result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">TextView</span><span class="p">)</span><span class="w"> </span><span class="n">findViewById</span><span class="p">(</span><span class="n">R</span><span class="p">.</span><span class="na">id</span><span class="p">.</span><span class="na">result</span><span class="p">);</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="n">view_suggest</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">TextView</span><span class="p">)</span><span class="w"> </span><span class="n">findViewById</span><span class="p">(</span><span class="n">R</span><span class="p">.</span><span class="na">id</span><span class="p">.</span><span class="na">suggest</span><span class="p">);</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="c1">// Listen for button clicks</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="kd">private</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">setListeners</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="n">calcbutton</span><span class="p">.</span><span class="na">setOnClickListener</span><span class="p">(</span><span class="n">calcBMI</span><span class="p">);</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="kd">private</span><span class="w"> </span><span class="n">Button</span><span class="p">.</span><span class="na">OnClickListener</span><span class="w"> </span><span class="n">calcBMI</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">Button</span><span class="p">.</span><span class="na">OnClickListener</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">onClick</span><span class="p">(</span><span class="n">View</span><span class="w"> </span><span class="n">v</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="n">DecimalFormat</span><span class="w"> </span><span class="n">nf</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">DecimalFormat</span><span class="p">(</span><span class="err">“</span><span class="n">0</span><span class="p">.</span><span class="na">0</span><span class="err">″</span><span class="p">);</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="kt">double</span><span class="w"> </span><span class="n">height</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Double</span><span class="p">.</span><span class="na">parseDouble</span><span class="p">(</span><span class="n">field_height</span><span class="p">.</span><span class="na">getText</span><span class="p">().</span><span class="na">toString</span><span class="p">())</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">100</span><span class="p">;</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="kt">double</span><span class="w"> </span><span class="n">weight</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Double</span><span class="p">.</span><span class="na">parseDouble</span><span class="p">(</span><span class="n">field_weight</span><span class="p">.</span><span class="na">getText</span><span class="p">().</span><span class="na">toString</span><span class="p">());</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="kt">double</span><span class="w"> </span><span class="n">BMI</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">weight</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="p">(</span><span class="n">height</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">height</span><span class="p">);</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="c1">// Present result</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="n">view_result</span><span class="p">.</span><span class="na">setText</span><span class="p">(</span><span class="n">getText</span><span class="p">(</span><span class="n">R</span><span class="p">.</span><span class="na">string</span><span class="p">.</span><span class="na">bmi_result</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">nf</span><span class="p">.</span><span class="na">format</span><span class="p">(</span><span class="n">BMI</span><span class="p">));</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="c1">// Give health advice</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">BMI</span><span class="w"> </span><span class="o">&amp;</span><span class="n">gt</span><span class="p">;</span><span class="w"> </span><span class="n">25</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="n">view_suggest</span><span class="p">.</span><span class="na">setText</span><span class="p">(</span><span class="n">R</span><span class="p">.</span><span class="na">string</span><span class="p">.</span><span class="na">advice_heavy</span><span class="p">);</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">BMI</span><span class="w"> </span><span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="w"> </span><span class="n">20</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="n">view_suggest</span><span class="p">.</span><span class="na">setText</span><span class="p">(</span><span class="n">R</span><span class="p">.</span><span class="na">string</span><span class="p">.</span><span class="na">advice_light</span><span class="p">);</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="p">{</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="n">view_suggest</span><span class="p">.</span><span class="na">setText</span><span class="p">(</span><span class="n">R</span><span class="p">.</span><span class="na">string</span><span class="p">.</span><span class="na">advice_average</span><span class="p">);</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="p">};</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
-</span></span></span></code></pre></div><p>总结:
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#f92672">package</span> com.demo.android.bmi;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> java.text.DecimalFormat;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> android.app.Activity;
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> android.os.Bundle;
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> android.view.View;
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> android.widget.Button;
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> android.widget.EditText;
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> android.widget.TextView;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">Bmi</span> <span style="color:#66d9ef">extends</span> Activity {
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">private</span> Button button_calc;
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">private</span> EditText field_height;
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">private</span> EditText field_weight;
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">private</span> TextView view_result;
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">private</span> TextView view_suggest;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">/** Called when the activity is first created. */</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">@Override</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">onCreate</span>(Bundle savedInstanceState) {
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">super</span>.<span style="color:#a6e22e">onCreate</span>(savedInstanceState);
+</span></span><span style="display:flex;"><span>setContentView(R.<span style="color:#a6e22e">layout</span>.<span style="color:#a6e22e">main</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>findViews();
+</span></span><span style="display:flex;"><span>setListensers();
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// 定义</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">private</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">findViews</span>() {
+</span></span><span style="display:flex;"><span>button_calc <span style="color:#f92672">=</span> (Button) findViewById(R.<span style="color:#a6e22e">id</span>.<span style="color:#a6e22e">submit</span>);
+</span></span><span style="display:flex;"><span>field_height <span style="color:#f92672">=</span> (EditText) findViewById(R.<span style="color:#a6e22e">id</span>.<span style="color:#a6e22e">height</span>);
+</span></span><span style="display:flex;"><span>field_weight <span style="color:#f92672">=</span> (EditText) findViewById(R.<span style="color:#a6e22e">id</span>.<span style="color:#a6e22e">weight</span>);
+</span></span><span style="display:flex;"><span>view_result <span style="color:#f92672">=</span> (TextView) findViewById(R.<span style="color:#a6e22e">id</span>.<span style="color:#a6e22e">result</span>);
+</span></span><span style="display:flex;"><span>view_suggest <span style="color:#f92672">=</span> (TextView) findViewById(R.<span style="color:#a6e22e">id</span>.<span style="color:#a6e22e">suggest</span>);
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// Listen for button clicks</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">private</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">setListeners</span>() {
+</span></span><span style="display:flex;"><span>calcbutton.<span style="color:#a6e22e">setOnClickListener</span>(calcBMI);
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">private</span> Button.<span style="color:#a6e22e">OnClickListener</span> calcBMI <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> Button.<span style="color:#a6e22e">OnClickListener</span>() {
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">onClick</span>(View v) {
+</span></span><span style="display:flex;"><span>DecimalFormat nf <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> DecimalFormat(<span style="color:#960050;background-color:#1e0010">“</span>0.<span style="color:#a6e22e">0</span><span style="color:#960050;background-color:#1e0010">″</span>);
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">double</span> height <span style="color:#f92672">=</span> Double.<span style="color:#a6e22e">parseDouble</span>(field_height.<span style="color:#a6e22e">getText</span>().<span style="color:#a6e22e">toString</span>()) <span style="color:#f92672">/</span> 100;
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">double</span> weight <span style="color:#f92672">=</span> Double.<span style="color:#a6e22e">parseDouble</span>(field_weight.<span style="color:#a6e22e">getText</span>().<span style="color:#a6e22e">toString</span>());
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">double</span> BMI <span style="color:#f92672">=</span> weight <span style="color:#f92672">/</span> (height <span style="color:#f92672">*</span> height);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// Present result</span>
+</span></span><span style="display:flex;"><span>view_result.<span style="color:#a6e22e">setText</span>(getText(R.<span style="color:#a6e22e">string</span>.<span style="color:#a6e22e">bmi_result</span>) <span style="color:#f92672">+</span> nf.<span style="color:#a6e22e">format</span>(BMI));
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// Give health advice</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> (BMI <span style="color:#f92672">&amp;</span>gt; 25) {
+</span></span><span style="display:flex;"><span>view_suggest.<span style="color:#a6e22e">setText</span>(R.<span style="color:#a6e22e">string</span>.<span style="color:#a6e22e">advice_heavy</span>);
+</span></span><span style="display:flex;"><span>} <span style="color:#66d9ef">else</span> <span style="color:#66d9ef">if</span> (BMI <span style="color:#f92672">&amp;</span>lt; 20) {
+</span></span><span style="display:flex;"><span>view_suggest.<span style="color:#a6e22e">setText</span>(R.<span style="color:#a6e22e">string</span>.<span style="color:#a6e22e">advice_light</span>);
+</span></span><span style="display:flex;"><span>} <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>view_suggest.<span style="color:#a6e22e">setText</span>(R.<span style="color:#a6e22e">string</span>.<span style="color:#a6e22e">advice_average</span>);
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>};
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>总结:
 关于项目
 在就是你项目经验，一定要突出你遇到什么难点，然后是怎么解决的！把问题引导到你熟悉的领域,或者知识点上,尽量将每个技术点细节凸显出来，
 心态:

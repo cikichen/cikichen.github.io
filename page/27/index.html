@@ -117,11 +117,12 @@
 <strong>(1)删除文件夹 Cocos2d-x</strong></p>
 </blockquote>
 <p><strong>(2)删除文件(以CCAppWiz 或者 CCXAppWiz前缀开头的文件)，主要是两个.ico文件</strong></p>
-<p>** <!-- raw HTML omitted -->**</p>
+<p>** <wbr />**</p>
 <p><strong>附官网解决方法：</strong></p>
 <blockquote>
 <p><strong>cd wizard directory</strong> (Example as default install)&gt;</p>
-<p>VS2008: C:\Program Files\Microsoft Visual Studio 9.0\VC\vcprojects\&gt;</p></div><div class="post-footer">
+<p>VS2008: C:\Program Files\Microsoft Visual Studio 9.0\VC\vcprojects\&gt;</p>
+<p>VC2008Express: C:\Program Files\Microsoft Visual Studio 9.0\VC\Express\VCProjects&gt;</p></div><div class="post-footer">
         <a href="/post/2013/08/12/%E8%BD%ACwin7%E7%8E%AF%E5%A2%83%E4%B8%8Bvs2010%E9%85%8D%E7%BD%AEcocos2d-x-2.1/">阅读全文</a><div class="post-tags">
                 <i class="fas fa-tags fa-fw" aria-hidden="true"></i>&nbsp;<a href="/tags/cocos2d-x/">Cocos2d-X</a></div></div>
 </article><article class="single summary" itemscope itemtype="http://schema.org/Article"><h1 class="single-title" itemprop="name headline">
@@ -131,7 +132,7 @@
 <p>打开C:\Windows\System32\drivers\etc目录下的hosts文件</p>
 <p>最下面添加一句代码：</p>
 <blockquote>
-<p><!-- raw HTML omitted -->74.125.237.1 dl-ssl.google.com<!-- raw HTML omitted --></p>
+<p><span style="color: #4e6384;">74.125.237.1 dl-ssl.google.com</span></p>
 </blockquote></div><div class="post-footer">
         <a href="/post/2013/08/12/android-sdk%E6%9B%B4%E6%96%B0%E7%BC%93%E6%85%A2%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88/">阅读全文</a><div class="post-tags">
                 <i class="fas fa-tags fa-fw" aria-hidden="true"></i>&nbsp;<a href="/tags/android/">Android</a>,&nbsp;<a href="/tags/sdk/">Sdk</a>,&nbsp;<a href="/tags/%E6%9B%B4%E6%96%B0/">更新</a></div></div>
@@ -141,14 +142,29 @@
 </span>&nbsp;<span class="post-publish">发布于 <time datetime="2013-08-01">2013-08-01</time></span></div><div class="content"><p>在C语言中，&amp;符号大家一定很熟悉吧。</p>
 <p>它除了可以作为按位运算“与”之外还有更常用的功能——取变量地址。</p>
 <p>我们首先看下面一个简单的例子：</p>
-<!-- raw HTML omitted -->
-<!-- raw HTML omitted -->
+<pre class="brush:c">
+#include <stdio.h>
+int main(void)
+{
+    int a = 0;
+    int *p = &amp;a;
+    printf("The value is: %d/n", *p);
+    return 0;
+}</pre>
 <p>上面代码中，指针p指向变量a的地址。在C/C++中，每个变量都有其相应的地址，通过在变量标识符前加&amp;符号即可获得变量的地址。</p>
 <p>那么我们这么写可以吗？int *p = &amp;0x01000;</p>
 <p>这显然不行。因为对于一个数值常量，它是没有地址的。而变量之所以有地址就是因为要有一个存储单元对变量进行标识（当然，变量也可以直接映射到某个寄存器）。</p>
 <p>我们再看下面的代码：</p>
-<!-- raw HTML omitted -->
-<!-- raw HTML omitted -->
+<pre class="brush:c">
+#include "stdio.h"
+int main(void)
+{
+int a = 0; // &amp;a = 0x0012ff60
+int *p = &amp;*(int*)0x0012ff60;
+printf("The value is: %d/n", *p);
+return 0;
+}
+</pre>
 <p>上面代码又是怎么回事呢？</p>
 <p>先前已经调查过变量a的地址——0x0012ff60，那么这里的指针p实际上也是指向变量a的地址。</p>
 <p>首先，将0x0012ff60作为int*，这时它与&amp;a是等价的。</p>
@@ -157,16 +173,17 @@
 <p>因此，这里的&amp;与第一个例子中的&amp;是不同的语义。这里的&amp;不是取地址，因为一个*(int*)0x0012ff60不是变量，它是没有地址的。每一个变量标识符在编译期间，编译器会为它们创建一个符号表，其中存放着变量标识符相应的各种属性，如类型、地址标识等。地址标识在连接后即可确定逻辑地址值。简而言之，&amp;作为取地址操作，当且仅当&amp;后面跟着的是变量或函数标识符。所以这里的&amp;表示脱去解引用。</p>
 <p>由此我们可以得出：&amp;作为取地址操作时，其行为结果是在编译时就被确定的；而*，解引用操作（或取内容）操作，其行为结果只能在运行时才可被确定。</p>
 <p>再看下面的例子，加深印象：</p>
-<!-- raw HTML omitted -->
-<!-- raw HTML omitted -->
-<p>不过，&amp;符号不象解引用*能用多次，它只能放在变量标识符或一次解引用前。下面举一个例子</p>
-<!-- raw HTML omitted -->
-<!-- raw HTML omitted -->
-<p>由于经过一次&amp;来脱去解引用之后，当前表达式就不为左值。而&amp;必须放在一个左值前，因为只有左值才能确保引用是有效的，呵呵。</p>
-<p>在C++中，&amp;还可以表示引用，这个就不多说了。</p>
-<!-- raw HTML omitted -->
-<!-- raw HTML omitted -->
-<p>本文来自CSDN博客，出处：http://blog.csdn.net/zenny_chen/archive/2008/06/04/2512056.aspx</p></div><div class="post-footer">
+<pre class="brush:c">
+#include "stdio.h"
+int main(void)
+{
+int a = 0;
+int *p = &amp;*&amp;*&amp;a;
+printf("The value is: %d/n", *p);
+return 0;
+}
+</pre>
+<p>不过，&amp;符号不象解引用*能用多次，它只能放在变量标识符或一次解引用前。下面举一个例子</p></div><div class="post-footer">
         <a href="/post/2013/08/01/%E8%BD%ACc_c-%E4%B8%AD%E5%8F%96%E5%9C%B0%E5%9D%80%E7%AC%A6%E7%9A%84%E8%AF%AD%E4%B9%89/">阅读全文</a></div>
 </article><article class="single summary" itemscope itemtype="http://schema.org/Article"><h1 class="single-title" itemprop="name headline">
         <a href="/post/2013/08/01/c-%E4%B8%ADconst%E7%94%A8%E6%B3%95%E8%AF%A6%E8%A7%A3/">C&#43;&#43;中const用法详解</a>
@@ -174,11 +191,15 @@
 </span>&nbsp;<span class="post-publish">发布于 <time datetime="2013-08-01">2013-08-01</time></span></div><div class="content"><p>之所以详细讨论C++中const的用法，主要是因为在使用const限定指针时存在一些需要注意的地方。以下将按三个方面讨论const的用法，分别为：</p>
 <p><strong>1、const的基本概念以及定义一般变量的用法；</strong></p>
 <p><strong>2、使用const定义指针时需注意的问题：</strong></p>
-<p>_ a) <!-- raw HTML omitted -->const指针<!-- raw HTML omitted -->_</p>
-<p>_ b) <!-- raw HTML omitted -->指向const对象的指针<!-- raw HTML omitted -->_</p>
-<!-- raw HTML omitted -->
-<p>const是C++中声明和定义变量时的一个限定关键字，用来指明所声明和定义的变量具有const属性，也就是被const修饰的变量是一个常量，常量的值必须在定义时初始化，并且在其生存期内不能改变其初始值。<!-- raw HTML omitted --></p>
-<!-- raw HTML omitted -->
+<p>_ a) <span style="color: #3366ff;">const指针</span>_</p>
+<p>_ b) <span style="color: #3366ff;">指向const对象的指针</span>_</p>
+<div>**1、const的基本概念以及定义一般变量的用法**</div>
+<p>const是C++中声明和定义变量时的一个限定关键字，用来指明所声明和定义的变量具有const属性，也就是被const修饰的变量是一个常量，常量的值必须在定义时初始化，并且在其生存期内不能改变其初始值。</div></p>
+<div>    对于一般类型或类类型（除指针类型）直接使用const限定符就可以，举例如下：
+> const int a;  //错误！需要在定义时初始化const类型
+> const int a = 0;  //正确！在定义时初始化const类型变量a为0，且a在其生存期内的值只能为a，不能改变
+> int const a = 0; //正确！在定义时初始化const类型变量a为0，且a在其生存期内的值只能为a，不能改变
+**<span style="color: #3366ff;">_PS：在定义一般类型或类类型时，const限定符与类型名称的顺序无关，也就是说const int 与 int const完全相同。_</span>**
 <p><strong>2、使用const定义指针时需注意的问题</strong></p>
 <p>此时主要需要区分两种类型：
 **    a) const指针**
@@ -210,30 +231,30 @@ const int * const pa = &amp;a;
 </blockquote>
 <p><strong>所以写此贴，将平时碰到的警告全部总结集中起来。</strong></p>
 <p><strong>1：Handler</strong></p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="c1">// This Handler class should be static or leaks might occur: IncomingHandler</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="nd">@SuppressLint</span><span class="p">(</span><span class="s">&#34;HandlerLeak&#34;</span><span class="p">)</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="kd">private</span><span class="w"> </span><span class="n">Handler</span><span class="w"> </span><span class="n">mHandler</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">Handler</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nd">@Override</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">handleMessage</span><span class="p">(</span><span class="n">Message</span><span class="w"> </span><span class="n">msg</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">};</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="p">};</span><span class="w">
-</span></span></span></code></pre></div><p>解决方法：</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kd">private</span><span class="w"> </span><span class="n">Handler</span><span class="w"> </span><span class="n">mHandler</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">Handler</span><span class="p">(</span><span class="k">new</span><span class="w"> </span><span class="n">Handler</span><span class="p">.</span><span class="na">Callback</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="nd">@Override</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="kd">public</span><span class="w"> </span><span class="kt">boolean</span><span class="w"> </span><span class="nf">handleMessage</span><span class="p">(</span><span class="n">Message</span><span class="w"> </span><span class="n">msg</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="kc">false</span><span class="p">;</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="p">}</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="p">});</span><span class="w">
-</span></span></span></code></pre></div><p>警告原因：静态弱应用可能出现内存泄露问题</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#75715e">// This Handler class should be static or leaks might occur: IncomingHandler</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">@SuppressLint</span>(<span style="color:#e6db74">&#34;HandlerLeak&#34;</span>)
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">private</span> Handler mHandler <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> Handler() {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">@Override</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">handleMessage</span>(Message msg) {
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    };
+</span></span><span style="display:flex;"><span>};
+</span></span></code></pre></div><p>解决方法：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#66d9ef">private</span> Handler mHandler <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> Handler(<span style="color:#66d9ef">new</span> Handler.<span style="color:#a6e22e">Callback</span>() {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">@Override</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">boolean</span> <span style="color:#a6e22e">handleMessage</span>(Message msg) {
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">false</span>;
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>});
+</span></span></code></pre></div><p>警告原因：静态弱应用可能出现内存泄露问题</p>
 <p><strong>2：SimpleDateFormat</strong></p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="c1">// To get local formatting use getDateInstance(), getDateTimeInstance(), or</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="c1">// getTimeInstance(), or use new SimpleDateFormat(String template, Locale</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="c1">// locale) with for example Locale.US for ASCII dates.</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nd">@SuppressLint</span><span class="p">(</span><span class="s">&#34;SimpleDateFormat&#34;</span><span class="p">)</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="n">SimpleDateFormat</span><span class="w"> </span><span class="n">simpleDateFormat</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">SimpleDateFormat</span><span class="p">(</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="s">&#34;yyyy-MM-ddHH:mm:ss&#34;</span><span class="p">);</span><span class="w">
-</span></span></span></code></pre></div><p>解决方法：</p></div><div class="post-footer">
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#75715e">// To get local formatting use getDateInstance(), getDateTimeInstance(), or</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// getTimeInstance(), or use new SimpleDateFormat(String template, Locale</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// locale) with for example Locale.US for ASCII dates.</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">@SuppressLint</span>(<span style="color:#e6db74">&#34;SimpleDateFormat&#34;</span>)
+</span></span><span style="display:flex;"><span>    SimpleDateFormat simpleDateFormat <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> SimpleDateFormat(
+</span></span><span style="display:flex;"><span>            <span style="color:#e6db74">&#34;yyyy-MM-ddHH:mm:ss&#34;</span>);
+</span></span></code></pre></div><p>解决方法：</p></div><div class="post-footer">
         <a href="/post/2013/07/30/%E8%BD%ACandroid%E4%B8%AD%E9%BB%84%E8%89%B2%E8%AD%A6%E5%91%8A%E6%8F%90%E7%A4%BA%E5%BC%BA%E8%BF%AB%E7%97%87/">阅读全文</a><div class="post-tags">
                 <i class="fas fa-tags fa-fw" aria-hidden="true"></i>&nbsp;<a href="/tags/android/">Android</a>,&nbsp;<a href="/tags/%E9%BB%84%E8%89%B2%E8%AD%A6%E5%91%8A/">黄色警告</a></div></div>
 </article><article class="single summary" itemscope itemtype="http://schema.org/Article"><h1 class="single-title" itemprop="name headline">
@@ -250,12 +271,12 @@ const int * const pa = &amp;a;
         alt="http://www.ithome.me/wp-content/uploads/2013/07/index_landing_page-300x236.png"
         title="Zemanta Related Posts Thumbnail" /></a>
 </p>
-<!-- raw HTML omitted -->
+<figure></figure>
 <h4 id="推荐书籍"><strong>推荐书籍</strong></h4>
 <p>你或许觉得，都2013年了，再去看个什么书来学习Android开发，这方法应该早就过时了。没错，或许你的想法是对的。但是我们还是推荐按照过时的办法来。理由的话，请参看： <a href="http://www.codinghorror.com/blog/2008/04/programmers-dont-read-books----but-you-should.html" target="_blank" rel="noopener noreffer">Programmers Don’t Read Books – But You Should</a>
  （作者为：Jeff Atwood）</p>
 <p>我推荐下面两本书：</p>
-<!-- raw HTML omitted -->
+<figure>[![android_development](http://www.ithome.me/wp-content/uploads/2013/07/android_development.png)](http://www.ithome.me/wp-content/uploads/2013/07/android_development.png) <figcaption>The Busy Coder’s Guide to Android Development</figcaption></figure>
 <ul>
 <li>《<a href="http://commonsware.com/Android/" target="_blank" rel="noopener noreffer">The Busy Coder’s Guide to Android Development</a>
 》(<a href="http://commonsware.com/blog/" target="_blank" rel="noopener noreffer">Mark Murphy</a>
@@ -265,10 +286,23 @@ const int * const pa = &amp;a;
  》（<a href="https://plus.google.com/102272971619910906878/posts" target="_blank" rel="noopener noreffer">Juhani Lehtimaki</a>
 著）。对于那些关注如何做出顶级UI设计的Android开发者来说，此书无可挑剔。</li>
 </ul>
-<!-- raw HTML omitted -->
+<figure>[![smashingUI](http://www.ithome.me/wp-content/uploads/2013/07/smashingUI.jpg)](http://www.ithome.me/wp-content/uploads/2013/07/smashingUI.jpg) <figcaption>Smashing UI</figcaption></figure>
 <h4 id="developerandroidcom-官方开发者站点推荐资源">developer.android.com 官方开发者站点推荐资源</h4>
 <p>在动手编写第一个Android应用之前，用心读一读<a href="http://developer.android.com/design/get-started/creative-vision.html" target="_blank" rel="noopener noreffer">Android Design</a>
-章节。尤其是下面的这些文章：</p></div><div class="post-footer">
+章节。尤其是下面的这些文章：</p>
+<ul>
+<li><a href="http://developer.android.com/design/style/devices-displays.html" target="_blank" rel="noopener noreffer">Devices and Displays</a>
+  (设备和显示)</li>
+<li><a href="http://developer.android.com/design/style/touch-feedback.html" target="_blank" rel="noopener noreffer">Touch Feedback   </a>
+(触摸反馈)</li>
+<li><a href="http://developer.android.com/design/style/metrics-grids.html" target="_blank" rel="noopener noreffer">Metrics and Grids</a>
+ (度量和网格)</li>
+<li><a href="http://developer.android.com/design/style/iconography.html" target="_blank" rel="noopener noreffer">Iconography</a>
+ (图像研究)
+同时也请下载<a href="http://developer.android.com/design/downloads/index.html" target="_blank" rel="noopener noreffer">Downloads</a>
+部分的代码，这些代码囊括了Android图标和控件的设计模板，源文件，样式以及无样式图标等等。</li>
+</ul>
+<p>那么读完了这些以后就可以开始编程了么？不，最好连下面的东西也一起读：</p></div><div class="post-footer">
         <a href="/post/2013/07/19/%E8%BD%ACandroid%E5%BC%80%E5%8F%91%E8%80%85%E5%BF%85%E7%9F%A5%E7%9A%84%E5%BC%80%E5%8F%91%E8%B5%84%E6%BA%90/">阅读全文</a><div class="post-tags">
                 <i class="fas fa-tags fa-fw" aria-hidden="true"></i>&nbsp;<a href="/tags/android/">Android</a>,&nbsp;<a href="/tags/%E8%B5%84%E6%BA%90/">资源</a></div></div>
 </article><ul class="pagination"><li class="page-item ">

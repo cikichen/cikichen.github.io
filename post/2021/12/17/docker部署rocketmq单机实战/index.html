@@ -171,8 +171,8 @@ version: &#39;3&#39; services: namesrv: image: apacherocketmq/rocketmq:4.9.2-alp
 <p>clone完成后，继续<code>cd rocketmq-docker/image-build</code>到image-build目录下</p>
 <p>目前最新版本为<code>4.9.2</code>,我们就以这个版本为例：
 继续输入下列指令</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">sh build-image.sh 4.9.2 alpine
-</span></span></code></pre></div><p>等待完成就即可，如果报错，请自行根据错误查找原因。只要环境没问题，编译完成后我们能得到<code>apacherocketmq/rocketmq</code>镜像</p>
+<pre tabindex="0"><code>sh build-image.sh 4.9.2 alpine
+</code></pre><p>等待完成就即可，如果报错，请自行根据错误查找原因。只要环境没问题，编译完成后我们能得到<code>apacherocketmq/rocketmq</code>镜像</p>
 <p>至此，我们已经完成了一半的工作。</p>
 <h3 id="编写docker-compose配置">编写docker-compose配置</h3>
 <blockquote>
@@ -180,49 +180,49 @@ version: &#39;3&#39; services: namesrv: image: apacherocketmq/rocketmq:4.9.2-alp
 有经验的同学此时已经急不可耐了，鱼拿去。
 完整的<code>docker-compose.yml</code>文件</p>
 </blockquote>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">version: &#39;3&#39;
-</span></span><span class="line"><span class="cl">services:
-</span></span><span class="line"><span class="cl">  namesrv:
-</span></span><span class="line"><span class="cl">    image: apacherocketmq/rocketmq:4.9.2-alpine
-</span></span><span class="line"><span class="cl">    container_name: rmqnamesrv
-</span></span><span class="line"><span class="cl">    ports:
-</span></span><span class="line"><span class="cl">      - 9876:9876
-</span></span><span class="line"><span class="cl">    volumes:
-</span></span><span class="line"><span class="cl">      - ./data/namesrv/logs:/home/rocketmq/logs
-</span></span><span class="line"><span class="cl">    command: sh mqnamesrv
-</span></span><span class="line"><span class="cl">    restart: always
-</span></span><span class="line"><span class="cl">  broker:
-</span></span><span class="line"><span class="cl">    image: apacherocketmq/rocketmq:4.9.2-alpine
-</span></span><span class="line"><span class="cl">    container_name: rmqbroker
-</span></span><span class="line"><span class="cl">    links:
-</span></span><span class="line"><span class="cl">      - namesrv
-</span></span><span class="line"><span class="cl">    ports:
-</span></span><span class="line"><span class="cl">      - 10909:10909
-</span></span><span class="line"><span class="cl">      - 10911:10911
-</span></span><span class="line"><span class="cl">      - 10912:10912
-</span></span><span class="line"><span class="cl">    environment:
-</span></span><span class="line"><span class="cl">      - NAMESRV_ADDR=namesrv:9876
-</span></span><span class="line"><span class="cl">    volumes:
-</span></span><span class="line"><span class="cl">      - ./data/broker/logs:/home/rocketmq/logs
-</span></span><span class="line"><span class="cl">      - ./data/broker/store:/home/rocketmq/store
-</span></span><span class="line"><span class="cl">      - ./data/broker/conf/broker.conf:/home/rocketmq/rocketmq-4.9.2/conf/broker.conf
-</span></span><span class="line"><span class="cl">      - ./data/broker/runbroker.sh:/home/rocketmq/rocketmq-4.9.2/bin/runbroker.sh
-</span></span><span class="line"><span class="cl">    command: sh mqbroker -c /home/rocketmq/rocketmq-4.9.2/conf/broker.conf
-</span></span><span class="line"><span class="cl">    depends_on:
-</span></span><span class="line"><span class="cl">      - namesrv
-</span></span><span class="line"><span class="cl">    restart: always
-</span></span><span class="line"><span class="cl">  rmqconsole:
-</span></span><span class="line"><span class="cl">    image: candice0630/rocketmq-console-ng:2.0
-</span></span><span class="line"><span class="cl">    container_name: rmqconsole
-</span></span><span class="line"><span class="cl">    ports:
-</span></span><span class="line"><span class="cl">      - 9001:8080
-</span></span><span class="line"><span class="cl">    environment:
-</span></span><span class="line"><span class="cl">      JAVA_OPTS: -Drocketmq.namesrv.addr=namesrv:9876
-</span></span><span class="line"><span class="cl">        -Dcom.rocketmq.sendMessageWithVIPChannel=false
-</span></span><span class="line"><span class="cl">    depends_on:
-</span></span><span class="line"><span class="cl">      - namesrv
-</span></span><span class="line"><span class="cl">    restart: always
-</span></span></code></pre></div><p>上面一共三个images，<code>namesrv</code>、<code>broker</code>和<code>rmqconsole</code>
+<pre tabindex="0"><code>version: &#39;3&#39;
+services:
+  namesrv:
+    image: apacherocketmq/rocketmq:4.9.2-alpine
+    container_name: rmqnamesrv
+    ports:
+      - 9876:9876
+    volumes:
+      - ./data/namesrv/logs:/home/rocketmq/logs
+    command: sh mqnamesrv
+    restart: always
+  broker:
+    image: apacherocketmq/rocketmq:4.9.2-alpine
+    container_name: rmqbroker
+    links:
+      - namesrv
+    ports:
+      - 10909:10909
+      - 10911:10911
+      - 10912:10912
+    environment:
+      - NAMESRV_ADDR=namesrv:9876
+    volumes:
+      - ./data/broker/logs:/home/rocketmq/logs
+      - ./data/broker/store:/home/rocketmq/store
+      - ./data/broker/conf/broker.conf:/home/rocketmq/rocketmq-4.9.2/conf/broker.conf
+      - ./data/broker/runbroker.sh:/home/rocketmq/rocketmq-4.9.2/bin/runbroker.sh
+    command: sh mqbroker -c /home/rocketmq/rocketmq-4.9.2/conf/broker.conf
+    depends_on:
+      - namesrv
+    restart: always
+  rmqconsole:
+    image: candice0630/rocketmq-console-ng:2.0
+    container_name: rmqconsole
+    ports:
+      - 9001:8080
+    environment:
+      JAVA_OPTS: -Drocketmq.namesrv.addr=namesrv:9876
+        -Dcom.rocketmq.sendMessageWithVIPChannel=false
+    depends_on:
+      - namesrv
+    restart: always
+</code></pre><p>上面一共三个images，<code>namesrv</code>、<code>broker</code>和<code>rmqconsole</code>
 熟悉<code>docker-compose</code>的同学可以直接跳过这部分了
 本部分主要结合上面的配置来说，不适应的根据自己的习惯自行更改
 先建立一个<code>rocketmq</code>文件夹，然后在文件夹下面创建<code>docker-compose.yml</code>文件，复制上面的内容进去。在<code>docker-compose.yml</code>同级目录下创建<code>data</code>文件夹，在<code>data</code>文件夹下分别创建<code>broker</code>和<code>namesrv</code>文件夹，<code>broker</code>目录下分别创建<code>conf</code>、<code>logs</code>和<code>store</code>文件夹。<code>namesrv</code>目录下创建<code>logs</code>目录，<code>logs</code>目录下创建<code>rocketmqlogs</code>目录，这样所有的目录创建完成。自定义的<code>broker.conf</code>文件放到<code>data/broker/conf</code>目录下。</p>
@@ -237,164 +237,164 @@ version: &#39;3&#39; services: namesrv: image: apacherocketmq/rocketmq:4.9.2-alp
 然后回到<code>broker</code>容器，先导入环境变量<code>export NAMESRV_ADDR=namesrv的容器内网ID:9876</code>
 然后通过<code>./tools.sh org.apache.rocketmq.example.quickstart.Producer</code>来测试消息发送，出现<code>SendResult [sendStatus=SEND_OK, msgId=7F00000100A</code>说明发送成功，如果是connect failed，请检查配置是否正确。如果出现磁盘满的提示，需要修改<code>diskMaxUsedSpaceRatio</code>的值，可以通过修改conf或者sh脚本的方式。上面的yml文件已经定义好了，你只需要把自己的配置文件放入就行，两种方式二选一。提供下我的文件</p>
 <p><strong>broker.conf</strong></p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">brokerClusterName = DefaultCluster
-</span></span><span class="line"><span class="cl">brokerName = broker-a
-</span></span><span class="line"><span class="cl">brokerId = 0
-</span></span><span class="line"><span class="cl">deleteWhen = 04
-</span></span><span class="line"><span class="cl">fileReservedTime = 48
-</span></span><span class="line"><span class="cl">brokerRole = ASYNC_MASTER
-</span></span><span class="line"><span class="cl">flushDiskType = ASYNC_FLUSH
-</span></span><span class="line"><span class="cl">diskMaxUsedSpaceRatio=99
-</span></span></code></pre></div><p><strong>runbroker.sh</strong></p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl"><span class="cp">#!/bin/bash
-</span></span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="c1"># Licensed to the Apache Software Foundation (ASF) under one or more</span>
-</span></span><span class="line"><span class="cl"><span class="c1"># contributor license agreements.  See the NOTICE file distributed with</span>
-</span></span><span class="line"><span class="cl"><span class="c1"># this work for additional information regarding copyright ownership.</span>
-</span></span><span class="line"><span class="cl"><span class="c1"># The ASF licenses this file to You under the Apache License, Version 2.0</span>
-</span></span><span class="line"><span class="cl"><span class="c1"># (the &#34;License&#34;); you may not use this file except in compliance with</span>
-</span></span><span class="line"><span class="cl"><span class="c1"># the License.  You may obtain a copy of the License at</span>
-</span></span><span class="line"><span class="cl"><span class="c1">#</span>
-</span></span><span class="line"><span class="cl"><span class="c1">#     http://www.apache.org/licenses/LICENSE-2.0</span>
-</span></span><span class="line"><span class="cl"><span class="c1">#</span>
-</span></span><span class="line"><span class="cl"><span class="c1"># Unless required by applicable law or agreed to in writing, software</span>
-</span></span><span class="line"><span class="cl"><span class="c1"># distributed under the License is distributed on an &#34;AS IS&#34; BASIS,</span>
-</span></span><span class="line"><span class="cl"><span class="c1"># WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span>
-</span></span><span class="line"><span class="cl"><span class="c1"># See the License for the specific language governing permissions and</span>
-</span></span><span class="line"><span class="cl"><span class="c1"># limitations under the License.</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="c1">#===========================================================================================</span>
-</span></span><span class="line"><span class="cl"><span class="c1"># Java Environment Setting</span>
-</span></span><span class="line"><span class="cl"><span class="c1">#===========================================================================================</span>
-</span></span><span class="line"><span class="cl">error_exit<span class="o">()</span> <span class="o">{</span>
-</span></span><span class="line"><span class="cl">    <span class="nb">echo</span> <span class="s2">&#34;ERROR: </span><span class="nv">$1</span><span class="s2"> !!&#34;</span>
-</span></span><span class="line"><span class="cl">    <span class="nb">exit</span> <span class="m">1</span>
-</span></span><span class="line"><span class="cl"><span class="o">}</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">find_java_home<span class="o">()</span> <span class="o">{</span>
-</span></span><span class="line"><span class="cl">    <span class="k">case</span> <span class="s2">&#34;</span><span class="k">$(</span>uname<span class="k">)</span><span class="s2">&#34;</span> in
-</span></span><span class="line"><span class="cl">    Darwin<span class="o">)</span>
-</span></span><span class="line"><span class="cl">        <span class="nv">JAVA_HOME</span><span class="o">=</span><span class="k">$(</span>/usr/libexec/java_home<span class="k">)</span>
-</span></span><span class="line"><span class="cl">        <span class="p">;;</span>
-</span></span><span class="line"><span class="cl">    *<span class="o">)</span>
-</span></span><span class="line"><span class="cl">        <span class="nv">JAVA_HOME</span><span class="o">=</span><span class="k">$(</span>dirname <span class="k">$(</span>dirname <span class="k">$(</span>readlink -f <span class="k">$(</span>which javac<span class="k">))))</span>
-</span></span><span class="line"><span class="cl">        <span class="p">;;</span>
-</span></span><span class="line"><span class="cl">    <span class="k">esac</span>
-</span></span><span class="line"><span class="cl"><span class="o">}</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">find_java_home
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="o">[</span> ! -e <span class="s2">&#34;</span><span class="nv">$JAVA_HOME</span><span class="s2">/bin/java&#34;</span> <span class="o">]</span> <span class="o">&amp;&amp;</span> <span class="nv">JAVA_HOME</span><span class="o">=</span><span class="nv">$HOME</span>/jdk/java
-</span></span><span class="line"><span class="cl"><span class="o">[</span> ! -e <span class="s2">&#34;</span><span class="nv">$JAVA_HOME</span><span class="s2">/bin/java&#34;</span> <span class="o">]</span> <span class="o">&amp;&amp;</span> <span class="nv">JAVA_HOME</span><span class="o">=</span>/usr/java
-</span></span><span class="line"><span class="cl"><span class="o">[</span> ! -e <span class="s2">&#34;</span><span class="nv">$JAVA_HOME</span><span class="s2">/bin/java&#34;</span> <span class="o">]</span> <span class="o">&amp;&amp;</span> error_exit <span class="s2">&#34;Please set the JAVA_HOME variable in your environment, We need java(x64)!&#34;</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="nb">export</span> JAVA_HOME
-</span></span><span class="line"><span class="cl"><span class="nb">export</span> <span class="nv">JAVA</span><span class="o">=</span><span class="s2">&#34;</span><span class="nv">$JAVA_HOME</span><span class="s2">/bin/java&#34;</span>
-</span></span><span class="line"><span class="cl"><span class="nb">export</span> <span class="nv">BASE_DIR</span><span class="o">=</span><span class="k">$(</span>dirname <span class="nv">$0</span><span class="k">)</span>/..
-</span></span><span class="line"><span class="cl"><span class="nb">export</span> <span class="nv">CLASSPATH</span><span class="o">=</span>.:<span class="si">${</span><span class="nv">BASE_DIR</span><span class="si">}</span>/conf:<span class="si">${</span><span class="nv">CLASSPATH</span><span class="si">}</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="c1">#===========================================================================================</span>
-</span></span><span class="line"><span class="cl"><span class="c1"># JVM Configuration</span>
-</span></span><span class="line"><span class="cl"><span class="c1">#===========================================================================================</span>
-</span></span><span class="line"><span class="cl">calculate_heap_sizes<span class="o">()</span> <span class="o">{</span>
-</span></span><span class="line"><span class="cl">    <span class="k">case</span> <span class="s2">&#34;</span><span class="k">$(</span>uname<span class="k">)</span><span class="s2">&#34;</span> in
-</span></span><span class="line"><span class="cl">    Linux<span class="o">)</span>
-</span></span><span class="line"><span class="cl">        <span class="nv">system_memory_in_mb</span><span class="o">=</span><span class="k">$(</span>free -m <span class="p">|</span> sed -n <span class="s1">&#39;2p&#39;</span> <span class="p">|</span> awk <span class="s1">&#39;{print $2}&#39;</span><span class="k">)</span>
-</span></span><span class="line"><span class="cl">        <span class="nv">system_cpu_cores</span><span class="o">=</span><span class="k">$(</span>egrep -c <span class="s1">&#39;processor([[:space:]]+):.*&#39;</span> /proc/cpuinfo<span class="k">)</span>
-</span></span><span class="line"><span class="cl">        <span class="p">;;</span>
-</span></span><span class="line"><span class="cl">    FreeBSD<span class="o">)</span>
-</span></span><span class="line"><span class="cl">        <span class="nv">system_memory_in_bytes</span><span class="o">=</span><span class="k">$(</span>sysctl hw.physmem <span class="p">|</span> awk <span class="s1">&#39;{print $2}&#39;</span><span class="k">)</span>
-</span></span><span class="line"><span class="cl">        <span class="nv">system_memory_in_mb</span><span class="o">=</span><span class="k">$(</span>expr <span class="nv">$system_memory_in_bytes</span> / <span class="m">1024</span> / 1024<span class="k">)</span>
-</span></span><span class="line"><span class="cl">        <span class="nv">system_cpu_cores</span><span class="o">=</span><span class="k">$(</span>sysctl hw.ncpu <span class="p">|</span> awk <span class="s1">&#39;{print $2}&#39;</span><span class="k">)</span>
-</span></span><span class="line"><span class="cl">        <span class="p">;;</span>
-</span></span><span class="line"><span class="cl">    SunOS<span class="o">)</span>
-</span></span><span class="line"><span class="cl">        <span class="nv">system_memory_in_mb</span><span class="o">=</span><span class="k">$(</span>prtconf <span class="p">|</span> awk <span class="s1">&#39;/Memory size:/ {print $3}&#39;</span><span class="k">)</span>
-</span></span><span class="line"><span class="cl">        <span class="nv">system_cpu_cores</span><span class="o">=</span><span class="k">$(</span>psrinfo <span class="p">|</span> wc -l<span class="k">)</span>
-</span></span><span class="line"><span class="cl">        <span class="p">;;</span>
-</span></span><span class="line"><span class="cl">    Darwin<span class="o">)</span>
-</span></span><span class="line"><span class="cl">        <span class="nv">system_memory_in_bytes</span><span class="o">=</span><span class="k">$(</span>sysctl hw.memsize <span class="p">|</span> awk <span class="s1">&#39;{print $2}&#39;</span><span class="k">)</span>
-</span></span><span class="line"><span class="cl">        <span class="nv">system_memory_in_mb</span><span class="o">=</span><span class="k">$(</span>expr <span class="nv">$system_memory_in_bytes</span> / <span class="m">1024</span> / 1024<span class="k">)</span>
-</span></span><span class="line"><span class="cl">        <span class="nv">system_cpu_cores</span><span class="o">=</span><span class="k">$(</span>sysctl hw.ncpu <span class="p">|</span> awk <span class="s1">&#39;{print $2}&#39;</span><span class="k">)</span>
-</span></span><span class="line"><span class="cl">        <span class="p">;;</span>
-</span></span><span class="line"><span class="cl">    *<span class="o">)</span>
-</span></span><span class="line"><span class="cl">        <span class="c1"># assume reasonable defaults for e.g. a modern desktop or</span>
-</span></span><span class="line"><span class="cl">        <span class="c1"># cheap server</span>
-</span></span><span class="line"><span class="cl">        <span class="nv">system_memory_in_mb</span><span class="o">=</span><span class="s2">&#34;2048&#34;</span>
-</span></span><span class="line"><span class="cl">        <span class="nv">system_cpu_cores</span><span class="o">=</span><span class="s2">&#34;2&#34;</span>
-</span></span><span class="line"><span class="cl">        <span class="p">;;</span>
-</span></span><span class="line"><span class="cl">    <span class="k">esac</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">    <span class="c1"># some systems like the raspberry pi don&#39;t report cores, use at least 1</span>
-</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="o">[</span> <span class="s2">&#34;</span><span class="nv">$system_cpu_cores</span><span class="s2">&#34;</span> -lt <span class="s2">&#34;1&#34;</span> <span class="o">]</span><span class="p">;</span> <span class="k">then</span>
-</span></span><span class="line"><span class="cl">        <span class="nv">system_cpu_cores</span><span class="o">=</span><span class="s2">&#34;1&#34;</span>
-</span></span><span class="line"><span class="cl">    <span class="k">fi</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">    <span class="c1"># set max heap size based on the following</span>
-</span></span><span class="line"><span class="cl">    <span class="c1"># max(min(1/2 ram, 1024MB), min(1/4 ram, 8GB))</span>
-</span></span><span class="line"><span class="cl">    <span class="c1"># calculate 1/2 ram and cap to 1024MB</span>
-</span></span><span class="line"><span class="cl">    <span class="c1"># calculate 1/4 ram and cap to 8192MB</span>
-</span></span><span class="line"><span class="cl">    <span class="c1"># pick the max</span>
-</span></span><span class="line"><span class="cl">    <span class="nv">half_system_memory_in_mb</span><span class="o">=</span><span class="k">$(</span>expr <span class="nv">$system_memory_in_mb</span> / 2<span class="k">)</span>
-</span></span><span class="line"><span class="cl">    <span class="nv">quarter_system_memory_in_mb</span><span class="o">=</span><span class="k">$(</span>expr <span class="nv">$half_system_memory_in_mb</span> / 2<span class="k">)</span>
-</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="o">[</span> <span class="s2">&#34;</span><span class="nv">$half_system_memory_in_mb</span><span class="s2">&#34;</span> -gt <span class="s2">&#34;1024&#34;</span> <span class="o">]</span><span class="p">;</span> <span class="k">then</span>
-</span></span><span class="line"><span class="cl">        <span class="nv">half_system_memory_in_mb</span><span class="o">=</span><span class="s2">&#34;1024&#34;</span>
-</span></span><span class="line"><span class="cl">    <span class="k">fi</span>
-</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="o">[</span> <span class="s2">&#34;</span><span class="nv">$quarter_system_memory_in_mb</span><span class="s2">&#34;</span> -gt <span class="s2">&#34;8192&#34;</span> <span class="o">]</span><span class="p">;</span> <span class="k">then</span>
-</span></span><span class="line"><span class="cl">        <span class="nv">quarter_system_memory_in_mb</span><span class="o">=</span><span class="s2">&#34;8192&#34;</span>
-</span></span><span class="line"><span class="cl">    <span class="k">fi</span>
-</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="o">[</span> <span class="s2">&#34;</span><span class="nv">$half_system_memory_in_mb</span><span class="s2">&#34;</span> -gt <span class="s2">&#34;</span><span class="nv">$quarter_system_memory_in_mb</span><span class="s2">&#34;</span> <span class="o">]</span><span class="p">;</span> <span class="k">then</span>
-</span></span><span class="line"><span class="cl">        <span class="nv">max_heap_size_in_mb</span><span class="o">=</span><span class="s2">&#34;</span><span class="nv">$half_system_memory_in_mb</span><span class="s2">&#34;</span>
-</span></span><span class="line"><span class="cl">    <span class="k">else</span>
-</span></span><span class="line"><span class="cl">        <span class="nv">max_heap_size_in_mb</span><span class="o">=</span><span class="s2">&#34;</span><span class="nv">$quarter_system_memory_in_mb</span><span class="s2">&#34;</span>
-</span></span><span class="line"><span class="cl">    <span class="k">fi</span>
-</span></span><span class="line"><span class="cl">    <span class="nv">MAX_HEAP_SIZE</span><span class="o">=</span><span class="s2">&#34;</span><span class="si">${</span><span class="nv">max_heap_size_in_mb</span><span class="si">}</span><span class="s2">M&#34;</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">    <span class="c1"># Young gen: min(max_sensible_per_modern_cpu_core * num_cores, 1/4 * heap size)</span>
-</span></span><span class="line"><span class="cl">    <span class="nv">max_sensible_yg_per_core_in_mb</span><span class="o">=</span><span class="s2">&#34;100&#34;</span>
-</span></span><span class="line"><span class="cl">    <span class="nv">max_sensible_yg_in_mb</span><span class="o">=</span><span class="k">$(</span>expr <span class="nv">$max_sensible_yg_per_core_in_mb</span> <span class="s2">&#34;*&#34;</span> <span class="nv">$system_cpu_cores</span><span class="k">)</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">    <span class="nv">desired_yg_in_mb</span><span class="o">=</span><span class="k">$(</span>expr <span class="nv">$max_heap_size_in_mb</span> / 4<span class="k">)</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="o">[</span> <span class="s2">&#34;</span><span class="nv">$desired_yg_in_mb</span><span class="s2">&#34;</span> -gt <span class="s2">&#34;</span><span class="nv">$max_sensible_yg_in_mb</span><span class="s2">&#34;</span> <span class="o">]</span><span class="p">;</span> <span class="k">then</span>
-</span></span><span class="line"><span class="cl">        <span class="nv">HEAP_NEWSIZE</span><span class="o">=</span><span class="s2">&#34;</span><span class="si">${</span><span class="nv">max_sensible_yg_in_mb</span><span class="si">}</span><span class="s2">M&#34;</span>
-</span></span><span class="line"><span class="cl">    <span class="k">else</span>
-</span></span><span class="line"><span class="cl">        <span class="nv">HEAP_NEWSIZE</span><span class="o">=</span><span class="s2">&#34;</span><span class="si">${</span><span class="nv">desired_yg_in_mb</span><span class="si">}</span><span class="s2">M&#34;</span>
-</span></span><span class="line"><span class="cl">    <span class="k">fi</span>
-</span></span><span class="line"><span class="cl"><span class="o">}</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">calculate_heap_sizes
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="c1"># Dynamically calculate parameters, for reference.</span>
-</span></span><span class="line"><span class="cl"><span class="nv">Xms</span><span class="o">=</span><span class="nv">$MAX_HEAP_SIZE</span>
-</span></span><span class="line"><span class="cl"><span class="nv">Xmx</span><span class="o">=</span><span class="nv">$MAX_HEAP_SIZE</span>
-</span></span><span class="line"><span class="cl"><span class="nv">Xmn</span><span class="o">=</span><span class="nv">$HEAP_NEWSIZE</span>
-</span></span><span class="line"><span class="cl"><span class="nv">MaxDirectMemorySize</span><span class="o">=</span><span class="nv">$MAX_HEAP_SIZE</span>
-</span></span><span class="line"><span class="cl"><span class="c1"># Set for `JAVA_OPT`.</span>
-</span></span><span class="line"><span class="cl"><span class="nv">JAVA_OPT</span><span class="o">=</span><span class="s2">&#34;</span><span class="si">${</span><span class="nv">JAVA_OPT</span><span class="si">}</span><span class="s2"> -server -Xms</span><span class="si">${</span><span class="nv">Xms</span><span class="si">}</span><span class="s2"> -Xmx</span><span class="si">${</span><span class="nv">Xmx</span><span class="si">}</span><span class="s2"> -Xmn</span><span class="si">${</span><span class="nv">Xmn</span><span class="si">}</span><span class="s2">&#34;</span>
-</span></span><span class="line"><span class="cl"><span class="nv">JAVA_OPT</span><span class="o">=</span><span class="s2">&#34;</span><span class="si">${</span><span class="nv">JAVA_OPT</span><span class="si">}</span><span class="s2"> -XX:+UseG1GC -XX:G1HeapRegionSize=16m -XX:G1ReservePercent=25 -XX:InitiatingHeapOccupancyPercent=30 -XX:SoftRefLRUPolicyMSPerMB=0 -XX:SurvivorRatio=8&#34;</span>
-</span></span><span class="line"><span class="cl"><span class="nv">JAVA_OPT</span><span class="o">=</span><span class="s2">&#34;</span><span class="si">${</span><span class="nv">JAVA_OPT</span><span class="si">}</span><span class="s2"> -verbose:gc -Xloggc:/dev/shm/mq_gc_%p.log -XX:+PrintGCDetails -XX:+PrintGCDateStamps -XX:+PrintGCApplicationStoppedTime -XX:+PrintAdaptiveSizePolicy&#34;</span>
-</span></span><span class="line"><span class="cl"><span class="nv">JAVA_OPT</span><span class="o">=</span><span class="s2">&#34;</span><span class="si">${</span><span class="nv">JAVA_OPT</span><span class="si">}</span><span class="s2"> -XX:+UseGCLogFileRotation -XX:NumberOfGCLogFiles=5 -XX:GCLogFileSize=30m&#34;</span>
-</span></span><span class="line"><span class="cl"><span class="nv">JAVA_OPT</span><span class="o">=</span><span class="s2">&#34;</span><span class="si">${</span><span class="nv">JAVA_OPT</span><span class="si">}</span><span class="s2"> -XX:-OmitStackTraceInFastThrow&#34;</span>
-</span></span><span class="line"><span class="cl"><span class="nv">JAVA_OPT</span><span class="o">=</span><span class="s2">&#34;</span><span class="si">${</span><span class="nv">JAVA_OPT</span><span class="si">}</span><span class="s2"> -XX:+AlwaysPreTouch&#34;</span>
-</span></span><span class="line"><span class="cl"><span class="nv">JAVA_OPT</span><span class="o">=</span><span class="s2">&#34;</span><span class="si">${</span><span class="nv">JAVA_OPT</span><span class="si">}</span><span class="s2"> -XX:MaxDirectMemorySize=</span><span class="si">${</span><span class="nv">MaxDirectMemorySize</span><span class="si">}</span><span class="s2">&#34;</span>
-</span></span><span class="line"><span class="cl"><span class="nv">JAVA_OPT</span><span class="o">=</span><span class="s2">&#34;</span><span class="si">${</span><span class="nv">JAVA_OPT</span><span class="si">}</span><span class="s2"> -XX:-UseLargePages -XX:-UseBiasedLocking&#34;</span>
-</span></span><span class="line"><span class="cl"><span class="nv">JAVA_OPT</span><span class="o">=</span><span class="s2">&#34;</span><span class="si">${</span><span class="nv">JAVA_OPT</span><span class="si">}</span><span class="s2"> -Djava.ext.dirs=</span><span class="si">${</span><span class="nv">JAVA_HOME</span><span class="si">}</span><span class="s2">/jre/lib/ext:</span><span class="si">${</span><span class="nv">BASE_DIR</span><span class="si">}</span><span class="s2">/lib&#34;</span>
-</span></span><span class="line"><span class="cl"><span class="c1">#JAVA_OPT=&#34;${JAVA_OPT} -Xdebug -Xrunjdwp:transport=dt_socket,address=9555,server=y,suspend=n&#34;</span>
-</span></span><span class="line"><span class="cl"><span class="nv">JAVA_OPT</span><span class="o">=</span><span class="s2">&#34;</span><span class="si">${</span><span class="nv">JAVA_OPT</span><span class="si">}</span><span class="s2"> </span><span class="si">${</span><span class="nv">JAVA_OPT_EXT</span><span class="si">}</span><span class="s2">&#34;</span>
-</span></span><span class="line"><span class="cl"><span class="nv">JAVA_OPT</span><span class="o">=</span><span class="s2">&#34;</span><span class="si">${</span><span class="nv">JAVA_OPT</span><span class="si">}</span><span class="s2"> -cp </span><span class="si">${</span><span class="nv">CLASSPATH</span><span class="si">}</span><span class="s2">&#34;</span>
-</span></span><span class="line"><span class="cl"><span class="nv">JAVA_OPT</span><span class="o">=</span><span class="s2">&#34;</span><span class="si">${</span><span class="nv">JAVA_OPT</span><span class="si">}</span><span class="s2"> -Drocketmq.broker.diskSpaceWarningLevelRatio=0.99&#34;</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">numactl --interleave<span class="o">=</span>all <span class="nb">pwd</span> &gt;/dev/null 2&gt;<span class="p">&amp;</span><span class="m">1</span>
-</span></span><span class="line"><span class="cl"><span class="k">if</span> <span class="o">[</span> <span class="nv">$?</span> -eq <span class="m">0</span> <span class="o">]</span><span class="p">;</span> <span class="k">then</span>
-</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="o">[</span> -z <span class="s2">&#34;</span><span class="nv">$RMQ_NUMA_NODE</span><span class="s2">&#34;</span> <span class="o">]</span><span class="p">;</span> <span class="k">then</span>
-</span></span><span class="line"><span class="cl">        numactl --interleave<span class="o">=</span>all <span class="nv">$JAVA</span> <span class="si">${</span><span class="nv">JAVA_OPT</span><span class="si">}</span> <span class="nv">$@</span>
-</span></span><span class="line"><span class="cl">    <span class="k">else</span>
-</span></span><span class="line"><span class="cl">        numactl --cpunodebind<span class="o">=</span><span class="nv">$RMQ_NUMA_NODE</span> --membind<span class="o">=</span><span class="nv">$RMQ_NUMA_NODE</span> <span class="nv">$JAVA</span> <span class="si">${</span><span class="nv">JAVA_OPT</span><span class="si">}</span> <span class="nv">$@</span>
-</span></span><span class="line"><span class="cl">    <span class="k">fi</span>
-</span></span><span class="line"><span class="cl"><span class="k">else</span>
-</span></span><span class="line"><span class="cl">    <span class="nv">$JAVA</span> <span class="si">${</span><span class="nv">JAVA_OPT</span><span class="si">}</span> <span class="nv">$@</span>
-</span></span><span class="line"><span class="cl"><span class="k">fi</span>
-</span></span></code></pre></div><p>通过指令<code>./tools.sh org.apache.rocketmq.example.quickstart.Consumer</code>来查看发送的消息</p>
+<pre tabindex="0"><code>brokerClusterName = DefaultCluster
+brokerName = broker-a
+brokerId = 0
+deleteWhen = 04
+fileReservedTime = 48
+brokerRole = ASYNC_MASTER
+flushDiskType = ASYNC_FLUSH
+diskMaxUsedSpaceRatio=99
+</code></pre><p><strong>runbroker.sh</strong></p>
+<pre tabindex="0"><code>#!/bin/bash
+
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the &#34;License&#34;); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an &#34;AS IS&#34; BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+#===========================================================================================
+# Java Environment Setting
+#===========================================================================================
+error_exit() {
+    echo &#34;ERROR: $1 !!&#34;
+    exit 1
+}
+
+find_java_home() {
+    case &#34;$(uname)&#34; in
+    Darwin)
+        JAVA_HOME=$(/usr/libexec/java_home)
+        ;;
+    *)
+        JAVA_HOME=$(dirname $(dirname $(readlink -f $(which javac))))
+        ;;
+    esac
+}
+
+find_java_home
+
+[ ! -e &#34;$JAVA_HOME/bin/java&#34; ] &amp;&amp; JAVA_HOME=$HOME/jdk/java
+[ ! -e &#34;$JAVA_HOME/bin/java&#34; ] &amp;&amp; JAVA_HOME=/usr/java
+[ ! -e &#34;$JAVA_HOME/bin/java&#34; ] &amp;&amp; error_exit &#34;Please set the JAVA_HOME variable in your environment, We need java(x64)!&#34;
+
+export JAVA_HOME
+export JAVA=&#34;$JAVA_HOME/bin/java&#34;
+export BASE_DIR=$(dirname $0)/..
+export CLASSPATH=.:${BASE_DIR}/conf:${CLASSPATH}
+
+#===========================================================================================
+# JVM Configuration
+#===========================================================================================
+calculate_heap_sizes() {
+    case &#34;$(uname)&#34; in
+    Linux)
+        system_memory_in_mb=$(free -m | sed -n &#39;2p&#39; | awk &#39;{print $2}&#39;)
+        system_cpu_cores=$(egrep -c &#39;processor([[:space:]]+):.*&#39; /proc/cpuinfo)
+        ;;
+    FreeBSD)
+        system_memory_in_bytes=$(sysctl hw.physmem | awk &#39;{print $2}&#39;)
+        system_memory_in_mb=$(expr $system_memory_in_bytes / 1024 / 1024)
+        system_cpu_cores=$(sysctl hw.ncpu | awk &#39;{print $2}&#39;)
+        ;;
+    SunOS)
+        system_memory_in_mb=$(prtconf | awk &#39;/Memory size:/ {print $3}&#39;)
+        system_cpu_cores=$(psrinfo | wc -l)
+        ;;
+    Darwin)
+        system_memory_in_bytes=$(sysctl hw.memsize | awk &#39;{print $2}&#39;)
+        system_memory_in_mb=$(expr $system_memory_in_bytes / 1024 / 1024)
+        system_cpu_cores=$(sysctl hw.ncpu | awk &#39;{print $2}&#39;)
+        ;;
+    *)
+        # assume reasonable defaults for e.g. a modern desktop or
+        # cheap server
+        system_memory_in_mb=&#34;2048&#34;
+        system_cpu_cores=&#34;2&#34;
+        ;;
+    esac
+
+    # some systems like the raspberry pi don&#39;t report cores, use at least 1
+    if [ &#34;$system_cpu_cores&#34; -lt &#34;1&#34; ]; then
+        system_cpu_cores=&#34;1&#34;
+    fi
+
+    # set max heap size based on the following
+    # max(min(1/2 ram, 1024MB), min(1/4 ram, 8GB))
+    # calculate 1/2 ram and cap to 1024MB
+    # calculate 1/4 ram and cap to 8192MB
+    # pick the max
+    half_system_memory_in_mb=$(expr $system_memory_in_mb / 2)
+    quarter_system_memory_in_mb=$(expr $half_system_memory_in_mb / 2)
+    if [ &#34;$half_system_memory_in_mb&#34; -gt &#34;1024&#34; ]; then
+        half_system_memory_in_mb=&#34;1024&#34;
+    fi
+    if [ &#34;$quarter_system_memory_in_mb&#34; -gt &#34;8192&#34; ]; then
+        quarter_system_memory_in_mb=&#34;8192&#34;
+    fi
+    if [ &#34;$half_system_memory_in_mb&#34; -gt &#34;$quarter_system_memory_in_mb&#34; ]; then
+        max_heap_size_in_mb=&#34;$half_system_memory_in_mb&#34;
+    else
+        max_heap_size_in_mb=&#34;$quarter_system_memory_in_mb&#34;
+    fi
+    MAX_HEAP_SIZE=&#34;${max_heap_size_in_mb}M&#34;
+
+    # Young gen: min(max_sensible_per_modern_cpu_core * num_cores, 1/4 * heap size)
+    max_sensible_yg_per_core_in_mb=&#34;100&#34;
+    max_sensible_yg_in_mb=$(expr $max_sensible_yg_per_core_in_mb &#34;*&#34; $system_cpu_cores)
+
+    desired_yg_in_mb=$(expr $max_heap_size_in_mb / 4)
+
+    if [ &#34;$desired_yg_in_mb&#34; -gt &#34;$max_sensible_yg_in_mb&#34; ]; then
+        HEAP_NEWSIZE=&#34;${max_sensible_yg_in_mb}M&#34;
+    else
+        HEAP_NEWSIZE=&#34;${desired_yg_in_mb}M&#34;
+    fi
+}
+
+calculate_heap_sizes
+
+# Dynamically calculate parameters, for reference.
+Xms=$MAX_HEAP_SIZE
+Xmx=$MAX_HEAP_SIZE
+Xmn=$HEAP_NEWSIZE
+MaxDirectMemorySize=$MAX_HEAP_SIZE
+# Set for `JAVA_OPT`.
+JAVA_OPT=&#34;${JAVA_OPT} -server -Xms${Xms} -Xmx${Xmx} -Xmn${Xmn}&#34;
+JAVA_OPT=&#34;${JAVA_OPT} -XX:+UseG1GC -XX:G1HeapRegionSize=16m -XX:G1ReservePercent=25 -XX:InitiatingHeapOccupancyPercent=30 -XX:SoftRefLRUPolicyMSPerMB=0 -XX:SurvivorRatio=8&#34;
+JAVA_OPT=&#34;${JAVA_OPT} -verbose:gc -Xloggc:/dev/shm/mq_gc_%p.log -XX:+PrintGCDetails -XX:+PrintGCDateStamps -XX:+PrintGCApplicationStoppedTime -XX:+PrintAdaptiveSizePolicy&#34;
+JAVA_OPT=&#34;${JAVA_OPT} -XX:+UseGCLogFileRotation -XX:NumberOfGCLogFiles=5 -XX:GCLogFileSize=30m&#34;
+JAVA_OPT=&#34;${JAVA_OPT} -XX:-OmitStackTraceInFastThrow&#34;
+JAVA_OPT=&#34;${JAVA_OPT} -XX:+AlwaysPreTouch&#34;
+JAVA_OPT=&#34;${JAVA_OPT} -XX:MaxDirectMemorySize=${MaxDirectMemorySize}&#34;
+JAVA_OPT=&#34;${JAVA_OPT} -XX:-UseLargePages -XX:-UseBiasedLocking&#34;
+JAVA_OPT=&#34;${JAVA_OPT} -Djava.ext.dirs=${JAVA_HOME}/jre/lib/ext:${BASE_DIR}/lib&#34;
+#JAVA_OPT=&#34;${JAVA_OPT} -Xdebug -Xrunjdwp:transport=dt_socket,address=9555,server=y,suspend=n&#34;
+JAVA_OPT=&#34;${JAVA_OPT} ${JAVA_OPT_EXT}&#34;
+JAVA_OPT=&#34;${JAVA_OPT} -cp ${CLASSPATH}&#34;
+JAVA_OPT=&#34;${JAVA_OPT} -Drocketmq.broker.diskSpaceWarningLevelRatio=0.99&#34;
+
+numactl --interleave=all pwd &gt;/dev/null 2&gt;&amp;1
+if [ $? -eq 0 ]; then
+    if [ -z &#34;$RMQ_NUMA_NODE&#34; ]; then
+        numactl --interleave=all $JAVA ${JAVA_OPT} $@
+    else
+        numactl --cpunodebind=$RMQ_NUMA_NODE --membind=$RMQ_NUMA_NODE $JAVA ${JAVA_OPT} $@
+    fi
+else
+    $JAVA ${JAVA_OPT} $@
+fi
+</code></pre><p>通过指令<code>./tools.sh org.apache.rocketmq.example.quickstart.Consumer</code>来查看发送的消息</p>
 </div><div class="post-footer" id="post-footer">
     <div class="post-info">
         <div class="post-info-line">

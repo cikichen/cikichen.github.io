@@ -168,63 +168,61 @@
 <h3 id="11-介绍databinding">1.1 介绍<code>DataBinding</code></h3>
 <p><code>Android</code>通过<code>DataBinding</code>提供了编写声明型布局的支持。这样可以最大程度简化<em>布局</em>和<em>逻辑</em>相关联的代码。</p>
 <p>数据绑定要求修改文件，外层需要包裹一个<code>layout</code>布局。主要通过<code>@{}</code> 或 <code>@={}</code>语法把布局中的元素和表达式的引用写入到属性中。</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-xml" data-lang="xml"><span class="line"><span class="cl"><span class="cp">&lt;?xml version=&#34;1.0&#34; encoding=&#34;utf-8&#34;?&gt;</span>
-</span></span><span class="line"><span class="cl"><span class="nt">&lt;layout</span> <span class="na">xmlns:android=</span><span class="s">&#34;http://schemas.android.com/apk/res/android&#34;</span>
-</span></span><span class="line"><span class="cl">    <span class="na">xmlns:app=</span><span class="s">&#34;http://schemas.android.com/apk/res-auto&#34;</span>
-</span></span><span class="line"><span class="cl">    <span class="na">xmlns:tools=</span><span class="s">&#34;http://schemas.android.com/tools&#34;</span><span class="nt">&gt;</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">    <span class="nt">&lt;data&gt;</span>
-</span></span><span class="line"><span class="cl">        <span class="nt">&lt;variable</span>
-</span></span><span class="line"><span class="cl">            <span class="na">name=</span><span class="s">&#34;mainModel&#34;</span>
-</span></span><span class="line"><span class="cl">            <span class="na">type=</span><span class="s">&#34;me.ithome.jetpack.model.MainViewModel&#34;</span> <span class="nt">/&gt;</span>①
-</span></span><span class="line"><span class="cl">    <span class="nt">&lt;/data&gt;</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">    <span class="nt">&lt;androidx.constraintlayout.widget.ConstraintLayout</span>
-</span></span><span class="line"><span class="cl">        <span class="na">android:layout_width=</span><span class="s">&#34;match_parent&#34;</span>
-</span></span><span class="line"><span class="cl">        <span class="na">android:layout_height=</span><span class="s">&#34;match_parent&#34;</span>
-</span></span><span class="line"><span class="cl">        <span class="na">tools:context=</span><span class="s">&#34;.MainActivity&#34;</span><span class="nt">&gt;</span>②
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">        <span class="nt">&lt;TextView</span>
-</span></span><span class="line"><span class="cl">            <span class="na">android:id=</span><span class="s">&#34;@+id/tv_userinfo&#34;</span>
-</span></span><span class="line"><span class="cl">            <span class="na">android:layout_width=</span><span class="s">&#34;wrap_content&#34;</span>
-</span></span><span class="line"><span class="cl">            <span class="na">android:layout_height=</span><span class="s">&#34;wrap_content&#34;</span>
-</span></span><span class="line"><span class="cl">            <span class="na">android:text=</span><span class="s">&#34;@{mainModel.userData.toString()}&#34;</span>
-</span></span><span class="line"><span class="cl">            <span class="na">app:layout_constraintBottom_toBottomOf=</span><span class="s">&#34;parent&#34;</span>
-</span></span><span class="line"><span class="cl">            <span class="na">app:layout_constraintLeft_toLeftOf=</span><span class="s">&#34;parent&#34;</span>
-</span></span><span class="line"><span class="cl">            <span class="na">app:layout_constraintRight_toRightOf=</span><span class="s">&#34;parent&#34;</span>
-</span></span><span class="line"><span class="cl">            <span class="na">app:layout_constraintTop_toTopOf=</span><span class="s">&#34;parent&#34;</span> <span class="nt">/&gt;</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">        <span class="nt">&lt;Button</span>
-</span></span><span class="line"><span class="cl">            <span class="na">android:id=</span><span class="s">&#34;@+id/button&#34;</span>
-</span></span><span class="line"><span class="cl">            <span class="na">android:layout_width=</span><span class="s">&#34;wrap_content&#34;</span>
-</span></span><span class="line"><span class="cl">            <span class="na">android:layout_height=</span><span class="s">&#34;wrap_content&#34;</span>
-</span></span><span class="line"><span class="cl">            <span class="na">android:layout_marginTop=</span><span class="s">&#34;56dp&#34;</span>
-</span></span><span class="line"><span class="cl">            <span class="na">android:onClick=</span><span class="s">&#34;@{(view) -&gt; mainModel.getClick(view)}&#34;</span>
-</span></span><span class="line"><span class="cl">            <span class="na">android:text=</span><span class="s">&#34;@string/btn_getUserInfo&#34;</span>
-</span></span><span class="line"><span class="cl">            <span class="na">app:layout_constraintBottom_toTopOf=</span><span class="s">&#34;@+id/tv_userinfo&#34;</span>
-</span></span><span class="line"><span class="cl">            <span class="na">app:layout_constraintEnd_toEndOf=</span><span class="s">&#34;parent&#34;</span>
-</span></span><span class="line"><span class="cl">            <span class="na">app:layout_constraintHorizontal_bias=</span><span class="s">&#34;0.498&#34;</span>
-</span></span><span class="line"><span class="cl">            <span class="na">app:layout_constraintStart_toStartOf=</span><span class="s">&#34;parent&#34;</span>
-</span></span><span class="line"><span class="cl">            <span class="na">app:layout_constraintTop_toTopOf=</span><span class="s">&#34;parent&#34;</span> <span class="nt">/&gt;</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">    <span class="nt">&lt;/androidx.constraintlayout.widget.ConstraintLayout&gt;</span>
-</span></span><span class="line"><span class="cl"><span class="nt">&lt;/layout&gt;</span>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-xml" data-lang="xml"><span style="display:flex;"><span><span style="color:#75715e">&lt;?xml version=&#34;1.0&#34; encoding=&#34;utf-8&#34;?&gt;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">&lt;layout</span> <span style="color:#a6e22e">xmlns:android=</span><span style="color:#e6db74">&#34;http://schemas.android.com/apk/res/android&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">xmlns:app=</span><span style="color:#e6db74">&#34;http://schemas.android.com/apk/res-auto&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">xmlns:tools=</span><span style="color:#e6db74">&#34;http://schemas.android.com/tools&#34;</span><span style="color:#f92672">&gt;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">&lt;data&gt;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">&lt;variable</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">name=</span><span style="color:#e6db74">&#34;mainModel&#34;</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">type=</span><span style="color:#e6db74">&#34;me.ithome.jetpack.model.MainViewModel&#34;</span> <span style="color:#f92672">/&gt;</span>①
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">&lt;/data&gt;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">&lt;androidx.constraintlayout.widget.ConstraintLayout</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">android:layout_width=</span><span style="color:#e6db74">&#34;match_parent&#34;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">android:layout_height=</span><span style="color:#e6db74">&#34;match_parent&#34;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">tools:context=</span><span style="color:#e6db74">&#34;.MainActivity&#34;</span><span style="color:#f92672">&gt;</span>②
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">&lt;TextView</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">android:id=</span><span style="color:#e6db74">&#34;@+id/tv_userinfo&#34;</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">android:layout_width=</span><span style="color:#e6db74">&#34;wrap_content&#34;</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">android:layout_height=</span><span style="color:#e6db74">&#34;wrap_content&#34;</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">android:text=</span><span style="color:#e6db74">&#34;@{mainModel.userData.toString()}&#34;</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">app:layout_constraintBottom_toBottomOf=</span><span style="color:#e6db74">&#34;parent&#34;</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">app:layout_constraintLeft_toLeftOf=</span><span style="color:#e6db74">&#34;parent&#34;</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">app:layout_constraintRight_toRightOf=</span><span style="color:#e6db74">&#34;parent&#34;</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">app:layout_constraintTop_toTopOf=</span><span style="color:#e6db74">&#34;parent&#34;</span> <span style="color:#f92672">/&gt;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">&lt;Button</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">android:id=</span><span style="color:#e6db74">&#34;@+id/button&#34;</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">android:layout_width=</span><span style="color:#e6db74">&#34;wrap_content&#34;</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">android:layout_height=</span><span style="color:#e6db74">&#34;wrap_content&#34;</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">android:layout_marginTop=</span><span style="color:#e6db74">&#34;56dp&#34;</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">android:onClick=</span><span style="color:#e6db74">&#34;@{(view) -&gt; mainModel.getClick(view)}&#34;</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">android:text=</span><span style="color:#e6db74">&#34;@string/btn_getUserInfo&#34;</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">app:layout_constraintBottom_toTopOf=</span><span style="color:#e6db74">&#34;@+id/tv_userinfo&#34;</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">app:layout_constraintEnd_toEndOf=</span><span style="color:#e6db74">&#34;parent&#34;</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">app:layout_constraintHorizontal_bias=</span><span style="color:#e6db74">&#34;0.498&#34;</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">app:layout_constraintStart_toStartOf=</span><span style="color:#e6db74">&#34;parent&#34;</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">app:layout_constraintTop_toTopOf=</span><span style="color:#e6db74">&#34;parent&#34;</span> <span style="color:#f92672">/&gt;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">&lt;/androidx.constraintlayout.widget.ConstraintLayout&gt;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">&lt;/layout&gt;</span>
 </span></span></code></pre></div><p>①用户变量，定义了能在这个布局里面使用的属性和类 <br>
 ②常规布局</p>
 <p><code>DataBinding</code>会基于<code>layout</code>创建一个<code>Binding class</code>，这个类包含了布局属性(定义的变量)到相关视图的所有绑定，并且会为布局中的数据元素生成<code>setter</code>，生成的类的名称是基于<code>layout</code>的名称(驼峰命名，加上<code>Binding</code>后缀)。比如布局名是<code>activity_main.xml</code>，生成的类就是<code>ActivityMainBinding</code>。你能通过这个类去<code>inflate</code>布局和数据模型，也可以通过<code>DataBindingUtil</code>类。</p>
 <ol>
 <li><code>DataBindingUtils</code>加载布局</li>
 </ol>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-kt" data-lang="kt"><span class="line"><span class="cl"><span class="k">val</span> <span class="py">mainBindingUtil</span> <span class="p">=</span> <span class="nc">DataBindingUtil</span><span class="p">.</span><span class="n">setContentView</span><span class="p">&lt;</span><span class="n">ActivityMainBinding</span><span class="p">&gt;(</span><span class="k">this</span><span class="p">,</span> <span class="nc">R</span><span class="p">.</span><span class="n">layout</span><span class="p">.</span><span class="n">activity_main</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl"><span class="n">mainBindingUtil</span><span class="p">.</span><span class="n">lifecycleOwner</span> <span class="p">=</span> <span class="k">this</span>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-kt" data-lang="kt"><span style="display:flex;"><span><span style="color:#66d9ef">val</span> mainBindingUtil = <span style="color:#a6e22e">DataBindingUtil</span>.setContentView&lt;ActivityMainBinding&gt;(<span style="color:#66d9ef">this</span>, <span style="color:#a6e22e">R</span>.layout.activity_main)
+</span></span><span style="display:flex;"><span>mainBindingUtil.lifecycleOwner = <span style="color:#66d9ef">this</span>
 </span></span></code></pre></div><ol start="2">
 <li><code>inflate</code>加载布局(此方法也能用于<code>RecyclerView</code>, <code>ViewPager</code>)</li>
 </ol>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-kt" data-lang="kt"><span class="line"><span class="cl"><span class="k">val</span> <span class="py">mainBindingUtil</span> <span class="p">=</span> <span class="nc">ActivityMainBinding</span><span class="p">.</span><span class="n">inflate</span><span class="p">(</span><span class="n">layoutInflater</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl"><span class="n">setContentView</span><span class="p">(</span><span class="n">mainBindingUtil</span><span class="p">.</span><span class="n">root</span><span class="p">)</span>
-</span></span></code></pre></div><p>上述两种方法大家二选一，一般在<code>Activity</code>中我们都用第一种。</p>
-<h3 id="12-如何启用databinding">1.2 如何启用<code>DataBinding</code></h3>
-<p>想要在<code>Android App</code>工程中使用<code>databinding</code>，只需要在<code>app/build.gradle</code>文件中设置如下代码：</p></div><div class="post-footer">
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-kt" data-lang="kt"><span style="display:flex;"><span><span style="color:#66d9ef">val</span> mainBindingUtil = <span style="color:#a6e22e">ActivityMainBinding</span>.inflate(layoutInflater)
+</span></span><span style="display:flex;"><span>setContentView(mainBindingUtil.root)
+</span></span></code></pre></div><p>上述两种方法大家二选一，一般在<code>Activity</code>中我们都用第一种。</p></div><div class="post-footer">
         <a href="/post/2020/11/02/%E5%9C%A8android%E4%B8%AD%E4%BD%BF%E7%94%A8data-binding/">阅读全文</a><div class="post-tags">
                 <i class="fas fa-tags fa-fw" aria-hidden="true"></i>&nbsp;<a href="/tags/databinding/">DataBinding</a>,&nbsp;<a href="/tags/android/">Android</a>,&nbsp;<a href="/tags/kotlin/">Kotlin</a></div></div>
 </article><article class="single summary" itemscope itemtype="http://schema.org/Article"><h1 class="single-title" itemprop="name headline">
@@ -402,21 +400,21 @@ FileOutputStream()未关闭，IO流忘记关闭
 懒汉式：需要的时候才实例化，常用的例子就是非空检查和双重检查式的实现。
 饿汉式：类加载的时候就先实例化。
 类似这样的</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kd">private</span><span class="w"> </span><span class="kd">static</span><span class="w"> </span><span class="n">Singleton</span><span class="w"> </span><span class="n">instance</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">Singleton</span><span class="p">();</span><span class="w">
-</span></span></span></code></pre></div><p>饿汉式会线程安全些。
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#66d9ef">private</span> <span style="color:#66d9ef">static</span> Singleton instance <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> Singleton();
+</span></span></code></pre></div><p>饿汉式会线程安全些。
 我们用的最主流的方式是静态内部类的方式。</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kd">class</span> <span class="nc">SingleInstance</span><span class="p">{</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="kd">private</span><span class="w"> </span><span class="nf">SingleInstance</span><span class="p">(){}</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w"> 
-</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="kd">private</span><span class="w"> </span><span class="kd">static</span><span class="w"> </span><span class="kd">class</span> <span class="nc">SingleInstanceHolder</span><span class="p">{</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">     </span><span class="kd">private</span><span class="w"> </span><span class="kd">static</span><span class="w"> </span><span class="n">SingleInstance</span><span class="w"> </span><span class="n">INSTANCE</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">SingleInstance</span><span class="p">();</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w"> </span><span class="p">}</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w"> 
-</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="kd">public</span><span class="w"> </span><span class="kd">static</span><span class="w"> </span><span class="n">SingleInstance</span><span class="w"> </span><span class="nf">getInstance</span><span class="p">(){</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">SingleInstanceHolder</span><span class="p">.</span><span class="na">INSTANCE</span><span class="p">;</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="p">}</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
-</span></span></span></code></pre></div><blockquote>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">SingleInstance</span>{
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">private</span> <span style="color:#a6e22e">SingleInstance</span>(){}
+</span></span><span style="display:flex;"><span> 
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">private</span> <span style="color:#66d9ef">static</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">SingleInstanceHolder</span>{
+</span></span><span style="display:flex;"><span>     <span style="color:#66d9ef">private</span> <span style="color:#66d9ef">static</span> SingleInstance INSTANCE <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> SingleInstance();
+</span></span><span style="display:flex;"><span> }
+</span></span><span style="display:flex;"><span> 
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">static</span> SingleInstance <span style="color:#a6e22e">getInstance</span>(){
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> SingleInstanceHolder.<span style="color:#a6e22e">INSTANCE</span>;
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><blockquote>
 <p>一个省只会有一个省长。</p></div><div class="post-footer">
         <a href="/post/2020/10/21/%E5%BF%AB%E9%80%9F%E7%90%86%E8%A7%A3%E4%BA%8C%E5%8D%81%E4%B8%89%E7%A7%8D%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/">阅读全文</a><div class="post-tags">
                 <i class="fas fa-tags fa-fw" aria-hidden="true"></i>&nbsp;<a href="/tags/%E7%BC%96%E7%A8%8B/">编程</a>,&nbsp;<a href="/tags/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/">设计模式</a>,&nbsp;<a href="/tags/%E9%9D%A2%E8%AF%95/">面试</a></div></div>
@@ -424,19 +422,19 @@ FileOutputStream()未关闭，IO流忘记关闭
         <a href="/post/2020/10/19/mac%E4%B8%8A%E5%AE%89%E8%A3%85yarn%E5%92%8Cnvm/">Mac上安装yarn和nvm</a>
     </h1><div class="post-meta"><span class="post-author"><a href="/" title="Author" rel=" author" class="author"><i class="fas fa-user-circle fa-fw" aria-hidden="true"></i>Simon</a>
 </span>&nbsp;<span class="post-publish">发布于 <time datetime="2020-10-19">2020-10-19</time></span>&nbsp;<span class="post-category">收录于 <a href="/categories/%E7%BC%96%E7%A8%8B/"><i class="far fa-folder fa-fw" aria-hidden="true"></i>编程</a></span></div><div class="content"><p><code>Mac</code>上安装<code>yarn</code>最方便的方式就是命令行输入:</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">brew install yarn
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>brew install yarn
 </span></span></code></pre></div><p>但是这样会把<code>node</code>也一并安装，作为开发者来说，保持多个<code>node</code>版本是必要的，所以我们一般都是通过<code>nvm</code>来管理<code>node</code>版本。</p>
 <p><code>brew</code>也提供过<code>brew install yarn --without-node</code>命令，但是现在已经失效。不必再试。</p>
 <p>输入<code>brew install</code>，根据提示我们发现目前可用的指令是<code>brew install yarn --ignore-dependencies</code></p>
 <p>运行后会报错，提示你找不到<code>node</code>，那么我们是不是可以把<code>nvm</code>的<code>node</code> link 到<code>brew</code>去呢？</p>
 <p>答案是可以的，步骤如下(<code>node</code>的版本号改为你实际使用的版本):</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">~ which node 
-</span></span><span class="line"><span class="cl">/usr/local/opt/nvm/versions/node/v14.14.0/bin/node
-</span></span><span class="line"><span class="cl">~ mkdir /usr/local/Cellar/node
-</span></span><span class="line"><span class="cl">~ ln -s /usr/local/opt/nvm/versions/node/v14.14.0 /usr/local/Cellar/node
-</span></span><span class="line"><span class="cl">~ brew link --overwrite node
-</span></span><span class="line"><span class="cl">~ brew doctor
-</span></span><span class="line"><span class="cl">~ brew install yarn --ignore-dependencies
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>~ which node 
+</span></span><span style="display:flex;"><span>/usr/local/opt/nvm/versions/node/v14.14.0/bin/node
+</span></span><span style="display:flex;"><span>~ mkdir /usr/local/Cellar/node
+</span></span><span style="display:flex;"><span>~ ln -s /usr/local/opt/nvm/versions/node/v14.14.0 /usr/local/Cellar/node
+</span></span><span style="display:flex;"><span>~ brew link --overwrite node
+</span></span><span style="display:flex;"><span>~ brew doctor
+</span></span><span style="display:flex;"><span>~ brew install yarn --ignore-dependencies
 </span></span></code></pre></div><p>安装这个顺序操作就OK了。</p></div><div class="post-footer">
         <a href="/post/2020/10/19/mac%E4%B8%8A%E5%AE%89%E8%A3%85yarn%E5%92%8Cnvm/">阅读全文</a><div class="post-tags">
                 <i class="fas fa-tags fa-fw" aria-hidden="true"></i>&nbsp;<a href="/tags/%E7%BC%96%E7%A8%8B/">编程</a>,&nbsp;<a href="/tags/yarn/">Yarn</a>,&nbsp;<a href="/tags/nvm/">Nvm</a></div></div>

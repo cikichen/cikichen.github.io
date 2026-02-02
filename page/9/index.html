@@ -103,10 +103,10 @@
         <a href="/post/2018/09/18/flutter%E6%8F%92%E4%BB%B6%E4%B8%8A%E4%BC%A0pub-dartlang%E5%A4%B1%E8%B4%A5%E7%9A%84%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88/">flutter插件上传pub.dartlang失败的解决方案</a>
     </h1><div class="post-meta"><span class="post-author"><a href="/" title="Author" rel=" author" class="author"><i class="fas fa-user-circle fa-fw" aria-hidden="true"></i>SimonChen</a>
 </span>&nbsp;<span class="post-publish">发布于 <time datetime="2018-09-18">2018-09-18</time></span>&nbsp;<span class="post-category">收录于 <a href="/categories/%E7%A7%BB%E5%8A%A8%E5%BC%80%E5%8F%91/"><i class="far fa-folder fa-fw" aria-hidden="true"></i>移动开发</a></span></div><div class="content"><p>最近开发了一款<code>flutter</code>的插件，想发布到<code>pub.darlang</code>上面去，然后发现命令行各种失败，设置了ss全局|-代|理，命令行export代|理,全都不行，账号验证完毕后，提示上传完成，但是最后一步总是失败。后来无意中发现一次上传过程中出现的地址是<code>flutter-io.cn</code>，我猜测会不会是因为设置了镜像的原因。<strong>果断在.zshrc中去掉了镜像地址设置，然后再试，一次成功，完美解决。</strong></p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-gdscript3" data-lang="gdscript3"><span class="line"><span class="cl"><span class="c1"># 注释掉这两句</span>
-</span></span><span class="line"><span class="cl"><span class="c1"># export PUB_HOSTED_URL=https://pub.flutter-io.cn</span>
-</span></span><span class="line"><span class="cl"><span class="c1"># export FLUTTER_STORAGE_BASE_URL=https://storage.flutter-io.cn</span>
-</span></span></code></pre></div><p>如果有其他同学遇到类似问题，可以试试去掉镜像再试试。</p></div><div class="post-footer">
+<pre tabindex="0"><code># 注释掉这两句
+# export PUB_HOSTED_URL=https://pub.flutter-io.cn
+# export FLUTTER_STORAGE_BASE_URL=https://storage.flutter-io.cn
+</code></pre><p>如果有其他同学遇到类似问题，可以试试去掉镜像再试试。</p></div><div class="post-footer">
         <a href="/post/2018/09/18/flutter%E6%8F%92%E4%BB%B6%E4%B8%8A%E4%BC%A0pub-dartlang%E5%A4%B1%E8%B4%A5%E7%9A%84%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88/">阅读全文</a><div class="post-tags">
                 <i class="fas fa-tags fa-fw" aria-hidden="true"></i>&nbsp;<a href="/tags/flutter/">Flutter</a></div></div>
 </article><article class="single summary" itemscope itemtype="http://schema.org/Article"><h1 class="single-title" itemprop="name headline">
@@ -116,36 +116,36 @@
 使用这些控件时，可能出现跳转后bottomNavigationBar还保留在底部的情况。
 截止本文发布为止，目前Flutter开发工具还是有一些莫名其妙的问题的。如果你一直用iOS模拟器调试，发现有些奇葩问题怎么改代码都没效果，不妨切换成android模拟器试试，反之亦然。</p>
 <p><strong>获取设备宽高</strong></p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">double width = MediaQuery.of(context).size.width;
-</span></span><span class="line"><span class="cl">double height = MediaQuery.of(context).size.height;
-</span></span></code></pre></div><p><strong>标题栏沉浸式</strong></p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">void main() {
-</span></span><span class="line"><span class="cl">  runApp(App());
-</span></span><span class="line"><span class="cl">  if (Platform.isAndroid) {
-</span></span><span class="line"><span class="cl">    SystemUiOverlayStyle systemUiOverlayStyle = SystemUiOverlayStyle(statusBarColor: Colors.transparent);
-</span></span><span class="line"><span class="cl">    SystemChrome.setSystemUIOverlayStyle(systemUiOverlayStyle);
-</span></span><span class="line"><span class="cl">  }
-</span></span><span class="line"><span class="cl">}
-</span></span></code></pre></div><p><strong>AppBar标题居中和去掉AppBar下侧阴影</strong></p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">Widget _tabbar(BuildContext context) {
-</span></span><span class="line"><span class="cl">    return AppBar(
-</span></span><span class="line"><span class="cl">      ...
-</span></span><span class="line"><span class="cl">      centerTitle: true, // 标题居中
-</span></span><span class="line"><span class="cl">      elevation: 0.0, // 去掉appbar下面的阴影
-</span></span><span class="line"><span class="cl">    );
-</span></span><span class="line"><span class="cl">  }
-</span></span></code></pre></div><p><strong>有状态组件一定要使用createState</strong></p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-gdscript3" data-lang="gdscript3"><span class="line"><span class="cl"><span class="k">class</span> <span class="n">HomeScreen</span> <span class="k">extends</span> <span class="n">StatefulWidget</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">  <span class="k">const</span> <span class="n">HomeScreen</span><span class="p">();</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">  <span class="err">@</span><span class="n">override</span>
-</span></span><span class="line"><span class="cl">  <span class="n">_HomeScreenState</span> <span class="n">createState</span><span class="p">()</span> <span class="o">=&gt;</span> <span class="n">_HomeScreenState</span><span class="p">();</span>
-</span></span><span class="line"><span class="cl"><span class="p">}</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="k">class</span> <span class="n">_HomeScreenState</span> <span class="k">extends</span> <span class="n">State</span><span class="o">&lt;</span><span class="n">HomeScreen</span><span class="o">&gt;</span> <span class="n">with</span> <span class="n">SingleTickerProviderStateMixin</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">  <span class="o">//</span> <span class="err">使用</span><span class="n">TickerProvider</span> <span class="err">记得加</span> <span class="n">with</span> <span class="n">SingleTickerProviderStateMixin</span> <span class="err">不然会报错</span>
-</span></span><span class="line"><span class="cl"><span class="p">}</span>
-</span></span></code></pre></div><p><strong>使用ios的动画交互 和 MaterialApp 主题颜色配置不生效的问题</strong>
+<pre tabindex="0"><code>double width = MediaQuery.of(context).size.width;
+double height = MediaQuery.of(context).size.height;
+</code></pre><p><strong>标题栏沉浸式</strong></p>
+<pre tabindex="0"><code>void main() {
+  runApp(App());
+  if (Platform.isAndroid) {
+    SystemUiOverlayStyle systemUiOverlayStyle = SystemUiOverlayStyle(statusBarColor: Colors.transparent);
+    SystemChrome.setSystemUIOverlayStyle(systemUiOverlayStyle);
+  }
+}
+</code></pre><p><strong>AppBar标题居中和去掉AppBar下侧阴影</strong></p>
+<pre tabindex="0"><code>Widget _tabbar(BuildContext context) {
+    return AppBar(
+      ...
+      centerTitle: true, // 标题居中
+      elevation: 0.0, // 去掉appbar下面的阴影
+    );
+  }
+</code></pre><p><strong>有状态组件一定要使用createState</strong></p>
+<pre tabindex="0"><code>class HomeScreen extends StatefulWidget {
+  const HomeScreen();
+
+  @override
+  _HomeScreenState createState() =&gt; _HomeScreenState();
+}
+
+class _HomeScreenState extends State&lt;HomeScreen&gt; with SingleTickerProviderStateMixin {
+  // 使用TickerProvider 记得加 with SingleTickerProviderStateMixin 不然会报错
+}
+</code></pre><p><strong>使用ios的动画交互 和 MaterialApp 主题颜色配置不生效的问题</strong>
 检查是否存在子级MaterialApp。如果有子级MaterialApp请删除，保证全局只有一个MaterialApp，theme就会生效</p></div><div class="post-footer">
         <a href="/post/2018/08/28/flutter%E5%AE%9E%E7%94%A8%E6%8A%80%E5%B7%A7%E6%B1%87%E6%80%BB/">阅读全文</a><div class="post-tags">
                 <i class="fas fa-tags fa-fw" aria-hidden="true"></i>&nbsp;<a href="/tags/flutter/">Flutter</a>,&nbsp;<a href="/tags/%E6%B2%89%E6%B5%B8%E5%BC%8F/">沉浸式</a></div></div>
@@ -162,23 +162,23 @@
         title="https://cloud.githubusercontent.com/assets/16514704/25273844/2894bc8e-26c0-11e7-87f3-2a051d1e92b9.jpg" /></p>
 <p>随着 4G 的普遍以及 WiFi 的广泛使用，手机上的网速已经足够稳定和高速，以视频为主的 HTML5 也越来越普遍了，相比帧动画，视频的表现更加丰富，这里介绍一些实践经验。</p>
 <p><strong>video的属性</strong></p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-gdscript3" data-lang="gdscript3"><span class="line"><span class="cl"><span class="o">&lt;</span><span class="n">video</span>
-</span></span><span class="line"><span class="cl">  <span class="n">id</span><span class="o">=</span><span class="s2">&#34;video&#34;</span> 
-</span></span><span class="line"><span class="cl">  <span class="n">src</span><span class="o">=</span><span class="s2">&#34;video.mp4&#34;</span> 
-</span></span><span class="line"><span class="cl">  <span class="n">controls</span> <span class="o">=</span> <span class="s2">&#34;true&#34;</span>
-</span></span><span class="line"><span class="cl">  <span class="n">poster</span><span class="o">=</span><span class="s2">&#34;images.jpg&#34;</span> <span class="o">/*</span><span class="err">视频封面</span><span class="o">*/</span>
-</span></span><span class="line"><span class="cl">  <span class="nb">preload</span><span class="o">=</span><span class="s2">&#34;auto&#34;</span> 
-</span></span><span class="line"><span class="cl">  <span class="n">webkit</span><span class="o">-</span><span class="n">playsinline</span><span class="o">=</span><span class="s2">&#34;true&#34;</span> <span class="o">/*</span><span class="err">这个属性是</span><span class="n">ios</span> <span class="mi">10</span><span class="err">中设置可以</span>
-</span></span><span class="line"><span class="cl">                     <span class="err">让视频在小窗内播放，也就是不是全屏播放</span><span class="o">*/</span>  
-</span></span><span class="line"><span class="cl">  <span class="n">playsinline</span><span class="o">=</span><span class="s2">&#34;true&#34;</span>  <span class="o">/*</span><span class="n">IOS微信浏览器支持小窗内播放</span><span class="o">*/</span> 
-</span></span><span class="line"><span class="cl">  <span class="n">x</span><span class="o">-</span><span class="n">webkit</span><span class="o">-</span><span class="n">airplay</span><span class="o">=</span><span class="s2">&#34;allow&#34;</span> 
-</span></span><span class="line"><span class="cl">  <span class="n">x5</span><span class="o">-</span><span class="n">video</span><span class="o">-</span><span class="n">player</span><span class="o">-</span><span class="n">type</span><span class="o">=</span><span class="s2">&#34;h5&#34;</span>  <span class="o">/*</span><span class="err">启用</span><span class="n">H5播放器</span><span class="p">,</span><span class="err">是</span><span class="n">wechat安卓版特性</span><span class="o">*/</span>
-</span></span><span class="line"><span class="cl">  <span class="n">x5</span><span class="o">-</span><span class="n">video</span><span class="o">-</span><span class="n">player</span><span class="o">-</span><span class="n">fullscreen</span><span class="o">=</span><span class="s2">&#34;true&#34;</span> <span class="o">/*</span><span class="err">全屏设置，</span>
-</span></span><span class="line"><span class="cl">                     <span class="err">设置为</span> <span class="bp">true</span> <span class="err">是防止横屏</span><span class="o">*/</span>
-</span></span><span class="line"><span class="cl">  <span class="n">x5</span><span class="o">-</span><span class="n">video</span><span class="o">-</span><span class="n">orientation</span><span class="o">=</span><span class="s2">&#34;portraint&#34;</span> <span class="o">//</span><span class="err">播放器支付的方向，</span> <span class="n">landscape横屏</span><span class="err">，</span><span class="n">portraint竖屏</span><span class="err">，默认值为竖屏</span>
-</span></span><span class="line"><span class="cl">  <span class="n">style</span><span class="o">=</span><span class="s2">&#34;object-fit:fill&#34;</span><span class="o">&gt;</span>
-</span></span><span class="line"><span class="cl"><span class="o">&lt;/</span><span class="n">video</span><span class="o">&gt;</span>
-</span></span></code></pre></div><ul>
+<pre tabindex="0"><code>&lt;video
+  id=&#34;video&#34; 
+  src=&#34;video.mp4&#34; 
+  controls = &#34;true&#34;
+  poster=&#34;images.jpg&#34; /*视频封面*/
+  preload=&#34;auto&#34; 
+  webkit-playsinline=&#34;true&#34; /*这个属性是ios 10中设置可以
+                     让视频在小窗内播放，也就是不是全屏播放*/  
+  playsinline=&#34;true&#34;  /*IOS微信浏览器支持小窗内播放*/ 
+  x-webkit-airplay=&#34;allow&#34; 
+  x5-video-player-type=&#34;h5&#34;  /*启用H5播放器,是wechat安卓版特性*/
+  x5-video-player-fullscreen=&#34;true&#34; /*全屏设置，
+                     设置为 true 是防止横屏*/
+  x5-video-orientation=&#34;portraint&#34; //播放器支付的方向， landscape横屏，portraint竖屏，默认值为竖屏
+  style=&#34;object-fit:fill&#34;&gt;
+&lt;/video&gt;
+</code></pre><ul>
 <li><code>src</code>: 视频的地址</li>
 <li><code>controls</code>: 加上这个属性，Gecko 会提供用户控制，允许用户控制视频的播放，包括音     量，跨帧，暂停/恢复播放。</li>
 <li><code>poster</code>: 属性规定视频下载时显示的图像，或者在用户点击播放按钮前显示的图像。如果未设置该属性，则使用视频的第一帧来代替。</li>
@@ -197,8 +197,8 @@ ios加<code>playsinline</code>属性，之前只带webkit前缀的在ios10以后
 <li><strong>android</strong>
 <code>x5-video-player-type=&quot;h5&quot;</code>属性，腾讯x5内核系的android微信和手Q内置浏览器用的浏览器webview的内核，使用这个属性在微信中视频会有不同的表现，会呈现全屏状态，貌似播放控件剥去了，至少加了这个属性后视频上层可以有其他dom元素出现了（非腾讯白名单机制的一种处理措施）。</li>
 </ul>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">&lt;video id=&#34;video&#34; src=&#34;xx.mp4&#34; playsinline webkit-playsinline&gt;&lt;/video&gt;
-</span></span></code></pre></div><h3 id="自动播放">自动播放</h3>
+<pre tabindex="0"><code>&lt;video id=&#34;video&#34; src=&#34;xx.mp4&#34; playsinline webkit-playsinline&gt;&lt;/video&gt;
+</code></pre><h3 id="自动播放">自动播放</h3>
 <p>android始终不能自动播放，不多说。值得一提的是经测现在ios10后版本的safari和微信都不让视频自动播放了（顺带音频也不能自动播放了），但微信提供了一个事件WeixinJSBridgeReady，在微信嵌入webview全局的这个事件触发后，视频仍可以自动播放，这个应该是现在在ios端微信的视频自动播放的比较靠谱的方式，其他如手q或者其他浏览器，建议就引导用户出发触屏的行为操作出发比较好。</p></div><div class="post-footer">
         <a href="/post/2018/08/15/%E8%A7%86%E9%A2%91h5-video%E6%A0%87%E7%AD%BE%E6%9C%80%E4%BD%B3%E5%AE%9E%E8%B7%B5/">阅读全文</a><div class="post-tags">
                 <i class="fas fa-tags fa-fw" aria-hidden="true"></i>&nbsp;<a href="/tags/h5/">H5</a>,&nbsp;<a href="/tags/video/">Video</a>,&nbsp;<a href="/tags/%E8%A7%86%E9%A2%91/">视频</a></div></div>
@@ -220,18 +220,18 @@ A:Xcode插件方式不仅配置麻烦，而且配置完成后还需要大量的�
 <h4 id="11-安装fastlane"><strong>1.1 安装fastlane</strong></h4>
 <p><em>在Mac编译机上需要配置好fastlane</em></p>
 <p>打包iOS我们需要保证xcode命令行已经正确安装</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">xcode-select --install  //命令行输入，如果未安装会弹出对话框提示安装，否则会提示已经安装
-</span></span></code></pre></div><p>可以通过两种方式来安装<a href="https://fastlane.tools/" target="_blank" rel="noopener noreffer">fastlane</a>
+<pre tabindex="0"><code>xcode-select --install  //命令行输入，如果未安装会弹出对话框提示安装，否则会提示已经安装
+</code></pre><p>可以通过两种方式来安装<a href="https://fastlane.tools/" target="_blank" rel="noopener noreffer">fastlane</a>
 
 <strong>方式一：</strong></p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">[sudo] gem install fastlane -NV
-</span></span></code></pre></div><p><strong>方式二：</strong></p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">brew cask install fastlane
-</span></span></code></pre></div><h4 id="12-项目中配置fastlane"><strong>1.2 项目中配置fastlane</strong></h4>
+<pre tabindex="0"><code>[sudo] gem install fastlane -NV
+</code></pre><p><strong>方式二：</strong></p>
+<pre tabindex="0"><code>brew cask install fastlane
+</code></pre><h4 id="12-项目中配置fastlane"><strong>1.2 项目中配置fastlane</strong></h4>
 <p><em>给我们需要自动化编译的iOS工程配置fastlane</em></p>
 <p>假如我们现在有一个<code>BlocklySample</code>的工程，我们需要在项目根目录下执行命令行</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">fastlane init
-</span></span></code></pre></div><p>会有如下图这样的提示，需要我们选择哪种任务，这里我们可以选<code>2</code>或者<code>3</code>。选择这两个选择后会提示让你输入iOS开发者的账号密码，这样会自动给你生成团队信息、bid和基本编译脚本等等。
+<pre tabindex="0"><code>fastlane init
+</code></pre><p>会有如下图这样的提示，需要我们选择哪种任务，这里我们可以选<code>2</code>或者<code>3</code>。选择这两个选择后会提示让你输入iOS开发者的账号密码，这样会自动给你生成团队信息、bid和基本编译脚本等等。
 <img
         class="lazyload"
         src="/svg/loading.min.svg"
@@ -250,142 +250,142 @@ A:Xcode插件方式不仅配置麻烦，而且配置完成后还需要大量的�
         alt="http://7xq9ge.com1.z0.glb.clouddn.com/2018-08-15-15343127999279.jpg"
         title="http://7xq9ge.com1.z0.glb.clouddn.com/2018-08-15-15343127999279.jpg" /></p>
 <p>修改fastlane目录下的Fastfile文件</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-gdscript3" data-lang="gdscript3"><span class="line"><span class="cl"><span class="c1"># This file contains the fastlane.tools configuration</span>
-</span></span><span class="line"><span class="cl"><span class="c1"># You can find the documentation at https://docs.fastlane.tools</span>
-</span></span><span class="line"><span class="cl"><span class="c1">#</span>
-</span></span><span class="line"><span class="cl"><span class="c1"># For a list of all available actions, check out</span>
-</span></span><span class="line"><span class="cl"><span class="c1">#</span>
-</span></span><span class="line"><span class="cl"><span class="c1">#     https://docs.fastlane.tools/actions</span>
-</span></span><span class="line"><span class="cl"><span class="c1">#</span>
-</span></span><span class="line"><span class="cl"><span class="c1"># For a list of all available plugins, check out</span>
-</span></span><span class="line"><span class="cl"><span class="c1">#</span>
-</span></span><span class="line"><span class="cl"><span class="c1">#     https://docs.fastlane.tools/plugins/available-plugins</span>
-</span></span><span class="line"><span class="cl"><span class="c1">#</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="c1"># Uncomment the line if you want fastlane to automatically update itself</span>
-</span></span><span class="line"><span class="cl"><span class="c1"># update_fastlane</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="n">default_platform</span><span class="p">(:</span><span class="n">ios</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="n">platform</span> <span class="p">:</span><span class="n">ios</span> <span class="k">do</span>
-</span></span><span class="line"><span class="cl">  <span class="n">desc</span> <span class="s2">&#34;Push a new release build to the App Store&#34;</span>
-</span></span><span class="line"><span class="cl">  <span class="n">lane</span> <span class="p">:</span><span class="n">release_appstore</span> <span class="k">do</span>
-</span></span><span class="line"><span class="cl">    <span class="n">increment_build_number</span><span class="p">(</span><span class="n">xcodeproj</span><span class="p">:</span> <span class="s2">&#34;xxx.xcodeproj&#34;</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">    <span class="n">update_project_provisioning</span><span class="p">(</span>
-</span></span><span class="line"><span class="cl">        <span class="c1"># 之前有sigh下载的描述文件存储路径</span>
-</span></span><span class="line"><span class="cl">        <span class="n">profile</span><span class="p">:</span><span class="s2">&#34;fastlane/provision/xxx.mobileprovision&#34;</span><span class="p">,</span>
-</span></span><span class="line"><span class="cl">        <span class="c1"># 打包配置，Debug，Release</span>
-</span></span><span class="line"><span class="cl">        <span class="n">build_configuration</span><span class="p">:</span><span class="s2">&#34;Release&#34;</span>
-</span></span><span class="line"><span class="cl">    <span class="p">)</span>
-</span></span><span class="line"><span class="cl">    <span class="n">automatic_code_signing</span><span class="p">(</span>
-</span></span><span class="line"><span class="cl">        <span class="c1"># 工程文件所在路径</span>
-</span></span><span class="line"><span class="cl">        <span class="n">path</span><span class="p">:</span><span class="s2">&#34;xxx.xcodeproj&#34;</span><span class="p">,</span>
-</span></span><span class="line"><span class="cl">        <span class="c1"># 是否使用自动签名，这里如果是打包的话应该一般都为false吧，默认也是false</span>
-</span></span><span class="line"><span class="cl">        <span class="n">use_automatic_signing</span><span class="p">:</span><span class="bp">false</span><span class="p">,</span>
-</span></span><span class="line"><span class="cl">        <span class="c1"># 这个就不用说了，需要修改的targets</span>
-</span></span><span class="line"><span class="cl">        <span class="n">targets</span><span class="p">:</span><span class="s2">&#34;xxx&#34;</span><span class="p">,</span>
-</span></span><span class="line"><span class="cl">        <span class="c1"># 用哪种方式打包“iPhone Develop”还是“iPhone Distribution”</span>
-</span></span><span class="line"><span class="cl">        <span class="n">code_sign_identity</span><span class="p">:</span><span class="s2">&#34;iPhone Distribution&#34;</span><span class="p">,</span>
-</span></span><span class="line"><span class="cl">        <span class="c1"># 描述文件名称， 也就是使用哪个描述文件打包</span>
-</span></span><span class="line"><span class="cl">        <span class="n">profile_name</span><span class="p">:</span><span class="s2">&#34;xxx&#34;</span>
-</span></span><span class="line"><span class="cl">    <span class="p">)</span>
-</span></span><span class="line"><span class="cl">    <span class="n">scheme_name</span> <span class="o">=</span> <span class="s1">&#39;xxx&#39;</span>
-</span></span><span class="line"><span class="cl">    <span class="n">configuration</span> <span class="o">=</span> <span class="s1">&#39;AppStore&#39;</span>
-</span></span><span class="line"><span class="cl">    <span class="n">version</span> <span class="o">=</span> <span class="n">get_info_plist_value</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="s2">&#34;./#{scheme_name}/Info.plist&#34;</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="s2">&#34;CFBundleShortVersionString&#34;</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">    <span class="n">build</span> <span class="o">=</span> <span class="n">get_info_plist_value</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="s2">&#34;./#{scheme_name}/Info.plist&#34;</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="s2">&#34;CFBundleVersion&#34;</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">    <span class="n">output_directory</span> <span class="o">=</span> <span class="ne">File</span><span class="o">.</span><span class="n">expand_path</span><span class="p">(</span><span class="s2">&#34;..&#34;</span><span class="p">,</span> <span class="n">Dir</span><span class="o">.</span><span class="n">pwd</span><span class="p">)</span> <span class="o">+</span> <span class="ne">File</span><span class="p">::</span><span class="ne">Separator</span> <span class="o">+</span> <span class="s1">&#39;build&#39;</span>
-</span></span><span class="line"><span class="cl">    <span class="n">output_name</span> <span class="o">=</span> <span class="s2">&#34;#{scheme_name}_#{configuration}_#{version}_#{build}_#{Time.now.strftime(&#39;%Y%m</span><span class="si">%d</span><span class="s2">%H%M%S&#39;)}.ipa&#34;</span>
-</span></span><span class="line"><span class="cl">    <span class="n">build_app</span><span class="p">(</span><span class="n">workspace</span><span class="p">:</span> <span class="s2">&#34;xxx.xcworkspace&#34;</span><span class="p">,</span> <span class="n">scheme</span><span class="p">:</span> <span class="s2">&#34;xxx&#34;</span><span class="p">,</span> <span class="n">export_method</span><span class="p">:</span> <span class="s2">&#34;app-store&#34;</span><span class="p">,</span> <span class="n">output_directory</span><span class="p">:</span> <span class="n">output_directory</span><span class="p">,</span>
-</span></span><span class="line"><span class="cl">      <span class="n">output_name</span><span class="p">:</span> <span class="n">output_name</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">    <span class="n">upload_to_app_store</span>
-</span></span><span class="line"><span class="cl">  <span class="n">end</span>
-</span></span><span class="line"><span class="cl">  <span class="n">desc</span> <span class="s2">&#34;Push a new release build to the Testflight&#34;</span>
-</span></span><span class="line"><span class="cl">  <span class="n">lane</span> <span class="p">:</span><span class="n">release_testflight</span> <span class="k">do</span>
-</span></span><span class="line"><span class="cl">    <span class="n">update_project_provisioning</span><span class="p">(</span>
-</span></span><span class="line"><span class="cl">        <span class="c1"># 之前有sigh下载的描述文件存储路径</span>
-</span></span><span class="line"><span class="cl">        <span class="n">profile</span><span class="p">:</span><span class="s2">&#34;fastlane/provision/xxx.mobileprovision&#34;</span><span class="p">,</span>
-</span></span><span class="line"><span class="cl">        <span class="c1"># 打包配置，Debug，Release</span>
-</span></span><span class="line"><span class="cl">        <span class="n">build_configuration</span><span class="p">:</span><span class="s2">&#34;Release&#34;</span>
-</span></span><span class="line"><span class="cl">    <span class="p">)</span>
-</span></span><span class="line"><span class="cl">    <span class="n">automatic_code_signing</span><span class="p">(</span>
-</span></span><span class="line"><span class="cl">        <span class="c1"># 工程文件所在路径</span>
-</span></span><span class="line"><span class="cl">        <span class="n">path</span><span class="p">:</span><span class="s2">&#34;xxx.xcodeproj&#34;</span><span class="p">,</span>
-</span></span><span class="line"><span class="cl">        <span class="c1"># 是否使用自动签名，这里如果是打包的话应该一般都为false吧，默认也是false</span>
-</span></span><span class="line"><span class="cl">        <span class="n">use_automatic_signing</span><span class="p">:</span><span class="bp">false</span><span class="p">,</span>
-</span></span><span class="line"><span class="cl">        <span class="c1"># 这个就不用说了，需要修改的targets</span>
-</span></span><span class="line"><span class="cl">        <span class="n">targets</span><span class="p">:</span><span class="s2">&#34;xxx&#34;</span><span class="p">,</span>
-</span></span><span class="line"><span class="cl">        <span class="c1"># 用哪种方式打包“iPhone Develop”还是“iPhone Distribution”</span>
-</span></span><span class="line"><span class="cl">        <span class="n">code_sign_identity</span><span class="p">:</span><span class="s2">&#34;iPhone Distribution&#34;</span><span class="p">,</span>
-</span></span><span class="line"><span class="cl">        <span class="c1"># 描述文件名称， 也就是使用哪个描述文件打包</span>
-</span></span><span class="line"><span class="cl">        <span class="n">profile_name</span><span class="p">:</span><span class="s2">&#34;xxx&#34;</span>
-</span></span><span class="line"><span class="cl">    <span class="p">)</span>
-</span></span><span class="line"><span class="cl">    <span class="n">scheme_name</span> <span class="o">=</span> <span class="s1">&#39;xxx&#39;</span>
-</span></span><span class="line"><span class="cl">    <span class="n">configuration</span> <span class="o">=</span> <span class="s1">&#39;AppStore&#39;</span>
-</span></span><span class="line"><span class="cl">    <span class="n">version</span> <span class="o">=</span> <span class="n">get_info_plist_value</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="s2">&#34;./#{scheme_name}/Info.plist&#34;</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="s2">&#34;CFBundleShortVersionString&#34;</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">    <span class="n">build</span> <span class="o">=</span> <span class="n">get_info_plist_value</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="s2">&#34;./#{scheme_name}/Info.plist&#34;</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="s2">&#34;CFBundleVersion&#34;</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">    <span class="n">output_directory</span> <span class="o">=</span> <span class="ne">File</span><span class="o">.</span><span class="n">expand_path</span><span class="p">(</span><span class="s2">&#34;..&#34;</span><span class="p">,</span> <span class="n">Dir</span><span class="o">.</span><span class="n">pwd</span><span class="p">)</span> <span class="o">+</span> <span class="ne">File</span><span class="p">::</span><span class="ne">Separator</span> <span class="o">+</span> <span class="s1">&#39;build&#39;</span>
-</span></span><span class="line"><span class="cl">    <span class="n">output_name</span> <span class="o">=</span> <span class="s2">&#34;#{scheme_name}_#{configuration}_#{version}_#{build}_#{Time.now.strftime(&#39;%Y%m</span><span class="si">%d</span><span class="s2">%H%M%S&#39;)}.ipa&#34;</span>
-</span></span><span class="line"><span class="cl">    <span class="n">build_app</span><span class="p">(</span><span class="n">workspace</span><span class="p">:</span> <span class="s2">&#34;xxx.xcworkspace&#34;</span><span class="p">,</span> <span class="n">scheme</span><span class="p">:</span> <span class="s2">&#34;xxx&#34;</span><span class="p">,</span> <span class="n">export_method</span><span class="p">:</span> <span class="s2">&#34;app-store&#34;</span><span class="p">,</span> <span class="n">output_directory</span><span class="p">:</span> <span class="n">output_directory</span><span class="p">,</span>
-</span></span><span class="line"><span class="cl">      <span class="n">output_name</span><span class="p">:</span> <span class="n">output_name</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">    <span class="n">upload_to_testflight</span>
-</span></span><span class="line"><span class="cl">  <span class="n">end</span>
-</span></span><span class="line"><span class="cl">  <span class="n">desc</span> <span class="s2">&#34;Push a new release build to the Ad Hoc&#34;</span>
-</span></span><span class="line"><span class="cl">  <span class="n">lane</span> <span class="p">:</span><span class="n">release_adhoc</span> <span class="k">do</span> <span class="o">|</span><span class="n">option</span><span class="o">|</span>
-</span></span><span class="line"><span class="cl">  	<span class="c1"># cocoapods</span>
-</span></span><span class="line"><span class="cl">  	<span class="c1">#根据传入参数version设置app的版本号</span>
-</span></span><span class="line"><span class="cl">	<span class="c1"># increment_version_number(version_number: option[:version]) </span>
-</span></span><span class="line"><span class="cl">	<span class="c1">#自动增加build号</span>
-</span></span><span class="line"><span class="cl">	<span class="c1">#increment_build_number</span>
-</span></span><span class="line"><span class="cl">  	<span class="n">update_project_provisioning</span><span class="p">(</span>
-</span></span><span class="line"><span class="cl">        <span class="c1"># 之前有sigh下载的描述文件存储路径</span>
-</span></span><span class="line"><span class="cl">        <span class="n">profile</span><span class="p">:</span><span class="s2">&#34;fastlane/provision/xxx.mobileprovision&#34;</span><span class="p">,</span>
-</span></span><span class="line"><span class="cl">        <span class="c1"># 打包配置，Debug，Release</span>
-</span></span><span class="line"><span class="cl">        <span class="n">build_configuration</span><span class="p">:</span><span class="s2">&#34;Release&#34;</span>
-</span></span><span class="line"><span class="cl">    <span class="p">)</span>
-</span></span><span class="line"><span class="cl">  	<span class="n">automatic_code_signing</span><span class="p">(</span>
-</span></span><span class="line"><span class="cl">        <span class="c1"># 工程文件所在路径</span>
-</span></span><span class="line"><span class="cl">        <span class="n">path</span><span class="p">:</span><span class="s2">&#34;xxx.xcodeproj&#34;</span><span class="p">,</span>
-</span></span><span class="line"><span class="cl">        <span class="c1"># 是否使用自动签名，这里如果是打包的话应该一般都为false吧，默认也是false</span>
-</span></span><span class="line"><span class="cl">        <span class="n">use_automatic_signing</span><span class="p">:</span><span class="bp">false</span><span class="p">,</span>
-</span></span><span class="line"><span class="cl">        <span class="c1"># 打包的team ID， 也就是打包使用的证书中的team ID，这个如果不知道是什么的话可以在xCode中设置好签名用的描述文件后到xcodeproj下的pbxproj文件中搜索“DEVELOPMENT_TEAM”，它的值就是了</span>
-</span></span><span class="line"><span class="cl">        <span class="n">team_id</span><span class="p">:</span><span class="s2">&#34;RRRRR5555&#34;</span><span class="p">,</span>
-</span></span><span class="line"><span class="cl">        <span class="c1"># 这个就不用说了，需要修改的targets</span>
-</span></span><span class="line"><span class="cl">        <span class="n">targets</span><span class="p">:</span><span class="s2">&#34;xxx&#34;</span><span class="p">,</span>
-</span></span><span class="line"><span class="cl">        <span class="c1"># 用哪种方式打包“iPhone Develop”还是“iPhone Distribution”</span>
-</span></span><span class="line"><span class="cl">        <span class="n">code_sign_identity</span><span class="p">:</span><span class="s2">&#34;iPhone Distribution&#34;</span><span class="p">,</span>
-</span></span><span class="line"><span class="cl">        <span class="c1"># 描述文件名称， 也就是使用哪个描述文件打包</span>
-</span></span><span class="line"><span class="cl">        <span class="n">profile_name</span><span class="p">:</span><span class="s2">&#34;xxx&#34;</span>
-</span></span><span class="line"><span class="cl">    <span class="p">)</span>
-</span></span><span class="line"><span class="cl">    <span class="c1">#证书签名</span>
-</span></span><span class="line"><span class="cl">    <span class="c1"># sigh</span>
-</span></span><span class="line"><span class="cl">    <span class="c1">#编译打包</span>
-</span></span><span class="line"><span class="cl">    <span class="n">scheme_name</span> <span class="o">=</span> <span class="s1">&#39;xxx&#39;</span>
-</span></span><span class="line"><span class="cl">    <span class="n">configuration</span> <span class="o">=</span> <span class="s1">&#39;Release&#39;</span>
-</span></span><span class="line"><span class="cl">    <span class="n">version</span> <span class="o">=</span> <span class="n">get_info_plist_value</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="s2">&#34;./#{scheme_name}/Info.plist&#34;</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="s2">&#34;CFBundleShortVersionString&#34;</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">    <span class="n">build</span> <span class="o">=</span> <span class="n">get_info_plist_value</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="s2">&#34;./#{scheme_name}/Info.plist&#34;</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="s2">&#34;CFBundleVersion&#34;</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">    <span class="n">output_directory</span> <span class="o">=</span> <span class="ne">File</span><span class="o">.</span><span class="n">expand_path</span><span class="p">(</span><span class="s2">&#34;..&#34;</span><span class="p">,</span> <span class="n">Dir</span><span class="o">.</span><span class="n">pwd</span><span class="p">)</span> <span class="o">+</span> <span class="ne">File</span><span class="p">::</span><span class="ne">Separator</span> <span class="o">+</span> <span class="s1">&#39;build&#39;</span>
-</span></span><span class="line"><span class="cl">    <span class="n">output_name</span> <span class="o">=</span> <span class="s2">&#34;#{scheme_name}_#{configuration}_#{version}_#{build}_#{Time.now.strftime(&#39;%Y%m</span><span class="si">%d</span><span class="s2">%H%M%S&#39;)}.ipa&#34;</span>
-</span></span><span class="line"><span class="cl">    <span class="n">gym</span><span class="p">(</span>
-</span></span><span class="line"><span class="cl">    	<span class="n">scheme</span><span class="p">:</span> <span class="n">scheme_name</span><span class="p">,</span> 
-</span></span><span class="line"><span class="cl">    	<span class="n">clean</span><span class="p">:</span> <span class="bp">true</span><span class="p">,</span> 
-</span></span><span class="line"><span class="cl">    	<span class="n">silent</span><span class="p">:</span><span class="bp">true</span><span class="p">,</span>
-</span></span><span class="line"><span class="cl">    	<span class="n">export_method</span><span class="p">:</span><span class="s1">&#39;ad-hoc&#39;</span><span class="p">,</span> 
-</span></span><span class="line"><span class="cl">    	<span class="n">export_options</span><span class="p">:</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">      	  <span class="n">provisioningProfiles</span><span class="p">:</span> <span class="p">{</span> 
-</span></span><span class="line"><span class="cl">      	  <span class="c1">#前面的是bundle id，后面的是对应用到的mobileprovision，只需要名字，不需要后缀</span>
-</span></span><span class="line"><span class="cl">          <span class="s2">&#34;me.ithome.xxx&#34;</span> <span class="o">=&gt;</span> <span class="s2">&#34;xxx&#34;</span>
-</span></span><span class="line"><span class="cl">        <span class="p">}},</span>
-</span></span><span class="line"><span class="cl">        <span class="n">configuration</span><span class="p">:</span> <span class="n">configuration</span><span class="p">,</span> 
-</span></span><span class="line"><span class="cl">        <span class="n">output_directory</span><span class="p">:</span> <span class="n">output_directory</span><span class="p">,</span> 
-</span></span><span class="line"><span class="cl">        <span class="n">output_name</span><span class="p">:</span> <span class="n">output_name</span><span class="p">,</span> 
-</span></span><span class="line"><span class="cl">        <span class="c1"># 签名证书的名称，去钥匙串-登录-证书里面复制</span>
-</span></span><span class="line"><span class="cl">        <span class="n">codesigning_identity</span><span class="p">:</span><span class="s1">&#39;iPhone Distribution: xxx (Rxxx47)&#39;</span><span class="p">,</span>
-</span></span><span class="line"><span class="cl">        <span class="n">export_xcargs</span><span class="p">:</span> <span class="s1">&#39;-allowProvisioningUpdates&#39;</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">        <span class="c1"># 上传到蒲公英，需要安装pgyer插件</span>
-</span></span><span class="line"><span class="cl">        <span class="c1">#pgyer(api_key: &#34;aaaa&#34;, user_key: &#34;bbbb&#34;)</span>
-</span></span><span class="line"><span class="cl">  <span class="n">end</span>
-</span></span><span class="line"><span class="cl"><span class="n">end</span>
-</span></span></code></pre></div><blockquote>
+<pre tabindex="0"><code># This file contains the fastlane.tools configuration
+# You can find the documentation at https://docs.fastlane.tools
+#
+# For a list of all available actions, check out
+#
+#     https://docs.fastlane.tools/actions
+#
+# For a list of all available plugins, check out
+#
+#     https://docs.fastlane.tools/plugins/available-plugins
+#
+
+# Uncomment the line if you want fastlane to automatically update itself
+# update_fastlane
+
+default_platform(:ios)
+
+platform :ios do
+  desc &#34;Push a new release build to the App Store&#34;
+  lane :release_appstore do
+    increment_build_number(xcodeproj: &#34;xxx.xcodeproj&#34;)
+    update_project_provisioning(
+        # 之前有sigh下载的描述文件存储路径
+        profile:&#34;fastlane/provision/xxx.mobileprovision&#34;,
+        # 打包配置，Debug，Release
+        build_configuration:&#34;Release&#34;
+    )
+    automatic_code_signing(
+        # 工程文件所在路径
+        path:&#34;xxx.xcodeproj&#34;,
+        # 是否使用自动签名，这里如果是打包的话应该一般都为false吧，默认也是false
+        use_automatic_signing:false,
+        # 这个就不用说了，需要修改的targets
+        targets:&#34;xxx&#34;,
+        # 用哪种方式打包“iPhone Develop”还是“iPhone Distribution”
+        code_sign_identity:&#34;iPhone Distribution&#34;,
+        # 描述文件名称， 也就是使用哪个描述文件打包
+        profile_name:&#34;xxx&#34;
+    )
+    scheme_name = &#39;xxx&#39;
+    configuration = &#39;AppStore&#39;
+    version = get_info_plist_value(path: &#34;./#{scheme_name}/Info.plist&#34;, key: &#34;CFBundleShortVersionString&#34;)
+    build = get_info_plist_value(path: &#34;./#{scheme_name}/Info.plist&#34;, key: &#34;CFBundleVersion&#34;)
+    output_directory = File.expand_path(&#34;..&#34;, Dir.pwd) + File::Separator + &#39;build&#39;
+    output_name = &#34;#{scheme_name}_#{configuration}_#{version}_#{build}_#{Time.now.strftime(&#39;%Y%m%d%H%M%S&#39;)}.ipa&#34;
+    build_app(workspace: &#34;xxx.xcworkspace&#34;, scheme: &#34;xxx&#34;, export_method: &#34;app-store&#34;, output_directory: output_directory,
+      output_name: output_name)
+    upload_to_app_store
+  end
+  desc &#34;Push a new release build to the Testflight&#34;
+  lane :release_testflight do
+    update_project_provisioning(
+        # 之前有sigh下载的描述文件存储路径
+        profile:&#34;fastlane/provision/xxx.mobileprovision&#34;,
+        # 打包配置，Debug，Release
+        build_configuration:&#34;Release&#34;
+    )
+    automatic_code_signing(
+        # 工程文件所在路径
+        path:&#34;xxx.xcodeproj&#34;,
+        # 是否使用自动签名，这里如果是打包的话应该一般都为false吧，默认也是false
+        use_automatic_signing:false,
+        # 这个就不用说了，需要修改的targets
+        targets:&#34;xxx&#34;,
+        # 用哪种方式打包“iPhone Develop”还是“iPhone Distribution”
+        code_sign_identity:&#34;iPhone Distribution&#34;,
+        # 描述文件名称， 也就是使用哪个描述文件打包
+        profile_name:&#34;xxx&#34;
+    )
+    scheme_name = &#39;xxx&#39;
+    configuration = &#39;AppStore&#39;
+    version = get_info_plist_value(path: &#34;./#{scheme_name}/Info.plist&#34;, key: &#34;CFBundleShortVersionString&#34;)
+    build = get_info_plist_value(path: &#34;./#{scheme_name}/Info.plist&#34;, key: &#34;CFBundleVersion&#34;)
+    output_directory = File.expand_path(&#34;..&#34;, Dir.pwd) + File::Separator + &#39;build&#39;
+    output_name = &#34;#{scheme_name}_#{configuration}_#{version}_#{build}_#{Time.now.strftime(&#39;%Y%m%d%H%M%S&#39;)}.ipa&#34;
+    build_app(workspace: &#34;xxx.xcworkspace&#34;, scheme: &#34;xxx&#34;, export_method: &#34;app-store&#34;, output_directory: output_directory,
+      output_name: output_name)
+    upload_to_testflight
+  end
+  desc &#34;Push a new release build to the Ad Hoc&#34;
+  lane :release_adhoc do |option|
+  	# cocoapods
+  	#根据传入参数version设置app的版本号
+	# increment_version_number(version_number: option[:version]) 
+	#自动增加build号
+	#increment_build_number
+  	update_project_provisioning(
+        # 之前有sigh下载的描述文件存储路径
+        profile:&#34;fastlane/provision/xxx.mobileprovision&#34;,
+        # 打包配置，Debug，Release
+        build_configuration:&#34;Release&#34;
+    )
+  	automatic_code_signing(
+        # 工程文件所在路径
+        path:&#34;xxx.xcodeproj&#34;,
+        # 是否使用自动签名，这里如果是打包的话应该一般都为false吧，默认也是false
+        use_automatic_signing:false,
+        # 打包的team ID， 也就是打包使用的证书中的team ID，这个如果不知道是什么的话可以在xCode中设置好签名用的描述文件后到xcodeproj下的pbxproj文件中搜索“DEVELOPMENT_TEAM”，它的值就是了
+        team_id:&#34;RRRRR5555&#34;,
+        # 这个就不用说了，需要修改的targets
+        targets:&#34;xxx&#34;,
+        # 用哪种方式打包“iPhone Develop”还是“iPhone Distribution”
+        code_sign_identity:&#34;iPhone Distribution&#34;,
+        # 描述文件名称， 也就是使用哪个描述文件打包
+        profile_name:&#34;xxx&#34;
+    )
+    #证书签名
+    # sigh
+    #编译打包
+    scheme_name = &#39;xxx&#39;
+    configuration = &#39;Release&#39;
+    version = get_info_plist_value(path: &#34;./#{scheme_name}/Info.plist&#34;, key: &#34;CFBundleShortVersionString&#34;)
+    build = get_info_plist_value(path: &#34;./#{scheme_name}/Info.plist&#34;, key: &#34;CFBundleVersion&#34;)
+    output_directory = File.expand_path(&#34;..&#34;, Dir.pwd) + File::Separator + &#39;build&#39;
+    output_name = &#34;#{scheme_name}_#{configuration}_#{version}_#{build}_#{Time.now.strftime(&#39;%Y%m%d%H%M%S&#39;)}.ipa&#34;
+    gym(
+    	scheme: scheme_name, 
+    	clean: true, 
+    	silent:true,
+    	export_method:&#39;ad-hoc&#39;, 
+    	export_options: {
+      	  provisioningProfiles: { 
+      	  #前面的是bundle id，后面的是对应用到的mobileprovision，只需要名字，不需要后缀
+          &#34;me.ithome.xxx&#34; =&gt; &#34;xxx&#34;
+        }},
+        configuration: configuration, 
+        output_directory: output_directory, 
+        output_name: output_name, 
+        # 签名证书的名称，去钥匙串-登录-证书里面复制
+        codesigning_identity:&#39;iPhone Distribution: xxx (Rxxx47)&#39;,
+        export_xcargs: &#39;-allowProvisioningUpdates&#39;)
+        # 上传到蒲公英，需要安装pgyer插件
+        #pgyer(api_key: &#34;aaaa&#34;, user_key: &#34;bbbb&#34;)
+  end
+end
+</code></pre><blockquote>
 <ul>
 <li>上述脚本中有部分xxx之类的东西，需要自行替换成自己项目的。</li>
 <li>所有脚本中用到的xxx.mobileprovision都需要双击安装一次，否者会提示找不到。</li>
@@ -439,15 +439,15 @@ A:Xcode插件方式不仅配置麻烦，而且配置完成后还需要大量的�
 </span>&nbsp;<span class="post-publish">发布于 <time datetime="2018-07-18">2018-07-18</time></span>&nbsp;<span class="post-category">收录于 <a href="/categories/%E7%A7%BB%E5%8A%A8%E5%BC%80%E5%8F%91/"><i class="far fa-folder fa-fw" aria-hidden="true"></i>移动开发</a>&nbsp;<a href="/categories/%E8%B7%A8%E5%B9%B3%E5%8F%B0/"><i class="far fa-folder fa-fw" aria-hidden="true"></i>跨平台</a></span></div><div class="content"><p>好了，我们已经配置好环境变量。现在开始我们的第一个Flutter应用。</p>
 <p>Flutter项目可以通过命令行创建，也可以用IDE创建。</p>
 <h3 id="1-命令行方式创建flutter项目">1. 命令行方式创建Flutter项目</h3>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">flutter create myapp
-</span></span><span class="line"><span class="cl">cd myapp
-</span></span></code></pre></div><p>也可以指定pkg/bundleid</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">flutter create --org com.example --template=app myapp
-</span></span><span class="line"><span class="cl">cd myapp
-</span></span></code></pre></div><p>然后，如果当前有模拟器运行，直接<code>flutter run</code>，否者安装下面的命令运行</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">flutter emulators //列出可用的模拟器
-</span></span><span class="line"><span class="cl">flutter emulators --launch &lt;emulator id&gt; //启动模拟器 emulator id=&gt;apple_ios_simulator
-</span></span></code></pre></div><p>命令行方式就介绍这些了，有兴趣的请自行参考https://flutter.io/developing-packages/</p>
+<pre tabindex="0"><code>flutter create myapp
+cd myapp
+</code></pre><p>也可以指定pkg/bundleid</p>
+<pre tabindex="0"><code>flutter create --org com.example --template=app myapp
+cd myapp
+</code></pre><p>然后，如果当前有模拟器运行，直接<code>flutter run</code>，否者安装下面的命令运行</p>
+<pre tabindex="0"><code>flutter emulators //列出可用的模拟器
+flutter emulators --launch &lt;emulator id&gt; //启动模拟器 emulator id=&gt;apple_ios_simulator
+</code></pre><p>命令行方式就介绍这些了，有兴趣的请自行参考https://flutter.io/developing-packages/</p>
 <h3 id="2-android-studio">2. Android Studio</h3>
 <p>好了，重点来了，这也是我所推荐的方式，通过AS来开发一个Flutter应用。</p>
 <p>请跟着步骤来吧。</p>

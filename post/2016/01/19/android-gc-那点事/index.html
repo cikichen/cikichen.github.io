@@ -144,6 +144,7 @@
 前者的在工作的时候是不没有独立的“Mark”与“Copy”阶段的，而是合在一起做一个动作，就叫Scavenge（或Evacuate，或者就叫Copy）。也就是说，每发现一个这次收集中尚未访问过的活对象就直接Copy到新地方，同时设置Forwarding Pointer，这样的工作方式就需要多一份空间。
 后者在工作的时候则需要分别的Mark与Compact阶段，Mark阶段用来发现并标记所有活的对象，然后compact阶段才移动对象来达到Compact的目的。如果Compact方式是Sliding Compaction，则在Mark之后就可以按顺序一个个对象“滑动”到空间的某一侧。因为已经先遍历了整个空间里的对象图，知道所有的活对象了，所以移动的时候就可以在同一个空间内而不需要多一份空间。
 所以新生代的回收会更快一点，老年代的回收则会需要更长时间，同时压缩阶段是会暂停应用的，所以给我们应该尽量避免对象出现在老年代。</p>
+<!-- more -->
 <h3 id="2-dalvik虚拟机">2. Dalvik虚拟机</h3>
 <h4 id="21-java堆">2.1. Java堆</h4>
 <p>Java堆实际上是由一个Active堆和一个Zygote堆组成的，其中，Zygote堆用来管理Zygote进程在启动过程中预加载和创建的各种对象，而Active堆是在Zygote进程Fork第一个子进程之前创建的。以后启动的所有应用程序进程是被Zygote进程Fork出来的，并都持有一个自己的Dalvik虚拟机。在创建应用程序的过程中，Dalvik虚拟机采用Cow策略复制Zygote进程的地址空间。
@@ -292,15 +293,15 @@ Dalvik GC：</p>
 <p>当我们想要根据GC日志来追查一些GC可能造成的卡顿时，我们需要了解GC日志的组成，不同信息代表了什么含义。</p>
 <h4 id="41-dalvik-gc日志">4.1. Dalvik GC日志</h4>
 <p>Dalvik的日志格式基本如下：</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">D/dalvikvm:&lt;GC_Reason&gt;&lt;Amount_freed&gt;,&lt;Heap_stats&gt;,&lt;Pause_time&gt;,&lt;Total_time&gt;
-</span></span></code></pre></div><p><code>GC_Reason</code>: 就是我们上文提到的，是gc_alloc还是gc_concurrent，了解到不同的原因方便我们做不同的处理。
+<pre tabindex="0"><code>D/dalvikvm:&lt;GC_Reason&gt;&lt;Amount_freed&gt;,&lt;Heap_stats&gt;,&lt;Pause_time&gt;,&lt;Total_time&gt;
+</code></pre><p><code>GC_Reason</code>: 就是我们上文提到的，是gc_alloc还是gc_concurrent，了解到不同的原因方便我们做不同的处理。
 <code>Amount_freed</code>: 表示系统通过这次GC操作释放了多少内存。
 <code>Heap_stats</code>: 中会显示当前内存的空闲比例以及使用情况（活动对象所占内存 / 当前程序总内存）。
 <code>Pause_time</code>: 表示这次GC操作导致应用程序暂停的时间。关于这个暂停的时间，在2.3之前GC操作是不能并发进行的，也就是系统正在进行GC，那么应用程序就只能阻塞住等待GC结束。而自2.3之后，GC操作改成了并发的方式进行，就是说GC的过程中不会影响到应用程序的正常运行，但是在GC操作的开始和结束的时候会短暂阻塞一段时间，所以还有后续的一个total_time。
 <code>Total_time</code>: 表示本次GC所花费的总时间和上面的Pause_time,也就是stop all是不一样的，卡顿时间主要看上面的pause_time。</p>
 <h4 id="42-art-gc日志">4.2. ART GC日志</h4>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">I/art:&lt;GC_Reason&gt;&lt;Amount_freed&gt;,&lt;LOS_Space_Status&gt;,&lt;Heap_stats&gt;,&lt;Pause_time&gt;,&lt;Total_time&gt;
-</span></span></code></pre></div><p>基本情况和Dalvik没有什么差别，GC的Reason更多了，还多了一个OS_Space_Status.
+<pre tabindex="0"><code>I/art:&lt;GC_Reason&gt;&lt;Amount_freed&gt;,&lt;LOS_Space_Status&gt;,&lt;Heap_stats&gt;,&lt;Pause_time&gt;,&lt;Total_time&gt;
+</code></pre><p>基本情况和Dalvik没有什么差别，GC的Reason更多了，还多了一个OS_Space_Status.
 <code>LOS_Space_Status</code>：Large Object Space，大对象占用的空间，这部分内存并不是分配在堆上的，但仍属于应用程序内存空间，主要用来管理 bitmap 等占内存大的对象，避免因分配大内存导致堆频繁 GC。
 写在最后：图片来源自网络，特别鸣谢罗升阳。</p>
 <p>原文地址:http://mp.weixin.qq.com/s?__biz=MzI1MTA1MzM2Nw==&amp;mid=400021278&amp;idx=1&amp;sn=0e971807eb0e9dcc1a81853189a092f3&amp;scene=0#rd 版权由原作者所有</p>

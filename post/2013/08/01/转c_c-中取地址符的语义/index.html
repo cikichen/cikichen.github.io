@@ -10,11 +10,11 @@
   <meta property="og:description" content="在C语言中，&amp;符号大家一定很熟悉吧。
 它除了可以作为按位运算“与”之外还有更常用的功能——取变量地址。
 我们首先看下面一个简单的例子：
-上面代码中，指针p指向变量a的地址。在C/C&#43;&#43;中，每个变量都有其相应的地址，通过在变量标识符前加&amp;符号即可获得变量的地址。
+#include int main(void) { int a = 0; int *p = &amp;a; printf(&#34;The value is: %d/n&#34;, *p); return 0; } 上面代码中，指针p指向变量a的地址。在C/C&#43;&#43;中，每个变量都有其相应的地址，通过在变量标识符前加&amp;符号即可获得变量的地址。
 那么我们这么写可以吗？int *p = &amp;0x01000;
 这显然不行。因为对于一个数值常量，它是没有地址的。而变量之所以有地址就是因为要有一个存储单元对变量进行标识（当然，变量也可以直接映射到某个寄存器）。
 我们再看下面的代码：
-上面代码又是怎么回事呢？
+#include &#34;stdio.h&#34; int main(void) { int a = 0; // &amp;a = 0x0012ff60 int *p = &amp;*(int*)0x0012ff60; printf(&#34;The value is: %d/n&#34;, *p); return 0; } 上面代码又是怎么回事呢？
 先前已经调查过变量a的地址——0x0012ff60，那么这里的指针p实际上也是指向变量a的地址。
 首先，将0x0012ff60作为int*，这时它与&amp;a是等价的。
 然后*(int*)0x0012ff60表示取变量a的内容。
@@ -22,10 +22,7 @@
 因此，这里的&amp;与第一个例子中的&amp;是不同的语义。这里的&amp;不是取地址，因为一个*(int*)0x0012ff60不是变量，它是没有地址的。每一个变量标识符在编译期间，编译器会为它们创建一个符号表，其中存放着变量标识符相应的各种属性，如类型、地址标识等。地址标识在连接后即可确定逻辑地址值。简而言之，&amp;作为取地址操作，当且仅当&amp;后面跟着的是变量或函数标识符。所以这里的&amp;表示脱去解引用。
 由此我们可以得出：&amp;作为取地址操作时，其行为结果是在编译时就被确定的；而*，解引用操作（或取内容）操作，其行为结果只能在运行时才可被确定。
 再看下面的例子，加深印象：
-不过，&amp;符号不象解引用*能用多次，它只能放在变量标识符或一次解引用前。下面举一个例子
-由于经过一次&amp;来脱去解引用之后，当前表达式就不为左值。而&amp;必须放在一个左值前，因为只有左值才能确保引用是有效的，呵呵。
-在C&#43;&#43;中，&amp;还可以表示引用，这个就不多说了。
-本文来自CSDN博客，出处：http://blog.csdn.net/zenny_chen/archive/2008/06/04/2512056.aspx">
+#include &#34;stdio.h&#34; int main(void) { int a = 0; int *p = &amp;*&amp;*&amp;a; printf(&#34;The value is: %d/n&#34;, *p); return 0; } 不过，&amp;符号不象解引用*能用多次，它只能放在变量标识符或一次解引用前。下面举一个例子">
   <meta property="og:locale" content="zh_CN">
   <meta property="og:type" content="article">
     <meta property="article:section" content="posts">
@@ -37,11 +34,11 @@
   <meta name="twitter:description" content="在C语言中，&amp;符号大家一定很熟悉吧。
 它除了可以作为按位运算“与”之外还有更常用的功能——取变量地址。
 我们首先看下面一个简单的例子：
-上面代码中，指针p指向变量a的地址。在C/C&#43;&#43;中，每个变量都有其相应的地址，通过在变量标识符前加&amp;符号即可获得变量的地址。
+#include int main(void) { int a = 0; int *p = &amp;a; printf(&#34;The value is: %d/n&#34;, *p); return 0; } 上面代码中，指针p指向变量a的地址。在C/C&#43;&#43;中，每个变量都有其相应的地址，通过在变量标识符前加&amp;符号即可获得变量的地址。
 那么我们这么写可以吗？int *p = &amp;0x01000;
 这显然不行。因为对于一个数值常量，它是没有地址的。而变量之所以有地址就是因为要有一个存储单元对变量进行标识（当然，变量也可以直接映射到某个寄存器）。
 我们再看下面的代码：
-上面代码又是怎么回事呢？
+#include &#34;stdio.h&#34; int main(void) { int a = 0; // &amp;a = 0x0012ff60 int *p = &amp;*(int*)0x0012ff60; printf(&#34;The value is: %d/n&#34;, *p); return 0; } 上面代码又是怎么回事呢？
 先前已经调查过变量a的地址——0x0012ff60，那么这里的指针p实际上也是指向变量a的地址。
 首先，将0x0012ff60作为int*，这时它与&amp;a是等价的。
 然后*(int*)0x0012ff60表示取变量a的内容。
@@ -49,10 +46,7 @@
 因此，这里的&amp;与第一个例子中的&amp;是不同的语义。这里的&amp;不是取地址，因为一个*(int*)0x0012ff60不是变量，它是没有地址的。每一个变量标识符在编译期间，编译器会为它们创建一个符号表，其中存放着变量标识符相应的各种属性，如类型、地址标识等。地址标识在连接后即可确定逻辑地址值。简而言之，&amp;作为取地址操作，当且仅当&amp;后面跟着的是变量或函数标识符。所以这里的&amp;表示脱去解引用。
 由此我们可以得出：&amp;作为取地址操作时，其行为结果是在编译时就被确定的；而*，解引用操作（或取内容）操作，其行为结果只能在运行时才可被确定。
 再看下面的例子，加深印象：
-不过，&amp;符号不象解引用*能用多次，它只能放在变量标识符或一次解引用前。下面举一个例子
-由于经过一次&amp;来脱去解引用之后，当前表达式就不为左值。而&amp;必须放在一个左值前，因为只有左值才能确保引用是有效的，呵呵。
-在C&#43;&#43;中，&amp;还可以表示引用，这个就不多说了。
-本文来自CSDN博客，出处：http://blog.csdn.net/zenny_chen/archive/2008/06/04/2512056.aspx">
+#include &#34;stdio.h&#34; int main(void) { int a = 0; int *p = &amp;*&amp;*&amp;a; printf(&#34;The value is: %d/n&#34;, *p); return 0; } 不过，&amp;符号不象解引用*能用多次，它只能放在变量标识符或一次解引用前。下面举一个例子">
       <meta name="twitter:site" content="@https://twitter.com/ChenCiki">
 <meta name="application-name" content="My KeepIt site">
 <meta name="apple-mobile-web-app-title" content="My KeepIt site"><meta name="theme-color" content="#ffffff"><meta name="msapplication-TileColor" content="#da532c"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
@@ -66,7 +60,7 @@
         "mainEntityOfPage": {
             "@type": "WebPage",
             "@id": "https:\/\/www.ithome.me\/post\/2013\/08\/01\/%E8%BD%ACc_c-%E4%B8%AD%E5%8F%96%E5%9C%B0%E5%9D%80%E7%AC%A6%E7%9A%84%E8%AF%AD%E4%B9%89\/"
-        },"genre": "posts","wordcount":  22 ,
+        },"genre": "posts","wordcount":  151 ,
         "url": "https:\/\/www.ithome.me\/post\/2013\/08\/01\/%E8%BD%ACc_c-%E4%B8%AD%E5%8F%96%E5%9C%B0%E5%9D%80%E7%AC%A6%E7%9A%84%E8%AF%AD%E4%B9%89\/","datePublished": "2013-08-01T16:41:57+08:00","dateModified": "2013-08-01T16:41:57+08:00","license": "©{year}, All Rights Reserved. Simon Chen","publisher": {
             "@type": "Organization",
             "name": ""},"author": {
@@ -142,7 +136,7 @@
         </div><article class="page single"><h1 class="single-title animate__animated animate__flipInX">[转]C/C&#43;&#43;中取地址符&amp;的语义</h1><div class="post-meta">
             <div class="post-meta-line"><span class="post-author"><a href="/" title="Author" rel=" author" class="author"><i class="fas fa-user-circle fa-fw" aria-hidden="true"></i>SimonChen</a>
 </span></div>
-            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw" aria-hidden="true"></i>&nbsp;<time datetime="2013-08-01">2013-08-01</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden="true"></i>&nbsp;约 22 字&nbsp;
+            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw" aria-hidden="true"></i>&nbsp;<time datetime="2013-08-01">2013-08-01</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden="true"></i>&nbsp;约 151 字&nbsp;
                 <i class="far fa-clock fa-fw" aria-hidden="true"></i>&nbsp;预计阅读 1 分钟&nbsp;</div>
         </div><div class="details toc" id="toc-static"  data-kept="">
                 <div class="details-summary toc-title">
@@ -153,14 +147,29 @@
             </div><div class="content" id="content"><p>在C语言中，&amp;符号大家一定很熟悉吧。</p>
 <p>它除了可以作为按位运算“与”之外还有更常用的功能——取变量地址。</p>
 <p>我们首先看下面一个简单的例子：</p>
-<!-- raw HTML omitted -->
-<!-- raw HTML omitted -->
+<pre class="brush:c">
+#include <stdio.h>
+int main(void)
+{
+    int a = 0;
+    int *p = &amp;a;
+    printf("The value is: %d/n", *p);
+    return 0;
+}</pre>
 <p>上面代码中，指针p指向变量a的地址。在C/C++中，每个变量都有其相应的地址，通过在变量标识符前加&amp;符号即可获得变量的地址。</p>
 <p>那么我们这么写可以吗？int *p = &amp;0x01000;</p>
 <p>这显然不行。因为对于一个数值常量，它是没有地址的。而变量之所以有地址就是因为要有一个存储单元对变量进行标识（当然，变量也可以直接映射到某个寄存器）。</p>
 <p>我们再看下面的代码：</p>
-<!-- raw HTML omitted -->
-<!-- raw HTML omitted -->
+<pre class="brush:c">
+#include "stdio.h"
+int main(void)
+{
+int a = 0; // &amp;a = 0x0012ff60
+int *p = &amp;*(int*)0x0012ff60;
+printf("The value is: %d/n", *p);
+return 0;
+}
+</pre>
 <p>上面代码又是怎么回事呢？</p>
 <p>先前已经调查过变量a的地址——0x0012ff60，那么这里的指针p实际上也是指向变量a的地址。</p>
 <p>首先，将0x0012ff60作为int*，这时它与&amp;a是等价的。</p>
@@ -169,15 +178,41 @@
 <p>因此，这里的&amp;与第一个例子中的&amp;是不同的语义。这里的&amp;不是取地址，因为一个*(int*)0x0012ff60不是变量，它是没有地址的。每一个变量标识符在编译期间，编译器会为它们创建一个符号表，其中存放着变量标识符相应的各种属性，如类型、地址标识等。地址标识在连接后即可确定逻辑地址值。简而言之，&amp;作为取地址操作，当且仅当&amp;后面跟着的是变量或函数标识符。所以这里的&amp;表示脱去解引用。</p>
 <p>由此我们可以得出：&amp;作为取地址操作时，其行为结果是在编译时就被确定的；而*，解引用操作（或取内容）操作，其行为结果只能在运行时才可被确定。</p>
 <p>再看下面的例子，加深印象：</p>
-<!-- raw HTML omitted -->
-<!-- raw HTML omitted -->
+<pre class="brush:c">
+#include "stdio.h"
+int main(void)
+{
+int a = 0;
+int *p = &amp;*&amp;*&amp;a;
+printf("The value is: %d/n", *p);
+return 0;
+}
+</pre>
 <p>不过，&amp;符号不象解引用*能用多次，它只能放在变量标识符或一次解引用前。下面举一个例子</p>
-<!-- raw HTML omitted -->
-<!-- raw HTML omitted -->
+<pre class="brush:c">
+int main(void)
+{
+int a = 100;
+int *p = &amp;a;
+int **pp = &amp;p;
+int **qq = &amp;*&amp;*pp; // OK
+int **rr = *&amp;*&amp;pp; // OK
+int **ss = &amp;&amp;**pp; // ERROR
+}
+</pre>
 <p>由于经过一次&amp;来脱去解引用之后，当前表达式就不为左值。而&amp;必须放在一个左值前，因为只有左值才能确保引用是有效的，呵呵。</p>
 <p>在C++中，&amp;还可以表示引用，这个就不多说了。</p>
-<!-- raw HTML omitted -->
-<!-- raw HTML omitted -->
+<pre class="brush:c++">
+#include "iostream"
+using namespace std;
+int main(void)
+{
+int a = 0;
+int &amp;r = a;
+cout &lt;&lt; "The value is: " &lt;&lt; r &lt;&lt; endl;
+return 0;
+}
+</pre>
 <p>本文来自CSDN博客，出处：http://blog.csdn.net/zenny_chen/archive/2008/06/04/2512056.aspx</p>
 </div><div class="post-footer" id="post-footer">
     <div class="post-info">

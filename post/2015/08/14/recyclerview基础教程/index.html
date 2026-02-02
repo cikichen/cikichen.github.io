@@ -134,6 +134,7 @@
 <p>RecyclerView是从support-v7库开始引入的，用于取代 ListView 。<br>
 相比于 <code>ListView</code>， RecyclerView更加灵活、高效和无限的可扩展性。</p>
 </blockquote>
+<!-- toc -->
 <h2 id="环境准备">环境准备</h2>
 <ul>
 <li>Windows/Mac</li>
@@ -142,9 +143,9 @@
 <li>科学上网(开发人员必备)</li>
 </ul>
 <p>首先，我们需要引入依赖库：</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">compile &#39;com.android.support:appcompat-v7:22.2.1&#39;
-</span></span><span class="line"><span class="cl">compile &#39;com.android.support:recyclerview-v7:22.2.1&#39;
-</span></span></code></pre></div><h2 id="简单的-listview-列表">简单的 ListView 列表</h2>
+<pre tabindex="0"><code>compile &#39;com.android.support:appcompat-v7:22.2.1&#39;
+compile &#39;com.android.support:recyclerview-v7:22.2.1&#39;
+</code></pre><h2 id="简单的-listview-列表">简单的 ListView 列表</h2>
 <p>我们首先来实现一个简单的 listview 列表效果：</p>
 <p><img
         class="lazyload"
@@ -155,137 +156,138 @@
         alt="http://ww3.sinaimg.cn/mw690/62b0904dgw1ev6v1syxboj20u01hc78j.jpg"
         title="http://ww3.sinaimg.cn/mw690/62b0904dgw1ev6v1syxboj20u01hc78j.jpg" /></p>
 <p>因为此处用到了 design 库的新控件<code>CardView</code>，所以我们还需要加入如下依赖库：</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">compile &#39;com.android.support:cardview-v7:22.2.1&#39;
-</span></span></code></pre></div><p>首先创建一个 RecyclerView 的新项目，修改我们的 <code>activity_main.xml</code> 代码如下：</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-xml" data-lang="xml"><span class="line"><span class="cl"><span class="cp">&lt;?xml version=&#34;1.0&#34; encoding=&#34;utf-8&#34;?&gt;</span>
-</span></span><span class="line"><span class="cl"><span class="nt">&lt;FrameLayout</span>
-</span></span><span class="line"><span class="cl">    <span class="na">android:id=</span><span class="s">&#34;@+id/drawer_layout&#34;</span>
-</span></span><span class="line"><span class="cl">    <span class="na">xmlns:android=</span><span class="s">&#34;http://schemas.android.com/apk/res/android&#34;</span>
-</span></span><span class="line"><span class="cl">    <span class="na">xmlns:app=</span><span class="s">&#34;http://schemas.android.com/apk/res-auto&#34;</span>
-</span></span><span class="line"><span class="cl">    <span class="na">android:layout_width=</span><span class="s">&#34;match_parent&#34;</span>
-</span></span><span class="line"><span class="cl">    <span class="na">android:layout_height=</span><span class="s">&#34;match_parent&#34;</span>
-</span></span><span class="line"><span class="cl">    <span class="na">android:fitsSystemWindows=</span><span class="s">&#34;true&#34;</span><span class="nt">&gt;</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">        <span class="nt">&lt;android.support.v7.widget.RecyclerView</span>
-</span></span><span class="line"><span class="cl">            <span class="na">android:id=</span><span class="s">&#34;@+id/rc_content&#34;</span>
-</span></span><span class="line"><span class="cl">            <span class="na">android:layout_width=</span><span class="s">&#34;match_parent&#34;</span>
-</span></span><span class="line"><span class="cl">            <span class="na">android:layout_height=</span><span class="s">&#34;match_parent&#34;</span>
-</span></span><span class="line"><span class="cl">            <span class="na">app:layout_behavior=</span><span class="s">&#34;@string/appbar_scrolling_view_behavior&#34;</span><span class="nt">&gt;</span>
-</span></span><span class="line"><span class="cl">        <span class="nt">&lt;/android.support.v7.widget.RecyclerView&gt;</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="nt">&lt;/FrameLayout&gt;</span>
+<!-- more -->
+<pre tabindex="0"><code>compile &#39;com.android.support:cardview-v7:22.2.1&#39;
+</code></pre><p>首先创建一个 RecyclerView 的新项目，修改我们的 <code>activity_main.xml</code> 代码如下：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-xml" data-lang="xml"><span style="display:flex;"><span><span style="color:#75715e">&lt;?xml version=&#34;1.0&#34; encoding=&#34;utf-8&#34;?&gt;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">&lt;FrameLayout</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">android:id=</span><span style="color:#e6db74">&#34;@+id/drawer_layout&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">xmlns:android=</span><span style="color:#e6db74">&#34;http://schemas.android.com/apk/res/android&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">xmlns:app=</span><span style="color:#e6db74">&#34;http://schemas.android.com/apk/res-auto&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">android:layout_width=</span><span style="color:#e6db74">&#34;match_parent&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">android:layout_height=</span><span style="color:#e6db74">&#34;match_parent&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">android:fitsSystemWindows=</span><span style="color:#e6db74">&#34;true&#34;</span><span style="color:#f92672">&gt;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">&lt;android.support.v7.widget.RecyclerView</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">android:id=</span><span style="color:#e6db74">&#34;@+id/rc_content&#34;</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">android:layout_width=</span><span style="color:#e6db74">&#34;match_parent&#34;</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">android:layout_height=</span><span style="color:#e6db74">&#34;match_parent&#34;</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">app:layout_behavior=</span><span style="color:#e6db74">&#34;@string/appbar_scrolling_view_behavior&#34;</span><span style="color:#f92672">&gt;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">&lt;/android.support.v7.widget.RecyclerView&gt;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">&lt;/FrameLayout&gt;</span>
 </span></span></code></pre></div><h3 id="recyclerviewadapter">RecyclerView.Adapter</h3>
 <p><code>RecyclerView</code> 的适配器实现与以往的 ListView 稍有不同，需要继承它自身特有的 <a href="https://developer.android.com/intl/zh-cn/reference/android/support/v7/widget/RecyclerView.Adapter.html" target="_blank" rel="noopener noreffer">RecyclerView.Adapter</a>
 ，并且<code>RecyclerView</code> 必须通过自带的 <a href="https://developer.android.com/intl/zh-cn/reference/android/support/v7/widget/RecyclerView.ViewHolder.html" target="_blank" rel="noopener noreffer">RecyclerView.ViewHolder</a>
  来构建 Item。</p>
 <p><code>adapter</code>  基本代码如下：</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kd">class</span> <span class="nc">RecyclerViewApdater</span><span class="w"> </span><span class="kd">extends</span><span class="w"> </span><span class="n">RecyclerView</span><span class="p">.</span><span class="na">Adapter</span><span class="o">&lt;</span><span class="n">RecyclerView</span><span class="p">.</span><span class="na">ViewHolder</span><span class="o">&gt;</span><span class="w"> </span><span class="p">{</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="nf">RecyclerViewApdater</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nd">@Override</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="n">RecyclerView</span><span class="p">.</span><span class="na">ViewHolder</span><span class="w"> </span><span class="nf">onCreateViewHolder</span><span class="p">(</span><span class="n">ViewGroup</span><span class="w"> </span><span class="n">parent</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">viewType</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">...</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nd">@Override</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">onBindViewHolder</span><span class="p">(</span><span class="n">RecyclerView</span><span class="p">.</span><span class="na">ViewHolder</span><span class="w"> </span><span class="n">holder</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">position</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">...</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nd">@Override</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="nf">getItemCount</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">count</span><span class="p">;</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
-</span></span></span></code></pre></div><p>根据代码我们可以发现和<code>ListView</code>不同的是，我们重写了 <code>onCreateViewHolder(ViewGroup parent, int viewType)</code> 和 <code>onBindViewHolder(RecyclerView.ViewHolder holder, int position)</code>。根据名字我们可知，这两个方法，一个是创建数据，一个是绑定数据。其实这两个方法干的事情和在 <code>ListView</code> 的 <code>getView</code>方法里面做的事情一样。但是现在布局和数据分离的方式明显结构清晰多了。</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">RecyclerViewApdater</span> <span style="color:#66d9ef">extends</span> RecyclerView.<span style="color:#a6e22e">Adapter</span><span style="color:#f92672">&lt;</span>RecyclerView.<span style="color:#a6e22e">ViewHolder</span><span style="color:#f92672">&gt;</span> {
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">public</span> <span style="color:#a6e22e">RecyclerViewApdater</span>() {
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">@Override</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">public</span> RecyclerView.<span style="color:#a6e22e">ViewHolder</span> <span style="color:#a6e22e">onCreateViewHolder</span>(ViewGroup parent, <span style="color:#66d9ef">int</span> viewType) {
+</span></span><span style="display:flex;"><span>    ...
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">@Override</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">onBindViewHolder</span>(RecyclerView.<span style="color:#a6e22e">ViewHolder</span> holder, <span style="color:#66d9ef">int</span> position) {
+</span></span><span style="display:flex;"><span>    ...
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">@Override</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">int</span> <span style="color:#a6e22e">getItemCount</span>() {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> count;
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>根据代码我们可以发现和<code>ListView</code>不同的是，我们重写了 <code>onCreateViewHolder(ViewGroup parent, int viewType)</code> 和 <code>onBindViewHolder(RecyclerView.ViewHolder holder, int position)</code>。根据名字我们可知，这两个方法，一个是创建数据，一个是绑定数据。其实这两个方法干的事情和在 <code>ListView</code> 的 <code>getView</code>方法里面做的事情一样。但是现在布局和数据分离的方式明显结构清晰多了。</p>
 <h3 id="oncreateviewholder">onCreateViewHolder</h3>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="w">    </span><span class="nd">@Override</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="n">RecyclerView</span><span class="p">.</span><span class="na">ViewHolder</span><span class="w"> </span><span class="nf">onCreateViewHolder</span><span class="p">(</span><span class="n">ViewGroup</span><span class="w"> </span><span class="n">parent</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">viewType</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">View</span><span class="w"> </span><span class="n">view</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">LayoutInflater</span><span class="p">.</span><span class="na">from</span><span class="p">(</span><span class="n">parent</span><span class="p">.</span><span class="na">getContext</span><span class="p">()).</span><span class="na">inflate</span><span class="p">(</span><span class="n">R</span><span class="p">.</span><span class="na">layout</span><span class="p">.</span><span class="na">item_list</span><span class="p">,</span><span class="w"> </span><span class="n">parent</span><span class="p">,</span><span class="w"> </span><span class="kc">false</span><span class="p">);</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">CardViewHolder</span><span class="p">(</span><span class="n">view</span><span class="p">);</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
-</span></span></span></code></pre></div><p><code>onCreateViewHolder</code> 方法的返回的参数是一个 <code>RecyclerView.ViewHolder</code>，这个东西类似我们使用 <code>ListView</code>的时候自定义的模板类<code>ViewHolder</code>。关于<code>RecyclerView.ViewHolder</code>，官方文档的介绍是 <em><strong>用于描述 recyclerview 里面的项目视图和元数据</strong></em>。如何理解这句话？通俗的讲，就是用来存储数据和布局视图的工具类。</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kd">static</span><span class="w"> </span><span class="kd">class</span> <span class="nc">CardViewHolder</span><span class="w"> </span><span class="kd">extends</span><span class="w"> </span><span class="n">RecyclerView</span><span class="p">.</span><span class="na">ViewHolder</span><span class="w"> </span><span class="p">{</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="kd">public</span><span class="w"> </span><span class="n">CardView</span><span class="w"> </span><span class="n">mCardView</span><span class="p">;</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="kd">public</span><span class="w"> </span><span class="n">TextView</span><span class="w"> </span><span class="n">mTextView</span><span class="p">;</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="kd">public</span><span class="w"> </span><span class="nf">CardViewHolder</span><span class="p">(</span><span class="n">View</span><span class="w"> </span><span class="n">itemView</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="kd">super</span><span class="p">(</span><span class="n">itemView</span><span class="p">);</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="n">mCardView</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">CardView</span><span class="p">)</span><span class="w"> </span><span class="n">itemView</span><span class="p">.</span><span class="na">findViewById</span><span class="p">(</span><span class="n">R</span><span class="p">.</span><span class="na">id</span><span class="p">.</span><span class="na">view</span><span class="p">);</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="n">mTextView</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">TextView</span><span class="p">)</span><span class="w"> </span><span class="n">itemView</span><span class="p">.</span><span class="na">findViewById</span><span class="p">(</span><span class="n">R</span><span class="p">.</span><span class="na">id</span><span class="p">.</span><span class="na">tv_card</span><span class="p">);</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="p">}</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
-</span></span></span></code></pre></div><p><code>RecyclerView.ViewHolder</code>的构造函数需要传入一个<code>View</code>作为参数。这个<code>view</code>就是每一个<code>item</code>显示的布局文件。我们接受到这个 <code>view</code> 后可以对这个<code>view</code>进行一些操作，比如<code>findViewById</code>出所有的子控件。这个类还封装了一些其他方法供我们使用，具体可以参考官网文档 <a href="https://developer.android.com/reference/android/support/v7/widget/RecyclerView.ViewHolder.html" target="_blank" rel="noopener noreffer">RecyclerView.ViewHolder</a>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-java" data-lang="java"><span style="display:flex;"><span>    <span style="color:#a6e22e">@Override</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">public</span> RecyclerView.<span style="color:#a6e22e">ViewHolder</span> <span style="color:#a6e22e">onCreateViewHolder</span>(ViewGroup parent, <span style="color:#66d9ef">int</span> viewType) {
+</span></span><span style="display:flex;"><span>        View view <span style="color:#f92672">=</span> LayoutInflater.<span style="color:#a6e22e">from</span>(parent.<span style="color:#a6e22e">getContext</span>()).<span style="color:#a6e22e">inflate</span>(R.<span style="color:#a6e22e">layout</span>.<span style="color:#a6e22e">item_list</span>, parent, <span style="color:#66d9ef">false</span>);
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">new</span> CardViewHolder(view);
+</span></span><span style="display:flex;"><span>    }
+</span></span></code></pre></div><p><code>onCreateViewHolder</code> 方法的返回的参数是一个 <code>RecyclerView.ViewHolder</code>，这个东西类似我们使用 <code>ListView</code>的时候自定义的模板类<code>ViewHolder</code>。关于<code>RecyclerView.ViewHolder</code>，官方文档的介绍是 <em><strong>用于描述 recyclerview 里面的项目视图和元数据</strong></em>。如何理解这句话？通俗的讲，就是用来存储数据和布局视图的工具类。</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-java" data-lang="java"><span style="display:flex;"><span>    <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">static</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">CardViewHolder</span> <span style="color:#66d9ef">extends</span> RecyclerView.<span style="color:#a6e22e">ViewHolder</span> {
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">public</span> CardView mCardView;
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">public</span> TextView mTextView;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">public</span> <span style="color:#a6e22e">CardViewHolder</span>(View itemView) {
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">super</span>(itemView);
+</span></span><span style="display:flex;"><span>            mCardView <span style="color:#f92672">=</span> (CardView) itemView.<span style="color:#a6e22e">findViewById</span>(R.<span style="color:#a6e22e">id</span>.<span style="color:#a6e22e">view</span>);
+</span></span><span style="display:flex;"><span>            mTextView <span style="color:#f92672">=</span> (TextView) itemView.<span style="color:#a6e22e">findViewById</span>(R.<span style="color:#a6e22e">id</span>.<span style="color:#a6e22e">tv_card</span>);
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>    }
+</span></span></code></pre></div><p><code>RecyclerView.ViewHolder</code>的构造函数需要传入一个<code>View</code>作为参数。这个<code>view</code>就是每一个<code>item</code>显示的布局文件。我们接受到这个 <code>view</code> 后可以对这个<code>view</code>进行一些操作，比如<code>findViewById</code>出所有的子控件。这个类还封装了一些其他方法供我们使用，具体可以参考官网文档 <a href="https://developer.android.com/reference/android/support/v7/widget/RecyclerView.ViewHolder.html" target="_blank" rel="noopener noreffer">RecyclerView.ViewHolder</a>
 。</p>
 <p>回到<code>onCreateViewHolder(ViewGroup parent, int viewType)</code>，发现参数有两个，我们主要关注第二个<code>int viewType</code>，这个参数是由<code>getItemViewType(int position)</code>这个方法返回的，所以我们可以通过设置type来定制出我们需要的不同 Item。</p>
 <h3 id="onbindviewholder">onBindViewHolder</h3>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="w">    </span><span class="nd">@Override</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">onBindViewHolder</span><span class="p">(</span><span class="n">RecyclerView</span><span class="p">.</span><span class="na">ViewHolder</span><span class="w"> </span><span class="n">holder</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">position</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">CardViewHolder</span><span class="w"> </span><span class="n">mCardViewHolder</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">CardViewHolder</span><span class="p">)</span><span class="n">holder</span><span class="p">;</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">mCardViewHolder</span><span class="p">.</span><span class="na">mTextView</span><span class="p">.</span><span class="na">setText</span><span class="p">(</span><span class="s">&#34;Hello CardView &#34;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">position</span><span class="p">);</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
-</span></span></span></code></pre></div><p>这个方法有两个参数 <code>RecyclerView.ViewHolder holder</code> 和 <code>int position</code>。一个就是我们的视图数据，一个是当前 item 的位置。</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-java" data-lang="java"><span style="display:flex;"><span>    <span style="color:#a6e22e">@Override</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">onBindViewHolder</span>(RecyclerView.<span style="color:#a6e22e">ViewHolder</span> holder, <span style="color:#66d9ef">int</span> position) {
+</span></span><span style="display:flex;"><span>        CardViewHolder mCardViewHolder <span style="color:#f92672">=</span> (CardViewHolder)holder;
+</span></span><span style="display:flex;"><span>        mCardViewHolder.<span style="color:#a6e22e">mTextView</span>.<span style="color:#a6e22e">setText</span>(<span style="color:#e6db74">&#34;Hello CardView &#34;</span> <span style="color:#f92672">+</span> position);
+</span></span><span style="display:flex;"><span>    }
+</span></span></code></pre></div><p>这个方法有两个参数 <code>RecyclerView.ViewHolder holder</code> 和 <code>int position</code>。一个就是我们的视图数据，一个是当前 item 的位置。</p>
 <blockquote>
 <p><code>onCreateViewHolder</code> 和 <code>onBindViewHolder</code> 这两个方法是轮流调用的，先调用 <code>onCreateViewHolder</code> 生产Item，然后调用 <code>onBindViewHolder</code> 来对视图进行数据处理或布局变化。当滚动的时候只会调用<code>onBindViewHolder</code>显示数据。也就是说<code>RecyclerView</code>会自动去缓存布局并且复用。</p>
 </blockquote>
 <p>关于 RecyclerView 换成机制的问题，可以参考 <a href="http://lujun.co/2015/06/29/%e5%af%b9recyclerview%e7%9a%84%e4%b8%80%e7%82%b9%e6%8e%a2%e8%ae%a8/" target="_blank" rel="noopener noreffer">http://lujun.co/2015/06/29/对recyclerview的一点探讨/</a>
 </p>
 <p>RecyclerViewApdater的问完整代码如下:</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kd">class</span> <span class="nc">RecyclerViewApdater</span><span class="w"> </span><span class="kd">extends</span><span class="w"> </span><span class="n">RecyclerView</span><span class="p">.</span><span class="na">Adapter</span><span class="o">&lt;</span><span class="n">RecyclerView</span><span class="p">.</span><span class="na">ViewHolder</span><span class="o">&gt;</span><span class="w"> </span><span class="p">{</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">count</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">0</span><span class="p">;</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="nf">RecyclerViewApdater</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="nf">RecyclerViewApdater</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">size</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">count</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">size</span><span class="p">;</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nd">@Override</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="n">RecyclerView</span><span class="p">.</span><span class="na">ViewHolder</span><span class="w"> </span><span class="nf">onCreateViewHolder</span><span class="p">(</span><span class="n">ViewGroup</span><span class="w"> </span><span class="n">parent</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">viewType</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">View</span><span class="w"> </span><span class="n">view</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">LayoutInflater</span><span class="p">.</span><span class="na">from</span><span class="p">(</span><span class="n">parent</span><span class="p">.</span><span class="na">getContext</span><span class="p">()).</span><span class="na">inflate</span><span class="p">(</span><span class="n">R</span><span class="p">.</span><span class="na">layout</span><span class="p">.</span><span class="na">item_list</span><span class="p">,</span><span class="w"> </span><span class="n">parent</span><span class="p">,</span><span class="w"> </span><span class="kc">false</span><span class="p">);</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">CardViewHolder</span><span class="p">(</span><span class="n">view</span><span class="p">);</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nd">@Override</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">onBindViewHolder</span><span class="p">(</span><span class="n">RecyclerView</span><span class="p">.</span><span class="na">ViewHolder</span><span class="w"> </span><span class="n">holder</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">position</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">CardViewHolder</span><span class="w"> </span><span class="n">mCardViewHolder</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">CardViewHolder</span><span class="p">)</span><span class="n">holder</span><span class="p">;</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">mCardViewHolder</span><span class="p">.</span><span class="na">mTextView</span><span class="p">.</span><span class="na">setText</span><span class="p">(</span><span class="s">&#34;Hello CardView &#34;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">position</span><span class="p">);</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kt">boolean</span><span class="w"> </span><span class="nf">isHeaderPosition</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">position</span><span class="p">){</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">position</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">0</span><span class="p">;</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nd">@Override</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="nf">getItemCount</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">count</span><span class="p">;</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kd">static</span><span class="w"> </span><span class="kd">class</span> <span class="nc">CardViewHolder</span><span class="w"> </span><span class="kd">extends</span><span class="w"> </span><span class="n">RecyclerView</span><span class="p">.</span><span class="na">ViewHolder</span><span class="w"> </span><span class="p">{</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="kd">public</span><span class="w"> </span><span class="n">CardView</span><span class="w"> </span><span class="n">mCardView</span><span class="p">;</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="kd">public</span><span class="w"> </span><span class="n">TextView</span><span class="w"> </span><span class="n">mTextView</span><span class="p">;</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="kd">public</span><span class="w"> </span><span class="nf">CardViewHolder</span><span class="p">(</span><span class="n">View</span><span class="w"> </span><span class="n">itemView</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="kd">super</span><span class="p">(</span><span class="n">itemView</span><span class="p">);</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="n">mCardView</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">CardView</span><span class="p">)</span><span class="w"> </span><span class="n">itemView</span><span class="p">.</span><span class="na">findViewById</span><span class="p">(</span><span class="n">R</span><span class="p">.</span><span class="na">id</span><span class="p">.</span><span class="na">view</span><span class="p">);</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="n">mTextView</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">TextView</span><span class="p">)</span><span class="w"> </span><span class="n">itemView</span><span class="p">.</span><span class="na">findViewById</span><span class="p">(</span><span class="n">R</span><span class="p">.</span><span class="na">id</span><span class="p">.</span><span class="na">tv_card</span><span class="p">);</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="p">}</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kd">static</span><span class="w"> </span><span class="kd">class</span> <span class="nc">CardViewHeaderHolder</span><span class="w"> </span><span class="kd">extends</span><span class="w"> </span><span class="n">RecyclerView</span><span class="p">.</span><span class="na">ViewHolder</span><span class="w"> </span><span class="p">{</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="kd">public</span><span class="w"> </span><span class="nf">CardViewHeaderHolder</span><span class="p">(</span><span class="n">View</span><span class="w"> </span><span class="n">itemView</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="kd">super</span><span class="p">(</span><span class="n">itemView</span><span class="p">);</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="p">}</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
-</span></span></span></code></pre></div><h3 id="layoutmanager">LayoutManager</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">RecyclerViewApdater</span> <span style="color:#66d9ef">extends</span> RecyclerView.<span style="color:#a6e22e">Adapter</span><span style="color:#f92672">&lt;</span>RecyclerView.<span style="color:#a6e22e">ViewHolder</span><span style="color:#f92672">&gt;</span> {
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">int</span> count <span style="color:#f92672">=</span> 0;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">public</span> <span style="color:#a6e22e">RecyclerViewApdater</span>() {
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">public</span> <span style="color:#a6e22e">RecyclerViewApdater</span>(<span style="color:#66d9ef">int</span> size) {
+</span></span><span style="display:flex;"><span>        count <span style="color:#f92672">=</span> size;
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">@Override</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">public</span> RecyclerView.<span style="color:#a6e22e">ViewHolder</span> <span style="color:#a6e22e">onCreateViewHolder</span>(ViewGroup parent, <span style="color:#66d9ef">int</span> viewType) {
+</span></span><span style="display:flex;"><span>        View view <span style="color:#f92672">=</span> LayoutInflater.<span style="color:#a6e22e">from</span>(parent.<span style="color:#a6e22e">getContext</span>()).<span style="color:#a6e22e">inflate</span>(R.<span style="color:#a6e22e">layout</span>.<span style="color:#a6e22e">item_list</span>, parent, <span style="color:#66d9ef">false</span>);
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">new</span> CardViewHolder(view);
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">@Override</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">onBindViewHolder</span>(RecyclerView.<span style="color:#a6e22e">ViewHolder</span> holder, <span style="color:#66d9ef">int</span> position) {
+</span></span><span style="display:flex;"><span>        CardViewHolder mCardViewHolder <span style="color:#f92672">=</span> (CardViewHolder)holder;
+</span></span><span style="display:flex;"><span>        mCardViewHolder.<span style="color:#a6e22e">mTextView</span>.<span style="color:#a6e22e">setText</span>(<span style="color:#e6db74">&#34;Hello CardView &#34;</span> <span style="color:#f92672">+</span> position);
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">boolean</span> <span style="color:#a6e22e">isHeaderPosition</span>(<span style="color:#66d9ef">int</span> position){
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> position <span style="color:#f92672">==</span> 0;
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">@Override</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">int</span> <span style="color:#a6e22e">getItemCount</span>() {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> count;
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">static</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">CardViewHolder</span> <span style="color:#66d9ef">extends</span> RecyclerView.<span style="color:#a6e22e">ViewHolder</span> {
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">public</span> CardView mCardView;
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">public</span> TextView mTextView;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">public</span> <span style="color:#a6e22e">CardViewHolder</span>(View itemView) {
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">super</span>(itemView);
+</span></span><span style="display:flex;"><span>            mCardView <span style="color:#f92672">=</span> (CardView) itemView.<span style="color:#a6e22e">findViewById</span>(R.<span style="color:#a6e22e">id</span>.<span style="color:#a6e22e">view</span>);
+</span></span><span style="display:flex;"><span>            mTextView <span style="color:#f92672">=</span> (TextView) itemView.<span style="color:#a6e22e">findViewById</span>(R.<span style="color:#a6e22e">id</span>.<span style="color:#a6e22e">tv_card</span>);
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">static</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">CardViewHeaderHolder</span> <span style="color:#66d9ef">extends</span> RecyclerView.<span style="color:#a6e22e">ViewHolder</span> {
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">public</span> <span style="color:#a6e22e">CardViewHeaderHolder</span>(View itemView) {
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">super</span>(itemView);
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><h3 id="layoutmanager">LayoutManager</h3>
 <p>使用<code>RecyclerView</code>一定要通过<code>setLayoutManager</code>来设置布局类别。目前 support v7库提供了三种布局供我们使用。</p>
 <ul>
 <li>LinearLayoutManager  线性布局，比如<code>ListView</code>效果我们就需要使用这种</li>
@@ -293,73 +295,73 @@
 <li>StaggeredGridLayoutManager 瀑布流效果</li>
 </ul>
 <p>因为我们需要实现<code>ListView</code>效果，所以我们代码如下：</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kd">class</span> <span class="nc">MainActivity</span><span class="w"> </span><span class="kd">extends</span><span class="w"> </span><span class="n">AppCompatActivity</span><span class="w"> </span><span class="p">{</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="n">FrameLayout</span><span class="w"> </span><span class="n">drawerlayout</span><span class="p">;</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="n">android</span><span class="p">.</span><span class="na">support</span><span class="p">.</span><span class="na">v7</span><span class="p">.</span><span class="na">widget</span><span class="p">.</span><span class="na">RecyclerView</span><span class="w"> </span><span class="n">rccontent</span><span class="p">;</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nd">@Override</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">protected</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">onCreate</span><span class="p">(</span><span class="n">Bundle</span><span class="w"> </span><span class="n">savedInstanceState</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="kd">super</span><span class="p">.</span><span class="na">onCreate</span><span class="p">(</span><span class="n">savedInstanceState</span><span class="p">);</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">setContentView</span><span class="p">(</span><span class="n">R</span><span class="p">.</span><span class="na">layout</span><span class="p">.</span><span class="na">activity_main</span><span class="p">);</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">this</span><span class="p">.</span><span class="na">rccontent</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">RecyclerView</span><span class="p">)</span><span class="w"> </span><span class="n">findViewById</span><span class="p">(</span><span class="n">R</span><span class="p">.</span><span class="na">id</span><span class="p">.</span><span class="na">rc_content</span><span class="p">);</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">this</span><span class="p">.</span><span class="na">drawerlayout</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">FrameLayout</span><span class="p">)</span><span class="w"> </span><span class="n">findViewById</span><span class="p">(</span><span class="n">R</span><span class="p">.</span><span class="na">id</span><span class="p">.</span><span class="na">drawer_layout</span><span class="p">);</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">setSupportActionBar</span><span class="p">(</span><span class="n">toolbar</span><span class="p">);</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">getSupportActionBar</span><span class="p">().</span><span class="na">setDisplayShowTitleEnabled</span><span class="p">(</span><span class="kc">false</span><span class="p">);</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">getSupportActionBar</span><span class="p">().</span><span class="na">setHomeButtonEnabled</span><span class="p">(</span><span class="kc">true</span><span class="p">);</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">LinearLayoutManager</span><span class="w"> </span><span class="n">linearLayoutManager</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">LinearLayoutManager</span><span class="p">(</span><span class="k">this</span><span class="p">);</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">       </span><span class="c1">// GridLayoutManager gridLayoutManager = new GridLayoutManager(this, 2);</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">       </span><span class="c1">// StaggeredGridLayoutManager staggeredGridLayoutManager = new StaggeredGridLayoutManager(3, 1);</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">RecyclerViewApdater</span><span class="w"> </span><span class="n">recyclerViewApdater</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">RecyclerViewApdater</span><span class="p">(</span><span class="n">20</span><span class="p">);</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">rccontent</span><span class="p">.</span><span class="na">setLayoutManager</span><span class="p">(</span><span class="n">linearLayoutManager</span><span class="p">);</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">rccontent</span><span class="p">.</span><span class="na">setAdapter</span><span class="p">(</span><span class="n">recyclerViewApdater</span><span class="p">);</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
-</span></span></span></code></pre></div><h3 id="onitemclicklistener">onItemClickListener</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">MainActivity</span> <span style="color:#66d9ef">extends</span> AppCompatActivity {
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">private</span> FrameLayout drawerlayout;
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">private</span> android.<span style="color:#a6e22e">support</span>.<span style="color:#a6e22e">v7</span>.<span style="color:#a6e22e">widget</span>.<span style="color:#a6e22e">RecyclerView</span> rccontent;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">@Override</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">protected</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">onCreate</span>(Bundle savedInstanceState) {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">super</span>.<span style="color:#a6e22e">onCreate</span>(savedInstanceState);
+</span></span><span style="display:flex;"><span>        setContentView(R.<span style="color:#a6e22e">layout</span>.<span style="color:#a6e22e">activity_main</span>);
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">rccontent</span> <span style="color:#f92672">=</span> (RecyclerView) findViewById(R.<span style="color:#a6e22e">id</span>.<span style="color:#a6e22e">rc_content</span>);
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">drawerlayout</span> <span style="color:#f92672">=</span> (FrameLayout) findViewById(R.<span style="color:#a6e22e">id</span>.<span style="color:#a6e22e">drawer_layout</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        setSupportActionBar(toolbar);
+</span></span><span style="display:flex;"><span>        getSupportActionBar().<span style="color:#a6e22e">setDisplayShowTitleEnabled</span>(<span style="color:#66d9ef">false</span>);
+</span></span><span style="display:flex;"><span>        getSupportActionBar().<span style="color:#a6e22e">setHomeButtonEnabled</span>(<span style="color:#66d9ef">true</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        LinearLayoutManager linearLayoutManager <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> LinearLayoutManager(<span style="color:#66d9ef">this</span>);
+</span></span><span style="display:flex;"><span>       <span style="color:#75715e">// GridLayoutManager gridLayoutManager = new GridLayoutManager(this, 2);</span>
+</span></span><span style="display:flex;"><span>       <span style="color:#75715e">// StaggeredGridLayoutManager staggeredGridLayoutManager = new StaggeredGridLayoutManager(3, 1);</span>
+</span></span><span style="display:flex;"><span>        RecyclerViewApdater recyclerViewApdater <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> RecyclerViewApdater(20);
+</span></span><span style="display:flex;"><span>        rccontent.<span style="color:#a6e22e">setLayoutManager</span>(linearLayoutManager);
+</span></span><span style="display:flex;"><span>        rccontent.<span style="color:#a6e22e">setAdapter</span>(recyclerViewApdater);
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><h3 id="onitemclicklistener">onItemClickListener</h3>
 <p>我们会发现<code>RecyclerView</code>并没有提供<code>onItemClickListener</code>事件监听，如果我们需要在<code>Activity</code>里面监听 Item 的点击事件。可以通过接口回调的方式来实现。</p>
 <p>在<code>RecyclerView.Adapter</code>里面添加接口</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kd">interface</span> <span class="nc">onItemClickLintener</span><span class="p">{</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="kd">public</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">onItemClick</span><span class="p">(</span><span class="n">View</span><span class="w"> </span><span class="n">v</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">position</span><span class="p">);</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
-</span></span></span></code></pre></div><p>添加接口方法</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="kd">static</span><span class="w"> </span><span class="n">onItemClickLintener</span><span class="w"> </span><span class="n">mLintener</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">null</span><span class="p">;</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">setOnItemClickLintener</span><span class="p">(</span><span class="n">onItemClickLintener</span><span class="w"> </span><span class="n">mItemClick</span><span class="p">){</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">this</span><span class="p">.</span><span class="na">mLintener</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">mItemClick</span><span class="p">;</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
-</span></span></span></code></pre></div><p>在<code>RecyclerView.ViewHolder</code>中接受事件</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kd">static</span><span class="w"> </span><span class="kd">class</span> <span class="nc">CardViewHolder</span><span class="w"> </span><span class="kd">extends</span><span class="w"> </span><span class="n">RecyclerView</span><span class="p">.</span><span class="na">ViewHolder</span><span class="w"> </span><span class="p">{</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="kd">public</span><span class="w"> </span><span class="n">CardView</span><span class="w"> </span><span class="n">mCardView</span><span class="p">;</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="kd">public</span><span class="w"> </span><span class="n">TextView</span><span class="w"> </span><span class="n">mTextView</span><span class="p">;</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="kd">public</span><span class="w"> </span><span class="nf">CardViewHolder</span><span class="p">(</span><span class="kd">final</span><span class="w"> </span><span class="n">View</span><span class="w"> </span><span class="n">itemView</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="kd">super</span><span class="p">(</span><span class="n">itemView</span><span class="p">);</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="n">mCardView</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">CardView</span><span class="p">)</span><span class="w"> </span><span class="n">itemView</span><span class="p">.</span><span class="na">findViewById</span><span class="p">(</span><span class="n">R</span><span class="p">.</span><span class="na">id</span><span class="p">.</span><span class="na">view</span><span class="p">);</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="n">mTextView</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">TextView</span><span class="p">)</span><span class="w"> </span><span class="n">itemView</span><span class="p">.</span><span class="na">findViewById</span><span class="p">(</span><span class="n">R</span><span class="p">.</span><span class="na">id</span><span class="p">.</span><span class="na">tv_card</span><span class="p">);</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="n">itemView</span><span class="p">.</span><span class="na">setOnClickListener</span><span class="p">(</span><span class="k">new</span><span class="w"> </span><span class="n">View</span><span class="p">.</span><span class="na">OnClickListener</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">                </span><span class="nd">@Override</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">                </span><span class="kd">public</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">onClick</span><span class="p">(</span><span class="n">View</span><span class="w"> </span><span class="n">view</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">                    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">mLintener</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">null</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">                        </span><span class="n">mLintener</span><span class="p">.</span><span class="na">onItemClick</span><span class="p">(</span><span class="n">view</span><span class="p">,</span><span class="w"> </span><span class="n">getAdapterPosition</span><span class="p">());</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">                    </span><span class="p">}</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">                </span><span class="p">}</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="p">});</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="p">}</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
-</span></span></span></code></pre></div><p>通过<code>RecyclerViewApdater</code>来使用</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="w">        </span><span class="n">RecyclerViewApdater</span><span class="w"> </span><span class="n">recyclerViewApdater</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">RecyclerViewApdater</span><span class="p">(</span><span class="n">20</span><span class="p">);</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">recyclerViewApdater</span><span class="p">.</span><span class="na">setOnItemClickLintener</span><span class="p">(</span><span class="k">new</span><span class="w"> </span><span class="n">RecyclerViewApdater</span><span class="p">.</span><span class="na">onItemClickLintener</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="nd">@Override</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="kd">public</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">onItemClick</span><span class="p">(</span><span class="n">View</span><span class="w"> </span><span class="n">v</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">position</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">                </span><span class="n">Log</span><span class="p">.</span><span class="na">d</span><span class="p">(</span><span class="s">&#34;demo&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;------ &#34;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">position</span><span class="p">);</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="p">}</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="p">});</span><span class="w">
-</span></span></span></code></pre></div></div><div class="post-footer" id="post-footer">
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-java" data-lang="java"><span style="display:flex;"><span>    <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">interface</span> <span style="color:#a6e22e">onItemClickLintener</span>{
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">onItemClick</span>(View v, <span style="color:#66d9ef">int</span> position);
+</span></span><span style="display:flex;"><span>    }
+</span></span></code></pre></div><p>添加接口方法</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-java" data-lang="java"><span style="display:flex;"><span>    <span style="color:#66d9ef">private</span> <span style="color:#66d9ef">static</span> onItemClickLintener mLintener <span style="color:#f92672">=</span> <span style="color:#66d9ef">null</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">setOnItemClickLintener</span>(onItemClickLintener mItemClick){
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">mLintener</span> <span style="color:#f92672">=</span> mItemClick;
+</span></span><span style="display:flex;"><span>    }
+</span></span></code></pre></div><p>在<code>RecyclerView.ViewHolder</code>中接受事件</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-java" data-lang="java"><span style="display:flex;"><span>    <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">static</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">CardViewHolder</span> <span style="color:#66d9ef">extends</span> RecyclerView.<span style="color:#a6e22e">ViewHolder</span> {
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">public</span> CardView mCardView;
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">public</span> TextView mTextView;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">public</span> <span style="color:#a6e22e">CardViewHolder</span>(<span style="color:#66d9ef">final</span> View itemView) {
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">super</span>(itemView);
+</span></span><span style="display:flex;"><span>            mCardView <span style="color:#f92672">=</span> (CardView) itemView.<span style="color:#a6e22e">findViewById</span>(R.<span style="color:#a6e22e">id</span>.<span style="color:#a6e22e">view</span>);
+</span></span><span style="display:flex;"><span>            mTextView <span style="color:#f92672">=</span> (TextView) itemView.<span style="color:#a6e22e">findViewById</span>(R.<span style="color:#a6e22e">id</span>.<span style="color:#a6e22e">tv_card</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>            itemView.<span style="color:#a6e22e">setOnClickListener</span>(<span style="color:#66d9ef">new</span> View.<span style="color:#a6e22e">OnClickListener</span>() {
+</span></span><span style="display:flex;"><span>                <span style="color:#a6e22e">@Override</span>
+</span></span><span style="display:flex;"><span>                <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">onClick</span>(View view) {
+</span></span><span style="display:flex;"><span>                    <span style="color:#66d9ef">if</span> (mLintener <span style="color:#f92672">!=</span> <span style="color:#66d9ef">null</span>) {
+</span></span><span style="display:flex;"><span>                        mLintener.<span style="color:#a6e22e">onItemClick</span>(view, getAdapterPosition());
+</span></span><span style="display:flex;"><span>                    }
+</span></span><span style="display:flex;"><span>                }
+</span></span><span style="display:flex;"><span>            });
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>    }
+</span></span></code></pre></div><p>通过<code>RecyclerViewApdater</code>来使用</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-java" data-lang="java"><span style="display:flex;"><span>        RecyclerViewApdater recyclerViewApdater <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> RecyclerViewApdater(20);
+</span></span><span style="display:flex;"><span>        recyclerViewApdater.<span style="color:#a6e22e">setOnItemClickLintener</span>(<span style="color:#66d9ef">new</span> RecyclerViewApdater.<span style="color:#a6e22e">onItemClickLintener</span>() {
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">@Override</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">onItemClick</span>(View v, <span style="color:#66d9ef">int</span> position) {
+</span></span><span style="display:flex;"><span>                Log.<span style="color:#a6e22e">d</span>(<span style="color:#e6db74">&#34;demo&#34;</span>, <span style="color:#e6db74">&#34;------ &#34;</span> <span style="color:#f92672">+</span> position);
+</span></span><span style="display:flex;"><span>            }
+</span></span><span style="display:flex;"><span>        });
+</span></span></code></pre></div></div><div class="post-footer" id="post-footer">
     <div class="post-info">
         <div class="post-info-line">
             <div class="post-info-mod">

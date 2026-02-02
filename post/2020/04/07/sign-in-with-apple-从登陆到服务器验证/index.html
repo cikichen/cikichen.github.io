@@ -134,76 +134,76 @@
         alt="https://img.ibook8.club/15862407395820.jpg"
         title="https://img.ibook8.club/15862407395820.jpg" /></p>
 <p>关于手机端登录的代码，这里不做多余介绍，我们看下登录成功后， <code>Apple</code>返回给手机端的一些参数</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-swift" data-lang="swift"><span class="line"><span class="cl"><span class="n">open</span> <span class="kd">var</span> <span class="nv">user</span><span class="p">:</span> <span class="nb">String</span> <span class="p">{</span> <span class="kr">get</span> <span class="p">}</span>
-</span></span><span class="line"><span class="cl"><span class="n">open</span> <span class="kd">var</span> <span class="nv">state</span><span class="p">:</span> <span class="nb">String</span><span class="p">?</span> <span class="p">{</span> <span class="kr">get</span> <span class="p">}</span>
-</span></span><span class="line"><span class="cl"><span class="n">open</span> <span class="kd">var</span> <span class="nv">authorizedScopes</span><span class="p">:</span> <span class="p">[</span><span class="n">ASAuthorization</span><span class="p">.</span><span class="n">Scope</span><span class="p">]</span> <span class="p">{</span> <span class="kr">get</span> <span class="p">}</span>
-</span></span><span class="line"><span class="cl"><span class="n">open</span> <span class="kd">var</span> <span class="nv">authorizationCode</span><span class="p">:</span> <span class="n">Data</span><span class="p">?</span> <span class="p">{</span> <span class="kr">get</span> <span class="p">}</span>
-</span></span><span class="line"><span class="cl"><span class="n">open</span> <span class="kd">var</span> <span class="nv">identityToken</span><span class="p">:</span> <span class="n">Data</span><span class="p">?</span> <span class="p">{</span> <span class="kr">get</span> <span class="p">}</span>
-</span></span><span class="line"><span class="cl"><span class="n">open</span> <span class="kd">var</span> <span class="nv">email</span><span class="p">:</span> <span class="nb">String</span><span class="p">?</span> <span class="p">{</span> <span class="kr">get</span> <span class="p">}</span>
-</span></span><span class="line"><span class="cl"><span class="n">open</span> <span class="kd">var</span> <span class="nv">fullName</span><span class="p">:</span> <span class="n">PersonNameComponents</span><span class="p">?</span> <span class="p">{</span> <span class="kr">get</span> <span class="p">}</span>
-</span></span><span class="line"><span class="cl"><span class="n">open</span> <span class="kd">var</span> <span class="nv">realUserStatus</span><span class="p">:</span> <span class="n">ASUserDetectionStatus</span>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-swift" data-lang="swift"><span style="display:flex;"><span>open <span style="color:#66d9ef">var</span> user: String { <span style="color:#66d9ef">get</span> }
+</span></span><span style="display:flex;"><span>open <span style="color:#66d9ef">var</span> state: String? { <span style="color:#66d9ef">get</span> }
+</span></span><span style="display:flex;"><span>open <span style="color:#66d9ef">var</span> authorizedScopes: [ASAuthorization.Scope] { <span style="color:#66d9ef">get</span> }
+</span></span><span style="display:flex;"><span>open <span style="color:#66d9ef">var</span> authorizationCode: Data? { <span style="color:#66d9ef">get</span> }
+</span></span><span style="display:flex;"><span>open <span style="color:#66d9ef">var</span> identityToken: Data? { <span style="color:#66d9ef">get</span> }
+</span></span><span style="display:flex;"><span>open <span style="color:#66d9ef">var</span> email: String? { <span style="color:#66d9ef">get</span> }
+</span></span><span style="display:flex;"><span>open <span style="color:#66d9ef">var</span> fullName: PersonNameComponents? { <span style="color:#66d9ef">get</span> }
+</span></span><span style="display:flex;"><span>open <span style="color:#66d9ef">var</span> realUserStatus: ASUserDetectionStatus
 </span></span></code></pre></div><p>这里初步登录成功，从 <code>Apple</code> 拿到 <code>user</code> 、 <code>identityToken</code> 、 <code>authorizationCode</code> 等相关信息。</p>
 <h3 id="1-首先手机端先做一个验证">1. 首先手机端先做一个验证</h3>
 <p><code>identityToken</code> 是一个 <code>JWT</code> 格式的加密数据 （JWT相关知识介绍 <a href="http://www.ruanyifeng.com/blog/2018/07/json_web_token-tutorial.html" target="_blank" rel="noopener noreffer">JSON Web Token</a>
 ），我们通过如下代码拿到 <code>header</code> 和 <code>payload</code> 中的数据</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-swift" data-lang="swift"><span class="line"><span class="cl"><span class="k">guard</span> <span class="kd">let</span> <span class="nv">_</span> <span class="p">=</span> <span class="n">identityToken</span> <span class="k">else</span> <span class="p">{</span> <span class="k">return</span> <span class="p">}</span>
-</span></span><span class="line"><span class="cl">            
-</span></span><span class="line"><span class="cl"><span class="kd">let</span> <span class="nv">token</span> <span class="p">=</span> <span class="nb">String</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="n">identityToken</span><span class="p">!,</span> <span class="n">encoding</span><span class="p">:</span> <span class="p">.</span><span class="n">utf8</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl"><span class="kd">let</span> <span class="nv">arr</span> <span class="p">=</span> <span class="n">token</span><span class="p">?.</span><span class="n">components</span><span class="p">(</span><span class="n">separatedBy</span><span class="p">:</span> <span class="s">&#34;.&#34;</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl"><span class="kd">let</span> <span class="nv">header</span> <span class="p">=</span> <span class="n">arr</span><span class="p">?[</span><span class="mi">0</span><span class="p">]</span>
-</span></span><span class="line"><span class="cl"><span class="kd">let</span> <span class="nv">payload</span> <span class="p">=</span> <span class="n">arr</span><span class="p">?[</span><span class="mi">1</span><span class="p">]</span>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-swift" data-lang="swift"><span style="display:flex;"><span><span style="color:#66d9ef">guard</span> <span style="color:#66d9ef">let</span> _ = identityToken <span style="color:#66d9ef">else</span> { <span style="color:#66d9ef">return</span> }
+</span></span><span style="display:flex;"><span>            
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">let</span> token = String(data: identityToken!, encoding: .utf8)
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">let</span> arr = token?.components(separatedBy: <span style="color:#e6db74">&#34;.&#34;</span>)
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">let</span> header = arr?[<span style="color:#ae81ff">0</span>]
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">let</span> payload = arr?[<span style="color:#ae81ff">1</span>]
 </span></span></code></pre></div><p><code>header</code> 及 <code>payload</code> 均是base64编码的字符串，通过如下代码进行解码</p>
 <blockquote>
 <p>注意：swift中需要用NSData进行转换，用Data进行转换会失败</p>
 </blockquote>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-swift" data-lang="swift"><span class="line"><span class="cl"><span class="c1">// 这里为了方便，均采用 ! 强行解包</span>
-</span></span><span class="line"><span class="cl"><span class="kd">let</span> <span class="nv">headerData</span> <span class="p">=</span> <span class="n">NSData</span><span class="p">(</span><span class="n">base64EncodedString</span><span class="p">:</span> <span class="n">payload</span><span class="p">!)</span>
-</span></span><span class="line"><span class="cl"><span class="kd">let</span> <span class="nv">decodeHeader</span> <span class="p">=</span> <span class="nb">String</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="p">(</span><span class="n">headerData</span><span class="p">!</span> <span class="k">as</span> <span class="n">Data</span><span class="p">),</span> <span class="n">encoding</span><span class="p">:</span> <span class="p">.</span><span class="n">utf8</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="kd">let</span> <span class="nv">payloadData</span> <span class="p">=</span> <span class="n">NSData</span><span class="p">(</span><span class="n">base64EncodedString</span><span class="p">:</span> <span class="n">payload</span><span class="p">!)</span>
-</span></span><span class="line"><span class="cl"><span class="kd">let</span> <span class="nv">decodePayload</span> <span class="p">=</span> <span class="nb">String</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="p">(</span><span class="n">payloadData</span><span class="p">!</span> <span class="k">as</span> <span class="n">Data</span><span class="p">),</span> <span class="n">encoding</span><span class="p">:</span> <span class="p">.</span><span class="n">utf8</span><span class="p">)</span>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-swift" data-lang="swift"><span style="display:flex;"><span><span style="color:#75715e">// 这里为了方便，均采用 ! 强行解包</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">let</span> headerData = NSData(base64EncodedString: payload!)
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">let</span> decodeHeader = String(data: (headerData! <span style="color:#66d9ef">as</span> Data), encoding: .utf8)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">let</span> payloadData = NSData(base64EncodedString: payload!)
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">let</span> decodePayload = String(data: (payloadData! <span style="color:#66d9ef">as</span> Data), encoding: .utf8)
 </span></span></code></pre></div><p>得到结果如下</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-json" data-lang="json"><span class="line"><span class="cl"><span class="err">header:</span>
-</span></span><span class="line"><span class="cl"><span class="p">{</span><span class="nt">&#34;kid&#34;</span><span class="p">:</span><span class="s2">&#34;AIDOPK1&#34;</span><span class="p">,</span><span class="nt">&#34;alg&#34;</span><span class="p">:</span><span class="s2">&#34;RS256&#34;</span><span class="p">}</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="err">payload:</span>
-</span></span><span class="line"><span class="cl"><span class="p">{</span><span class="nt">&#34;iss&#34;</span><span class="p">:</span><span class="s2">&#34;https://appleid.apple.com&#34;</span><span class="p">,</span><span class="nt">&#34;aud&#34;</span><span class="p">:</span><span class="s2">&#34;这个是你的app的bundle identifier&#34;</span><span class="p">,</span><span class="nt">&#34;exp&#34;</span><span class="p">:</span><span class="mi">1567482337</span><span class="p">,</span><span class="nt">&#34;iat&#34;</span><span class="p">:</span><span class="mi">1567481737</span><span class="p">,</span><span class="nt">&#34;sub&#34;</span><span class="p">:</span><span class="s2">&#34;这个字段和上面获取的 user 字段是完全一样的&#34;</span><span class="p">,</span><span class="nt">&#34;c_hash&#34;</span><span class="p">:</span><span class="s2">&#34;8KDzfalU5kygg5zxXiX7dA&#34;</span><span class="p">,</span><span class="nt">&#34;auth_time&#34;</span><span class="p">:</span><span class="mi">1567481737</span><span class="p">}</span>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-json" data-lang="json"><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">header:</span>
+</span></span><span style="display:flex;"><span>{<span style="color:#f92672">&#34;kid&#34;</span>:<span style="color:#e6db74">&#34;AIDOPK1&#34;</span>,<span style="color:#f92672">&#34;alg&#34;</span>:<span style="color:#e6db74">&#34;RS256&#34;</span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">payload:</span>
+</span></span><span style="display:flex;"><span>{<span style="color:#f92672">&#34;iss&#34;</span>:<span style="color:#e6db74">&#34;https://appleid.apple.com&#34;</span>,<span style="color:#f92672">&#34;aud&#34;</span>:<span style="color:#e6db74">&#34;这个是你的app的bundle identifier&#34;</span>,<span style="color:#f92672">&#34;exp&#34;</span>:<span style="color:#ae81ff">1567482337</span>,<span style="color:#f92672">&#34;iat&#34;</span>:<span style="color:#ae81ff">1567481737</span>,<span style="color:#f92672">&#34;sub&#34;</span>:<span style="color:#e6db74">&#34;这个字段和上面获取的 user 字段是完全一样的&#34;</span>,<span style="color:#f92672">&#34;c_hash&#34;</span>:<span style="color:#e6db74">&#34;8KDzfalU5kygg5zxXiX7dA&#34;</span>,<span style="color:#f92672">&#34;auth_time&#34;</span>:<span style="color:#ae81ff">1567481737</span>}
 </span></span></code></pre></div><p>通过如上操作，我们可以获取到 <code>payload</code> 中的 <code>sub</code> 字段，然后与上面的 <code>user</code> 字段做一个对比，如果对比通过，则第一步完成</p>
 <p>把 base64 data 转化成字符串之后，也可以去 <a href="https://jwt.io/" target="_blank" rel="noopener noreffer">JWT官网</a>
  把字符串粘贴进去，获取 header 及 payload 信息</p>
 <h5 id="python-decode-base64-字符串示例代码如下"><code>python</code> decode base64 字符串示例代码如下：</h5>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">base64</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="n">token</span> <span class="o">=</span> <span class="s1">&#39;eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c&#39;</span>
-</span></span><span class="line"><span class="cl"><span class="n">arr</span> <span class="o">=</span> <span class="n">token</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="n">header</span> <span class="o">=</span> <span class="n">arr</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="n">data</span> <span class="o">=</span> <span class="n">header</span><span class="o">.</span><span class="n">encode</span><span class="p">()</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="n">missing_padding</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="o">%</span> <span class="mi">4</span>
-</span></span><span class="line"><span class="cl"><span class="k">if</span> <span class="n">missing_padding</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
-</span></span><span class="line"><span class="cl">    <span class="n">data</span> <span class="o">+=</span> <span class="sa">b</span><span class="s1">&#39;=&#39;</span><span class="o">*</span> <span class="p">(</span><span class="mi">4</span> <span class="o">-</span> <span class="n">missing_padding</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="n">bStr</span> <span class="o">=</span> <span class="n">base64</span><span class="o">.</span><span class="n">decodebytes</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl"><span class="n">decode_header</span> <span class="o">=</span> <span class="n">bStr</span><span class="o">.</span><span class="n">decode</span><span class="p">()</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="n">decode_header</span><span class="p">)</span> <span class="c1"># 结果 {&#34;alg&#34;: &#34;HS256&#34;,&#34;typ&#34;: &#34;JWT&#34;}</span>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#f92672">import</span> base64
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>token <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c&#39;</span>
+</span></span><span style="display:flex;"><span>arr <span style="color:#f92672">=</span> token<span style="color:#f92672">.</span>split(<span style="color:#e6db74">&#39;.&#39;</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>header <span style="color:#f92672">=</span> arr[<span style="color:#ae81ff">0</span>]
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>data <span style="color:#f92672">=</span> header<span style="color:#f92672">.</span>encode()
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>missing_padding <span style="color:#f92672">=</span> len(data) <span style="color:#f92672">%</span> <span style="color:#ae81ff">4</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> missing_padding <span style="color:#f92672">!=</span> <span style="color:#ae81ff">0</span>:
+</span></span><span style="display:flex;"><span>    data <span style="color:#f92672">+=</span> <span style="color:#e6db74">b</span><span style="color:#e6db74">&#39;=&#39;</span><span style="color:#f92672">*</span> (<span style="color:#ae81ff">4</span> <span style="color:#f92672">-</span> missing_padding)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>bStr <span style="color:#f92672">=</span> base64<span style="color:#f92672">.</span>decodebytes(data)
+</span></span><span style="display:flex;"><span>decode_header <span style="color:#f92672">=</span> bStr<span style="color:#f92672">.</span>decode()
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>print(decode_header) <span style="color:#75715e"># 结果 {&#34;alg&#34;: &#34;HS256&#34;,&#34;typ&#34;: &#34;JWT&#34;}</span>
 </span></span></code></pre></div><h3 id="2-服务端像苹果请求验证">2. 服务端像苹果请求验证</h3>
 <p>手机端需要提交 <code>user</code>  、<code>authorizationCode</code> 、 <code>identityToken</code>  字段信息（code和token字段苹果返回的是 <code>base64 Data</code> 形式，手机端可以先转换 base64 字符串之后在给服务器）到服务器。然后服务器通过 <code>https://appleid.apple.com/auth/token</code> 该接口，并拼接对应参数去验证，接口相关信息苹果有提供 <a href="https://developer.apple.com/documentation/signinwithapplerestapi/generate_and_validate_tokens" target="_blank" rel="noopener noreffer">Generate and validate tokens</a>
  。</p>
 <p>下面着重介绍几个参数及其获取方法。首先先看下该接口需要的参数，如下</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-json" data-lang="json"><span class="line"><span class="cl"><span class="err">client_id：</span> <span class="err">string</span> <span class="err">(Required)</span> <span class="err">(Authorization</span> <span class="err">and</span> <span class="err">Validation)</span> <span class="err">The</span> <span class="err">application</span> <span class="err">identifier</span> <span class="err">for</span> <span class="err">your</span> <span class="err">app</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="err">client_secret：</span> <span class="err">string</span> <span class="err">(Required)</span> <span class="err">(Authorization</span> <span class="err">and</span> <span class="err">Validation)</span> <span class="err">A</span> <span class="err">secret</span> <span class="err">generated</span> <span class="err">as</span> <span class="err">a</span> <span class="err">JSON</span> <span class="err">Web</span> <span class="err">Token</span> <span class="err">that</span> <span class="err">uses</span> <span class="err">the</span> <span class="err">secret</span> <span class="err">key</span> <span class="err">generated</span> <span class="err">by</span> <span class="err">the</span> <span class="err">WWDR</span> <span class="err">portal.</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="err">code：</span> <span class="err">string</span> <span class="err">(Authorization)</span> <span class="err">The</span> <span class="err">authorization</span> <span class="err">code</span> <span class="err">received</span> <span class="err">from</span> <span class="err">your</span> <span class="err">application’s</span> <span class="err">user</span> <span class="err">agent.</span> <span class="err">The</span> <span class="err">code</span> <span class="err">is</span> <span class="err">single</span> <span class="err">use</span> <span class="err">only</span> <span class="err">and</span> <span class="err">valid</span> <span class="err">for</span> <span class="err">five</span> <span class="err">minutes.</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="err">grant_type：</span> <span class="err">string</span> <span class="err">(Required)</span> <span class="err">(Authorization</span> <span class="err">and</span> <span class="err">Validation)</span> <span class="err">The</span> <span class="err">grant</span> <span class="err">type</span> <span class="err">that</span> <span class="err">determines</span> <span class="err">how</span> <span class="err">the</span> <span class="err">client</span> <span class="err">interacts</span> <span class="err">with</span> <span class="err">the</span> <span class="err">server.</span> <span class="err">For</span> <span class="err">authorization</span> <span class="err">code</span> <span class="err">validation,</span> <span class="err">use</span> <span class="err">authorization_code.</span> <span class="err">For</span> <span class="err">refresh</span> <span class="err">token</span> <span class="err">validation</span> <span class="err">requests,</span> <span class="err">use</span> <span class="err">refresh_token.</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="err">refresh_token：</span> <span class="err">string</span> <span class="err">(Validation)</span> <span class="err">The</span> <span class="err">refresh</span> <span class="err">token</span> <span class="err">received</span> <span class="err">during</span> <span class="err">the</span> <span class="err">authorization</span> <span class="err">request.</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="err">redirect_uri：</span> <span class="err">string</span> <span class="err">(Authorization)</span> <span class="err">The</span> <span class="err">destination</span> <span class="err">URI</span> <span class="err">the</span> <span class="err">code</span> <span class="err">was</span> <span class="err">originally</span> <span class="err">sent</span> <span class="err">to.</span>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-json" data-lang="json"><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">client_id：</span> <span style="color:#960050;background-color:#1e0010">string</span> <span style="color:#960050;background-color:#1e0010">(Required)</span> <span style="color:#960050;background-color:#1e0010">(Authorization</span> <span style="color:#960050;background-color:#1e0010">and</span> <span style="color:#960050;background-color:#1e0010">Validation)</span> <span style="color:#960050;background-color:#1e0010">The</span> <span style="color:#960050;background-color:#1e0010">application</span> <span style="color:#960050;background-color:#1e0010">identifier</span> <span style="color:#960050;background-color:#1e0010">for</span> <span style="color:#960050;background-color:#1e0010">your</span> <span style="color:#960050;background-color:#1e0010">app</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">client_secret：</span> <span style="color:#960050;background-color:#1e0010">string</span> <span style="color:#960050;background-color:#1e0010">(Required)</span> <span style="color:#960050;background-color:#1e0010">(Authorization</span> <span style="color:#960050;background-color:#1e0010">and</span> <span style="color:#960050;background-color:#1e0010">Validation)</span> <span style="color:#960050;background-color:#1e0010">A</span> <span style="color:#960050;background-color:#1e0010">secret</span> <span style="color:#960050;background-color:#1e0010">generated</span> <span style="color:#960050;background-color:#1e0010">as</span> <span style="color:#960050;background-color:#1e0010">a</span> <span style="color:#960050;background-color:#1e0010">JSON</span> <span style="color:#960050;background-color:#1e0010">Web</span> <span style="color:#960050;background-color:#1e0010">Token</span> <span style="color:#960050;background-color:#1e0010">that</span> <span style="color:#960050;background-color:#1e0010">uses</span> <span style="color:#960050;background-color:#1e0010">the</span> <span style="color:#960050;background-color:#1e0010">secret</span> <span style="color:#960050;background-color:#1e0010">key</span> <span style="color:#960050;background-color:#1e0010">generated</span> <span style="color:#960050;background-color:#1e0010">by</span> <span style="color:#960050;background-color:#1e0010">the</span> <span style="color:#960050;background-color:#1e0010">WWDR</span> <span style="color:#960050;background-color:#1e0010">portal.</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">code：</span> <span style="color:#960050;background-color:#1e0010">string</span> <span style="color:#960050;background-color:#1e0010">(Authorization)</span> <span style="color:#960050;background-color:#1e0010">The</span> <span style="color:#960050;background-color:#1e0010">authorization</span> <span style="color:#960050;background-color:#1e0010">code</span> <span style="color:#960050;background-color:#1e0010">received</span> <span style="color:#960050;background-color:#1e0010">from</span> <span style="color:#960050;background-color:#1e0010">your</span> <span style="color:#960050;background-color:#1e0010">application’s</span> <span style="color:#960050;background-color:#1e0010">user</span> <span style="color:#960050;background-color:#1e0010">agent.</span> <span style="color:#960050;background-color:#1e0010">The</span> <span style="color:#960050;background-color:#1e0010">code</span> <span style="color:#960050;background-color:#1e0010">is</span> <span style="color:#960050;background-color:#1e0010">single</span> <span style="color:#960050;background-color:#1e0010">use</span> <span style="color:#960050;background-color:#1e0010">only</span> <span style="color:#960050;background-color:#1e0010">and</span> <span style="color:#960050;background-color:#1e0010">valid</span> <span style="color:#960050;background-color:#1e0010">for</span> <span style="color:#960050;background-color:#1e0010">five</span> <span style="color:#960050;background-color:#1e0010">minutes.</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">grant_type：</span> <span style="color:#960050;background-color:#1e0010">string</span> <span style="color:#960050;background-color:#1e0010">(Required)</span> <span style="color:#960050;background-color:#1e0010">(Authorization</span> <span style="color:#960050;background-color:#1e0010">and</span> <span style="color:#960050;background-color:#1e0010">Validation)</span> <span style="color:#960050;background-color:#1e0010">The</span> <span style="color:#960050;background-color:#1e0010">grant</span> <span style="color:#960050;background-color:#1e0010">type</span> <span style="color:#960050;background-color:#1e0010">that</span> <span style="color:#960050;background-color:#1e0010">determines</span> <span style="color:#960050;background-color:#1e0010">how</span> <span style="color:#960050;background-color:#1e0010">the</span> <span style="color:#960050;background-color:#1e0010">client</span> <span style="color:#960050;background-color:#1e0010">interacts</span> <span style="color:#960050;background-color:#1e0010">with</span> <span style="color:#960050;background-color:#1e0010">the</span> <span style="color:#960050;background-color:#1e0010">server.</span> <span style="color:#960050;background-color:#1e0010">For</span> <span style="color:#960050;background-color:#1e0010">authorization</span> <span style="color:#960050;background-color:#1e0010">code</span> <span style="color:#960050;background-color:#1e0010">validation,</span> <span style="color:#960050;background-color:#1e0010">use</span> <span style="color:#960050;background-color:#1e0010">authorization_code.</span> <span style="color:#960050;background-color:#1e0010">For</span> <span style="color:#960050;background-color:#1e0010">refresh</span> <span style="color:#960050;background-color:#1e0010">token</span> <span style="color:#960050;background-color:#1e0010">validation</span> <span style="color:#960050;background-color:#1e0010">requests,</span> <span style="color:#960050;background-color:#1e0010">use</span> <span style="color:#960050;background-color:#1e0010">refresh_token.</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">refresh_token：</span> <span style="color:#960050;background-color:#1e0010">string</span> <span style="color:#960050;background-color:#1e0010">(Validation)</span> <span style="color:#960050;background-color:#1e0010">The</span> <span style="color:#960050;background-color:#1e0010">refresh</span> <span style="color:#960050;background-color:#1e0010">token</span> <span style="color:#960050;background-color:#1e0010">received</span> <span style="color:#960050;background-color:#1e0010">during</span> <span style="color:#960050;background-color:#1e0010">the</span> <span style="color:#960050;background-color:#1e0010">authorization</span> <span style="color:#960050;background-color:#1e0010">request.</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">redirect_uri：</span> <span style="color:#960050;background-color:#1e0010">string</span> <span style="color:#960050;background-color:#1e0010">(Authorization)</span> <span style="color:#960050;background-color:#1e0010">The</span> <span style="color:#960050;background-color:#1e0010">destination</span> <span style="color:#960050;background-color:#1e0010">URI</span> <span style="color:#960050;background-color:#1e0010">the</span> <span style="color:#960050;background-color:#1e0010">code</span> <span style="color:#960050;background-color:#1e0010">was</span> <span style="color:#960050;background-color:#1e0010">originally</span> <span style="color:#960050;background-color:#1e0010">sent</span> <span style="color:#960050;background-color:#1e0010">to.</span>
 </span></span></code></pre></div><p>其中 <code>client_id</code> 为app的 <code>bundle identifier</code> ， <code>code</code> 即为手机端获取到的 <code>authorizationCode</code> 信息， <code>grant_type</code> 传入固定字符串 <code>authorization_code</code>  即可。还剩下一个必要参数 <code>client_secret</code> 那么这个参数相对麻烦点，需要我们自己生成。<code>client_secret</code>参数是一个JWT，<code>singature</code>部分使用非对称加密 RSASSA【RSA签名算法】 和 ECDSA【椭圆曲线数据签名算法】。</p>
 <h5 id="生成-client_secret-之前我们需要做如下工作">生成 <code>client_secret</code> 之前，我们需要做如下工作</h5>
 <ul>
@@ -237,42 +237,42 @@
 创建完之后把私钥下载下来，并保存好，<em><strong>注意，私钥只能下载一次。</strong></em></li>
 </ul>
 <p>拿到上面所有信息之后，可以通过如下代码生成 <code>client_secret</code> ，代码为 <code>Ruby</code> 代码，确保已安装ruby环境。</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-ruby" data-lang="ruby"><span class="line"><span class="cl"><span class="nb">require</span> <span class="s2">&#34;jwt&#34;</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="n">key_file</span> <span class="o">=</span> <span class="s2">&#34;Path to the private key&#34;</span>
-</span></span><span class="line"><span class="cl"><span class="n">team_id</span> <span class="o">=</span> <span class="s2">&#34;Your Team ID&#34;</span>
-</span></span><span class="line"><span class="cl"><span class="n">client_id</span> <span class="o">=</span> <span class="s2">&#34;Your App Bundle ID&#34;</span>
-</span></span><span class="line"><span class="cl"><span class="n">key_id</span> <span class="o">=</span> <span class="s2">&#34;The Key ID of the private key&#34;</span>
-</span></span><span class="line"><span class="cl"><span class="n">validity_period</span> <span class="o">=</span> <span class="mi">180</span> <span class="c1"># In days. Max 180 (6 months) according to Apple docs.</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="n">private_key</span> <span class="o">=</span> <span class="no">OpenSSL</span><span class="o">::</span><span class="no">PKey</span><span class="o">::</span><span class="no">EC</span><span class="o">.</span><span class="n">new</span> <span class="no">IO</span><span class="o">.</span><span class="n">read</span> <span class="n">key_file</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="n">token</span> <span class="o">=</span> <span class="no">JWT</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span>
-</span></span><span class="line"><span class="cl">	<span class="p">{</span>
-</span></span><span class="line"><span class="cl">		<span class="ss">iss</span><span class="p">:</span> <span class="n">team_id</span><span class="p">,</span>
-</span></span><span class="line"><span class="cl">		<span class="ss">iat</span><span class="p">:</span> <span class="no">Time</span><span class="o">.</span><span class="n">now</span><span class="o">.</span><span class="n">to_i</span><span class="p">,</span>
-</span></span><span class="line"><span class="cl">		<span class="ss">exp</span><span class="p">:</span> <span class="no">Time</span><span class="o">.</span><span class="n">now</span><span class="o">.</span><span class="n">to_i</span> <span class="o">+</span> <span class="mi">86400</span> <span class="o">*</span> <span class="n">validity_period</span><span class="p">,</span>
-</span></span><span class="line"><span class="cl">		<span class="ss">aud</span><span class="p">:</span> <span class="s2">&#34;https://appleid.apple.com&#34;</span><span class="p">,</span>
-</span></span><span class="line"><span class="cl">		<span class="nb">sub</span><span class="p">:</span> <span class="n">client_id</span>
-</span></span><span class="line"><span class="cl">	<span class="p">},</span>
-</span></span><span class="line"><span class="cl">	<span class="n">private_key</span><span class="p">,</span>
-</span></span><span class="line"><span class="cl">	<span class="s2">&#34;ES256&#34;</span><span class="p">,</span>
-</span></span><span class="line"><span class="cl">	<span class="n">header_fields</span><span class="o">=</span>
-</span></span><span class="line"><span class="cl">	<span class="p">{</span>
-</span></span><span class="line"><span class="cl">		<span class="ss">kid</span><span class="p">:</span> <span class="n">key_id</span> 
-</span></span><span class="line"><span class="cl">	<span class="p">}</span>
-</span></span><span class="line"><span class="cl"><span class="p">)</span>
-</span></span><span class="line"><span class="cl"><span class="nb">puts</span> <span class="n">token</span>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-ruby" data-lang="ruby"><span style="display:flex;"><span>require <span style="color:#e6db74">&#34;jwt&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>key_file <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;Path to the private key&#34;</span>
+</span></span><span style="display:flex;"><span>team_id <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;Your Team ID&#34;</span>
+</span></span><span style="display:flex;"><span>client_id <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;Your App Bundle ID&#34;</span>
+</span></span><span style="display:flex;"><span>key_id <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;The Key ID of the private key&#34;</span>
+</span></span><span style="display:flex;"><span>validity_period <span style="color:#f92672">=</span> <span style="color:#ae81ff">180</span> <span style="color:#75715e"># In days. Max 180 (6 months) according to Apple docs.</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>private_key <span style="color:#f92672">=</span> <span style="color:#66d9ef">OpenSSL</span><span style="color:#f92672">::</span><span style="color:#66d9ef">PKey</span><span style="color:#f92672">::</span><span style="color:#66d9ef">EC</span><span style="color:#f92672">.</span>new <span style="color:#66d9ef">IO</span><span style="color:#f92672">.</span>read key_file
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>token <span style="color:#f92672">=</span> <span style="color:#66d9ef">JWT</span><span style="color:#f92672">.</span>encode(
+</span></span><span style="display:flex;"><span>	{
+</span></span><span style="display:flex;"><span>		<span style="color:#e6db74">iss</span>: team_id,
+</span></span><span style="display:flex;"><span>		<span style="color:#e6db74">iat</span>: <span style="color:#66d9ef">Time</span><span style="color:#f92672">.</span>now<span style="color:#f92672">.</span>to_i,
+</span></span><span style="display:flex;"><span>		<span style="color:#e6db74">exp</span>: <span style="color:#66d9ef">Time</span><span style="color:#f92672">.</span>now<span style="color:#f92672">.</span>to_i <span style="color:#f92672">+</span> <span style="color:#ae81ff">86400</span> <span style="color:#f92672">*</span> validity_period,
+</span></span><span style="display:flex;"><span>		<span style="color:#e6db74">aud</span>: <span style="color:#e6db74">&#34;https://appleid.apple.com&#34;</span>,
+</span></span><span style="display:flex;"><span>		sub: client_id
+</span></span><span style="display:flex;"><span>	},
+</span></span><span style="display:flex;"><span>	private_key,
+</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;ES256&#34;</span>,
+</span></span><span style="display:flex;"><span>	header_fields<span style="color:#f92672">=</span>
+</span></span><span style="display:flex;"><span>	{
+</span></span><span style="display:flex;"><span>		<span style="color:#e6db74">kid</span>: key_id 
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>)
+</span></span><span style="display:flex;"><span>puts token
 </span></span></code></pre></div><p>创建文件 <code>secret_gen.rb</code> ，把上面代码粘贴进去，执行 <code>ruby secret_gen.rb</code> 即可生成 <code>client_secret</code></p>
 <p>代码中这个 <code>key_file</code> 需要指定刚才下载的文件的地址
 到这里， <code>https://appleid.apple.com/auth/token</code>  的三个必需参数已经全部获得，进行请求，获得请求结果如下</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-json" data-lang="json"><span class="line"><span class="cl"><span class="p">{</span>
-</span></span><span class="line"><span class="cl">  <span class="nt">&#34;access_token&#34;</span><span class="p">:</span> <span class="s2">&#34;一个token，此处省略&#34;</span><span class="p">,</span>
-</span></span><span class="line"><span class="cl">  <span class="nt">&#34;token_type&#34;</span><span class="p">:</span> <span class="s2">&#34;Bearer&#34;</span><span class="p">,</span>
-</span></span><span class="line"><span class="cl">  <span class="nt">&#34;expires_in&#34;</span><span class="p">:</span> <span class="mi">3600</span><span class="p">,</span>
-</span></span><span class="line"><span class="cl">  <span class="nt">&#34;refresh_token&#34;</span><span class="p">:</span> <span class="s2">&#34;一个token，此处省略&#34;</span><span class="p">,</span>
-</span></span><span class="line"><span class="cl">  <span class="nt">&#34;id_token&#34;</span><span class="p">:</span> <span class="s2">&#34;结果是JWT，字符串形式，此处省略&#34;</span>
-</span></span><span class="line"><span class="cl"><span class="p">}</span>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-json" data-lang="json"><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">&#34;access_token&#34;</span>: <span style="color:#e6db74">&#34;一个token，此处省略&#34;</span>,
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">&#34;token_type&#34;</span>: <span style="color:#e6db74">&#34;Bearer&#34;</span>,
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">&#34;expires_in&#34;</span>: <span style="color:#ae81ff">3600</span>,
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">&#34;refresh_token&#34;</span>: <span style="color:#e6db74">&#34;一个token，此处省略&#34;</span>,
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">&#34;id_token&#34;</span>: <span style="color:#e6db74">&#34;结果是JWT，字符串形式，此处省略&#34;</span>
+</span></span><span style="display:flex;"><span>}
 </span></span></code></pre></div><p>参数解释看这个<a href="https://developer.apple.com/documentation/signinwithapplerestapi/tokenresponse" target="_blank" rel="noopener noreffer">文档</a>
 
 服务器拿到相应结果，其中 <code>id_token</code> 也是 <code>JWT</code> 数据，decode 出 <code>payload</code> 部分如下
@@ -288,18 +288,18 @@
 <h3 id="关于apple文档中的-public-key">关于Apple文档中的 <code>Public Key</code></h3>
 <p><code>Apple</code> 在服务器验证时候给的<a href="https://developer.apple.com/documentation/signinwithapplerestapi" target="_blank" rel="noopener noreffer">文档</a>
 有两个接口，一个是获取 <code>Public Key</code> 的，另一个便是验证token的。 <code>Public Key</code> 是一个固定的接口 <code>https://appleid.apple.com/auth/keys</code> ，直接调用便会获取到一个 <code>JWK</code> ，信息如下</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-json" data-lang="json"><span class="line"><span class="cl"><span class="p">{</span>
-</span></span><span class="line"><span class="cl">  <span class="nt">&#34;keys&#34;</span><span class="p">:</span> <span class="p">[</span>
-</span></span><span class="line"><span class="cl">    <span class="p">{</span>
-</span></span><span class="line"><span class="cl">      <span class="nt">&#34;kty&#34;</span><span class="p">:</span> <span class="s2">&#34;RSA&#34;</span><span class="p">,</span>
-</span></span><span class="line"><span class="cl">      <span class="nt">&#34;kid&#34;</span><span class="p">:</span> <span class="s2">&#34;AIDOPK1&#34;</span><span class="p">,</span>
-</span></span><span class="line"><span class="cl">      <span class="nt">&#34;use&#34;</span><span class="p">:</span> <span class="s2">&#34;sig&#34;</span><span class="p">,</span>
-</span></span><span class="line"><span class="cl">      <span class="nt">&#34;alg&#34;</span><span class="p">:</span> <span class="s2">&#34;RS256&#34;</span><span class="p">,</span>
-</span></span><span class="line"><span class="cl">      <span class="nt">&#34;n&#34;</span><span class="p">:</span> <span class="s2">&#34;lxrwmuYSAsTfn-lUu4goZSXBD9ackM9OJuwUVQHmbZo6GW4Fu_auUdN5zI7Y1dEDfgt7m7QXWbHuMD01HLnD4eRtY-RNwCWdjNfEaY_esUPY3OVMrNDI15Ns13xspWS3q-13kdGv9jHI28P87RvMpjz_JCpQ5IM44oSyRnYtVJO-320SB8E2Bw92pmrenbp67KRUzTEVfGU4-obP5RZ09OxvCr1io4KJvEOjDJuuoClF66AT72WymtoMdwzUmhINjR0XSqK6H0MdWsjw7ysyd_JhmqX5CAaT9Pgi0J8lU_pcl215oANqjy7Ob-VMhug9eGyxAWVfu_1u6QJKePlE-w&#34;</span><span class="p">,</span>
-</span></span><span class="line"><span class="cl">      <span class="nt">&#34;e&#34;</span><span class="p">:</span> <span class="s2">&#34;AQAB&#34;</span>
-</span></span><span class="line"><span class="cl">    <span class="p">}</span>
-</span></span><span class="line"><span class="cl">  <span class="p">]</span>
-</span></span><span class="line"><span class="cl"><span class="p">}</span>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-json" data-lang="json"><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">&#34;keys&#34;</span>: [
+</span></span><span style="display:flex;"><span>    {
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">&#34;kty&#34;</span>: <span style="color:#e6db74">&#34;RSA&#34;</span>,
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">&#34;kid&#34;</span>: <span style="color:#e6db74">&#34;AIDOPK1&#34;</span>,
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">&#34;use&#34;</span>: <span style="color:#e6db74">&#34;sig&#34;</span>,
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">&#34;alg&#34;</span>: <span style="color:#e6db74">&#34;RS256&#34;</span>,
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">&#34;n&#34;</span>: <span style="color:#e6db74">&#34;lxrwmuYSAsTfn-lUu4goZSXBD9ackM9OJuwUVQHmbZo6GW4Fu_auUdN5zI7Y1dEDfgt7m7QXWbHuMD01HLnD4eRtY-RNwCWdjNfEaY_esUPY3OVMrNDI15Ns13xspWS3q-13kdGv9jHI28P87RvMpjz_JCpQ5IM44oSyRnYtVJO-320SB8E2Bw92pmrenbp67KRUzTEVfGU4-obP5RZ09OxvCr1io4KJvEOjDJuuoClF66AT72WymtoMdwzUmhINjR0XSqK6H0MdWsjw7ysyd_JhmqX5CAaT9Pgi0J8lU_pcl215oANqjy7Ob-VMhug9eGyxAWVfu_1u6QJKePlE-w&#34;</span>,
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">&#34;e&#34;</span>: <span style="color:#e6db74">&#34;AQAB&#34;</span>
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>  ]
+</span></span><span style="display:flex;"><span>}
 </span></span></code></pre></div><p>我们可以通过这个 <code>Public Key</code> 去对手机端获取到的 <code>identityToken</code> (JWT 信息)进行解码，以获取 <code>header</code> 及 <code>payload</code></p>
 <p>我这里是通过 python 进行验证的。</p>
 <ul>
@@ -307,37 +307,37 @@
 进行转换）
 转换结果如下，我们创建一个文件名为 <code>publicKey.pem</code> 并把下面内容添加进去保存。</li>
 </ul>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">-----BEGIN PUBLIC KEY-----
-</span></span><span class="line"><span class="cl">MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAlxrwmuYSAsTfn+lUu4go
-</span></span><span class="line"><span class="cl">ZSXBD9ackM9OJuwUVQHmbZo6GW4Fu/auUdN5zI7Y1dEDfgt7m7QXWbHuMD01HLnD
-</span></span><span class="line"><span class="cl">4eRtY+RNwCWdjNfEaY/esUPY3OVMrNDI15Ns13xspWS3q+13kdGv9jHI28P87RvM
-</span></span><span class="line"><span class="cl">pjz/JCpQ5IM44oSyRnYtVJO+320SB8E2Bw92pmrenbp67KRUzTEVfGU4+obP5RZ0
-</span></span><span class="line"><span class="cl">9OxvCr1io4KJvEOjDJuuoClF66AT72WymtoMdwzUmhINjR0XSqK6H0MdWsjw7ysy
-</span></span><span class="line"><span class="cl">d/JhmqX5CAaT9Pgi0J8lU/pcl215oANqjy7Ob+VMhug9eGyxAWVfu/1u6QJKePlE
-</span></span><span class="line"><span class="cl">+wIDAQAB
-</span></span><span class="line"><span class="cl">-----END PUBLIC KEY-----
-</span></span></code></pre></div><ul>
+<pre tabindex="0"><code>-----BEGIN PUBLIC KEY-----
+MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAlxrwmuYSAsTfn+lUu4go
+ZSXBD9ackM9OJuwUVQHmbZo6GW4Fu/auUdN5zI7Y1dEDfgt7m7QXWbHuMD01HLnD
+4eRtY+RNwCWdjNfEaY/esUPY3OVMrNDI15Ns13xspWS3q+13kdGv9jHI28P87RvM
+pjz/JCpQ5IM44oSyRnYtVJO+320SB8E2Bw92pmrenbp67KRUzTEVfGU4+obP5RZ0
+9OxvCr1io4KJvEOjDJuuoClF66AT72WymtoMdwzUmhINjR0XSqK6H0MdWsjw7ysy
+d/JhmqX5CAaT9Pgi0J8lU/pcl215oANqjy7Ob+VMhug9eGyxAWVfu/1u6QJKePlE
++wIDAQAB
+-----END PUBLIC KEY-----
+</code></pre><ul>
 <li>安装库 <code>pip install authlib</code>  (其他各种语言对应的库都可从<a href="https://jwt.io/" target="_blank" rel="noopener noreffer">JWT官网</a>
 查找获取)</li>
 </ul>
 <p>脚本文件内容如下</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">authlib.jose</span> <span class="kn">import</span> <span class="n">jwt</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="n">identityToken</span> <span class="o">=</span> <span class="s1">&#39;这个是手机端获取到的identityToken&#39;</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="c1"># 这个publicKey.pem即刚才创建的文件，放在 py 文件同目录下即可</span>
-</span></span><span class="line"><span class="cl"><span class="n">dec</span> <span class="o">=</span> <span class="n">jwt</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="n">identityToken</span><span class="p">,</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&#34;publicKey.pem&#34;</span><span class="p">)</span><span class="o">.</span><span class="n">read</span><span class="p">())</span>
-</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="n">dec</span><span class="p">)</span>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#f92672">from</span> authlib.jose <span style="color:#f92672">import</span> jwt
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>identityToken <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;这个是手机端获取到的identityToken&#39;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 这个publicKey.pem即刚才创建的文件，放在 py 文件同目录下即可</span>
+</span></span><span style="display:flex;"><span>dec <span style="color:#f92672">=</span> jwt<span style="color:#f92672">.</span>decode(identityToken, open(<span style="color:#e6db74">&#34;publicKey.pem&#34;</span>)<span style="color:#f92672">.</span>read())
+</span></span><span style="display:flex;"><span>print(dec)
 </span></span></code></pre></div><p>这里打印出decode信息如下</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-json" data-lang="json"><span class="line"><span class="cl"><span class="p">{</span>
-</span></span><span class="line"><span class="cl">  <span class="nt">&#34;iss&#34;</span><span class="p">:</span> <span class="s2">&#34;https://appleid.apple.com&#34;</span><span class="p">,</span>
-</span></span><span class="line"><span class="cl">  <span class="nt">&#34;aud&#34;</span><span class="p">:</span> <span class="s2">&#34;这个对应app的bundleid&#34;</span><span class="p">,</span>
-</span></span><span class="line"><span class="cl">  <span class="nt">&#34;exp&#34;</span><span class="p">:</span> <span class="mi">1567494694</span><span class="p">,</span>
-</span></span><span class="line"><span class="cl">  <span class="nt">&#34;iat&#34;</span><span class="p">:</span> <span class="mi">1567494094</span><span class="p">,</span>
-</span></span><span class="line"><span class="cl">  <span class="nt">&#34;sub&#34;</span><span class="p">:</span> <span class="s2">&#34;这个字段和手机端获取的user信息相同&#34;</span><span class="p">,</span>
-</span></span><span class="line"><span class="cl">  <span class="nt">&#34;c_hash&#34;</span><span class="p">:</span> <span class="s2">&#34;nRYP2wGXBGT0bIYWibx4Yg&#34;</span><span class="p">,</span>
-</span></span><span class="line"><span class="cl">  <span class="nt">&#34;auth_time&#34;</span><span class="p">:</span> <span class="mi">1567494094</span>
-</span></span><span class="line"><span class="cl"><span class="p">}</span>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-json" data-lang="json"><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">&#34;iss&#34;</span>: <span style="color:#e6db74">&#34;https://appleid.apple.com&#34;</span>,
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">&#34;aud&#34;</span>: <span style="color:#e6db74">&#34;这个对应app的bundleid&#34;</span>,
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">&#34;exp&#34;</span>: <span style="color:#ae81ff">1567494694</span>,
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">&#34;iat&#34;</span>: <span style="color:#ae81ff">1567494094</span>,
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">&#34;sub&#34;</span>: <span style="color:#e6db74">&#34;这个字段和手机端获取的user信息相同&#34;</span>,
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">&#34;c_hash&#34;</span>: <span style="color:#e6db74">&#34;nRYP2wGXBGT0bIYWibx4Yg&#34;</span>,
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">&#34;auth_time&#34;</span>: <span style="color:#ae81ff">1567494094</span>
+</span></span><span style="display:flex;"><span>}
 </span></span></code></pre></div><p>到这里我们可以看到，通过 <code>Public Key</code> 饶了一大圈decode出来的payload信息，和我们直接将 <code>identityToken</code> 转换为base64字符串，在将base64字符串解码成普通字符串得到的信息是一样的。同样需要比对 <code>sub</code> 字段是否与 <code>user</code> 字段内容相同。</p>
 <p>绕一大圈去decode 相对于 直接转换，麻烦太多，但也可以从第一步去防止伪造信息登录，因为 <code>identityToken</code> 第三部分不正确的话，通过 <code>Public Key</code> 是解析不成功的。所以上面提到的第一步验证也可以放到服务器端去做。</p>
 <p>原文： <a href="https://www.yuque.com/zhanglong/bb0s5d/cxbh7n" target="_blank" rel="noopener noreffer">https://www.yuque.com/zhanglong/bb0s5d/cxbh7n</a>
