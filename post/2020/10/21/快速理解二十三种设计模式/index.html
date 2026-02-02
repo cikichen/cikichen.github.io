@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="robots" content="noodp" />
+        <title>快速理解二十三种设计模式(速记) - 编程心语</title><meta name="Description" content="This is my KeepIt site"><meta property="og:url" content="https://www.ithome.me/post/2020/10/21/%E5%BF%AB%E9%80%9F%E7%90%86%E8%A7%A3%E4%BA%8C%E5%8D%81%E4%B8%89%E7%A7%8D%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/">
+  <meta property="og:site_name" content="编程心语">
+  <meta property="og:title" content="快速理解二十三种设计模式(速记)">
+  <meta property="og:description" content="设计模式六大原则 单一职责原则（Single Responsibility Principle） 里氏替换原则（Liskov Substitution Principle） 依赖倒置原则（Dependence Inversion Principle） 接口隔离原则（Interface Segregation Principle） 迪米特法则（最少知道原则）(Law of Demeter) 合成复用原则（Composite Reuse Principle） 设计模式三大类 创建型模式（Creational Pattern）：对类的实例化过程进行了抽象，能够将软件模块中对象的创建和对象的使用分离。 （5种）工厂模式、抽象工厂模式、单例模式、建造者模式、原型模式
+结构型模式（Structural Pattern）：关注于对象的组成以及对象之间的依赖关系，描述如何将类或者对象结合在一起形成更大的结构，就像搭积木，可以通过简单积木的组合形成复杂的、功能更为强大的结构。 （7种）适配器模式、装饰者模式、代理模式、外观模式、桥接模式、组合模式、享元模式
+行为型模式（Behavioral Pattern）：关注于对象的行为问题，是对在不同的对象之间划分责任和算法的抽象化；不仅仅关注类和对象的结构，而且重点关注它们之间的相互作用。 （11种）策略模式、模板方法模式、观察者模式、迭代器模式、责任链模式、命令模式、备忘录模式、状态模式、访问者模式、中介者模式、解释器模式
+简单工厂模式 一个工厂根据不同的参数返回不同的产品
+水果店理解为一个简单工厂，你要苹果，他给你苹果，你要梨子，他就给你梨子。
+工厂模式 一个工厂创建一个具体的产品，一个产品对应一个工厂类。
+宝马x1一个工厂类，x2一个工厂类，x3一个工厂类，奔驰A级一个工厂类，C级一个工厂类
+抽象工厂模式 一个工厂创建一类产品，一类产品对应一个工厂。
+比如汽车制造工厂是个抽象工厂，它既可以生产宝马X1，也可以生产X2，X3。罐头厂是一个抽象工厂，它可以生产橘子罐头，也可以生产黄桃罐头。
+单例模式 这个没啥好说的，保证一个类仅有一个实例，并提供一个访问它的全局访问点。 需要记忆的是懒汉式和饿汉式。 懒汉式：需要的时候才实例化，常用的例子就是非空检查和双重检查式的实现。 饿汉式：类加载的时候就先实例化。 类似这样的
+private static Singleton instance = new Singleton(); 饿汉式会线程安全些。 我们用的最主流的方式是静态内部类的方式。
+public class SingleInstance{ private SingleInstance(){} private static class SingleInstanceHolder{ private static SingleInstance INSTANCE = new SingleInstance(); } public static SingleInstance getInstance(){ return SingleInstanceHolder.INSTANCE; } } 一个省只会有一个省长。">
+  <meta property="og:locale" content="zh_CN">
+  <meta property="og:type" content="article">
+    <meta property="article:section" content="posts">
+    <meta property="article:published_time" content="2020-10-21T12:17:10+08:00">
+    <meta property="article:modified_time" content="2020-10-21T12:17:10+08:00">
+    <meta property="article:tag" content="编程">
+    <meta property="article:tag" content="设计模式">
+    <meta property="article:tag" content="面试">
+
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="快速理解二十三种设计模式(速记)">
+  <meta name="twitter:description" content="设计模式六大原则 单一职责原则（Single Responsibility Principle） 里氏替换原则（Liskov Substitution Principle） 依赖倒置原则（Dependence Inversion Principle） 接口隔离原则（Interface Segregation Principle） 迪米特法则（最少知道原则）(Law of Demeter) 合成复用原则（Composite Reuse Principle） 设计模式三大类 创建型模式（Creational Pattern）：对类的实例化过程进行了抽象，能够将软件模块中对象的创建和对象的使用分离。 （5种）工厂模式、抽象工厂模式、单例模式、建造者模式、原型模式
+结构型模式（Structural Pattern）：关注于对象的组成以及对象之间的依赖关系，描述如何将类或者对象结合在一起形成更大的结构，就像搭积木，可以通过简单积木的组合形成复杂的、功能更为强大的结构。 （7种）适配器模式、装饰者模式、代理模式、外观模式、桥接模式、组合模式、享元模式
+行为型模式（Behavioral Pattern）：关注于对象的行为问题，是对在不同的对象之间划分责任和算法的抽象化；不仅仅关注类和对象的结构，而且重点关注它们之间的相互作用。 （11种）策略模式、模板方法模式、观察者模式、迭代器模式、责任链模式、命令模式、备忘录模式、状态模式、访问者模式、中介者模式、解释器模式
+简单工厂模式 一个工厂根据不同的参数返回不同的产品
+水果店理解为一个简单工厂，你要苹果，他给你苹果，你要梨子，他就给你梨子。
+工厂模式 一个工厂创建一个具体的产品，一个产品对应一个工厂类。
+宝马x1一个工厂类，x2一个工厂类，x3一个工厂类，奔驰A级一个工厂类，C级一个工厂类
+抽象工厂模式 一个工厂创建一类产品，一类产品对应一个工厂。
+比如汽车制造工厂是个抽象工厂，它既可以生产宝马X1，也可以生产X2，X3。罐头厂是一个抽象工厂，它可以生产橘子罐头，也可以生产黄桃罐头。
+单例模式 这个没啥好说的，保证一个类仅有一个实例，并提供一个访问它的全局访问点。 需要记忆的是懒汉式和饿汉式。 懒汉式：需要的时候才实例化，常用的例子就是非空检查和双重检查式的实现。 饿汉式：类加载的时候就先实例化。 类似这样的
+private static Singleton instance = new Singleton(); 饿汉式会线程安全些。 我们用的最主流的方式是静态内部类的方式。
+public class SingleInstance{ private SingleInstance(){} private static class SingleInstanceHolder{ private static SingleInstance INSTANCE = new SingleInstance(); } public static SingleInstance getInstance(){ return SingleInstanceHolder.INSTANCE; } } 一个省只会有一个省长。">
+      <meta name="twitter:site" content="@https://twitter.com/ChenCiki">
+<meta name="application-name" content="My KeepIt site">
+<meta name="apple-mobile-web-app-title" content="My KeepIt site"><meta name="theme-color" content="#ffffff"><meta name="msapplication-TileColor" content="#da532c"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5"><link rel="manifest" href="/site.webmanifest"><link rel="canonical" href="https://www.ithome.me/post/2020/10/21/%E5%BF%AB%E9%80%9F%E7%90%86%E8%A7%A3%E4%BA%8C%E5%8D%81%E4%B8%89%E7%A7%8D%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/" /><link rel="prev" href="https://www.ithome.me/post/2020/10/19/mac%E4%B8%8A%E5%AE%89%E8%A3%85yarn%E5%92%8Cnvm/" /><link rel="next" href="https://www.ithome.me/post/2020/10/21/android%E9%9D%A2%E8%AF%95%E9%A2%98%E6%B1%87%E6%80%BB%E4%B8%80/" /><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/normalize.css@8.0.1/normalize.min.css"><link rel="stylesheet" href="/css/style.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css"><script type="application/ld+json">
+    {
+        "@context": "http://schema.org",
+        "@type": "BlogPosting",
+        "headline": "快速理解二十三种设计模式(速记)",
+        "inLanguage": "zh-CN",
+        "mainEntityOfPage": {
+            "@type": "WebPage",
+            "@id": "https:\/\/www.ithome.me\/post\/2020\/10\/21\/%E5%BF%AB%E9%80%9F%E7%90%86%E8%A7%A3%E4%BA%8C%E5%8D%81%E4%B8%89%E7%A7%8D%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F\/"
+        },"genre": "posts","keywords": "编程, 设计模式, 面试","wordcount":  208 ,
+        "url": "https:\/\/www.ithome.me\/post\/2020\/10\/21\/%E5%BF%AB%E9%80%9F%E7%90%86%E8%A7%A3%E4%BA%8C%E5%8D%81%E4%B8%89%E7%A7%8D%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F\/","datePublished": "2020-10-21T12:17:10+08:00","dateModified": "2020-10-21T12:17:10+08:00","license": "©{year}, All Rights Reserved. Simon Chen","publisher": {
+            "@type": "Organization",
+            "name": ""},"author": {
+                "@type": "Person",
+                "name": "Simon"
+            },"description": ""
+    }
+    </script></head>
+    <body data-header-desktop="fixed" data-header-mobile="auto"><script type="text/javascript">(window.localStorage && localStorage.getItem('theme') ? localStorage.getItem('theme') === 'dark' : ('auto' === 'auto' ? window.matchMedia('(prefers-color-scheme: dark)').matches : 'auto' === 'dark')) && document.body.setAttribute('theme', 'dark');</script>
+
+        <div id="mask"></div><div class="wrapper"><header class="desktop" id="header-desktop">
+    <div class="header-wrapper">
+        <div class="header-title">
+            <a href="/" title="编程心语">编程心语</a>
+        </div>
+        <div class="menu">
+            <div class="menu-inner"><a class="menu-item" href="/posts/"> 文章 </a><a class="menu-item" href="/categories/"> 分类 </a><a class="menu-item" href="/tags/"> 标签 </a><a class="menu-item" href="/about-me/"> 关于 </a><span class="menu-item delimiter"></span><span class="menu-item search" id="search-desktop">
+                        <input type="text" placeholder="搜索文章标题或内容..." id="search-input-desktop">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-desktop" title="搜索">
+                            <i class="fas fa-search fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-desktop" title="清空">
+                            <i class="fas fa-times-circle fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-desktop">
+                            <i class="fas fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+                        </span>
+                    </span><a href="javascript:void(0);" class="menu-item theme-switch" title="切换主题">
+                    <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</header><header class="mobile" id="header-mobile">
+    <div class="header-container">
+        <div class="header-wrapper">
+            <div class="header-title">
+                <a href="/" title="编程心语">编程心语</a>
+            </div>
+            <div class="menu-toggle" id="menu-toggle-mobile">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+        <div class="menu" id="menu-mobile"><div class="search-wrapper">
+                    <div class="search mobile" id="search-mobile">
+                        <input type="text" placeholder="搜索文章标题或内容..." id="search-input-mobile">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-mobile" title="搜索">
+                            <i class="fas fa-search fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-mobile" title="清空">
+                            <i class="fas fa-times-circle fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-mobile">
+                            <i class="fas fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+                        </span>
+                    </div>
+                    <a href="javascript:void(0);" class="search-cancel" id="search-cancel-mobile">
+                        取消
+                    </a>
+                </div><a class="menu-item" href="/posts/" title="">文章</a><a class="menu-item" href="/categories/" title="">分类</a><a class="menu-item" href="/tags/" title="">标签</a><a class="menu-item" href="/about-me/" title="">关于</a><a href="javascript:void(0);" class="menu-item theme-switch" title="切换主题">
+                <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
+            </a></div>
+    </div>
+</header><div class="search-dropdown desktop">
+        <div id="search-dropdown-desktop"></div>
+    </div>
+    <div class="search-dropdown mobile">
+        <div id="search-dropdown-mobile"></div>
+    </div><main class="main">
+                <div class="container"><div class="toc" id="toc-auto">
+            <h2 class="toc-title">目录</h2>
+            <div class="toc-content" id="toc-content-auto"></div>
+        </div><article class="page single"><h1 class="single-title animate__animated animate__flipInX">快速理解二十三种设计模式(速记)</h1><div class="post-meta">
+            <div class="post-meta-line"><span class="post-author"><a href="/" title="Author" rel=" author" class="author"><i class="fas fa-user-circle fa-fw" aria-hidden="true"></i>Simon</a>
+</span>&nbsp;<span class="post-category">收录于 <a href="/categories/%E7%BC%96%E7%A8%8B/"><i class="far fa-folder fa-fw" aria-hidden="true"></i>编程</a>&nbsp;<a href="/categories/%E7%A7%BB%E5%8A%A8%E5%BC%80%E5%8F%91/"><i class="far fa-folder fa-fw" aria-hidden="true"></i>移动开发</a></span></div>
+            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw" aria-hidden="true"></i>&nbsp;<time datetime="2020-10-21">2020-10-21</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden="true"></i>&nbsp;约 208 字&nbsp;
+                <i class="far fa-clock fa-fw" aria-hidden="true"></i>&nbsp;预计阅读 1 分钟&nbsp;</div>
+        </div><div class="details toc" id="toc-static"  data-kept="">
+                <div class="details-summary toc-title">
+                    <span>目录</span>
+                    <span><i class="details-icon fas fa-angle-right" aria-hidden="true"></i></span>
+                </div>
+                <div class="details-content toc-content" id="toc-content-static"><nav id="TableOfContents">
+  <ul>
+    <li><a href="#设计模式六大原则">设计模式六大原则</a></li>
+    <li><a href="#设计模式三大类">设计模式三大类</a></li>
+    <li><a href="#简单工厂模式">简单工厂模式</a></li>
+    <li><a href="#工厂模式">工厂模式</a></li>
+    <li><a href="#抽象工厂模式">抽象工厂模式</a></li>
+    <li><a href="#单例模式">单例模式</a></li>
+    <li><a href="#建造者模式">建造者模式</a></li>
+    <li><a href="#原型模式">原型模式</a></li>
+    <li><a href="#适配器模式">适配器模式</a></li>
+    <li><a href="#代理模式">代理模式</a></li>
+    <li><a href="#桥接模式">桥接模式</a></li>
+    <li><a href="#组合模式">组合模式</a></li>
+    <li><a href="#装饰器模式">装饰器模式</a></li>
+    <li><a href="#外观模式">外观模式</a></li>
+    <li><a href="#中介者模式">中介者模式</a></li>
+    <li><a href="#享元模式">享元模式</a></li>
+    <li><a href="#责任链模式">责任链模式</a></li>
+    <li><a href="#模板模式">模板模式</a></li>
+    <li><a href="#命令模式">命令模式</a></li>
+    <li><a href="#策略模式">策略模式</a></li>
+    <li><a href="#备忘录模式">备忘录模式</a></li>
+    <li><a href="#观察者模式">观察者模式</a></li>
+    <li><a href="#解释器模式">解释器模式</a></li>
+    <li><a href="#迭代器模式">迭代器模式</a></li>
+    <li><a href="#状态模式">状态模式</a></li>
+    <li><a href="#访问者模式">访问者模式</a></li>
+  </ul>
+</nav></div>
+            </div><div class="content" id="content"><h2 id="设计模式六大原则">设计模式六大原则</h2>
+<ul>
+<li>单一职责原则（Single Responsibility Principle）</li>
+<li>里氏替换原则（Liskov Substitution Principle）</li>
+<li>依赖倒置原则（Dependence Inversion Principle）</li>
+<li>接口隔离原则（Interface Segregation Principle）</li>
+<li>迪米特法则（最少知道原则）(Law of Demeter)</li>
+<li>合成复用原则（Composite Reuse Principle）</li>
+</ul>
+<h2 id="设计模式三大类">设计模式三大类</h2>
+<ol>
+<li>
+<p>创建型模式（Creational Pattern）：对类的实例化过程进行了抽象，能够将软件模块中对象的创建和对象的使用分离。
+（5种）工厂模式、抽象工厂模式、单例模式、建造者模式、原型模式</p>
+</li>
+<li>
+<p>结构型模式（Structural Pattern）：关注于对象的组成以及对象之间的依赖关系，描述如何将类或者对象结合在一起形成更大的结构，就像搭积木，可以通过简单积木的组合形成复杂的、功能更为强大的结构。
+（7种）适配器模式、装饰者模式、代理模式、外观模式、桥接模式、组合模式、享元模式</p>
+</li>
+<li>
+<p>行为型模式（Behavioral Pattern）：关注于对象的行为问题，是对在不同的对象之间划分责任和算法的抽象化；不仅仅关注类和对象的结构，而且重点关注它们之间的相互作用。
+（11种）策略模式、模板方法模式、观察者模式、迭代器模式、责任链模式、命令模式、备忘录模式、状态模式、访问者模式、中介者模式、解释器模式</p>
+</li>
+</ol>
+<h2 id="简单工厂模式">简单工厂模式</h2>
+<p>一个工厂根据不同的参数返回不同的产品</p>
+<blockquote>
+<p>水果店理解为一个简单工厂，你要苹果，他给你苹果，你要梨子，他就给你梨子。</p>
+</blockquote>
+<h2 id="工厂模式">工厂模式</h2>
+<p>一个工厂创建一个具体的产品，一个产品对应一个工厂类。</p>
+<blockquote>
+<p>宝马x1一个工厂类，x2一个工厂类，x3一个工厂类，奔驰A级一个工厂类，C级一个工厂类</p>
+</blockquote>
+<h2 id="抽象工厂模式">抽象工厂模式</h2>
+<p>一个工厂创建一类产品，一类产品对应一个工厂。</p>
+<blockquote>
+<p>比如汽车制造工厂是个抽象工厂，它既可以生产宝马X1，也可以生产X2，X3。罐头厂是一个抽象工厂，它可以生产橘子罐头，也可以生产黄桃罐头。</p>
+</blockquote>
+<h2 id="单例模式">单例模式</h2>
+<p>这个没啥好说的，保证一个类仅有一个实例，并提供一个访问它的全局访问点。
+需要记忆的是<code>懒汉式</code>和<code>饿汉式</code>。
+懒汉式：需要的时候才实例化，常用的例子就是非空检查和双重检查式的实现。
+饿汉式：类加载的时候就先实例化。
+类似这样的</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kd">private</span><span class="w"> </span><span class="kd">static</span><span class="w"> </span><span class="n">Singleton</span><span class="w"> </span><span class="n">instance</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">Singleton</span><span class="p">();</span><span class="w">
+</span></span></span></code></pre></div><p>饿汉式会线程安全些。
+我们用的最主流的方式是静态内部类的方式。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kd">class</span> <span class="nc">SingleInstance</span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="kd">private</span><span class="w"> </span><span class="nf">SingleInstance</span><span class="p">(){}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"> 
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="kd">private</span><span class="w"> </span><span class="kd">static</span><span class="w"> </span><span class="kd">class</span> <span class="nc">SingleInstanceHolder</span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">     </span><span class="kd">private</span><span class="w"> </span><span class="kd">static</span><span class="w"> </span><span class="n">SingleInstance</span><span class="w"> </span><span class="n">INSTANCE</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">SingleInstance</span><span class="p">();</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"> </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"> 
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="kd">public</span><span class="w"> </span><span class="kd">static</span><span class="w"> </span><span class="n">SingleInstance</span><span class="w"> </span><span class="nf">getInstance</span><span class="p">(){</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">SingleInstanceHolder</span><span class="p">.</span><span class="na">INSTANCE</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span></code></pre></div><blockquote>
+<p>一个省只会有一个省长。</p>
+</blockquote>
+<h2 id="建造者模式">建造者模式</h2>
+<p>就是我们常用的<code>Builder</code>模式。使用多个简单的对象一步一步构建成一个复杂的对象，可以简化复杂对象的构建过程。
+将一个复杂的构建与其表示相分离，使得同样的构建过程可以创建不同的表示。</p>
+<blockquote>
+<ol>
+<li><code>Android</code>中的<code>Dialog</code>创建就是典型的建造者模式。</li>
+<li>比如拼图，你拼的顺序可以随意，但是最终组合出来的东西总是同一个。</li>
+</ol>
+</blockquote>
+<h2 id="原型模式">原型模式</h2>
+<p>用于创建重复的对象，同时又能保证性能。
+自己复制自己
+对象内部实现一个原形接口，用于创建对象自己的克隆。</p>
+<blockquote>
+<ol>
+<li>影分身</li>
+<li>Java Object的clone()</li>
+</ol>
+</blockquote>
+<h2 id="适配器模式">适配器模式</h2>
+<p>两个不兼容的接口之间的桥梁。
+将一个类的接口转换成客户希望的另外一个接口。适配器模式使得原本由于接口不兼容而不能一起工作的那些类可以一起工作。</p>
+<blockquote>
+<p>港版的电源插头是英标的大头，国产的插排都是国标的小口，需要买个转换器，这个转换器就是适配器。</p>
+</blockquote>
+<h2 id="代理模式">代理模式</h2>
+<p>分为静态代理和动态代理。静态会有一个静态代理类，动态主要是运行时通过反射机制实现。
+在代理模式中，我们创建具有现有对象的对象，以便向外界提供功能接口。</p>
+<blockquote>
+<ol>
+<li>Windows 里面的快捷方式</li>
+<li>皇帝早朝时，由太监给皇帝传话，皇帝-&gt;太监-&gt;大臣之间，太监就相当于代理。</li>
+</ol>
+</blockquote>
+<h2 id="桥接模式">桥接模式</h2>
+<p>把抽象化与实现化解耦，使得二者可以独立变化
+这种模式涉及到一个作为桥接的接口，使得实体类的功能独立于接口实现类。</p>
+<blockquote>
+<p>墙上的开关和吊顶的灯，当开关按下的时候，灯泡熄灭了，开关再次按下，灯泡又亮了。它们之间的状态是独立的。比如开关，可以关和开，灯泡可以亮和灭。但是它们又相互耦合，开关关闭时，灯泡灭，开启时，灯泡亮。那么我们人就是<code>client</code>，开关和灯泡就是抽象和实现的解耦。</p>
+</blockquote>
+<h2 id="组合模式">组合模式</h2>
+<p>又叫部分整体模式，是用于把一组相似的对象当作一个单一的对象。组合模式依据树形结构来组合对象，用来表示部分以及整体层次。
+这种模式创建了一个包含自己对象组的类。该类提供了修改相同对象组的方式。</p>
+<blockquote>
+<ol>
+<li>集团公司一般有最顶部是总公司，总公司下面会有行政，研发等各个部门以及分公司，分公司下面又会有各个部门。这样就形成了一个树状结构。</li>
+<li>Android中<code>ViewGroup</code>，<code>View</code>，<code>Button</code>等之间的关系也是组合模式。</li>
+</ol>
+</blockquote>
+<h2 id="装饰器模式">装饰器模式</h2>
+<p>允许向一个现有的对象添加新的功能，同时又不改变其结构。
+这种模式创建了一个装饰类，用来包装原有的类，并在保持类方法签名完整性的前提下，提供了额外的功能。</p>
+<blockquote>
+<ol>
+<li>一幅画外面加了个画框成了一个装饰画。</li>
+<li>人类不穿衣服是不文明行为，穿了衣服就装饰成了文明的人。衣服还会给你提供额外的功能，比如口袋。
+<em><strong>引申</strong></em>：装饰器模式和代理模式有什么区别？
+简单理解：它俩都是对原对象进行了包装，但是代理模式倾向于对权限的控制，一般来说，我们不希望<code>client</code>直接访问到目标对象或者<code>client</code>无法直接访问到目标对象的清下，用代理模式(代理类里面也可以增强功能)
+装饰器模式我们可以随意访问装饰类和装饰类包装的原目标类，装饰类提供了更强的能力。</li>
+</ol>
+</blockquote>
+<h2 id="外观模式">外观模式</h2>
+<p>隐藏系统的复杂性，并向客户端提供了一个客户端可以访问系统的接口。
+这种模式涉及到一个单一的类，该类提供了客户端请求的简化方法和对现有系统类方法的委托调用。</p>
+<blockquote>
+<ol>
+<li>去医院看病，需要挂号，抽血，拿药等等，流程很复杂，医院提供了接待员，他帮你处理所有的流程，你只需要专心看病就行了。</li>
+<li><code>Android</code>的图片加载库<code>Glide</code>，一句代码帮你实现图片的下载和显示，隐藏了复杂的图片显示逻辑。</li>
+<li>我们使用的手机，包含通话，相机，游戏各种功能。不要你打电话用个座机，拍照拿个相机，打游戏买哥NS。</li>
+</ol>
+</blockquote>
+<h2 id="中介者模式">中介者模式</h2>
+<p>用来降低多个对象和类之间的通信复杂性。
+这种模式提供了一个中介类，该类通常处理不同类之间的通信，并支持松耦合，使代码易于维护。</p>
+<blockquote>
+<ol>
+<li>我们去租房，如果自己去找房东直租太累了，我们找中介，中介找房东，最后我们通过中介租到房。</li>
+<li>我们说的技术中台，从整体看也是个中介者模式，没有中台前我们各个业务逻辑间相互耦合，杂乱无章，有了中台后，<code>client</code>和<code>server</code>通过中台交互。</li>
+<li>用户-&gt;运营人员-&gt;程序员，这三者也可以形成中介者模式，运营人员从用户获取程序问题，反馈给程序员修改。运营人员就是个中介。</li>
+</ol>
+</blockquote>
+<p><em><strong>引申</strong></em>：外观模式和中介者模式有什么区别？
+外观模式通过增加类来把原来复杂的业务逻辑封装并简化成容易使用的方式。
+中介者模式通过中介类隐藏多个调用者之间的复杂耦合关系，中介者分别和原本耦合的类打交道。</p>
+<h2 id="享元模式">享元模式</h2>
+<p>主要用于减少创建对象的数量，以减少内存占用和提高性能。
+享元模式尝试重用现有的同类对象，如果未找到匹配的对象，则创建新对象。</p>
+<blockquote>
+<ol>
+<li><code>JAVA</code> 中的 <code>String</code>，如果有则返回，如果没有则创建一个字符串保存在字符串缓存池里面。</li>
+<li>数据库连接池</li>
+<li>线程池</li>
+</ol>
+</blockquote>
+<h2 id="责任链模式">责任链模式</h2>
+<p>为请求创建了一个接收者对象的链。
+在这种模式中，通常每个接收者都包含对另一个接收者的引用。如果一个对象不能处理该请求，那么它会把相同的请求传给下一个接收者，依此类推。</p>
+<blockquote>
+<ol>
+<li><code>Android</code>中的事件分发机制</li>
+<li>击鼓传花游戏</li>
+<li>平时用到的请假审批流程，你的leader开始，一步步向上审批。</li>
+</ol>
+</blockquote>
+<h2 id="模板模式">模板模式</h2>
+<p>一个抽象类公开定义了执行它的方法的方式/模板。它的子类可以按需要重写方法实现，但调用将以抽象类中定义的方式进行。</p>
+<blockquote>
+<ol>
+<li>造房子的顺序，必须先打地基，搭建主体，按照设计图一步步来，你不能反着来。</li>
+<li><code>App</code>的生命周期，那必须是启动-运行-销毁</li>
+<li>春晚准备好的节目单，必须安装顺序演下去。</li>
+</ol>
+</blockquote>
+<p><em><strong>引申</strong></em>：责任链模式和模板模式有什么区别？
+责任链是不同模块一级级连接而成，可以从任意地方开始执行。
+模板模式必须按照规定的方式顺序执行。</p>
+<h2 id="命令模式">命令模式</h2>
+<p>是一种数据驱动的设计模式
+请求以命令的形式包裹在对象中，并传给调用对象。调用对象寻找可以处理该命令的合适的对象，并把该命令传给相应的对象，该对象执行命令。</p>
+<blockquote>
+<ol>
+<li>川普发了封杀<code>TikTok</code>的命令，下面的相关部门就开始执行。川普的命令发布者，下面的部门是执行者。</li>
+</ol>
+</blockquote>
+<h2 id="策略模式">策略模式</h2>
+<p>一个类的行为或其算法可以在运行时更改。
+在策略模式中，我们创建表示各种策略的对象和一个行为随着策略对象改变而改变的 <code>context</code> 对象。策略对象改变 <code>context</code> 对象的执行算法。</p>
+<blockquote>
+<ol>
+<li>旅行出游，选择交通方式。飞机，高铁等。</li>
+<li>对一个数组排序，有多种排序方式，比如插入，归并，冒泡。提供一个统一接口，分别实现不同的排序算法。</li>
+<li>B站看视频，切换不同分辨率(720,1080,天龙人专享蓝光)</li>
+</ol>
+</blockquote>
+<h2 id="备忘录模式">备忘录模式</h2>
+<p>保存一个对象的某个状态，以便在适当的时候恢复对象。</p>
+<blockquote>
+<ol>
+<li>游戏存档</li>
+<li>数据库的事务管理</li>
+<li>原子性</li>
+<li>修改文件前，先创建一个备份文件，修改成功就删除备份文件</li>
+</ol>
+</blockquote>
+<h2 id="观察者模式">观察者模式</h2>
+<p>当对象间存在一对多关系时，则使用观察者模式。
+当一个对象被修改时，则会自动通知依赖它的对象。</p>
+<blockquote>
+<ol>
+<li>球赛现场，观众是观察者，裁判是被观察者，犯规或者进球后，裁判作出判决，同步状态给观众。</li>
+<li>RSS订阅，所有的人都订阅同一个RSS地址，当内容发生变化时，订阅者都能看到变化。</li>
+</ol>
+</blockquote>
+<h2 id="解释器模式">解释器模式</h2>
+<p>提供了评估语言的语法或表达式的方式。
+这种模式实现了一个表达式接口，该接口解释一个特定的上下文。这种模式被用在 SQL 解析、符号处理引擎等。</p>
+<blockquote>
+<ol>
+<li>比如我们<code>Maven</code>的配置文件<code>xml</code>，里面定义了许多标签，程序要理解它需要有个解释器来告诉你每个标签代表什么意思</li>
+<li>常见的配置文件，需要解析器来解析每个配置的意义。</li>
+</ol>
+</blockquote>
+<h2 id="迭代器模式">迭代器模式</h2>
+<p>这种模式用于顺序访问集合对象的元素，不需要知道集合对象的底层表示。</p>
+<blockquote>
+<ol>
+<li>JAVA 中的 iterator</li>
+<li>新年第一天，排队领红包，一个一个去老板办公室。</li>
+</ol>
+</blockquote>
+<h2 id="状态模式">状态模式</h2>
+<p>类的行为是基于它的状态改变的。
+在状态模式中，我们创建表示各种状态的对象和一个行为随着状态对象改变而改变的 context 对象。
+不同的状态有不同的行为。</p>
+<blockquote>
+<ol>
+<li>一个人运动的时候他可以走、跑、跳。</li>
+<li>电视和遥控器，电视关机状态下，遥控器只能控制电视开机，其他按钮无效。开机状态下，遥控器可以关机，调频道，调音量等。</li>
+<li>手机里面的<code>wifi</code>设置，开关关闭后，<code>wifi</code>功能关闭。打开后可以寻找<code>wifi</code>信号，连接<code>wifi</code></li>
+</ol>
+</blockquote>
+<h2 id="访问者模式">访问者模式</h2>
+<p>将数据操作和数据结构分离的设计模式。
+在访问者模式（Visitor Pattern）中，我们使用了一个访问者类，它改变了元素类的执行算法。通过这种方式，元素的执行算法可以随着访问者改变而改变。
+根据模式，元素对象已接受访问者对象，这样访问者对象就可以处理元素对象上的操作。</p>
+<blockquote>
+<p>公司年终绩效考核，CEO和CTO分别考核非技术和技术，非技术和技术的考核指标不一样，分为两套，CEO只需要关注非技术的这套，CTO关注技术的这套。</p>
+</blockquote>
+</div><div class="post-footer" id="post-footer">
+    <div class="post-info">
+        <div class="post-info-line">
+            <div class="post-info-mod">
+                <span>更新于 2020-10-21</span>
+            </div></div>
+        <div class="post-info-line">
+            <div class="post-info-md"></div>
+            <div class="post-info-share">
+                <span><a href="javascript:void(0);" title="分享到 Twitter" data-sharer="twitter" data-url="https://www.ithome.me/post/2020/10/21/%E5%BF%AB%E9%80%9F%E7%90%86%E8%A7%A3%E4%BA%8C%E5%8D%81%E4%B8%89%E7%A7%8D%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/" data-title="快速理解二十三种设计模式(速记)" data-via="https://twitter.com/ChenCiki" data-hashtags="编程,设计模式,面试"><i class="fab fa-twitter fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="分享到 Facebook" data-sharer="facebook" data-url="https://www.ithome.me/post/2020/10/21/%E5%BF%AB%E9%80%9F%E7%90%86%E8%A7%A3%E4%BA%8C%E5%8D%81%E4%B8%89%E7%A7%8D%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/" data-hashtag="编程"><i class="fab fa-facebook-square fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="分享到 Hacker News" data-sharer="hackernews" data-url="https://www.ithome.me/post/2020/10/21/%E5%BF%AB%E9%80%9F%E7%90%86%E8%A7%A3%E4%BA%8C%E5%8D%81%E4%B8%89%E7%A7%8D%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/" data-title="快速理解二十三种设计模式(速记)"><i class="fab fa-hacker-news fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="分享到 Line" data-sharer="line" data-url="https://www.ithome.me/post/2020/10/21/%E5%BF%AB%E9%80%9F%E7%90%86%E8%A7%A3%E4%BA%8C%E5%8D%81%E4%B8%89%E7%A7%8D%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/" data-title="快速理解二十三种设计模式(速记)"><i data-svg-src="https://cdn.jsdelivr.net/npm/simple-icons@6.20.0/icons/line.svg" aria-hidden="true"></i></a><a href="javascript:void(0);" title="分享到 微博" data-sharer="weibo" data-url="https://www.ithome.me/post/2020/10/21/%E5%BF%AB%E9%80%9F%E7%90%86%E8%A7%A3%E4%BA%8C%E5%8D%81%E4%B8%89%E7%A7%8D%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/" data-title="快速理解二十三种设计模式(速记)" data-ralateuid="xxx"><i class="fab fa-weibo fa-fw" aria-hidden="true"></i></a></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="post-info-more">
+        <section class="post-tags"><i class="fas fa-tags fa-fw" aria-hidden="true"></i>&nbsp;<a href="/tags/%E7%BC%96%E7%A8%8B/">编程</a>,&nbsp;<a href="/tags/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/">设计模式</a>,&nbsp;<a href="/tags/%E9%9D%A2%E8%AF%95/">面试</a></section>
+        <section>
+            <span><a href="javascript:void(0);" onclick="window.history.back();">返回</a></span>&nbsp;|&nbsp;<span><a href="/">主页</a></span>
+        </section>
+    </div>
+
+    <div class="post-nav"><a href="/post/2020/10/19/mac%E4%B8%8A%E5%AE%89%E8%A3%85yarn%E5%92%8Cnvm/" class="prev" rel="prev" title="Mac上安装yarn和nvm"><i class="fas fa-angle-left fa-fw" aria-hidden="true"></i>Mac上安装yarn和nvm</a>
+            <a href="/post/2020/10/21/android%E9%9D%A2%E8%AF%95%E9%A2%98%E6%B1%87%E6%80%BB%E4%B8%80/" class="next" rel="next" title="Android高频面试题汇总(一)">Android高频面试题汇总(一)<i class="fas fa-angle-right fa-fw" aria-hidden="true"></i></a></div>
+</div>
+</article></div>
+            </main><footer class="footer">
+        <div class="footer-container"><div class="footer-line" itemscope itemtype="http://schema.org/CreativeWork"><i class="far fa-copyright fa-fw" aria-hidden="true"></i><span itemprop="copyrightYear">2011 - 2026</span><span class="author" itemprop="copyrightHolder">&nbsp;<a href="/" target="_blank">SimonChen</a></span></div>
+        </div>
+    </footer></div>
+
+        <div id="fixed-buttons"><a href="#" id="back-to-top" class="fixed-button" title="回到顶部">
+                <i class="fas fa-arrow-up fa-fw" aria-hidden="true"></i>
+            </a><a href="#" id="view-comments" class="fixed-button" title="查看评论">
+                <i class="fas fa-comment fa-fw" aria-hidden="true"></i>
+            </a>
+        </div><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/autocomplete.js@0.38.1/dist/autocomplete.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lunr@2.3.9/lunr.min.js"></script><script type="text/javascript" src="/lib/lunr/lunr.stemmer.support.min.js"></script><script type="text/javascript" src="/lib/lunr/lunr.zh.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lazysizes@5.3.1/lazysizes.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/clipboard@2.0.11/dist/clipboard.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/sharer.js@0.5.1/sharer.min.js"></script><script type="text/javascript">window.config={"code":{"copyTitle":"复制到剪贴板","maxShownLines":50},"comment":{},"search":{"highlightTag":"em","lunrLanguageCode":"zh","lunrSegmentitURL":"/lib/lunr/lunr.segmentit.js","maxResultLength":10,"noResultsFound":"没有找到结果","snippetLength":30}};</script><script type="text/javascript" src="/js/theme.min.js"></script></body>
+</html>

@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="robots" content="noodp" />
+        <title>解决MacBook M1下无法运行uiautomatorviewer - 编程心语</title><meta name="Description" content="This is my KeepIt site"><meta property="og:url" content="https://www.ithome.me/post/2021/04/06/%E8%A7%A3%E5%86%B3macbook-m1%E4%B8%8B%E6%97%A0%E6%B3%95%E8%BF%90%E8%A1%8Cuiautomatorviewer/">
+  <meta property="og:site_name" content="编程心语">
+  <meta property="og:title" content="解决MacBook M1下无法运行uiautomatorviewer">
+  <meta property="og:description" content="MacBook使用ARM芯片后虽然带来了性能和续航的提升，但是也带来了不少兼容性问题，好在发布几个月后主流的开发工具都慢慢适配完毕，然而一些小众的工具迟迟无法引来更新。所以Rosetta 2模式仍然非常重要。
+默认情况下，我们执行./uiautomatorviewer会报错:
+SWT folder &#39;/Users/xxx/Library/Android/sdk/tools/lib/aarch64&#39; does not exist. Please export ANDROID_SWT to point to the folder containing swt.jar for your platform. 意思是lib下没有aarch64这个目录。
+尝试方案1： 在lib下建立aarch64目录，网上找aarch64版本的swt.jar，无果。 最终报错如下：
+Exception in thread &#34;main&#34; java.lang.UnsatisfiedLinkError: Could not load SWT library. Reasons: no swt-cocoa-4936r26 in java.library.path no swt-cocoa in java.library.path Can&#39;t load library: /Users/xxx/.swt/lib/macosx/aarch64/libswt-cocoa-4936r26.jnilib Can&#39;t load library: /Users/xxx/.swt/lib/macosx/aarch64/libswt-cocoa.jnilib /Users/xxx/.swt/lib/macosx/aarch64/libswt-cocoa-4936r26.jnilib: dlopen(/Users/xxx/.swt/lib/macosx/aarch64/libswt-cocoa-4936r26.jnilib, 1): no suitable image found. Did find: /Users/xxx/.swt/lib/macosx/aarch64/libswt-cocoa-4936r26.jnilib: mach-o, but wrong architecture /Users/xxx/.swt/lib/macosx/aarch64/libswt-cocoa-4936r26.jnilib: mach-o, but wrong architecture at org.eclipse.swt.internal.Library.loadLibrary(Library.java:338) at org.eclipse.swt.internal.Library.loadLibrary(Library.java:257) at org.eclipse.swt.internal.C.&lt;clinit&gt;(C.java:19) at org.eclipse.swt.internal.cocoa.NSMutableArray.arrayWithCapacity(NSMutableArray.java:39) at org.eclipse.swt.widgets.Canvas.&lt;clinit&gt;(Canvas.java:55) at org.eclipse.jface.window.Window.createShell(Window.java:487) at org.eclipse.jface.window.Window.create(Window.java:430) at org.eclipse.jface.window.Window.open(Window.java:790) at com.android.uiautomator.UiAutomatorViewer.main(UiAutomatorViewer.java:78) 折腾许久也没找到解决方案，放弃。
+尝试方案2： 既然增加aarch64支持的方案无法解决，那就只能尝试Rosetta 2方式了。 运行arch -x86_64 ./uiautomatorviewer无效果。
+uiautomatorviewer依赖Java环境，我使用的是zulu arm版本jdk，所以切换jdk为x64版本。 export JAVA_HOME=/Library/Java/JavaVirtualMachines/jdk1.8.0_281.jdk/Contents/Home
+然后再次执行./uiautomatorviewer，成功运行。">
+  <meta property="og:locale" content="zh_CN">
+  <meta property="og:type" content="article">
+    <meta property="article:section" content="posts">
+    <meta property="article:published_time" content="2021-04-06T17:37:50+08:00">
+    <meta property="article:modified_time" content="2021-04-06T17:37:50+08:00">
+    <meta property="article:tag" content="Uiautomatorviewer">
+    <meta property="article:tag" content="Aarch64">
+
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="解决MacBook M1下无法运行uiautomatorviewer">
+  <meta name="twitter:description" content="MacBook使用ARM芯片后虽然带来了性能和续航的提升，但是也带来了不少兼容性问题，好在发布几个月后主流的开发工具都慢慢适配完毕，然而一些小众的工具迟迟无法引来更新。所以Rosetta 2模式仍然非常重要。
+默认情况下，我们执行./uiautomatorviewer会报错:
+SWT folder &#39;/Users/xxx/Library/Android/sdk/tools/lib/aarch64&#39; does not exist. Please export ANDROID_SWT to point to the folder containing swt.jar for your platform. 意思是lib下没有aarch64这个目录。
+尝试方案1： 在lib下建立aarch64目录，网上找aarch64版本的swt.jar，无果。 最终报错如下：
+Exception in thread &#34;main&#34; java.lang.UnsatisfiedLinkError: Could not load SWT library. Reasons: no swt-cocoa-4936r26 in java.library.path no swt-cocoa in java.library.path Can&#39;t load library: /Users/xxx/.swt/lib/macosx/aarch64/libswt-cocoa-4936r26.jnilib Can&#39;t load library: /Users/xxx/.swt/lib/macosx/aarch64/libswt-cocoa.jnilib /Users/xxx/.swt/lib/macosx/aarch64/libswt-cocoa-4936r26.jnilib: dlopen(/Users/xxx/.swt/lib/macosx/aarch64/libswt-cocoa-4936r26.jnilib, 1): no suitable image found. Did find: /Users/xxx/.swt/lib/macosx/aarch64/libswt-cocoa-4936r26.jnilib: mach-o, but wrong architecture /Users/xxx/.swt/lib/macosx/aarch64/libswt-cocoa-4936r26.jnilib: mach-o, but wrong architecture at org.eclipse.swt.internal.Library.loadLibrary(Library.java:338) at org.eclipse.swt.internal.Library.loadLibrary(Library.java:257) at org.eclipse.swt.internal.C.&lt;clinit&gt;(C.java:19) at org.eclipse.swt.internal.cocoa.NSMutableArray.arrayWithCapacity(NSMutableArray.java:39) at org.eclipse.swt.widgets.Canvas.&lt;clinit&gt;(Canvas.java:55) at org.eclipse.jface.window.Window.createShell(Window.java:487) at org.eclipse.jface.window.Window.create(Window.java:430) at org.eclipse.jface.window.Window.open(Window.java:790) at com.android.uiautomator.UiAutomatorViewer.main(UiAutomatorViewer.java:78) 折腾许久也没找到解决方案，放弃。
+尝试方案2： 既然增加aarch64支持的方案无法解决，那就只能尝试Rosetta 2方式了。 运行arch -x86_64 ./uiautomatorviewer无效果。
+uiautomatorviewer依赖Java环境，我使用的是zulu arm版本jdk，所以切换jdk为x64版本。 export JAVA_HOME=/Library/Java/JavaVirtualMachines/jdk1.8.0_281.jdk/Contents/Home
+然后再次执行./uiautomatorviewer，成功运行。">
+      <meta name="twitter:site" content="@https://twitter.com/ChenCiki">
+<meta name="application-name" content="My KeepIt site">
+<meta name="apple-mobile-web-app-title" content="My KeepIt site"><meta name="theme-color" content="#ffffff"><meta name="msapplication-TileColor" content="#da532c"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5"><link rel="manifest" href="/site.webmanifest"><link rel="canonical" href="https://www.ithome.me/post/2021/04/06/%E8%A7%A3%E5%86%B3macbook-m1%E4%B8%8B%E6%97%A0%E6%B3%95%E8%BF%90%E8%A1%8Cuiautomatorviewer/" /><link rel="prev" href="https://www.ithome.me/post/2020/12/31/macbook-m1%E5%BC%80%E5%8F%91flutter%E9%81%87%E5%88%B0%E7%9A%84%E9%97%AE%E9%A2%98/" /><link rel="next" href="https://www.ithome.me/post/2021/04/07/m1-abis-arm64-v8a-x86_64-are-not-supported-for-platform.-supported-abis-are-armeabi-v7a-x86/" /><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/normalize.css@8.0.1/normalize.min.css"><link rel="stylesheet" href="/css/style.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css"><script type="application/ld+json">
+    {
+        "@context": "http://schema.org",
+        "@type": "BlogPosting",
+        "headline": "解决MacBook M1下无法运行uiautomatorviewer",
+        "inLanguage": "zh-CN",
+        "mainEntityOfPage": {
+            "@type": "WebPage",
+            "@id": "https:\/\/www.ithome.me\/post\/2021\/04\/06\/%E8%A7%A3%E5%86%B3macbook-m1%E4%B8%8B%E6%97%A0%E6%B3%95%E8%BF%90%E8%A1%8Cuiautomatorviewer\/"
+        },"genre": "posts","keywords": "uiautomatorviewer, aarch64","wordcount":  102 ,
+        "url": "https:\/\/www.ithome.me\/post\/2021\/04\/06\/%E8%A7%A3%E5%86%B3macbook-m1%E4%B8%8B%E6%97%A0%E6%B3%95%E8%BF%90%E8%A1%8Cuiautomatorviewer\/","datePublished": "2021-04-06T17:37:50+08:00","dateModified": "2021-04-06T17:37:50+08:00","license": "©{year}, All Rights Reserved. Simon Chen","publisher": {
+            "@type": "Organization",
+            "name": ""},"author": {
+                "@type": "Person",
+                "name": "Simon"
+            },"description": ""
+    }
+    </script></head>
+    <body data-header-desktop="fixed" data-header-mobile="auto"><script type="text/javascript">(window.localStorage && localStorage.getItem('theme') ? localStorage.getItem('theme') === 'dark' : ('auto' === 'auto' ? window.matchMedia('(prefers-color-scheme: dark)').matches : 'auto' === 'dark')) && document.body.setAttribute('theme', 'dark');</script>
+
+        <div id="mask"></div><div class="wrapper"><header class="desktop" id="header-desktop">
+    <div class="header-wrapper">
+        <div class="header-title">
+            <a href="/" title="编程心语">编程心语</a>
+        </div>
+        <div class="menu">
+            <div class="menu-inner"><a class="menu-item" href="/posts/"> 文章 </a><a class="menu-item" href="/categories/"> 分类 </a><a class="menu-item" href="/tags/"> 标签 </a><a class="menu-item" href="/about-me/"> 关于 </a><span class="menu-item delimiter"></span><span class="menu-item search" id="search-desktop">
+                        <input type="text" placeholder="搜索文章标题或内容..." id="search-input-desktop">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-desktop" title="搜索">
+                            <i class="fas fa-search fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-desktop" title="清空">
+                            <i class="fas fa-times-circle fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-desktop">
+                            <i class="fas fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+                        </span>
+                    </span><a href="javascript:void(0);" class="menu-item theme-switch" title="切换主题">
+                    <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</header><header class="mobile" id="header-mobile">
+    <div class="header-container">
+        <div class="header-wrapper">
+            <div class="header-title">
+                <a href="/" title="编程心语">编程心语</a>
+            </div>
+            <div class="menu-toggle" id="menu-toggle-mobile">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+        <div class="menu" id="menu-mobile"><div class="search-wrapper">
+                    <div class="search mobile" id="search-mobile">
+                        <input type="text" placeholder="搜索文章标题或内容..." id="search-input-mobile">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-mobile" title="搜索">
+                            <i class="fas fa-search fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-mobile" title="清空">
+                            <i class="fas fa-times-circle fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-mobile">
+                            <i class="fas fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+                        </span>
+                    </div>
+                    <a href="javascript:void(0);" class="search-cancel" id="search-cancel-mobile">
+                        取消
+                    </a>
+                </div><a class="menu-item" href="/posts/" title="">文章</a><a class="menu-item" href="/categories/" title="">分类</a><a class="menu-item" href="/tags/" title="">标签</a><a class="menu-item" href="/about-me/" title="">关于</a><a href="javascript:void(0);" class="menu-item theme-switch" title="切换主题">
+                <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
+            </a></div>
+    </div>
+</header><div class="search-dropdown desktop">
+        <div id="search-dropdown-desktop"></div>
+    </div>
+    <div class="search-dropdown mobile">
+        <div id="search-dropdown-mobile"></div>
+    </div><main class="main">
+                <div class="container"><div class="toc" id="toc-auto">
+            <h2 class="toc-title">目录</h2>
+            <div class="toc-content" id="toc-content-auto"></div>
+        </div><article class="page single"><h1 class="single-title animate__animated animate__flipInX">解决MacBook M1下无法运行uiautomatorviewer</h1><div class="post-meta">
+            <div class="post-meta-line"><span class="post-author"><a href="/" title="Author" rel=" author" class="author"><i class="fas fa-user-circle fa-fw" aria-hidden="true"></i>Simon</a>
+</span>&nbsp;<span class="post-category">收录于 <a href="/categories/%E7%BC%96%E7%A8%8B/"><i class="far fa-folder fa-fw" aria-hidden="true"></i>编程</a>&nbsp;<a href="/categories/%E7%A7%BB%E5%8A%A8%E5%BC%80%E5%8F%91/"><i class="far fa-folder fa-fw" aria-hidden="true"></i>移动开发</a></span></div>
+            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw" aria-hidden="true"></i>&nbsp;<time datetime="2021-04-06">2021-04-06</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden="true"></i>&nbsp;约 102 字&nbsp;
+                <i class="far fa-clock fa-fw" aria-hidden="true"></i>&nbsp;预计阅读 1 分钟&nbsp;</div>
+        </div><div class="details toc" id="toc-static"  data-kept="">
+                <div class="details-summary toc-title">
+                    <span>目录</span>
+                    <span><i class="details-icon fas fa-angle-right" aria-hidden="true"></i></span>
+                </div>
+                <div class="details-content toc-content" id="toc-content-static"><nav id="TableOfContents"></nav></div>
+            </div><div class="content" id="content"><p>MacBook使用ARM芯片后虽然带来了性能和续航的提升，但是也带来了不少兼容性问题，好在发布几个月后主流的开发工具都慢慢适配完毕，然而一些小众的工具迟迟无法引来更新。所以<code>Rosetta 2</code>模式仍然非常重要。</p>
+<p>默认情况下，我们执行<code>./uiautomatorviewer</code>会报错:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-gdscript3" data-lang="gdscript3"><span class="line"><span class="cl"><span class="n">SWT</span> <span class="n">folder</span> <span class="s1">&#39;/Users/xxx/Library/Android/sdk/tools/lib/aarch64&#39;</span> <span class="n">does</span> <span class="ow">not</span> <span class="n">exist</span><span class="o">.</span>
+</span></span><span class="line"><span class="cl"><span class="n">Please</span> <span class="k">export</span> <span class="n">ANDROID_SWT</span> <span class="n">to</span> <span class="n">point</span> <span class="n">to</span> <span class="n">the</span> <span class="n">folder</span> <span class="n">containing</span> <span class="n">swt</span><span class="o">.</span><span class="n">jar</span> <span class="k">for</span> <span class="n">your</span> <span class="n">platform</span><span class="o">.</span>
+</span></span></code></pre></div><p>意思是<code>lib</code>下没有<code>aarch64</code>这个目录。</p>
+<p>尝试方案1：
+在<code>lib</code>下建立<code>aarch64</code>目录，网上找<code>aarch64</code>版本的<code>swt.jar</code>，无果。
+最终报错如下：</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-gdscript3" data-lang="gdscript3"><span class="line"><span class="cl"><span class="n">Exception</span> <span class="ow">in</span> <span class="n">thread</span> <span class="s2">&#34;main&#34;</span> <span class="n">java</span><span class="o">.</span><span class="n">lang</span><span class="o">.</span><span class="n">UnsatisfiedLinkError</span><span class="p">:</span> <span class="n">Could</span> <span class="ow">not</span> <span class="nb">load</span> <span class="n">SWT</span> <span class="n">library</span><span class="o">.</span> <span class="n">Reasons</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">	<span class="n">no</span> <span class="n">swt</span><span class="o">-</span><span class="n">cocoa</span><span class="o">-</span><span class="mi">4936</span><span class="n">r26</span> <span class="ow">in</span> <span class="n">java</span><span class="o">.</span><span class="n">library</span><span class="o">.</span><span class="n">path</span>
+</span></span><span class="line"><span class="cl">	<span class="n">no</span> <span class="n">swt</span><span class="o">-</span><span class="n">cocoa</span> <span class="ow">in</span> <span class="n">java</span><span class="o">.</span><span class="n">library</span><span class="o">.</span><span class="n">path</span>
+</span></span><span class="line"><span class="cl">	<span class="n">Can</span><span class="s1">&#39;t load library: /Users/xxx/.swt/lib/macosx/aarch64/libswt-cocoa-4936r26.jnilib</span>
+</span></span><span class="line"><span class="cl">	<span class="n">Can</span><span class="s1">&#39;t load library: /Users/xxx/.swt/lib/macosx/aarch64/libswt-cocoa.jnilib</span>
+</span></span><span class="line"><span class="cl">	<span class="o">/</span><span class="n">Users</span><span class="o">/</span><span class="n">xxx</span><span class="o">/.</span><span class="n">swt</span><span class="o">/</span><span class="n">lib</span><span class="o">/</span><span class="n">macosx</span><span class="o">/</span><span class="n">aarch64</span><span class="o">/</span><span class="n">libswt</span><span class="o">-</span><span class="n">cocoa</span><span class="o">-</span><span class="mi">4936</span><span class="n">r26</span><span class="o">.</span><span class="n">jnilib</span><span class="p">:</span> <span class="n">dlopen</span><span class="p">(</span><span class="o">/</span><span class="n">Users</span><span class="o">/</span><span class="n">xxx</span><span class="o">/.</span><span class="n">swt</span><span class="o">/</span><span class="n">lib</span><span class="o">/</span><span class="n">macosx</span><span class="o">/</span><span class="n">aarch64</span><span class="o">/</span><span class="n">libswt</span><span class="o">-</span><span class="n">cocoa</span><span class="o">-</span><span class="mi">4936</span><span class="n">r26</span><span class="o">.</span><span class="n">jnilib</span><span class="p">,</span> <span class="mi">1</span><span class="p">):</span> <span class="n">no</span> <span class="n">suitable</span> <span class="n">image</span> <span class="n">found</span><span class="o">.</span>  <span class="n">Did</span> <span class="n">find</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">	<span class="o">/</span><span class="n">Users</span><span class="o">/</span><span class="n">xxx</span><span class="o">/.</span><span class="n">swt</span><span class="o">/</span><span class="n">lib</span><span class="o">/</span><span class="n">macosx</span><span class="o">/</span><span class="n">aarch64</span><span class="o">/</span><span class="n">libswt</span><span class="o">-</span><span class="n">cocoa</span><span class="o">-</span><span class="mi">4936</span><span class="n">r26</span><span class="o">.</span><span class="n">jnilib</span><span class="p">:</span> <span class="n">mach</span><span class="o">-</span><span class="n">o</span><span class="p">,</span> <span class="n">but</span> <span class="n">wrong</span> <span class="n">architecture</span>
+</span></span><span class="line"><span class="cl">	<span class="o">/</span><span class="n">Users</span><span class="o">/</span><span class="n">xxx</span><span class="o">/.</span><span class="n">swt</span><span class="o">/</span><span class="n">lib</span><span class="o">/</span><span class="n">macosx</span><span class="o">/</span><span class="n">aarch64</span><span class="o">/</span><span class="n">libswt</span><span class="o">-</span><span class="n">cocoa</span><span class="o">-</span><span class="mi">4936</span><span class="n">r26</span><span class="o">.</span><span class="n">jnilib</span><span class="p">:</span> <span class="n">mach</span><span class="o">-</span><span class="n">o</span><span class="p">,</span> <span class="n">but</span> <span class="n">wrong</span> <span class="n">architecture</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="n">at</span> <span class="n">org</span><span class="o">.</span><span class="n">eclipse</span><span class="o">.</span><span class="n">swt</span><span class="o">.</span><span class="n">internal</span><span class="o">.</span><span class="n">Library</span><span class="o">.</span><span class="n">loadLibrary</span><span class="p">(</span><span class="n">Library</span><span class="o">.</span><span class="n">java</span><span class="p">:</span><span class="mi">338</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">	<span class="n">at</span> <span class="n">org</span><span class="o">.</span><span class="n">eclipse</span><span class="o">.</span><span class="n">swt</span><span class="o">.</span><span class="n">internal</span><span class="o">.</span><span class="n">Library</span><span class="o">.</span><span class="n">loadLibrary</span><span class="p">(</span><span class="n">Library</span><span class="o">.</span><span class="n">java</span><span class="p">:</span><span class="mi">257</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">	<span class="n">at</span> <span class="n">org</span><span class="o">.</span><span class="n">eclipse</span><span class="o">.</span><span class="n">swt</span><span class="o">.</span><span class="n">internal</span><span class="o">.</span><span class="n">C</span><span class="o">.&lt;</span><span class="n">clinit</span><span class="o">&gt;</span><span class="p">(</span><span class="n">C</span><span class="o">.</span><span class="n">java</span><span class="p">:</span><span class="mi">19</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">	<span class="n">at</span> <span class="n">org</span><span class="o">.</span><span class="n">eclipse</span><span class="o">.</span><span class="n">swt</span><span class="o">.</span><span class="n">internal</span><span class="o">.</span><span class="n">cocoa</span><span class="o">.</span><span class="n">NSMutableArray</span><span class="o">.</span><span class="n">arrayWithCapacity</span><span class="p">(</span><span class="n">NSMutableArray</span><span class="o">.</span><span class="n">java</span><span class="p">:</span><span class="mi">39</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">	<span class="n">at</span> <span class="n">org</span><span class="o">.</span><span class="n">eclipse</span><span class="o">.</span><span class="n">swt</span><span class="o">.</span><span class="n">widgets</span><span class="o">.</span><span class="n">Canvas</span><span class="o">.&lt;</span><span class="n">clinit</span><span class="o">&gt;</span><span class="p">(</span><span class="n">Canvas</span><span class="o">.</span><span class="n">java</span><span class="p">:</span><span class="mi">55</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">	<span class="n">at</span> <span class="n">org</span><span class="o">.</span><span class="n">eclipse</span><span class="o">.</span><span class="n">jface</span><span class="o">.</span><span class="n">window</span><span class="o">.</span><span class="n">Window</span><span class="o">.</span><span class="n">createShell</span><span class="p">(</span><span class="n">Window</span><span class="o">.</span><span class="n">java</span><span class="p">:</span><span class="mi">487</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">	<span class="n">at</span> <span class="n">org</span><span class="o">.</span><span class="n">eclipse</span><span class="o">.</span><span class="n">jface</span><span class="o">.</span><span class="n">window</span><span class="o">.</span><span class="n">Window</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">Window</span><span class="o">.</span><span class="n">java</span><span class="p">:</span><span class="mi">430</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">	<span class="n">at</span> <span class="n">org</span><span class="o">.</span><span class="n">eclipse</span><span class="o">.</span><span class="n">jface</span><span class="o">.</span><span class="n">window</span><span class="o">.</span><span class="n">Window</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">Window</span><span class="o">.</span><span class="n">java</span><span class="p">:</span><span class="mi">790</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">	<span class="n">at</span> <span class="n">com</span><span class="o">.</span><span class="n">android</span><span class="o">.</span><span class="n">uiautomator</span><span class="o">.</span><span class="n">UiAutomatorViewer</span><span class="o">.</span><span class="n">main</span><span class="p">(</span><span class="n">UiAutomatorViewer</span><span class="o">.</span><span class="n">java</span><span class="p">:</span><span class="mi">78</span><span class="p">)</span>
+</span></span></code></pre></div><p>折腾许久也没找到解决方案，放弃。</p>
+<p>尝试方案2：
+既然增加<code>aarch64</code>支持的方案无法解决，那就只能尝试<code>Rosetta 2</code>方式了。
+运行<code>arch -x86_64 ./uiautomatorviewer</code>无效果。</p>
+<p><code>uiautomatorviewer</code>依赖<code>Java环境</code>，我使用的是zulu arm版本<code>jdk</code>，所以切换<code>jdk</code>为x64版本。
+<code>export JAVA_HOME=/Library/Java/JavaVirtualMachines/jdk1.8.0_281.jdk/Contents/Home</code></p>
+<p>然后再次执行<code>./uiautomatorviewer</code>，成功运行。</p>
+</div><div class="post-footer" id="post-footer">
+    <div class="post-info">
+        <div class="post-info-line">
+            <div class="post-info-mod">
+                <span>更新于 2021-04-06</span>
+            </div></div>
+        <div class="post-info-line">
+            <div class="post-info-md"></div>
+            <div class="post-info-share">
+                <span><a href="javascript:void(0);" title="分享到 Twitter" data-sharer="twitter" data-url="https://www.ithome.me/post/2021/04/06/%E8%A7%A3%E5%86%B3macbook-m1%E4%B8%8B%E6%97%A0%E6%B3%95%E8%BF%90%E8%A1%8Cuiautomatorviewer/" data-title="解决MacBook M1下无法运行uiautomatorviewer" data-via="https://twitter.com/ChenCiki" data-hashtags="uiautomatorviewer,aarch64"><i class="fab fa-twitter fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="分享到 Facebook" data-sharer="facebook" data-url="https://www.ithome.me/post/2021/04/06/%E8%A7%A3%E5%86%B3macbook-m1%E4%B8%8B%E6%97%A0%E6%B3%95%E8%BF%90%E8%A1%8Cuiautomatorviewer/" data-hashtag="uiautomatorviewer"><i class="fab fa-facebook-square fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="分享到 Hacker News" data-sharer="hackernews" data-url="https://www.ithome.me/post/2021/04/06/%E8%A7%A3%E5%86%B3macbook-m1%E4%B8%8B%E6%97%A0%E6%B3%95%E8%BF%90%E8%A1%8Cuiautomatorviewer/" data-title="解决MacBook M1下无法运行uiautomatorviewer"><i class="fab fa-hacker-news fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="分享到 Line" data-sharer="line" data-url="https://www.ithome.me/post/2021/04/06/%E8%A7%A3%E5%86%B3macbook-m1%E4%B8%8B%E6%97%A0%E6%B3%95%E8%BF%90%E8%A1%8Cuiautomatorviewer/" data-title="解决MacBook M1下无法运行uiautomatorviewer"><i data-svg-src="https://cdn.jsdelivr.net/npm/simple-icons@6.20.0/icons/line.svg" aria-hidden="true"></i></a><a href="javascript:void(0);" title="分享到 微博" data-sharer="weibo" data-url="https://www.ithome.me/post/2021/04/06/%E8%A7%A3%E5%86%B3macbook-m1%E4%B8%8B%E6%97%A0%E6%B3%95%E8%BF%90%E8%A1%8Cuiautomatorviewer/" data-title="解决MacBook M1下无法运行uiautomatorviewer" data-ralateuid="xxx"><i class="fab fa-weibo fa-fw" aria-hidden="true"></i></a></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="post-info-more">
+        <section class="post-tags"><i class="fas fa-tags fa-fw" aria-hidden="true"></i>&nbsp;<a href="/tags/uiautomatorviewer/">Uiautomatorviewer</a>,&nbsp;<a href="/tags/aarch64/">Aarch64</a></section>
+        <section>
+            <span><a href="javascript:void(0);" onclick="window.history.back();">返回</a></span>&nbsp;|&nbsp;<span><a href="/">主页</a></span>
+        </section>
+    </div>
+
+    <div class="post-nav"><a href="/post/2020/12/31/macbook-m1%E5%BC%80%E5%8F%91flutter%E9%81%87%E5%88%B0%E7%9A%84%E9%97%AE%E9%A2%98/" class="prev" rel="prev" title="MacBook M1开发Flutter遇到的问题"><i class="fas fa-angle-left fa-fw" aria-hidden="true"></i>MacBook M1开发Flutter遇到的问题</a>
+            <a href="/post/2021/04/07/m1-abis-arm64-v8a-x86_64-are-not-supported-for-platform.-supported-abis-are-armeabi-v7a-x86/" class="next" rel="next" title="ABIs [arm64-v8a, x86_64] are not supported for platform. Supported ABIs are [armeabi-v7a, x86].">ABIs [arm64-v8a, x86_64] are not supported for platform. Supported ABIs are [armeabi-v7a, x86].<i class="fas fa-angle-right fa-fw" aria-hidden="true"></i></a></div>
+</div>
+</article></div>
+            </main><footer class="footer">
+        <div class="footer-container"><div class="footer-line" itemscope itemtype="http://schema.org/CreativeWork"><i class="far fa-copyright fa-fw" aria-hidden="true"></i><span itemprop="copyrightYear">2011 - 2026</span><span class="author" itemprop="copyrightHolder">&nbsp;<a href="/" target="_blank">SimonChen</a></span></div>
+        </div>
+    </footer></div>
+
+        <div id="fixed-buttons"><a href="#" id="back-to-top" class="fixed-button" title="回到顶部">
+                <i class="fas fa-arrow-up fa-fw" aria-hidden="true"></i>
+            </a><a href="#" id="view-comments" class="fixed-button" title="查看评论">
+                <i class="fas fa-comment fa-fw" aria-hidden="true"></i>
+            </a>
+        </div><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/autocomplete.js@0.38.1/dist/autocomplete.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lunr@2.3.9/lunr.min.js"></script><script type="text/javascript" src="/lib/lunr/lunr.stemmer.support.min.js"></script><script type="text/javascript" src="/lib/lunr/lunr.zh.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lazysizes@5.3.1/lazysizes.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/clipboard@2.0.11/dist/clipboard.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/sharer.js@0.5.1/sharer.min.js"></script><script type="text/javascript">window.config={"code":{"copyTitle":"复制到剪贴板","maxShownLines":50},"comment":{},"search":{"highlightTag":"em","lunrLanguageCode":"zh","lunrSegmentitURL":"/lib/lunr/lunr.segmentit.js","maxResultLength":10,"noResultsFound":"没有找到结果","snippetLength":30}};</script><script type="text/javascript" src="/js/theme.min.js"></script></body>
+</html>

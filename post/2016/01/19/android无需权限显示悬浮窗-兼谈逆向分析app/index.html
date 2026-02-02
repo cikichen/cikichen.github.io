@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="robots" content="noodp" />
+        <title>Android无需权限显示悬浮窗, 兼谈逆向分析app - 编程心语</title><meta name="Description" content="android悬浮框权限"><meta property="og:url" content="https://www.ithome.me/post/2016/01/19/android%E6%97%A0%E9%9C%80%E6%9D%83%E9%99%90%E6%98%BE%E7%A4%BA%E6%82%AC%E6%B5%AE%E7%AA%97-%E5%85%BC%E8%B0%88%E9%80%86%E5%90%91%E5%88%86%E6%9E%90app/">
+  <meta property="og:site_name" content="编程心语">
+  <meta property="og:title" content="Android无需权限显示悬浮窗, 兼谈逆向分析app">
+  <meta property="og:description" content="android悬浮框权限">
+  <meta property="og:locale" content="zh_CN">
+  <meta property="og:type" content="article">
+    <meta property="article:section" content="posts">
+    <meta property="article:published_time" content="2016-01-19T11:29:46+08:00">
+    <meta property="article:modified_time" content="2016-01-19T11:29:46+08:00">
+    <meta property="article:tag" content="Android">
+    <meta property="article:tag" content="悬浮框">
+
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Android无需权限显示悬浮窗, 兼谈逆向分析app">
+  <meta name="twitter:description" content="android悬浮框权限">
+      <meta name="twitter:site" content="@https://twitter.com/ChenCiki">
+<meta name="application-name" content="My KeepIt site">
+<meta name="apple-mobile-web-app-title" content="My KeepIt site"><meta name="theme-color" content="#ffffff"><meta name="msapplication-TileColor" content="#da532c"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5"><link rel="manifest" href="/site.webmanifest"><link rel="canonical" href="https://www.ithome.me/post/2016/01/19/android%E6%97%A0%E9%9C%80%E6%9D%83%E9%99%90%E6%98%BE%E7%A4%BA%E6%82%AC%E6%B5%AE%E7%AA%97-%E5%85%BC%E8%B0%88%E9%80%86%E5%90%91%E5%88%86%E6%9E%90app/" /><link rel="prev" href="https://www.ithome.me/post/2016/01/19/git-%E4%BB%A3%E7%A0%81%E5%86%B2%E7%AA%81%E5%B8%B8%E8%A7%81%E8%A7%A3%E5%86%B3%E6%96%B9%E6%B3%95/" /><link rel="next" href="https://www.ithome.me/post/2016/01/19/android-gc-%E9%82%A3%E7%82%B9%E4%BA%8B/" /><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/normalize.css@8.0.1/normalize.min.css"><link rel="stylesheet" href="/css/style.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css"><script type="application/ld+json">
+    {
+        "@context": "http://schema.org",
+        "@type": "BlogPosting",
+        "headline": "Android无需权限显示悬浮窗, 兼谈逆向分析app",
+        "inLanguage": "zh-CN",
+        "mainEntityOfPage": {
+            "@type": "WebPage",
+            "@id": "https:\/\/www.ithome.me\/post\/2016\/01\/19\/android%E6%97%A0%E9%9C%80%E6%9D%83%E9%99%90%E6%98%BE%E7%A4%BA%E6%82%AC%E6%B5%AE%E7%AA%97-%E5%85%BC%E8%B0%88%E9%80%86%E5%90%91%E5%88%86%E6%9E%90app\/"
+        },"genre": "posts","keywords": "android, 悬浮框","wordcount":  227 ,
+        "url": "https:\/\/www.ithome.me\/post\/2016\/01\/19\/android%E6%97%A0%E9%9C%80%E6%9D%83%E9%99%90%E6%98%BE%E7%A4%BA%E6%82%AC%E6%B5%AE%E7%AA%97-%E5%85%BC%E8%B0%88%E9%80%86%E5%90%91%E5%88%86%E6%9E%90app\/","datePublished": "2016-01-19T11:29:46+08:00","dateModified": "2016-01-19T11:29:46+08:00","license": "©{year}, All Rights Reserved. Simon Chen","publisher": {
+            "@type": "Organization",
+            "name": ""},"author": {
+                "@type": "Person",
+                "name": "SimonChen"
+            },"description": "android悬浮框权限"
+    }
+    </script></head>
+    <body data-header-desktop="fixed" data-header-mobile="auto"><script type="text/javascript">(window.localStorage && localStorage.getItem('theme') ? localStorage.getItem('theme') === 'dark' : ('auto' === 'auto' ? window.matchMedia('(prefers-color-scheme: dark)').matches : 'auto' === 'dark')) && document.body.setAttribute('theme', 'dark');</script>
+
+        <div id="mask"></div><div class="wrapper"><header class="desktop" id="header-desktop">
+    <div class="header-wrapper">
+        <div class="header-title">
+            <a href="/" title="编程心语">编程心语</a>
+        </div>
+        <div class="menu">
+            <div class="menu-inner"><a class="menu-item" href="/posts/"> 文章 </a><a class="menu-item" href="/categories/"> 分类 </a><a class="menu-item" href="/tags/"> 标签 </a><a class="menu-item" href="/about-me/"> 关于 </a><span class="menu-item delimiter"></span><span class="menu-item search" id="search-desktop">
+                        <input type="text" placeholder="搜索文章标题或内容..." id="search-input-desktop">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-desktop" title="搜索">
+                            <i class="fas fa-search fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-desktop" title="清空">
+                            <i class="fas fa-times-circle fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-desktop">
+                            <i class="fas fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+                        </span>
+                    </span><a href="javascript:void(0);" class="menu-item theme-switch" title="切换主题">
+                    <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</header><header class="mobile" id="header-mobile">
+    <div class="header-container">
+        <div class="header-wrapper">
+            <div class="header-title">
+                <a href="/" title="编程心语">编程心语</a>
+            </div>
+            <div class="menu-toggle" id="menu-toggle-mobile">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+        <div class="menu" id="menu-mobile"><div class="search-wrapper">
+                    <div class="search mobile" id="search-mobile">
+                        <input type="text" placeholder="搜索文章标题或内容..." id="search-input-mobile">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-mobile" title="搜索">
+                            <i class="fas fa-search fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-mobile" title="清空">
+                            <i class="fas fa-times-circle fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-mobile">
+                            <i class="fas fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+                        </span>
+                    </div>
+                    <a href="javascript:void(0);" class="search-cancel" id="search-cancel-mobile">
+                        取消
+                    </a>
+                </div><a class="menu-item" href="/posts/" title="">文章</a><a class="menu-item" href="/categories/" title="">分类</a><a class="menu-item" href="/tags/" title="">标签</a><a class="menu-item" href="/about-me/" title="">关于</a><a href="javascript:void(0);" class="menu-item theme-switch" title="切换主题">
+                <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
+            </a></div>
+    </div>
+</header><div class="search-dropdown desktop">
+        <div id="search-dropdown-desktop"></div>
+    </div>
+    <div class="search-dropdown mobile">
+        <div id="search-dropdown-mobile"></div>
+    </div><main class="main">
+                <div class="container"><div class="toc" id="toc-auto">
+            <h2 class="toc-title">目录</h2>
+            <div class="toc-content" id="toc-content-auto"></div>
+        </div><article class="page single"><h1 class="single-title animate__animated animate__flipInX">Android无需权限显示悬浮窗, 兼谈逆向分析app</h1><div class="post-meta">
+            <div class="post-meta-line"><span class="post-author"><a href="/" title="Author" rel=" author" class="author"><i class="fas fa-user-circle fa-fw" aria-hidden="true"></i>SimonChen</a>
+</span></div>
+            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw" aria-hidden="true"></i>&nbsp;<time datetime="2016-01-19">2016-01-19</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden="true"></i>&nbsp;约 227 字&nbsp;
+                <i class="far fa-clock fa-fw" aria-hidden="true"></i>&nbsp;预计阅读 2 分钟&nbsp;</div>
+        </div><div class="details toc" id="toc-static"  data-kept="">
+                <div class="details-summary toc-title">
+                    <span>目录</span>
+                    <span><i class="details-icon fas fa-angle-right" aria-hidden="true"></i></span>
+                </div>
+                <div class="details-content toc-content" id="toc-content-static"><nav id="TableOfContents">
+  <ul>
+    <li>
+      <ul>
+        <li><a href="#悬浮窗原理">悬浮窗原理</a></li>
+        <li><a href="#验证">验证</a></li>
+        <li><a href="#处理兼容性">处理兼容性</a></li>
+        <li><a href="#实测效果">实测效果</a></li>
+        <li><a href="#其他补充">其他补充</a></li>
+      </ul>
+    </li>
+  </ul>
+</nav></div>
+            </div><div class="content" id="content"><!-- raw HTML omitted -->
+<p>如下图, 截图是在使用Chrome时截的, 但是屏幕顶部却有UC的view浮在屏幕上. 我使用的是小米, 我并没有给UC授悬浮窗权限, 所以我看到这个悬浮窗时是很震惊的.</p>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="http://ww4.sinaimg.cn/large/62b0904dgw1f04v52p27dj20c80lqabw.jpg"
+        data-srcset="http://ww4.sinaimg.cn/large/62b0904dgw1f04v52p27dj20c80lqabw.jpg, http://ww4.sinaimg.cn/large/62b0904dgw1f04v52p27dj20c80lqabw.jpg 1.5x, http://ww4.sinaimg.cn/large/62b0904dgw1f04v52p27dj20c80lqabw.jpg 2x"
+        data-sizes="auto"
+        alt="http://ww4.sinaimg.cn/large/62b0904dgw1f04v52p27dj20c80lqabw.jpg"
+        title="http://ww4.sinaimg.cn/large/62b0904dgw1f04v52p27dj20c80lqabw.jpg" /></p>
+<h3 id="悬浮窗原理">悬浮窗原理</h3>
+<p>做过悬浮窗功能的人都知道, 要想显示悬浮窗, 要有一个服务运行在后台, 通过<code>getSystemService(Context.WINDOW_SERVICE)</code>拿到WindowManager, 然后向其中addView, addView第二个参数是一个<code>WindowManager.LayoutParams</code>, WindowManager.LayoutParams中有一个成员type, 有各种值, 一般设置成TYPE_PHONE就可以悬浮在很多view的上方了, 但是调用这个方法需要申请<code>android.permission.SYSTEM_ALERT_WINDOW</code>权限, 在很多机型上, 这个权限的名字叫悬浮窗, 比如小米手机上默认是禁用这个权限的, 有些恶意app会用这个权限弹广告, 而且很难追查是哪个应用弹的. 如果这个权限被禁用, 那么结果就是悬浮窗无法展示, 比如有道词典的复制查词功能, 在小米手机上经常没用, 其实是用户没有授权, 而且应用也没有引导用户给它打开授权.</p>
+<p>那么他是怎么实现的呢？有人就进行了逆向分析。</p>
+<p>过程省略。。。直接说结论</p>
+<h3 id="验证">验证</h3>
+<p>实际测试了一下, 将type设置成TYPE_TOAST果然有奇效, 不需要<code>android.permission.SYSTEM_ALERT_WINDOW</code>权限就能显示一个悬浮窗.</p>
+<p>之前我一直以为调用了系统<code>WindowManager.addView</code>需要<code>android.permission.SYSTEM_ALERT_WINDOW</code>权限, 但实际上调用这个方法是不需要权限的, 在Android源码中有这么一段</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-zed" data-lang="zed"><span class="line"><span class="cl"><span class="n">public</span><span class="w"> </span><span class="n">int</span><span class="w"> </span><span class="n">checkAddPermission</span><span class="p">(</span><span class="n">WindowManager</span><span class="p">.</span><span class="n">LayoutParams</span><span class="w"> </span><span class="n">attrs</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="n">int</span><span class="w"> </span><span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">attrs</span><span class="p">.</span><span class="n">type</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="n">if</span><span class="w"> </span><span class="p">(</span><span class="n">type</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">WindowManager</span><span class="p">.</span><span class="n">LayoutParams</span><span class="p">.</span><span class="n">FIRST_SYSTEM_WINDOW</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="o">||</span><span class="w"> </span><span class="n">type</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="n">WindowManager</span><span class="p">.</span><span class="n">LayoutParams</span><span class="p">.</span><span class="n">LAST_SYSTEM_WINDOW</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">return</span><span class="w"> </span><span class="n">WindowManagerImpl</span><span class="p">.</span><span class="n">ADD_OKAY</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="n">String</span><span class="w"> </span><span class="kd">permission</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">null</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="n">switch</span><span class="w"> </span><span class="p">(</span><span class="n">type</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">case</span><span class="w"> </span><span class="n">TYPE_TOAST</span><span class="o">:</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="c1">// XXX right now the app process has complete control over
+</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="c1">// this...  should introduce a token to let the system
+</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="c1">// monitor/control what they are doing.
+</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="n">break</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">case</span><span class="w"> </span><span class="n">TYPE_INPUT_METHOD</span><span class="o">:</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">case</span><span class="w"> </span><span class="n">TYPE_WALLPAPER</span><span class="o">:</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="c1">// The window manager will check these.
+</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="n">break</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">case</span><span class="w"> </span><span class="n">TYPE_PHONE</span><span class="o">:</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">case</span><span class="w"> </span><span class="n">TYPE_PRIORITY_PHONE</span><span class="o">:</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">case</span><span class="w"> </span><span class="n">TYPE_SYSTEM_ALERT</span><span class="o">:</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">case</span><span class="w"> </span><span class="n">TYPE_SYSTEM_ERROR</span><span class="o">:</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">case</span><span class="w"> </span><span class="n">TYPE_SYSTEM_OVERLAY</span><span class="o">:</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="kd">permission</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">android</span><span class="p">.</span><span class="n">Manifest</span><span class="p">.</span><span class="kd">permission</span><span class="p">.</span><span class="n">SYSTEM_ALERT_WINDOW</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="n">break</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">default</span><span class="o">:</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="kd">permission</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">android</span><span class="p">.</span><span class="n">Manifest</span><span class="p">.</span><span class="kd">permission</span><span class="p">.</span><span class="n">INTERNAL_SYSTEM_WINDOW</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="n">if</span><span class="w"> </span><span class="p">(</span><span class="kd">permission</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="n">null</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">if</span><span class="w"> </span><span class="p">(</span><span class="n">mContext</span><span class="p">.</span><span class="n">checkCallingOrSelfPermission</span><span class="p">(</span><span class="kd">permission</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">                </span><span class="o">!=</span><span class="w"> </span><span class="n">PackageManager</span><span class="p">.</span><span class="n">PERMISSION_GRANTED</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="n">return</span><span class="w"> </span><span class="n">WindowManagerImpl</span><span class="p">.</span><span class="n">ADD_PERMISSION_DENIED</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="n">return</span><span class="w"> </span><span class="n">WindowManagerImpl</span><span class="p">.</span><span class="n">ADD_OKAY</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span></code></pre></div><p>可以猜到这个方法是往系统的WindowManager里addView的时候做权限检查用的, 那个<code>type</code>就是我们在构造<code>WindowManager.LayoutParams</code>时赋值的<code>type</code>, 可以看到, 除了<code>TYPE_TOAST</code>, 其他都是要权限的, 而且非常喜感的是, 代码中的注释还说他们现在对这种type毫无限制, 应该引入标记来限制开发者.</p>
+<h3 id="处理兼容性">处理兼容性</h3>
+<p>在这篇文章刚刚公布的时候, 就有同学反馈悬浮窗无法接收事件, 刚开始我并没有特别在意, 在廖祜秋大神做了一个demo之后, 这篇文章阅读量又涨了不少, 随即收到更多反馈事件的问题, 我今天晚上借了台MIUI V5 4.2.2实测了一下, 这台机器上UC的快速搜索功能也无法正常使用.</p>
+<p>在这个ROM上表现为:
+使用<code>TYPE_PHONE</code>这类需要权限的<code>type</code>时, 只有在app处于前台时能显示悬浮窗, 且能正常接受触摸事件. 如果在应用详情里面授悬浮窗权限, 则工作完全正常.
+(这里是MIUI V5对悬浮窗的特殊处理, 现在的ROM, 包括MIUI V6上, 如果不授权, 无法显示任何悬浮窗)
+使用<code>TYPE_TOAST</code>这个不需要权限的<code>type</code>时, <strong>悬浮窗正常显示, 但不能接受触摸事件</strong>.</p>
+<p>原因是: <code>API level &gt;= 19</code>的时候, 使用<code>TYPE_TOAST</code>, 能接受到触摸事件。其他情况使用<code>TYPE_PHONE</code>(需要权限).</p>
+<p>可能是为了规避在低版本<code>TYPE_TOAST</code>不能接受事件的问题.</p>
+<p>关于针对源代码的分析, 请看<a href="http://www.jianshu.com/p/634cd056b90c" target="_blank" rel="noopener noreffer">Android悬浮窗使用TYPE_TOAST的小结</a>
+</p>
+<h3 id="实测效果">实测效果</h3>
+<p>我之前写的一个app有悬浮窗播放功能, 支持拖动窗口和点击暂停, 关闭窗口等等, 在4.4.4上实测功能正常.</p>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="http://ww1.sinaimg.cn/large/62b0904dgw1f04v643d8lg20as0j6x04.gif"
+        data-srcset="http://ww1.sinaimg.cn/large/62b0904dgw1f04v643d8lg20as0j6x04.gif, http://ww1.sinaimg.cn/large/62b0904dgw1f04v643d8lg20as0j6x04.gif 1.5x, http://ww1.sinaimg.cn/large/62b0904dgw1f04v643d8lg20as0j6x04.gif 2x"
+        data-sizes="auto"
+        alt="http://ww1.sinaimg.cn/large/62b0904dgw1f04v643d8lg20as0j6x04.gif"
+        title="http://ww1.sinaimg.cn/large/62b0904dgw1f04v643d8lg20as0j6x04.gif" /></p>
+<p>感谢微博上关注的大神廖祜秋, 他做了个demo, 虽然交互和UC不同, 可以参考一下实现.
+<img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="http://ww1.sinaimg.cn/large/62b0904dgw1f04v6mky30g20di0jgn29.gif"
+        data-srcset="http://ww1.sinaimg.cn/large/62b0904dgw1f04v6mky30g20di0jgn29.gif, http://ww1.sinaimg.cn/large/62b0904dgw1f04v6mky30g20di0jgn29.gif 1.5x, http://ww1.sinaimg.cn/large/62b0904dgw1f04v6mky30g20di0jgn29.gif 2x"
+        data-sizes="auto"
+        alt="http://ww1.sinaimg.cn/large/62b0904dgw1f04v6mky30g20di0jgn29.gif"
+        title="http://ww1.sinaimg.cn/large/62b0904dgw1f04v6mky30g20di0jgn29.gif" /></p>
+<p>关于这个, 他也写了一篇<a href="http://www.liaohuqiu.net/cn/posts/android-windows-manager/" target="_blank" rel="noopener noreffer">Android 悬浮窗的小结</a>
+</p>
+<h3 id="其他补充">其他补充</h3>
+<p>评论区的浮海大虾同学有更多补充如下:
+<code>TYPE_TOAST</code>一直都可以显示，但是用TYPE_TOAST显示出来的在2.3上无法接收点击事件，因此还是无法随意使用，下面是我之前研究后台线程显示对话框的时候记得笔记，大家可以看看</p>
+<p>我们项目中有需求需要在后台任务中显示Dialog，项目最初的做法是用Activity模拟Dialog，一个Activity已经承载了近20种Dialog，代码混乱至极。</p>
+<p>后来我发现Dialog可以通过改变Window Type实现不依赖Activity显示，然后就很兴奋的要在使用这种方式来作为新的实现方式。</p>
+<p>最初WindowType是<code>WindowManager.LayoutParams.TYPE_SYSTEM_ALERT</code>，可是这是悬浮窗了，MIUI会默认禁止（真他妈操蛋，也没有任何提示）最终放弃。</p>
+<p>后来试着换成了<code>WindowManager.LayoutParams.TYPE_TOAST</code>，起初效果很好，MIUI也不禁止了，哪里都能显示，这下开心了。可是后来又发现在2.3上不能接收点击事件，也就是说Dialog上的按钮不能点击，这他妈就很操蛋了，又放弃了。</p>
+<p>又试了试其他的Type都不能满足需求，结果如下： <!-- raw HTML omitted -->
+<code>TYPE_SEARCH_BAR</code>：未知  <!-- raw HTML omitted -->
+<code>TYPE_ACCESSIBILITY_OVERLAY</code>：拒绝使用  <!-- raw HTML omitted -->
+<code>TYPE_APPLICATION</code>：只能配合Activity在当前APP使用  <!-- raw HTML omitted -->
+<code>TYPE_APPLICATION_ATTACHED_DIALOG</code>：只能配合Activity在当前APP使用  <!-- raw HTML omitted -->
+<code>TYPE_APPLICATION_MEDIA</code>：无法使用（什么也不显示）  <!-- raw HTML omitted -->
+<code>TYPE_APPLICATION_PANEL</code>：只能配合Activity在当前APP使用（PopupWindow默认就是这个Type）  <!-- raw HTML omitted -->
+<code>TYPE_APPLICATION_STARTING</code>：无法使用（什么也不显示）  <!-- raw HTML omitted -->
+<code>TYPE_APPLICATION_SUB_PANEL</code>：只能配合Activity在当前APP使用  <!-- raw HTML omitted -->
+<code>TYPE_BASE_APPLICATION</code>：无法使用（什么也不显示）  <!-- raw HTML omitted -->
+<code>TYPE_CHANGED</code>：只能配合Activity在当前APP使用  <!-- raw HTML omitted -->
+<code>TYPE_INPUT_METHOD</code>：无法使用（直接崩溃）  <!-- raw HTML omitted -->
+<code>TYPE_INPUT_METHOD_DIALOG</code>：无法使用（直接崩溃）  <!-- raw HTML omitted -->
+<code>TYPE_KEYGUARD_DIALOG</code>：拒绝使用  <!-- raw HTML omitted -->
+<code>TYPE_PHONE</code>：属于悬浮窗（并且给一个Activity的话按下HOME键会出现看不到桌面上的图标异常情况）  <!-- raw HTML omitted -->
+<code>TYPE_TOAST</code>：不属于悬浮窗，但有悬浮窗的功能，缺点是在Android2.3上无法接收点击事件  <!-- raw HTML omitted -->
+<code>TYPE_SYSTEM_ALERT</code>：属于悬浮窗，但是会被禁止<!-- raw HTML omitted --></p>
+<p>大家如果对具体的逆向过程有兴趣，请参考原文: <a href="http://www.jianshu.com/p/167fd5f47d5c" target="_blank" rel="noopener noreffer">http://www.jianshu.com/p/167fd5f47d5c</a>
+</p>
+</div><div class="post-footer" id="post-footer">
+    <div class="post-info">
+        <div class="post-info-line">
+            <div class="post-info-mod">
+                <span>更新于 2016-01-19</span>
+            </div></div>
+        <div class="post-info-line">
+            <div class="post-info-md"></div>
+            <div class="post-info-share">
+                <span><a href="javascript:void(0);" title="分享到 Twitter" data-sharer="twitter" data-url="https://www.ithome.me/post/2016/01/19/android%E6%97%A0%E9%9C%80%E6%9D%83%E9%99%90%E6%98%BE%E7%A4%BA%E6%82%AC%E6%B5%AE%E7%AA%97-%E5%85%BC%E8%B0%88%E9%80%86%E5%90%91%E5%88%86%E6%9E%90app/" data-title="Android无需权限显示悬浮窗, 兼谈逆向分析app" data-via="https://twitter.com/ChenCiki" data-hashtags="android,悬浮框"><i class="fab fa-twitter fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="分享到 Facebook" data-sharer="facebook" data-url="https://www.ithome.me/post/2016/01/19/android%E6%97%A0%E9%9C%80%E6%9D%83%E9%99%90%E6%98%BE%E7%A4%BA%E6%82%AC%E6%B5%AE%E7%AA%97-%E5%85%BC%E8%B0%88%E9%80%86%E5%90%91%E5%88%86%E6%9E%90app/" data-hashtag="android"><i class="fab fa-facebook-square fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="分享到 Hacker News" data-sharer="hackernews" data-url="https://www.ithome.me/post/2016/01/19/android%E6%97%A0%E9%9C%80%E6%9D%83%E9%99%90%E6%98%BE%E7%A4%BA%E6%82%AC%E6%B5%AE%E7%AA%97-%E5%85%BC%E8%B0%88%E9%80%86%E5%90%91%E5%88%86%E6%9E%90app/" data-title="Android无需权限显示悬浮窗, 兼谈逆向分析app"><i class="fab fa-hacker-news fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="分享到 Line" data-sharer="line" data-url="https://www.ithome.me/post/2016/01/19/android%E6%97%A0%E9%9C%80%E6%9D%83%E9%99%90%E6%98%BE%E7%A4%BA%E6%82%AC%E6%B5%AE%E7%AA%97-%E5%85%BC%E8%B0%88%E9%80%86%E5%90%91%E5%88%86%E6%9E%90app/" data-title="Android无需权限显示悬浮窗, 兼谈逆向分析app"><i data-svg-src="https://cdn.jsdelivr.net/npm/simple-icons@6.20.0/icons/line.svg" aria-hidden="true"></i></a><a href="javascript:void(0);" title="分享到 微博" data-sharer="weibo" data-url="https://www.ithome.me/post/2016/01/19/android%E6%97%A0%E9%9C%80%E6%9D%83%E9%99%90%E6%98%BE%E7%A4%BA%E6%82%AC%E6%B5%AE%E7%AA%97-%E5%85%BC%E8%B0%88%E9%80%86%E5%90%91%E5%88%86%E6%9E%90app/" data-title="Android无需权限显示悬浮窗, 兼谈逆向分析app" data-ralateuid="xxx"><i class="fab fa-weibo fa-fw" aria-hidden="true"></i></a></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="post-info-more">
+        <section class="post-tags"><i class="fas fa-tags fa-fw" aria-hidden="true"></i>&nbsp;<a href="/tags/android/">Android</a>,&nbsp;<a href="/tags/%E6%82%AC%E6%B5%AE%E6%A1%86/">悬浮框</a></section>
+        <section>
+            <span><a href="javascript:void(0);" onclick="window.history.back();">返回</a></span>&nbsp;|&nbsp;<span><a href="/">主页</a></span>
+        </section>
+    </div>
+
+    <div class="post-nav"><a href="/post/2016/01/19/git-%E4%BB%A3%E7%A0%81%E5%86%B2%E7%AA%81%E5%B8%B8%E8%A7%81%E8%A7%A3%E5%86%B3%E6%96%B9%E6%B3%95/" class="prev" rel="prev" title="Git:代码冲突常见解决方法"><i class="fas fa-angle-left fa-fw" aria-hidden="true"></i>Git:代码冲突常见解决方法</a>
+            <a href="/post/2016/01/19/android-gc-%E9%82%A3%E7%82%B9%E4%BA%8B/" class="next" rel="next" title="Android GC 那点事">Android GC 那点事<i class="fas fa-angle-right fa-fw" aria-hidden="true"></i></a></div>
+</div>
+</article></div>
+            </main><footer class="footer">
+        <div class="footer-container"><div class="footer-line" itemscope itemtype="http://schema.org/CreativeWork"><i class="far fa-copyright fa-fw" aria-hidden="true"></i><span itemprop="copyrightYear">2011 - 2026</span><span class="author" itemprop="copyrightHolder">&nbsp;<a href="/" target="_blank">SimonChen</a></span></div>
+        </div>
+    </footer></div>
+
+        <div id="fixed-buttons"><a href="#" id="back-to-top" class="fixed-button" title="回到顶部">
+                <i class="fas fa-arrow-up fa-fw" aria-hidden="true"></i>
+            </a><a href="#" id="view-comments" class="fixed-button" title="查看评论">
+                <i class="fas fa-comment fa-fw" aria-hidden="true"></i>
+            </a>
+        </div><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/autocomplete.js@0.38.1/dist/autocomplete.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lunr@2.3.9/lunr.min.js"></script><script type="text/javascript" src="/lib/lunr/lunr.stemmer.support.min.js"></script><script type="text/javascript" src="/lib/lunr/lunr.zh.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lazysizes@5.3.1/lazysizes.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/clipboard@2.0.11/dist/clipboard.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/sharer.js@0.5.1/sharer.min.js"></script><script type="text/javascript">window.config={"code":{"copyTitle":"复制到剪贴板","maxShownLines":50},"comment":{},"search":{"highlightTag":"em","lunrLanguageCode":"zh","lunrSegmentitURL":"/lib/lunr/lunr.segmentit.js","maxResultLength":10,"noResultsFound":"没有找到结果","snippetLength":30}};</script><script type="text/javascript" src="/js/theme.min.js"></script></body>
+</html>

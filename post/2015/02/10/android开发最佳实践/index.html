@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="robots" content="noodp" />
+        <title>Android开发最佳实践 - 编程心语</title><meta name="Description" content="This is my KeepIt site"><meta property="og:url" content="https://www.ithome.me/post/2015/02/10/android%E5%BC%80%E5%8F%91%E6%9C%80%E4%BD%B3%E5%AE%9E%E8%B7%B5/">
+  <meta property="og:site_name" content="编程心语">
+  <meta property="og:title" content="Android开发最佳实践">
+  <meta property="og:description" content="——欢迎转载，请注明出处 http://blog.csdn.net/asce1885 ，未经本人同意请勿用于商业用途，谢谢——
+原文链接：https://github.com/futurice/android-best-practices 本文是Futurice公司的Android开发人员总结的最佳实践，遵循这些准则可以避免重复制造轮子。如果你对iOS或者Windows Phone开发感兴趣，那么也请看看iOS最佳实践 和Windows客户端开发最佳实践 。
+概要
+**使用Gradle和推荐的工程结构 **
+**把密码和敏感数据存放在gradle.properties文件中 **
+**不要自己实现HTTP客户端，要使用Volley或者OkHttp库 **
+**使用Jackson库来解析JSON数据 **
+**避免使用Guava，使用少量的函数库从而避免超出65k方法数限制 **
+**使用Fragments来表示UI界面 **
+**Activities只用来管理Fragments **
+**布局XML文件是代码，要组织好它们 **
+**使用样式文件来避免布局XML文件中属性的重复定义 **
+**使用多个样式文件避免单一大样式文件的使用 **
+**保持colors.xml文件简短和不重复，只定义颜色值 **
+**保持dimens.xml文件不重复，并只定义通用的常量 **
+**避免ViewGroups层次结构太深 **
+**避免在客户端侧处理WebViews，谨防内存泄漏 **
+**使用Robolectric作为单元测试的工具，Robotium作为UI测试的工具 **
+**使用Genymotion作为你的模拟器 **
+总是使用ProGuard或者DexGuard
+**Android SDK **
+把你的Android SDK目录放在电脑的主目录或者其他跟IDE安装目录独立的磁盘位置，某些IDE在安装时就包含了Android SDK，而且可能把它放在跟IDE相同的目录下。当你需要升级（或重新安装）IDE，或者更换IDE时，这种做法是不好的。同样要避免把Android SDK放在另外一个系统层级的目录中，这样当你的IDE在user模式下运行而不是root模式时，将需要sudo权限。
+**构建系统 **
+当下最受推崇的IDE是Android Studio，因为它是Google开发的，和Gradle耦合最好，默认使用最新的工程结构，已经处于稳定阶段，是为Android开发量身定做的IDE。
+当然你也可以使用Eclipse ADT，但你需要配置它才能使用Gradle，因为它默认使用的是旧的工程结构和使用Ant进行构建。你甚至可以使用类似Vim，Sublime Text，Emacs等文本编辑器，这种情况下你需要在命令行中使用Gradle和adb。如果你的Eclipse集成Gradle不可用，你的选择是要么使用命令行编译或者把项目迁移到Android Studio中。Android Studio是最好的选择，因为ADT插件已经被标记为过时了，也就是不会再作后续维护和更新了。
+无论你使用哪种方式，需保证的是按照官方的推荐使用新的工程结构和Gradle来构建你的应用，并避免把你特定于编辑器的配置文件加入到版本控制系统中。例如要避免把Ant的build.xml文件添加到版本控制系统中。特别是如果你在Ant中更改了编译配置，不要忘了同步更新build.gradle文件。最后一点，要对其他开发人员友好，不要迫使他们修改他们所用编辑器的偏好设置。
+函数库
+Jackson 是一个把Java对象转换为JSON字符串或者把JSON字符串转换成Java对象的Java函数库。Gson 也是解决这类问题很流行的选择之一，但我们发现Jackson更加高性能，因为它支持多种可选的处理JSON的方式：流，内存树模型和传统的JSON-POJO数据绑定。尽管如此，Jackson是比Gson更大的函数库，所以需要根据你项目的具体情况，你可能会选择GSON来避免65k方法数限制。其他的选择还有：Json-smart 和Boon JSON 。">
+  <meta property="og:locale" content="zh_CN">
+  <meta property="og:type" content="article">
+    <meta property="article:section" content="posts">
+    <meta property="article:published_time" content="2015-02-10T18:16:14+08:00">
+    <meta property="article:modified_time" content="2015-02-10T18:16:14+08:00">
+    <meta property="article:tag" content="Android">
+
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Android开发最佳实践">
+  <meta name="twitter:description" content="——欢迎转载，请注明出处 http://blog.csdn.net/asce1885 ，未经本人同意请勿用于商业用途，谢谢——
+原文链接：https://github.com/futurice/android-best-practices 本文是Futurice公司的Android开发人员总结的最佳实践，遵循这些准则可以避免重复制造轮子。如果你对iOS或者Windows Phone开发感兴趣，那么也请看看iOS最佳实践 和Windows客户端开发最佳实践 。
+概要
+**使用Gradle和推荐的工程结构 **
+**把密码和敏感数据存放在gradle.properties文件中 **
+**不要自己实现HTTP客户端，要使用Volley或者OkHttp库 **
+**使用Jackson库来解析JSON数据 **
+**避免使用Guava，使用少量的函数库从而避免超出65k方法数限制 **
+**使用Fragments来表示UI界面 **
+**Activities只用来管理Fragments **
+**布局XML文件是代码，要组织好它们 **
+**使用样式文件来避免布局XML文件中属性的重复定义 **
+**使用多个样式文件避免单一大样式文件的使用 **
+**保持colors.xml文件简短和不重复，只定义颜色值 **
+**保持dimens.xml文件不重复，并只定义通用的常量 **
+**避免ViewGroups层次结构太深 **
+**避免在客户端侧处理WebViews，谨防内存泄漏 **
+**使用Robolectric作为单元测试的工具，Robotium作为UI测试的工具 **
+**使用Genymotion作为你的模拟器 **
+总是使用ProGuard或者DexGuard
+**Android SDK **
+把你的Android SDK目录放在电脑的主目录或者其他跟IDE安装目录独立的磁盘位置，某些IDE在安装时就包含了Android SDK，而且可能把它放在跟IDE相同的目录下。当你需要升级（或重新安装）IDE，或者更换IDE时，这种做法是不好的。同样要避免把Android SDK放在另外一个系统层级的目录中，这样当你的IDE在user模式下运行而不是root模式时，将需要sudo权限。
+**构建系统 **
+当下最受推崇的IDE是Android Studio，因为它是Google开发的，和Gradle耦合最好，默认使用最新的工程结构，已经处于稳定阶段，是为Android开发量身定做的IDE。
+当然你也可以使用Eclipse ADT，但你需要配置它才能使用Gradle，因为它默认使用的是旧的工程结构和使用Ant进行构建。你甚至可以使用类似Vim，Sublime Text，Emacs等文本编辑器，这种情况下你需要在命令行中使用Gradle和adb。如果你的Eclipse集成Gradle不可用，你的选择是要么使用命令行编译或者把项目迁移到Android Studio中。Android Studio是最好的选择，因为ADT插件已经被标记为过时了，也就是不会再作后续维护和更新了。
+无论你使用哪种方式，需保证的是按照官方的推荐使用新的工程结构和Gradle来构建你的应用，并避免把你特定于编辑器的配置文件加入到版本控制系统中。例如要避免把Ant的build.xml文件添加到版本控制系统中。特别是如果你在Ant中更改了编译配置，不要忘了同步更新build.gradle文件。最后一点，要对其他开发人员友好，不要迫使他们修改他们所用编辑器的偏好设置。
+函数库
+Jackson 是一个把Java对象转换为JSON字符串或者把JSON字符串转换成Java对象的Java函数库。Gson 也是解决这类问题很流行的选择之一，但我们发现Jackson更加高性能，因为它支持多种可选的处理JSON的方式：流，内存树模型和传统的JSON-POJO数据绑定。尽管如此，Jackson是比Gson更大的函数库，所以需要根据你项目的具体情况，你可能会选择GSON来避免65k方法数限制。其他的选择还有：Json-smart 和Boon JSON 。">
+      <meta name="twitter:site" content="@https://twitter.com/ChenCiki">
+<meta name="application-name" content="My KeepIt site">
+<meta name="apple-mobile-web-app-title" content="My KeepIt site"><meta name="theme-color" content="#ffffff"><meta name="msapplication-TileColor" content="#da532c"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5"><link rel="manifest" href="/site.webmanifest"><link rel="canonical" href="https://www.ithome.me/post/2015/02/10/android%E5%BC%80%E5%8F%91%E6%9C%80%E4%BD%B3%E5%AE%9E%E8%B7%B5/" /><link rel="prev" href="https://www.ithome.me/post/2015/02/05/eclipse%E7%94%A8%E6%B3%95-%E4%BD%BF%E7%94%A8javadoc%E5%AF%BC%E5%87%BA%E9%A1%B9%E7%9B%AE%E7%9A%84api%E6%96%87%E6%A1%A3/" /><link rel="next" href="https://www.ithome.me/post/2015/03/06/%E5%88%9B%E4%B8%9A%E5%89%8D%E9%9C%80%E8%A6%81%E7%9F%A5%E9%81%93%E7%9A%845%E4%B8%AA%E7%BC%96%E7%A8%8B%E8%B0%AC%E8%AE%BA/" /><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/normalize.css@8.0.1/normalize.min.css"><link rel="stylesheet" href="/css/style.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css"><script type="application/ld+json">
+    {
+        "@context": "http://schema.org",
+        "@type": "BlogPosting",
+        "headline": "Android开发最佳实践",
+        "inLanguage": "zh-CN",
+        "mainEntityOfPage": {
+            "@type": "WebPage",
+            "@id": "https:\/\/www.ithome.me\/post\/2015\/02\/10\/android%E5%BC%80%E5%8F%91%E6%9C%80%E4%BD%B3%E5%AE%9E%E8%B7%B5\/"
+        },"genre": "posts","keywords": "android","wordcount":  194 ,
+        "url": "https:\/\/www.ithome.me\/post\/2015\/02\/10\/android%E5%BC%80%E5%8F%91%E6%9C%80%E4%BD%B3%E5%AE%9E%E8%B7%B5\/","datePublished": "2015-02-10T18:16:14+08:00","dateModified": "2015-02-10T18:16:14+08:00","license": "©{year}, All Rights Reserved. Simon Chen","publisher": {
+            "@type": "Organization",
+            "name": ""},"author": {
+                "@type": "Person",
+                "name": "SimonChen"
+            },"description": ""
+    }
+    </script></head>
+    <body data-header-desktop="fixed" data-header-mobile="auto"><script type="text/javascript">(window.localStorage && localStorage.getItem('theme') ? localStorage.getItem('theme') === 'dark' : ('auto' === 'auto' ? window.matchMedia('(prefers-color-scheme: dark)').matches : 'auto' === 'dark')) && document.body.setAttribute('theme', 'dark');</script>
+
+        <div id="mask"></div><div class="wrapper"><header class="desktop" id="header-desktop">
+    <div class="header-wrapper">
+        <div class="header-title">
+            <a href="/" title="编程心语">编程心语</a>
+        </div>
+        <div class="menu">
+            <div class="menu-inner"><a class="menu-item" href="/posts/"> 文章 </a><a class="menu-item" href="/categories/"> 分类 </a><a class="menu-item" href="/tags/"> 标签 </a><a class="menu-item" href="/about-me/"> 关于 </a><span class="menu-item delimiter"></span><span class="menu-item search" id="search-desktop">
+                        <input type="text" placeholder="搜索文章标题或内容..." id="search-input-desktop">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-desktop" title="搜索">
+                            <i class="fas fa-search fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-desktop" title="清空">
+                            <i class="fas fa-times-circle fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-desktop">
+                            <i class="fas fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+                        </span>
+                    </span><a href="javascript:void(0);" class="menu-item theme-switch" title="切换主题">
+                    <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</header><header class="mobile" id="header-mobile">
+    <div class="header-container">
+        <div class="header-wrapper">
+            <div class="header-title">
+                <a href="/" title="编程心语">编程心语</a>
+            </div>
+            <div class="menu-toggle" id="menu-toggle-mobile">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+        <div class="menu" id="menu-mobile"><div class="search-wrapper">
+                    <div class="search mobile" id="search-mobile">
+                        <input type="text" placeholder="搜索文章标题或内容..." id="search-input-mobile">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-mobile" title="搜索">
+                            <i class="fas fa-search fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-mobile" title="清空">
+                            <i class="fas fa-times-circle fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-mobile">
+                            <i class="fas fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+                        </span>
+                    </div>
+                    <a href="javascript:void(0);" class="search-cancel" id="search-cancel-mobile">
+                        取消
+                    </a>
+                </div><a class="menu-item" href="/posts/" title="">文章</a><a class="menu-item" href="/categories/" title="">分类</a><a class="menu-item" href="/tags/" title="">标签</a><a class="menu-item" href="/about-me/" title="">关于</a><a href="javascript:void(0);" class="menu-item theme-switch" title="切换主题">
+                <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
+            </a></div>
+    </div>
+</header><div class="search-dropdown desktop">
+        <div id="search-dropdown-desktop"></div>
+    </div>
+    <div class="search-dropdown mobile">
+        <div id="search-dropdown-mobile"></div>
+    </div><main class="main">
+                <div class="container"><div class="toc" id="toc-auto">
+            <h2 class="toc-title">目录</h2>
+            <div class="toc-content" id="toc-content-auto"></div>
+        </div><article class="page single"><h1 class="single-title animate__animated animate__flipInX">Android开发最佳实践</h1><div class="post-meta">
+            <div class="post-meta-line"><span class="post-author"><a href="/" title="Author" rel=" author" class="author"><i class="fas fa-user-circle fa-fw" aria-hidden="true"></i>SimonChen</a>
+</span></div>
+            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw" aria-hidden="true"></i>&nbsp;<time datetime="2015-02-10">2015-02-10</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden="true"></i>&nbsp;约 194 字&nbsp;
+                <i class="far fa-clock fa-fw" aria-hidden="true"></i>&nbsp;预计阅读 1 分钟&nbsp;</div>
+        </div><div class="details toc" id="toc-static"  data-kept="">
+                <div class="details-summary toc-title">
+                    <span>目录</span>
+                    <span><i class="details-icon fas fa-angle-right" aria-hidden="true"></i></span>
+                </div>
+                <div class="details-content toc-content" id="toc-content-static"><nav id="TableOfContents"></nav></div>
+            </div><div class="content" id="content"><p>——欢迎转载，请注明出处 <a href="http://blog.csdn.net/asce1885" target="_blank" rel="noopener noreffer">http://blog.csdn.net/asce1885</a>
+ ，未经本人同意请勿用于商业用途，谢谢——</p>
+<p>原文链接：<a href="https://github.com/futurice/android-best-practices" target="_blank" rel="noopener noreffer">https://github.com/futurice/android-best-practices</a>
+</p>
+<p>本文是Futurice公司的Android开发人员总结的最佳实践，遵循这些准则可以避免重复制造轮子。如果你对iOS或者Windows Phone开发感兴趣，那么也请看看<a href="https://github.com/futurice/ios-good-practices" target="_blank" rel="noopener noreffer">iOS最佳实践</a>
+和<a href="https://github.com/futurice/win-client-dev-good-practices" target="_blank" rel="noopener noreffer">Windows客户端开发最佳实践</a>
+。</p>
+<p><strong>概要</strong></p>
+<p>**使用Gradle和推荐的工程结构
+**</p>
+<p>**把密码和敏感数据存放在gradle.properties文件中
+**</p>
+<p>**不要自己实现HTTP客户端，要使用Volley或者OkHttp库
+**</p>
+<p>**使用Jackson库来解析JSON数据
+**</p>
+<p>**避免使用Guava，使用少量的函数库从而避免超出65k方法数限制
+**</p>
+<p>**使用Fragments来表示UI界面
+**</p>
+<p>**Activities只用来管理Fragments
+**</p>
+<p>**布局XML文件是代码，要组织好它们
+**</p>
+<p>**使用样式文件来避免布局XML文件中属性的重复定义
+**</p>
+<p>**使用多个样式文件避免单一大样式文件的使用
+**</p>
+<p>**保持colors.xml文件简短和不重复，只定义颜色值
+**</p>
+<p>**保持dimens.xml文件不重复，并只定义通用的常量
+**</p>
+<p>**避免ViewGroups层次结构太深
+**</p>
+<p>**避免在客户端侧处理WebViews，谨防内存泄漏
+**</p>
+<p>**使用Robolectric作为单元测试的工具，Robotium作为UI测试的工具
+**</p>
+<p>**使用Genymotion作为你的模拟器
+**</p>
+<p><strong>总是使用ProGuard或者DexGuard</strong></p>
+<p>**Android SDK
+**</p>
+<p>把你的Android SDK目录放在电脑的主目录或者其他跟IDE安装目录独立的磁盘位置，某些IDE在安装时就包含了Android SDK，而且可能把它放在跟IDE相同的目录下。当你需要升级（或重新安装）IDE，或者更换IDE时，这种做法是不好的。同样要避免把Android SDK放在另外一个系统层级的目录中，这样当你的IDE在user模式下运行而不是root模式时，将需要sudo权限。</p>
+<p>**构建系统
+**</p>
+<!-- raw HTML omitted -->
+<p>当下最受推崇的IDE是Android Studio，因为它是Google开发的，和Gradle耦合最好，默认使用最新的工程结构，已经处于稳定阶段，是为Android开发量身定做的IDE。</p>
+<p>当然你也可以使用Eclipse ADT，但你需要配置它才能使用Gradle，因为它默认使用的是旧的工程结构和使用Ant进行构建。你甚至可以使用类似Vim，Sublime Text，Emacs等文本编辑器，这种情况下你需要在命令行中使用Gradle和adb。如果你的Eclipse集成Gradle不可用，你的选择是要么使用命令行编译或者把项目迁移到Android Studio中。Android Studio是最好的选择，因为ADT插件已经被标记为过时了，也就是不会再作后续维护和更新了。</p>
+<p>无论你使用哪种方式，需保证的是按照官方的推荐使用新的工程结构和Gradle来构建你的应用，并避免把你特定于编辑器的配置文件加入到版本控制系统中。例如要避免把Ant的build.xml文件添加到版本控制系统中。特别是如果你在Ant中更改了编译配置，不要忘了同步更新build.gradle文件。最后一点，要对其他开发人员友好，不要迫使他们修改他们所用编辑器的偏好设置。</p>
+<p><strong>函数库</strong></p>
+<p><a href="http://wiki.fasterxml.com/JacksonHome" target="_blank" rel="noopener noreffer">Jackson</a>
+是一个把Java对象转换为JSON字符串或者把JSON字符串转换成Java对象的Java函数库。<a href="https://code.google.com/p/google-gson/" target="_blank" rel="noopener noreffer">Gson</a>
+也是解决这类问题很流行的选择之一，但我们发现Jackson更加高性能，因为它支持多种可选的处理JSON的方式：流，内存树模型和传统的JSON-POJO数据绑定。尽管如此，Jackson是比Gson更大的函数库，所以需要根据你项目的具体情况，你可能会选择GSON来避免65k方法数限制。其他的选择还有：<a href="https://code.google.com/p/json-smart/" target="_blank" rel="noopener noreffer">Json-smart</a>
+和<a href="https://github.com/RichardHightower/boon/wiki/Boon-JSON-in-five-minutes" target="_blank" rel="noopener noreffer">Boon JSON</a>
+。</p>
+<p>**网络，缓存和图像。**向后端服务器发起网络请求有很多经过实战检验的解决方案，你应该使用这些解决方案而不是自己实现一个。使用<a href="https://android.googlesource.com/platform/frameworks/volley" target="_blank" rel="noopener noreffer">Volley</a>
+或者<a href="http://square.github.io/retrofit/" target="_blank" rel="noopener noreffer">Retrofit</a>
+吧！除了网络请求，Volley还提供了帮助类用于加载和缓存图像。如果你选择Retrofit，那么可以考虑使用<a href="http://square.github.io/picasso/" target="_blank" rel="noopener noreffer">Picasso</a>
+作为加载和缓存图像的函数库，并结合<a href="http://square.github.io/okhttp/" target="_blank" rel="noopener noreffer">OkHttp</a>
+实现高效的HTTP请求。Retrofit，Picasso和OkHttp这三款函数库都是同一家公司开发的，所以它们能够很好的互补。<a href="http://stackoverflow.com/questions/24375043/how-to-implement-android-volley-with-okhttp-2-0/24951835#24951835" target="_blank" rel="noopener noreffer">Volley也能使用OkHttp来实现网络连接</a>
+。</p>
+<p>RxJava是一个响应式编程的函数库，也就是可以处理异步事件。这是一个强大和有前途的编程范式，但由于它是如此的不同，因此会显得不好理解。在使用这个函数库搭建你的应用的框架时，我们建议你要保持谨慎的态度。我们有几个项目已经使用RxJava来实现，如果你需要帮助可以联系以下这些人：Timo Tuominen, Olli Salonen, Andre Medeiros, Mark Voit, Antti Lammi, Vera Izrailit, Juha Ristolainen。我们已经写了一些博客文章来进行介绍</p>
+<p>1）<a href="http://blog.futurice.com/tech-pick-of-the-week-rx-for-net-and-rxjava-for-android" target="_blank" rel="noopener noreffer">http://blog.futurice.com/tech-pick-of-the-week-rx-for-net-and-rxjava-for-android</a>
+；</p>
+<p>2）<a href="http://blog.futurice.com/top-7-tips-for-rxjava-on-android" target="_blank" rel="noopener noreffer">http://blog.futurice.com/top-7-tips-for-rxjava-on-android</a>
+；</p>
+<p>3）<a href="https://gist.github.com/staltz/868e7e9bc2a7b8c1f754" target="_blank" rel="noopener noreffer">https://gist.github.com/staltz/868e7e9bc2a7b8c1f754</a>
+；</p>
+<p>4）<a href="http://blog.futurice.com/android-development-has-its-own-swift" target="_blank" rel="noopener noreffer">http://blog.futurice.com/android-development-has-its-own-swift</a>
+）。</p>
+<p>如果你之前没有使用RxJava的经验，那么开始时可以仅在网络请求API的响应处使用。如果有经验了，可以将RxJava应用在简单UI事件的处理，例如点击事件或者搜索框中的输入事件。如果你对自己的RxJava技能很自信而且想把RxJava应用到整个项目架构中，那么在代码难以理解的部分要编写Javadocs。要记住对RxJava不熟悉的程序员可能在维护工程的初期会很痛苦。尽你所能帮助他们理解你的代码和RxJava。</p>
+<p><a href="https://github.com/evant/gradle-retrolambda" target="_blank" rel="noopener noreffer">Retrolambda</a>
+是兼容在Android中和JDK8之前的Java版本中使用Lambda表达式语法的一个Java函数库。它帮助你的代码保持紧凑和可读，特别是当你使用函数式编程风格时，例如使用RxJava。要使用这个库，需要安装JDK8，在Android Studio工程结构对话框中设置SDK的位置，并设置JAVA8_HOME和JAVA7_HOME环境变量，然后在工程的build.gradle中设置如下：</p>
+<!-- raw HTML omitted -->
+<!-- raw HTML omitted -->
+<p> </p>
+<p>接着在各个模块的build.gradle中增加配置如下：</p>
+<!-- raw HTML omitted -->
+<!-- raw HTML omitted -->
+<!-- raw HTML omitted -->
+<p>Activities and Fragments</p>
+<!-- raw HTML omitted -->
+<p>因此，很难严格界定Fragments（或者Activities）是controllers类还是views类。最好把Fragments类单独放在fragments包里面。如果你遵循前面段落的建议的话（只有一个主Activity），Activities可以放在顶层的包里面。如果你计划会存在多个activities，那么就将Activity放在单独的activities包里面。</p>
+<p>另一方面，整个包结构看起来很像经典的MVC框架，models包目录存放网络请求API响应经过JSON解析器填充后得到的POJOs对象。views包目录存放自定义的views，notifications，action bar views，widgets等等。Adapters处于灰色地带，介于data和views之间，然而，它们一般需要通过getView()函数导出视图，所以你可以在views包中增加adapters子包。</p>
+<!-- raw HTML omitted -->
+<p>**命名。**遵循以类型作为前缀命名的惯例，即type_foo_bar.xml。例子如下：fragment_contact_details.xml，view_primary_button.xml，activity_main.xml。</p>
+<!-- raw HTML omitted -->
+<p>    &lt;TextView  
+        android:id=&quot;@+id/name&quot;  
+        android:layout_width=&ldquo;match_parent&rdquo;  
+        android:layout_height=&ldquo;wrap_content&rdquo;  
+        android:layout_alignParentRight=&ldquo;true&rdquo;  
+        android:text=&quot;@string/name&quot;  
+        style=&quot;@style/FancyText&quot;  
+        /&gt;  </p>
+<p>    &lt;include layout=&quot;@layout/reusable_part&quot; /&gt;  </p>
+<p>&lt;/LinearLayout&gt;<!-- raw HTML omitted --></p>
+<!-- raw HTML omitted -->
+<p>**把一个大的style文件细分成多个文件。**你没有必要维护单独一个styles.xml文件，Android SDK能很好的支持其他文件。styles文件的名字并不一定要是styles.xml，起作用的是xml文件里面的&lt;style&gt;标签。因此，你的样式文件命名可以是styles.xml，styles_home.xml，styles_item_details.xml，styles_forms.xml等。和资源目录名不同（编译系统需要根据资源目录名找到资源），res/values里面的文件名可以随意命名。</p>
+<p>colors.xml是调色板。在你的colors.xml文件中除了定义颜色名字到RGBA颜色值的映射外，不应该定义其他的东西。不用使用它来定义不同类型按钮的RGBA颜色值。</p>
+<!-- raw HTML omitted -->
+<p>    &lt;!&ndash; grayscale &ndash;&gt;  
+    &lt;color name=&ldquo;white&rdquo;     &gt;#FFFFFF&lt;/color&gt;  
+    &lt;color name=&ldquo;gray_light&rdquo;&gt;#DBDBDB&lt;/color&gt;  
+    &lt;color name=&ldquo;gray&rdquo;      &gt;#939393&lt;/color&gt;  
+    &lt;color name=&ldquo;gray_dark&rdquo; &gt;#5F5F5F&lt;/color&gt;  
+    &lt;color name=&ldquo;black&rdquo;     &gt;#323232&lt;/color&gt;  </p>
+<p>    &lt;!&ndash; basic colors &ndash;&gt;  
+    &lt;color name=&ldquo;green&rdquo;&gt;#27D34D&lt;/color&gt;  
+    &lt;color name=&ldquo;blue&rdquo;&gt;#2A91BD&lt;/color&gt;  
+    &lt;color name=&ldquo;orange&rdquo;&gt;#FF9D2F&lt;/color&gt;  
+    &lt;color name=&ldquo;red&rdquo;&gt;#FF432F&lt;/color&gt;  </p>
+<p>&lt;/resources&gt;<!-- raw HTML omitted --></p>
+<!-- raw HTML omitted -->
+<p>**dimens.xml文件跟colors.xml文件具有相同的用法。**你应该定义一个典型的间距和字体大小的模版，目的基本上和colors.xml文件一样，好的dimens.xml文件例子如下：</p>
+<!-- raw HTML omitted -->
+<!-- raw HTML omitted -->
+<p> </p>
+<p>布局文件的边距和填充应该使用spacing_****尺寸定义，而不是使用硬编码（类似字符串硬编码）。这样会带来统一的外观，同时使得组织和修改样式和布局更简单。</p>
+<p>**避免过深的views层级。**有时你可能会被诱导在LinearLayout中再增加一层LinearLayout，例如为了完成一组views的排列。这种情况类似如下：</p>
+<!-- raw HTML omitted -->
+<!-- raw HTML omitted -->
+<p>即使你没有很明显的在Layout文件中看到这种情况，但可能最终发生在Java代码中将某个view inflate到另外的view中。</p>
+<p>这可能会引起一些问题，你可能会遇到性能问题，因为处理器需要处理很复杂的UI树层级。另一个更严重的问题是可能会引起<a href="http://stackoverflow.com/questions/2762924/java-lang-stackoverflow-error-suspected-too-many-views" target="_blank" rel="noopener noreffer">StackOverflowError</a>
+。</p>
+<p>因此，尽量使你的view具有扁平的层级：学习怎样使用<a href="https://developer.android.com/guide/topics/ui/layout/relative.html" target="_blank" rel="noopener noreffer">RelativeLayout</a>
+，怎样<a href="http://developer.android.com/training/improving-layouts/optimizing-layout.html" target="_blank" rel="noopener noreffer">优化布局</a>
+和使用<a href="http://stackoverflow.com/questions/8834898/what-is-the-purpose-of-androids-merge-tag-in-xml-layouts" target="_blank" rel="noopener noreffer">&lt;merge&gt;标签</a>
+。</p>
+<p>**小心WebView相关的问题。**当你需要展示一个web页面时，例如新闻文章，要避免在客户端侧对HTML进行简化处理，相反，应该向服务器端请求经过简化后的HTML。当WebView持有所在Activity Context引用而不是Application Context引用时，也可能导致内存泄漏。要避免在简单文本或者按钮使用WebView，应该使用TextView和Button。</p>
+<p><strong>测试框架</strong></p>
+<p>Android SDK的测试框架还很简单，尤其是UI测试相关的。Android Gradle目前实现了一个叫做<a href="http://tools.android.com/tech-docs/new-build-system/user-guide#TOC-Testing" target="_blank" rel="noopener noreffer">connectedAndroidTest</a>
+的测试任务，它能够使用<a href="http://developer.android.com/reference/android/test/package-summary.html" target="_blank" rel="noopener noreffer">JUnit的Android扩展</a>
+来运行你创建的JUnit测试用例。这意味着你需要连接设备或者模拟器来运行测试用例，遵循官方帮助指南来进行测试1）<a href="http://developer.android.com/tools/testing/testing_android.html" target="_blank" rel="noopener noreffer">http://developer.android.com/tools/testing/testing_android.html</a>
+；</p>
+<p>2）<a href="http://developer.android.com/tools/testing/activity_test.html" target="_blank" rel="noopener noreffer">http://developer.android.com/tools/testing/activity_test.html</a>
+）。</p>
+<p>**使用Robolectric来进行单元测试，而不是UI测试。**这是一个为了提高开发速度，专注于提供“独立于设备”的测试框架，尤其适用于models和view models的单元测试。但是Robolectric对于UI测试的支持是不准确和不完善的。使用Robolectric进行动画，对话框等相关的UI元素测试时会遇到问题，你将看不到屏幕相应的UI元素被测试实时操纵，你将类似于在黑暗中行走。</p>
+<p>Robotium简化了UI测试。你不需要Robotium来执行UI测试用例，但它提供了很多帮助工具用来获取和分析views，控制屏幕等，这一点对你可能很有帮助。测试用例很简单，如下所示：</p>
+<!-- raw HTML omitted -->
+<!-- raw HTML omitted -->
+<p><strong>模拟器</strong></p>
+<p>如果你的工作是开发android app，那么买一个<a href="http://www.genymotion.com/" target="_blank" rel="noopener noreffer">Genymotion模拟器</a>
+的licence吧。Genymotion模拟器比AVD模拟器具有更快的帧率，而且具有演示app，模拟网络连接质量，GPS位置等工具。它也是用于连接测试的理想工具。使用Genymotion模拟器，你可以模拟很多不同类型的设备，所以购买一个Genymotion模拟器licence比买多个真实设备更划算。</p>
+<p>要注意的是：Genymotion模拟器没有移植所有的Google服务，例如Google Play Stoe和Google Maps。你可能需要测试三星特有的API，这时需要购买一台真实的三星设备。</p>
+<p><strong>Proguard配置</strong></p>
+<p>在Android工程中<a href="http://proguard.sourceforge.net/" target="_blank" rel="noopener noreffer">ProGuard</a>
+被用于压缩和混淆打包后的代码。ProGuard的使用可以在工程配置文件中设置。一般情况下当构建一个release版本的apk时，你需要配置Gradle使用ProGuard。</p>
+<!-- raw HTML omitted -->
+<!-- raw HTML omitted -->
+<p>为了决定哪些代码需要保留，哪些代码需要丢弃或者混淆，你需要在你的代码中指定一个或者多个入口点。这些入口点典型的就是具有main函数，applets，midlets，activities等的类。Android框架使用的默认配置文件是SDK_HOME/tools/proguard/proguard-android.txt。自定义的工程特有的proguard规则文件定义为my-project/app/proguard-rules.pro，将会拼接到默认配置中。</p>
+<!-- raw HTML omitted -->
+<p>在你的项目早期，执行一个release构建来检查ProGuard规则是否正确的保持了不需要移除或者混淆的东西。当你增加新的函数库，也要执行新的Release构建并在设备上测试生成的apk来确保没有问题。不要等到你的app要发布1.0版本了才想到要执行一个release构建，这时你可能会得到及其不愉快的惊喜，并花一段时间来修复这些问题。</p>
+<p>贴士：保存每个你发布给最终用户的apk包对应的mapping.txt文件。保存mapping.txt的原因在于当你的用户上传混淆过的crash日志时，你可以很容易的进行调试。</p>
+<p>DexGuard：如果你需要能对你发布的代码进行优化，尤其是混淆的核心工具的话，可以考虑<a href="http://www.saikoa.com/dexguard" target="_blank" rel="noopener noreffer">DexGuard</a>
+，这是由ProGuard同一团队发布的商业软件。它还可以很容易的对分割Dex文件以解决65k函数个数限制问题。</p>
+<p> </p>
+</div><div class="post-footer" id="post-footer">
+    <div class="post-info">
+        <div class="post-info-line">
+            <div class="post-info-mod">
+                <span>更新于 2015-02-10</span>
+            </div></div>
+        <div class="post-info-line">
+            <div class="post-info-md"></div>
+            <div class="post-info-share">
+                <span><a href="javascript:void(0);" title="分享到 Twitter" data-sharer="twitter" data-url="https://www.ithome.me/post/2015/02/10/android%E5%BC%80%E5%8F%91%E6%9C%80%E4%BD%B3%E5%AE%9E%E8%B7%B5/" data-title="Android开发最佳实践" data-via="https://twitter.com/ChenCiki" data-hashtags="android"><i class="fab fa-twitter fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="分享到 Facebook" data-sharer="facebook" data-url="https://www.ithome.me/post/2015/02/10/android%E5%BC%80%E5%8F%91%E6%9C%80%E4%BD%B3%E5%AE%9E%E8%B7%B5/" data-hashtag="android"><i class="fab fa-facebook-square fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="分享到 Hacker News" data-sharer="hackernews" data-url="https://www.ithome.me/post/2015/02/10/android%E5%BC%80%E5%8F%91%E6%9C%80%E4%BD%B3%E5%AE%9E%E8%B7%B5/" data-title="Android开发最佳实践"><i class="fab fa-hacker-news fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="分享到 Line" data-sharer="line" data-url="https://www.ithome.me/post/2015/02/10/android%E5%BC%80%E5%8F%91%E6%9C%80%E4%BD%B3%E5%AE%9E%E8%B7%B5/" data-title="Android开发最佳实践"><i data-svg-src="https://cdn.jsdelivr.net/npm/simple-icons@6.20.0/icons/line.svg" aria-hidden="true"></i></a><a href="javascript:void(0);" title="分享到 微博" data-sharer="weibo" data-url="https://www.ithome.me/post/2015/02/10/android%E5%BC%80%E5%8F%91%E6%9C%80%E4%BD%B3%E5%AE%9E%E8%B7%B5/" data-title="Android开发最佳实践" data-ralateuid="xxx"><i class="fab fa-weibo fa-fw" aria-hidden="true"></i></a></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="post-info-more">
+        <section class="post-tags"><i class="fas fa-tags fa-fw" aria-hidden="true"></i>&nbsp;<a href="/tags/android/">Android</a></section>
+        <section>
+            <span><a href="javascript:void(0);" onclick="window.history.back();">返回</a></span>&nbsp;|&nbsp;<span><a href="/">主页</a></span>
+        </section>
+    </div>
+
+    <div class="post-nav"><a href="/post/2015/02/05/eclipse%E7%94%A8%E6%B3%95-%E4%BD%BF%E7%94%A8javadoc%E5%AF%BC%E5%87%BA%E9%A1%B9%E7%9B%AE%E7%9A%84api%E6%96%87%E6%A1%A3/" class="prev" rel="prev" title="Eclipse用法:使用Javadoc导出项目的API文档"><i class="fas fa-angle-left fa-fw" aria-hidden="true"></i>Eclipse用法:使用Javadoc导出项目的API文档</a>
+            <a href="/post/2015/03/06/%E5%88%9B%E4%B8%9A%E5%89%8D%E9%9C%80%E8%A6%81%E7%9F%A5%E9%81%93%E7%9A%845%E4%B8%AA%E7%BC%96%E7%A8%8B%E8%B0%AC%E8%AE%BA/" class="next" rel="next" title="创业前需要知道的5个编程谬论">创业前需要知道的5个编程谬论<i class="fas fa-angle-right fa-fw" aria-hidden="true"></i></a></div>
+</div>
+</article></div>
+            </main><footer class="footer">
+        <div class="footer-container"><div class="footer-line" itemscope itemtype="http://schema.org/CreativeWork"><i class="far fa-copyright fa-fw" aria-hidden="true"></i><span itemprop="copyrightYear">2011 - 2026</span><span class="author" itemprop="copyrightHolder">&nbsp;<a href="/" target="_blank">SimonChen</a></span></div>
+        </div>
+    </footer></div>
+
+        <div id="fixed-buttons"><a href="#" id="back-to-top" class="fixed-button" title="回到顶部">
+                <i class="fas fa-arrow-up fa-fw" aria-hidden="true"></i>
+            </a><a href="#" id="view-comments" class="fixed-button" title="查看评论">
+                <i class="fas fa-comment fa-fw" aria-hidden="true"></i>
+            </a>
+        </div><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/autocomplete.js@0.38.1/dist/autocomplete.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lunr@2.3.9/lunr.min.js"></script><script type="text/javascript" src="/lib/lunr/lunr.stemmer.support.min.js"></script><script type="text/javascript" src="/lib/lunr/lunr.zh.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lazysizes@5.3.1/lazysizes.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/clipboard@2.0.11/dist/clipboard.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/sharer.js@0.5.1/sharer.min.js"></script><script type="text/javascript">window.config={"code":{"copyTitle":"复制到剪贴板","maxShownLines":50},"comment":{},"search":{"highlightTag":"em","lunrLanguageCode":"zh","lunrSegmentitURL":"/lib/lunr/lunr.segmentit.js","maxResultLength":10,"noResultsFound":"没有找到结果","snippetLength":30}};</script><script type="text/javascript" src="/js/theme.min.js"></script></body>
+</html>
