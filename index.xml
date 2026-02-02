@@ -1,0 +1,347 @@
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0">
+    <channel>
+        <title>编程心语</title>
+        <link>https://www.ithome.me/</link>
+        <description>This is my KeepIt site</description>
+        <generator>Hugo -- gohugo.io</generator><language>zh-CN</language><managingEditor>hncdcsm1@vip.qq.com (Simon Chen)</managingEditor>
+            <webMaster>hncdcsm1@vip.qq.com (Simon Chen)</webMaster><copyright>©{year}, All Rights Reserved. Simon Chen</copyright><lastBuildDate>Fri, 06 Sep 2024 00:00:00 &#43;0000</lastBuildDate>
+            <atom:link href="https://www.ithome.me/index.xml" rel="self" type="application/rss+xml" />
+        <item>
+    <title>ERROR 2002 (HY000): Can&#39;t connect to local MySQL server through socket &#39;/tmp/mysql.sock&#39; (2)</title>
+    <link>https://www.ithome.me/post/2024/09/06/cant-connect-to-local-mysql-server-through-socket/</link>
+    <pubDate>Fri, 06 Sep 2024 00:00:00 &#43;0000</pubDate>
+    <author>Simon</author>
+    <guid>https://www.ithome.me/post/2024/09/06/cant-connect-to-local-mysql-server-through-socket/</guid>
+    <description><![CDATA[<p>Mac上通过<code>brew install mysql</code>安装，但是某天突然无法启动，报错：ERROR 2002 (HY000): Can&rsquo;t connect to local MySQL server through socket &lsquo;/tmp/mysql.sock&rsquo; (2)。</p>
+<p>网上的解决方案试了一遍没一个有用，真正有用的是</p>
+<pre tabindex="0"><code>rm -rf /opt/homebrew/var/mysql
+</code></pre><p>但是会把所有的内容清空。自己慎重。</p>
+<p>删除后重新安装就OK了</p>]]></description>
+</item>
+<item>
+    <title>2023 11 08 阿里云Linux更新docker</title>
+    <link>https://www.ithome.me/post/2023/11/08/%E9%98%BF%E9%87%8C%E4%BA%91linux%E6%9B%B4%E6%96%B0docker/</link>
+    <pubDate>Wed, 08 Nov 2023 00:00:00 &#43;0000</pubDate>
+    <author>Simon</author>
+    <guid>https://www.ithome.me/post/2023/11/08/%E9%98%BF%E9%87%8C%E4%BA%91linux%E6%9B%B4%E6%96%B0docker/</guid>
+    <description><![CDATA[<h1 id="前言">前言</h1>
+<p>我的系统信息:</p>
+<pre tabindex="0"><code>Distributor ID:	AlibabaCloud(AliyunLinux)
+Description:	Alibaba Cloud Linux (Aliyun Linux) release 2.1903 LTS (Hunting Beagle)
+Release:	2.1903
+</code></pre><p>aliyun linux 2实际对应的是centos7。默认的docker版本是Docker version 1.13.1, build 7d71120/1.13.1，这个版本已经很老旧了，无法兼容一些新的容器。所以升级是非常有必要的。</p>
+<h1 id="卸载旧版本">卸载旧版本</h1>
+<h3 id="删除docker">删除docker</h3>
+<pre tabindex="0"><code>  	yum remove docker \
+                  docker-client \
+                  docker-client-latest \
+                  docker-common \
+                  docker-latest \
+                  docker-latest-logrotate \
+                  docker-logrotate \
+                  docker-engine
+</code></pre><p>如果无法卸载，则需要先查看安装的docker包。
+执行下面的指令:</p>
+<pre tabindex="0"><code>yum list installed | grep docker
+</code></pre><p>打印结果如下：</p>
+<pre tabindex="0"><code>docker.x86_64                         2:1.13.1-209.git7d71120.1.al7  @updates
+docker-client.x86_64                  2:1.13.1-209.git7d71120.1.al7  @updates
+docker-common.x86_64                  2:1.13.1-209.git7d71120.1.al7  @updates
+docker-compose.noarch                 1.18.0-4.el7                   @epel
+docker-rhel-push-plugin.x86_64        2:1.13.1-209.git7d71120.1.al7  @updates
+python36-docker.noarch                2.6.1-3.el7                    @epel
+python36-docker-pycreds.noarch        0.2.1-2.el7                    @epel
+python36-dockerpty.noarch             0.4.1-18.el7                   @epel
+</code></pre><p>然后再次执行</p>]]></description>
+</item>
+<item>
+    <title>2022 11 23 Alibaba Cloud Linux更新git版本到2.x</title>
+    <link>https://www.ithome.me/post/2022/11/23/alibaba-cloud-linux%E6%9B%B4%E6%96%B0git%E7%89%88%E6%9C%AC%E5%88%B02/</link>
+    <pubDate>Wed, 23 Nov 2022 00:00:00 &#43;0000</pubDate>
+    <author>Simon</author>
+    <guid>https://www.ithome.me/post/2022/11/23/alibaba-cloud-linux%E6%9B%B4%E6%96%B0git%E7%89%88%E6%9C%AC%E5%88%B02/</guid>
+    <description><![CDATA[<p>Alibaba Cloud Linux是阿里云基于龙蜥社区（OpenAnolis）的龙蜥操作系统（Anolis OS）打造的操作系统发行版，兼容RHEL/CentOS。</p>
+<p>底层实际就是centos，先要区分你的版本是centos7还是8。</p>
+<p>Alibaba Cloud Linux 3选择Linux kernel 5.10 LTS，同时默认搭载GCC 10.2、binutils 2.35、glibc 2.32等基础软件。
+Alibaba Cloud Linux 2选择Linux kernel 4.19 LTS，同时提供GCC-7.3.1/8.2.1/9.1.1的devtoolset支持。</p>
+<p>Alibaba Cloud Linux 3基于Anolis OS 8打造，兼容CentOS 8、RHEL 8生态。
+Alibaba Cloud Linux 2基于Aonlis OS 7打造，兼容CentOS 7、RHEL 7生态。</p>
+<p>可以通过<code>cat /proc/version</code>指令查看你的内核版本，以此来判断你是7还是8。</p>
+<pre tabindex="0"><code>Linux version 4.19.91-24.1.al7.x86_64 (mockbuild@koji.alibaba-inc.com) (gcc version 4.8.5 20150623 (Red Hat 4.8.5-44) (GCC)) #1 SMP Wed Jul 21 17:40:23 CST 2021
+</code></pre><p>比如我的是4.19，那么就是centos 7。</p>
+<h3 id="1-首先要添加源">1. 首先要添加源</h3>
+<p>如果是其他版本的，自行在这里https://packages.endpointdev.com查找</p>
+<pre tabindex="0"><code>yum install https://packages.endpointdev.com/rhel/7/os/x86_64/endpoint-repo.x86_64.rpm
+</code></pre><p>(非root用户前面需要添加sudo)</p>
+<h3 id="2-修改repo文件">2. 修改repo文件</h3>
+<p>如果你此时去<code>yum install git</code>会报错</p>]]></description>
+</item>
+<item>
+    <title>2022 11 21 Subsystem Request Failed on Channel 0 Scp: Connection Closed</title>
+    <link>https://www.ithome.me/post/2022/11/21/subsystem-request-failed-on-channel-0-scp-connection-closed/</link>
+    <pubDate>Mon, 21 Nov 2022 00:00:00 &#43;0000</pubDate>
+    <author>Simon</author>
+    <guid>https://www.ithome.me/post/2022/11/21/subsystem-request-failed-on-channel-0-scp-connection-closed/</guid>
+    <description><![CDATA[<p>某次正常拉取<code>gerrit</code>仓库的时候，出现报错</p>
+<blockquote>
+<p>subsystem request failed on channel 0
+scp: Connection closed</p>
+</blockquote>
+<p>报错原因是scp版本升级导致问题出现。解决方案如下：
+<code>https://github.com/PowerShell/Win32-OpenSSH/issues/1945</code></p>
+<p>不想看issues的直接根据下面的改：
+<code>scp -p -P</code>改为<code>scp -p -O -P</code></p>]]></description>
+</item>
+<item>
+    <title>手摸手极简docker部署rocketmq单机实战</title>
+    <link>https://www.ithome.me/post/2021/12/17/docker%E9%83%A8%E7%BD%B2rocketmq%E5%8D%95%E6%9C%BA%E5%AE%9E%E6%88%98/</link>
+    <pubDate>Fri, 17 Dec 2021 00:00:00 &#43;0000</pubDate>
+    <author>Simon</author>
+    <guid>https://www.ithome.me/post/2021/12/17/docker%E9%83%A8%E7%BD%B2rocketmq%E5%8D%95%E6%9C%BA%E5%AE%9E%E6%88%98/</guid>
+    <description><![CDATA[<p>自己本地搭建rocketmq开发环境还是用docker方便点，之前搭建一直有些小问题，最近专项解决了下，终于搞定了，这里整理分享下</p>
+<h3 id="环境准备">环境准备</h3>
+<blockquote>
+<p>因笔者用的MacBook，所以会主要以Mac为主讲解，其他环境区别不大</p>
+</blockquote>
+<p>首先请准备好docker环境，推荐<a href="https://www.docker.com/products/docker-desktop" target="_blank" rel="noopener noreffer">docker desktop</a>
+，无他，点点点就完事了，不用的时候不启动，开发机紧张的内存问题得到了心理上的安慰。</p>
+<p>还需要安装好<code>docker-compose</code>，请自行参考安装教程<a href="https://docs.docker.com/compose/install/" target="_blank" rel="noopener noreffer">点这里</a>
+</p>
+<blockquote>
+<p>注：<code>docker desktop</code>自带了docker-compose，所以不需要再单独安装compose了</p>
+</blockquote>
+<h3 id="编译rocketmq镜像">编译rocketmq镜像</h3>
+<p>环境搞定了，我们开始搭建rocketmq，直接用官方推荐的docker镜像即可。
+镜像下载地址：<a href="https://github.com/apache/rocketmq-docker" target="_blank" rel="noopener noreffer">https://github.com/apache/rocketmq-docker</a>
+</p>
+<p>我们先通过<code>git</code>把代码拉下来，打开命令行复制粘贴</p>
+<p><code>git clone https://hub.fastgit.org/apache/rocketmq-docker.git</code></p>
+<p>clone完成后，继续<code>cd rocketmq-docker/image-build</code>到image-build目录下</p>
+<p>目前最新版本为<code>4.9.2</code>,我们就以这个版本为例：
+继续输入下列指令</p>
+<pre tabindex="0"><code>sh build-image.sh 4.9.2 alpine
+</code></pre><p>等待完成就即可，如果报错，请自行根据错误查找原因。只要环境没问题，编译完成后我们能得到<code>apacherocketmq/rocketmq</code>镜像</p>
+<p>至此，我们已经完成了一半的工作。</p>
+<h3 id="编写docker-compose配置">编写docker-compose配置</h3>
+<blockquote>
+<p>鲁迅：授人以鱼不如授人以渔和鱼
+有经验的同学此时已经急不可耐了，鱼拿去。
+完整的<code>docker-compose.yml</code>文件</p>
+</blockquote>
+<pre tabindex="0"><code>version: &#39;3&#39;
+services:
+  namesrv:
+    image: apacherocketmq/rocketmq:4.9.2-alpine
+    container_name: rmqnamesrv
+    ports:
+      - 9876:9876
+    volumes:
+      - ./data/namesrv/logs:/home/rocketmq/logs
+    command: sh mqnamesrv
+    restart: always
+  broker:
+    image: apacherocketmq/rocketmq:4.9.2-alpine
+    container_name: rmqbroker
+    links:
+      - namesrv
+    ports:
+      - 10909:10909
+      - 10911:10911
+      - 10912:10912
+    environment:
+      - NAMESRV_ADDR=namesrv:9876
+    volumes:
+      - ./data/broker/logs:/home/rocketmq/logs
+      - ./data/broker/store:/home/rocketmq/store
+      - ./data/broker/conf/broker.conf:/home/rocketmq/rocketmq-4.9.2/conf/broker.conf
+      - ./data/broker/runbroker.sh:/home/rocketmq/rocketmq-4.9.2/bin/runbroker.sh
+    command: sh mqbroker -c /home/rocketmq/rocketmq-4.9.2/conf/broker.conf
+    depends_on:
+      - namesrv
+    restart: always
+  rmqconsole:
+    image: candice0630/rocketmq-console-ng:2.0
+    container_name: rmqconsole
+    ports:
+      - 9001:8080
+    environment:
+      JAVA_OPTS: -Drocketmq.namesrv.addr=namesrv:9876
+        -Dcom.rocketmq.sendMessageWithVIPChannel=false
+    depends_on:
+      - namesrv
+    restart: always
+</code></pre><p>上面一共三个images，<code>namesrv</code>、<code>broker</code>和<code>rmqconsole</code>
+熟悉<code>docker-compose</code>的同学可以直接跳过这部分了
+本部分主要结合上面的配置来说，不适应的根据自己的习惯自行更改
+先建立一个<code>rocketmq</code>文件夹，然后在文件夹下面创建<code>docker-compose.yml</code>文件，复制上面的内容进去。在<code>docker-compose.yml</code>同级目录下创建<code>data</code>文件夹，在<code>data</code>文件夹下分别创建<code>broker</code>和<code>namesrv</code>文件夹，<code>broker</code>目录下分别创建<code>conf</code>、<code>logs</code>和<code>store</code>文件夹。<code>namesrv</code>目录下创建<code>logs</code>目录，<code>logs</code>目录下创建<code>rocketmqlogs</code>目录，这样所有的目录创建完成。自定义的<code>broker.conf</code>文件放到<code>data/broker/conf</code>目录下。</p>]]></description>
+</item>
+<item>
+    <title>2021 06 24 Centos7上更新Redis到最新版</title>
+    <link>https://www.ithome.me/post/2021/06/24/centos7%E4%B8%8A%E6%9B%B4%E6%96%B0redis%E5%88%B06/</link>
+    <pubDate>Thu, 24 Jun 2021 00:00:00 &#43;0000</pubDate>
+    <author>Simon</author>
+    <guid>https://www.ithome.me/post/2021/06/24/centos7%E4%B8%8A%E6%9B%B4%E6%96%B0redis%E5%88%B06/</guid>
+    <description><![CDATA[<h3 id="1-首先需要安装remi的软件源官网地址">1. 首先需要安装Remi的软件源，<a href="http://rpms.remirepo.net/" target="_blank" rel="noopener noreffer">官网地址</a>
+</h3>
+<p>我们选择中国的镜像地址：</p>
+<pre tabindex="0"><code>//centos 7
+yum install -y https://mirrors.tuna.tsinghua.edu.cn/remi/enterprise/remi-release-7.rpm
+</code></pre><pre tabindex="0"><code>//centos 8
+yum install -y https://mirrors.tuna.tsinghua.edu.cn/remi/enterprise/remi-release-8.rpm
+</code></pre><h3 id="2-输入-yum---enablereporemi-install-redis">2. 输入 <code>yum --enablerepo=remi install redis</code></h3>
+<p>中途会提示输入<code>y</code></p>
+<h3 id="3-安装完成后输入systemctl-start-redis启动redis">3. 安装完成后输入<code>systemctl start redis</code>启动redis</h3>
+<p>如果之前已经在运行redis3.x，可以输入<code>systemctl restart redis</code>重启一次</p>
+<pre tabindex="0"><code>//查看运行状态
+systemctl status redis
+</code></pre><h3 id="4-查看redis版本">4. 查看redis版本</h3>
+<pre tabindex="0"><code>redis-server -v
+</code></pre>]]></description>
+</item>
+<item>
+    <title>Nginx配置ssl证书无法访问的问题</title>
+    <link>https://www.ithome.me/post/2021/05/16/nginx%E9%85%8D%E7%BD%AEssl%E8%AF%81%E4%B9%A6%E6%97%A0%E6%B3%95%E8%AE%BF%E9%97%AE%E7%9A%84%E9%97%AE%E9%A2%98/</link>
+    <pubDate>Sun, 16 May 2021 00:00:00 &#43;0000</pubDate>
+    <author>Simon</author>
+    <guid>https://www.ithome.me/post/2021/05/16/nginx%E9%85%8D%E7%BD%AEssl%E8%AF%81%E4%B9%A6%E6%97%A0%E6%B3%95%E8%AE%BF%E9%97%AE%E7%9A%84%E9%97%AE%E9%A2%98/</guid>
+    <description><![CDATA[<h2 id="nginx配置了ssl证书但是http能访问https不行">nginx配置了SSL证书，但是http能访问，https不行</h2>
+<hr>
+<h3 id="检查443端口是否已经开放">检查443端口是否已经开放</h3>
+<ul>
+<li><i class="far fa-square fa-fw" aria-hidden="true"></i> 腾讯云和阿里云的安全策略组里面放行端口<code>80</code>和<code>443</code></li>
+<li><i class="far fa-square fa-fw" aria-hidden="true"></i> 防火墙端口放开。通过SSH登录到服务器(centos为例)
+<ul>
+<li>centos通过<code>firewall-cmd --list-all</code>查看是否开放了443端口</li>
+<li>若没有，运行<code>firewall-cmd --zone=public --add-port=443/tcp --permanent</code></li>
+<li><code>systemctl restart firewalld</code>重启防火墙生效</li>
+</ul>
+</li>
+</ul>
+<h3 id="检查证书是否配置正确">检查证书是否配置正确</h3>
+<pre tabindex="0"><code>    server {
+        listen 443 ssl;
+        server_name your domain;
+        client_max_body_size 1024m;
+
+        ssl_certificate /www/server/nginx/conf/cert/555.pem;
+        ssl_certificate_key /www/server/nginx/conf/cert/555.key;
+        ssl_session_timeout 5m;
+        ssl_ciphers ECDHE-RSA-AES128-GCM-SHA256:ECDHE:ECDH:AES:HIGH:!NULL:!aNULL:!MD5:!ADH:!RC4;
+        ssl_protocols TLSv1 TLSv1.1 TLSv1.2;
+        ssl_prefer_server_ciphers on;
+    }
+</code></pre><h2 id="强制http跳转到https提示重定向过多">强制http跳转到https，提示重定向过多</h2>
+<hr>
+<h3 id="你使用了rewrite并且在一个server里面同时监听了80和443">你使用了<code>rewrite</code>，并且在一个server里面同时监听了<code>80</code>和<code>443</code></h3>
+<p>解决方法：<code>80</code>和<code>443</code>分别拆分到不同的<code>server</code>，80里面做301重定向，下面是配置文件，仅供参考。</p>
+<pre tabindex="0"><code>   upstream halo {
+        server 127.0.0.1:8090;
+    }
+    server {
+        listen 80;
+        return 301 https://yourdomain$request_uri;
+    }
+    server {
+        listen 443 ssl;
+        server_name yourdomain;
+        client_max_body_size 1024m;
+
+        #charset koi8-r;
+
+        ssl_certificate /www/server/nginx/conf/cert/xxx.pem;
+        ssl_certificate_key /www/server/nginx/conf/cert/xxx.key;
+        ssl_session_timeout 5m;
+        ssl_ciphers ECDHE-RSA-AES128-GCM-SHA256:ECDHE:ECDH:AES:HIGH:!NULL:!aNULL:!MD5:!ADH:!RC4;
+        ssl_protocols TLSv1 TLSv1.1 TLSv1.2;
+        ssl_prefer_server_ciphers on;
+
+        #access_log  logs/host.access.log  main;
+        location / {
+            proxy_pass http://halo;
+            proxy_set_header HOST $host;
+            proxy_set_header X-Forwarded-Proto $scheme;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For
+            $proxy_add_x_forwarded_for;
+        }
+        #error_page  404              /404.html;
+        # redirect server error pages to the static page /50x.html
+        error_page 500 502 503 504 /50x.html;
+        location = /50x.html {
+            root html;
+        }
+    }
+</code></pre>]]></description>
+</item>
+<item>
+    <title>There is an issue with node-fibers</title>
+    <link>https://www.ithome.me/post/2021/05/12/m1%E6%97%A0%E6%B3%95%E7%BC%96%E8%AF%91taro%E7%9A%84%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88/</link>
+    <pubDate>Wed, 12 May 2021 00:00:00 &#43;0000</pubDate>
+    <author>Simon</author>
+    <guid>https://www.ithome.me/post/2021/05/12/m1%E6%97%A0%E6%B3%95%E7%BC%96%E8%AF%91taro%E7%9A%84%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88/</guid>
+    <description><![CDATA[<h3 id="macbook-m1和taro"><code>MacBook M1</code>和<code>taro</code></h3>
+<p>在MacBook M1上运行<code>taro</code>项目<code>yarn dev:h5</code>的时候会报下面的错误：</p>
+<pre tabindex="0"><code>## There is an issue with `node-fibers` ##
+`/node_modules/fibers/bin/darwin-arm64-88/fibers.node` is missing.
+
+Try running this to fix the issue: .nvm/versions/node/v15.5.0/bin/node /node_modules/fibers/build
+Error: Cannot find module &#39;node_modules/fibers/bin/darwin-arm64-88/fibers&#39;
+</code></pre><p>找了很久没找到解决方案，知道找个一个类似的问题：https://www.jianshu.com/p/145015d721a5</p>
+<h3 id="解决办法">解决办法</h3>
+<p>我的环境如下：
+node： v15.14.0
+taro-cli： v3.2.8</p>
+<p>先看错误提示:</p>
+<pre tabindex="0"><code>## There is an issue with `node-fibers` ##
+`/node_modules/fibers/bin/darwin-arm64-88/fibers.node` is missing.
+
+Try running this to fix the issue: .nvm/versions/node/v15.14.0/bin/node /node_modules/fibers/build
+Error: Cannot find module &#39;node_modules/fibers/bin/darwin-arm64-88/fibers&#39;
+</code></pre><p>执行<code>/Users/xxx/.nvm/versions/node/v15.14.0/bin/node /Users/xxx/xxx/node_modules/fibers/build</code>时找不到fibers的<code>darwin-arm64-88</code></p>
+<ol>
+<li>在项目目录下执行<code>find . -name fibers.node</code>，看看输出路径有没有<code>darwin-arm64-88</code>，如果没有，继续下面步骤2</li>
+<li>在项目目录手动执行<code>/Users/xxx/.nvm/versions/node/v15.14.0/bin/node /Users/xxx/xxx/node_modules/fibers/build</code>，输出提示<code>node-gyp not found! Please ensure node-gyp is in your PATH--</code></li>
+<li>执行<code>npm install -g node-gyp</code>安装<code>node-gyp</code></li>
+<li>再次执行<code>/Users/xxx/.nvm/versions/node/v15.14.0/bin/node /Users/xxx/xxx/node_modules/fibers/build</code>，此时报错<code>binding.gyp not found</code></li>
+<li>项目目录下执行<code>find . -name binding.gyp</code>，会发现<code>node_modules/fibers/binding.gyp</code>，项目中是存在这个文件的</li>
+<li>项目录下下<code>cd node_modules/fibers</code>，然后再次执行<code>/Users/xxx/.nvm/versions/node/v15.14.0/bin/node /Users/xxx/xxx/node_modules/fibers/build</code>，不出意外的话此时应该编译通过了。</li>
+<li>然后<code>cd ../..</code>，执行<code>yarn dev:h5</code>，成功启动。</li>
+</ol>]]></description>
+</item>
+<item>
+    <title>怎样在Centos中安装Oracle JDK</title>
+    <link>https://www.ithome.me/post/2021/04/15/%E6%80%8E%E6%A0%B7%E5%9C%A8centos%E4%B8%AD%E5%AE%89%E8%A3%85oracle-jdk/</link>
+    <pubDate>Thu, 15 Apr 2021 00:00:00 &#43;0000</pubDate>
+    <author>Simon</author>
+    <guid>https://www.ithome.me/post/2021/04/15/%E6%80%8E%E6%A0%B7%E5%9C%A8centos%E4%B8%AD%E5%AE%89%E8%A3%85oracle-jdk/</guid>
+    <description><![CDATA[<h4 id="解决方案">解决方案</h4>
+<ol>
+<li>从<a href="https://www.oracle.com/java/technologies/javase/javase-jdk8-downloads.html" target="_blank" rel="noopener noreffer">这里</a>
+下载最新的JDK. 现在CentOs (Linux x64 RPM Package) , <a href="https://download.oracle.com/otn/java/jdk/8u281-b09/89d678f2be164786b292527658ca1605/jdk-8u281-linux-x64.rpm" target="_blank" rel="noopener noreffer">jdk-8u281-linux-x64.rpm</a>
+</li>
+<li><code>chmod +x jdk-8u281-linux-x64.rpm</code></li>
+<li><code>yum install jdk-8u281-linux-x64.rpm</code> <code>Java</code>会被安装在<code>/usr/java</code>目录</li>
+<li><code>alternatives --config java</code> 选择你要的Java版本</li>
+<li>验证你的Java版本</li>
+</ol>
+<pre tabindex="0"><code>java version &#34;1.8.0_281&#34;
+Java(TM) SE Runtime Environment (build 1.8.0_281-b09)
+Java HotSpot(TM) 64-Bit Server VM (build 25.281-b09, mixed mode)
+</code></pre>]]></description>
+</item>
+<item>
+    <title>ABIs [arm64-v8a, x86_64] are not supported for platform. Supported ABIs are [armeabi-v7a, x86].</title>
+    <link>https://www.ithome.me/post/2021/04/07/m1-abis-arm64-v8a-x86_64-are-not-supported-for-platform.-supported-abis-are-armeabi-v7a-x86/</link>
+    <pubDate>Wed, 07 Apr 2021 00:00:00 &#43;0000</pubDate>
+    <author>Simon</author>
+    <guid>https://www.ithome.me/post/2021/04/07/m1-abis-arm64-v8a-x86_64-are-not-supported-for-platform.-supported-abis-are-armeabi-v7a-x86/</guid>
+    <description><![CDATA[<p>M1的兼容性问题还是不少，比如NDK开发遇到坑了，提示
+<code>ABIs [arm64-v8a, x86_64] are not supported for platform. Supported ABIs are [armeabi-v7a, x86]</code></p>
+<p>然后找到了这个issue:
+<a href="https://github.com/android/ndk/issues/1299" target="_blank" rel="noopener noreffer">https://github.com/android/ndk/issues/1299</a>
+</p>
+<p>尝试了无果。</p>
+<p>然后无意中发现其他人的M1可以编译，对比后发现是NDK版本问题，我使用的最新22版本报错，但是降级到<code>21.1.6352462</code>后能正常编译成功。</p>]]></description>
+</item>
+</channel>
+</rss>
