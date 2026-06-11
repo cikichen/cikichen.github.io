@@ -100,6 +100,17 @@
         alt="https://www.gravatar.com/avatar/7a0c24f697ea1587001c36d00039b60f?s=240&amp;d=mp"
         title="https://www.gravatar.com/avatar/7a0c24f697ea1587001c36d00039b60f?s=240&amp;d=mp" /></a></div><div class="home-subtitle"><div id="id-1" class="typeit"></div></div></div>
 <article class="single summary" itemscope itemtype="http://schema.org/Article"><h1 class="single-title" itemprop="name headline">
+        <a href="/post/2019/02/13/wkwebview-%E9%82%A3%E4%BA%9B%E5%9D%91/">WKWebView 那些坑</a>
+    </h1><div class="post-meta"><span class="post-author"><a href="/" title="Author" rel=" author" class="author"><i class="fas fa-user-circle fa-fw" aria-hidden="true"></i>SimonChen</a>
+</span>&nbsp;<span class="post-publish">published on <time datetime="2019-02-13">2019-02-13</time></span>&nbsp;<span class="post-category">included in <a href="/categories/%E7%A7%BB%E5%8A%A8%E5%BC%80%E5%8F%91/"><i class="far fa-folder fa-fw" aria-hidden="true"></i>移动开发</a></span></div><div class="content">本文出处“腾讯Bugly(http://bugly.qq.com ),作者林泽水”
+导语 WKWebView 是苹果在 WWDC 2014 上推出的新一代 webView 组件，用以替代 UIKit 中笨重难用、内存泄漏的 UIWebView。WKWebView 拥有60fps滚动刷新率、和 safari 相同的 JavaScript 引擎等优势。
+简单的适配方法本文不再赘述，主要来说说适配 WKWebView 过程中填过的坑以及善待解决的技术难题。
+1、WKWebView 白屏问题 WKWebView 自诩拥有更快的加载速度，更低的内存占用，但实际上 WKWebView 是一个多进程组件，Network Loading 以及 UI Rendering 在其它进程中执行。初次适配 WKWebView 的时候，我们也惊讶于打开 WKWebView 后，App 进程内存消耗反而大幅下降，但是仔细观察会发现，Other Process 的内存占用会增加。在一些用 webGL 渲染的复杂页面，使用 WKWebView 总体的内存占用（App Process Memory + Other Process Memory）不见得比 UIWebView 少很多。
+在 UIWebView 上当内存占用太大的时候，App Process 会 crash；而在 WKWebView 上当总体的内存占用比较大的时候，WebContent Process 会 crash，从而出现白屏现象。在 WKWebView 中加载下面的测试链接可以稳定重现白屏现象:
+http://people.mozilla.org/~rnewman/fennec/mem.html 这个时候 WKWebView.URL 会变为 nil, 简单的 reload 刷新操作已经失效，对于一些长驻的H5页面影响比较大。</div><div class="post-footer">
+        <a href="/post/2019/02/13/wkwebview-%E9%82%A3%E4%BA%9B%E5%9D%91/">Read More</a><div class="post-tags">
+                <i class="fas fa-tags fa-fw" aria-hidden="true"></i>&nbsp;<a href="/tags/wkwebview/">WKWebView</a></div></div>
+</article><article class="single summary" itemscope itemtype="http://schema.org/Article"><h1 class="single-title" itemprop="name headline">
         <a href="/post/2018/12/25/2019%E6%96%B0%E4%B8%AA%E7%A8%8E%E6%89%A3%E9%99%A4%E7%BB%86%E5%88%99%E5%9B%BE%E4%BE%8B/">2019新个税扣除细则图例</a>
     </h1><div class="post-meta"><span class="post-author"><a href="/" title="Author" rel=" author" class="author"><i class="fas fa-user-circle fa-fw" aria-hidden="true"></i>SimonChen</a>
 </span>&nbsp;<span class="post-publish">published on <time datetime="2018-12-25">2018-12-25</time></span>&nbsp;<span class="post-category">included in <a href="/categories/%E6%8A%80%E6%9C%AF%E4%B9%8B%E5%A4%96/"><i class="far fa-folder fa-fw" aria-hidden="true"></i>技术之外</a></span></div><div class="content">2019的个税专项终于落定，对工薪阶层来说真的是个好事，可以说是个良心正常。 总体来说就是一下几项：
@@ -137,13 +148,6 @@ allprojects{ repositories { def REPOSITORY_URL = &#39;http://maven.aliyun.com/ne
 </span>&nbsp;<span class="post-publish">published on <time datetime="2018-09-19">2018-09-19</time></span>&nbsp;<span class="post-category">included in <a href="/categories/%E7%A7%BB%E5%8A%A8%E5%BC%80%E5%8F%91/"><i class="far fa-folder fa-fw" aria-hidden="true"></i>移动开发</a></span></div><div class="content">最近公司有个项目使用flutter全新开发，开发过程中遇到了一些问题，比如我们登录注册等验证地方使用了极验，但是极验肯定是没有flutter插件的，那就只能自己动手造了。</div><div class="post-footer">
         <a href="/post/2018/09/19/flutter%E6%8F%92%E4%BB%B6%E5%BC%80%E5%8F%91-%E8%B8%A9%E5%9D%91%E4%B9%8B%E8%B7%AF/">Read More</a><div class="post-tags">
                 <i class="fas fa-tags fa-fw" aria-hidden="true"></i>&nbsp;<a href="/tags/flutter%E6%8F%92%E4%BB%B6/">Flutter插件</a>,&nbsp;<a href="/tags/%E6%9E%81%E9%AA%8C/">极验</a></div></div>
-</article><article class="single summary" itemscope itemtype="http://schema.org/Article"><h1 class="single-title" itemprop="name headline">
-        <a href="/post/2018/09/18/flutter%E6%8F%92%E4%BB%B6%E4%B8%8A%E4%BC%A0pub-dartlang%E5%A4%B1%E8%B4%A5%E7%9A%84%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88/">flutter插件上传pub.dartlang失败的解决方案</a>
-    </h1><div class="post-meta"><span class="post-author"><a href="/" title="Author" rel=" author" class="author"><i class="fas fa-user-circle fa-fw" aria-hidden="true"></i>SimonChen</a>
-</span>&nbsp;<span class="post-publish">published on <time datetime="2018-09-18">2018-09-18</time></span>&nbsp;<span class="post-category">included in <a href="/categories/%E7%A7%BB%E5%8A%A8%E5%BC%80%E5%8F%91/"><i class="far fa-folder fa-fw" aria-hidden="true"></i>移动开发</a></span></div><div class="content">最近开发了一款flutter的插件，想发布到pub.darlang上面去，然后发现命令行各种失败，设置了ss全局|-代|理，命令行export代|理,全都不行，账号验证完毕后，提示上传完成，但是最后一步总是失败。后来无意中发现一次上传过程中出现的地址是flutter-io.cn，我猜测会不会是因为设置了镜像的原因。果断在.zshrc中去掉了镜像地址设置，然后再试，一次成功，完美解决。
-# 注释掉这两句 # export PUB_HOSTED_URL=https://pub.flutter-io.cn # export FLUTTER_STORAGE_BASE_URL=https://storage.flutter-io.cn 如果有其他同学遇到类似问题，可以试试去掉镜像再试试。</div><div class="post-footer">
-        <a href="/post/2018/09/18/flutter%E6%8F%92%E4%BB%B6%E4%B8%8A%E4%BC%A0pub-dartlang%E5%A4%B1%E8%B4%A5%E7%9A%84%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88/">Read More</a><div class="post-tags">
-                <i class="fas fa-tags fa-fw" aria-hidden="true"></i>&nbsp;<a href="/tags/flutter/">Flutter</a></div></div>
 </article><ul class="pagination"><li class="page-item ">
                     <span class="page-link">
                         <a href="/">1</a>

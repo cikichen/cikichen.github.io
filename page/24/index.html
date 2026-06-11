@@ -100,6 +100,25 @@
         alt="https://www.gravatar.com/avatar/7a0c24f697ea1587001c36d00039b60f?s=240&amp;d=mp"
         title="https://www.gravatar.com/avatar/7a0c24f697ea1587001c36d00039b60f?s=240&amp;d=mp" /></a></div><div class="home-subtitle"><div id="id-1" class="typeit"></div></div></div>
 <article class="single summary" itemscope itemtype="http://schema.org/Article"><h1 class="single-title" itemprop="name headline">
+        <a href="/post/2013/12/26/objective-c%E8%AF%AD%E6%B3%95%E5%AD%A6%E4%B9%A0-static%E5%85%B3%E9%94%AE%E5%AD%97/">Objective-C语法学习-static关键字</a>
+    </h1><div class="post-meta"><span class="post-author"><a href="/" title="Author" rel=" author" class="author"><i class="fas fa-user-circle fa-fw" aria-hidden="true"></i>SimonChen</a>
+</span>&nbsp;<span class="post-publish">published on <time datetime="2013-12-26">2013-12-26</time></span></div><div class="content">在变量声明前加上关键字static,可以使局部变量保留多次调用一个方法所得的值。如下：
+[objc] static int hitCount = 0; [/objc]
+声明整数hitCount是一个静态变量。和其他常量局部变量不同，静态变量的初始值为0，所以前面显示的初始化是多余的。此外，他们只在程序开始执行时初始化一次，并且在多次调用方法时保存这些数值。
+所以编码序列
+[objc] -(void)showPage { static int pageCount = 0; &hellip;. ++pageCount; &hellip;. } [/objc]
+可能出现在一个showPage方法中，它用于记录该方法的调用次数。只在程序开始时局部静态变量设置为0，并且在连续调用showPage方法时获得新值。
+注意，将pageCount设置为局部静态变量和实例变量之间的区别。对于前一种情况，pageCount能记录调用showPage方法的所有对象打印页面的数目。对于后一种情况，pageCount变量可以计算每个对象的页面数目，因为每个对象都有自己的pageCount副本。
+记住只能在定义静态和局部变量的方法中访问这些变量。所以，即使静态变量pageCount，也只能在showPage函数中访问。可以将变量的声明移到所有方法声明的外部(通常放在implementation文件的开始处)，这样所有方法都可以访问它们，如：
+[objc] #import &quot;Printer.h&quot;
+static int pageCount;
+@implementation Printer
+&hellip;
+@end [/objc]
+这样，该文件中包含的所有实例或者类方法都可以访问变量pageCount。</div><div class="post-footer">
+        <a href="/post/2013/12/26/objective-c%E8%AF%AD%E6%B3%95%E5%AD%A6%E4%B9%A0-static%E5%85%B3%E9%94%AE%E5%AD%97/">Read More</a><div class="post-tags">
+                <i class="fas fa-tags fa-fw" aria-hidden="true"></i>&nbsp;<a href="/tags/objective-c/">Objective-C</a></div></div>
+</article><article class="single summary" itemscope itemtype="http://schema.org/Article"><h1 class="single-title" itemprop="name headline">
         <a href="/post/2013/12/26/objective-c%E8%AF%AD%E6%B3%95%E5%AD%A6%E4%B9%A0-%E4%BD%BF%E7%94%A8%E7%82%B9%E8%BF%90%E7%AE%97%E7%AC%A6%E8%AE%BF%E9%97%AE%E5%B1%9E%E6%80%A7/">Objective-C语法学习-使用点运算符访问属性</a>
     </h1><div class="post-meta"><span class="post-author"><a href="/" title="Author" rel=" author" class="author"><i class="fas fa-user-circle fa-fw" aria-hidden="true"></i>SimonChen</a>
 </span>&nbsp;<span class="post-publish">published on <time datetime="2013-12-26">2013-12-26</time></span></div><div class="content">Objective-C语言允许你使用非常简便的语法访问属性。要获得myFraction中存储的numerator的值，可使用下面的语句：
@@ -195,30 +214,6 @@ initVar方法简单地把100赋值给ClassA的实例变量：
 测试代码：
 [objc] int main(int argc,char* argv[]) { NSAutoreleasePool* pool = [[NSAutoreleasePool alloc] init]; ClassB* b = [[ClassB alloc] init]; [b initVar]; [b printVar]; [b release]; [pool drain]; return 0; } [/objc]</div><div class="post-footer">
         <a href="/post/2013/12/26/objective-c%E8%AF%AD%E6%B3%95%E5%AD%A6%E4%B9%A0-%E7%BB%A7%E6%89%BF/">Read More</a><div class="post-tags">
-                <i class="fas fa-tags fa-fw" aria-hidden="true"></i>&nbsp;<a href="/tags/objective-c/">Objective-C</a></div></div>
-</article><article class="single summary" itemscope itemtype="http://schema.org/Article"><h1 class="single-title" itemprop="name headline">
-        <a href="/post/2013/12/26/objective-c-e8-af-ad-e6-b3-95-e5-ad-a6-e4-b9-a0-e9-99-90-e5-ae-9a-e8-af-8dlong-e3-80-81long-long-e3-80-81short-e3-80-81unsigned-e5-8f-8asigned/">Objective-C语法学习-限定词:long、long long、short、unsigned及signed</a>
-    </h1><div class="post-meta"><span class="post-author"><a href="/" title="Author" rel=" author" class="author"><i class="fas fa-user-circle fa-fw" aria-hidden="true"></i>SimonChen</a>
-</span>&nbsp;<span class="post-publish">published on <time datetime="2013-12-26">2013-12-26</time></span></div><div class="content">与Java不同，objc中的Long是用来修饰其他类型的，比如
-long int 如果直接把限定词long放在int声明之前，那么所声明的整型变量在某些计算机上具有扩展的值域。例子如下：
-[objc] long int factorial; [/objc]
-就像float和double变量一样，long变量的具体精度也是由具体的计算机系统决定的。在许多系统上，int与long int具有相同的值域，而且任何一个都能存储32位宽的整型值。
-long int 类型的常量值可通过在整型变量末尾添加字母L（大小写均可）来形成。但数字和L之间不允许有空格。例如：
-[objc] long int numberOfPoints = 131071100L; [/objc]
-要用NSLog显示long int的值，使用字母l作为修饰符并放在整型格式符号i、o和x之前。这意味着格式符号%li用十进制格式显示long int的值。%lo用八进制显示。%lx用十六进制格式显示。
-long long [objc] long long int maxAllowedStorage; [/objc]
-这条语句把将指定的变量声明为具有特定扩展精度的变量，该扩展精度保证变量至少具有64位的宽度。NSLog字符串表示方法为%lli。使用两个l。
-long double [objc] long double US_deficit_2004; [/objc]
-long double常量可写成其尾部带有字母l或L的浮点常量，如下：
-[objc] 1.234e+7L [/objc]
-要显示long double 的值，需要使用修饰符L。因此，%Lf表示用浮点计数法显示，%Le用科学计数法显示，而%Lg表示用上述两种中任选一种表示。
-short int short int 用来告诉objective-c编译器要声明的特定变量用来存储相当小的整数。之所以使用short变量，主要原因是对节约内存空间的考虑，当程序员需要大量内存而可用的内存量又十分有限时，就可以用short变量来解决这个问题。
-在某些计算机上，short int 占用的内存空间是常规int变量所占空间的一半。在任何情况下，确保分配给short int的空间数量不少于16位。
-在objective-c中，没有其他方法可显式地编写short int 型常量。要显示short int变量，可将字母h放在任何普通的整型转换符号之前，例如：%hi,%ho或者%hx。
-unsigned int [objc] unsigned int counter; [/objc]
-向编译器声明：变量counter只用于保存正值。通过限定整型变量的使用，使它专门存储正整数，可以扩展整型变量的精度。
-声明unsigned类型常量，需要在值后添加u(U)。例如：</div><div class="post-footer">
-        <a href="/post/2013/12/26/objective-c-e8-af-ad-e6-b3-95-e5-ad-a6-e4-b9-a0-e9-99-90-e5-ae-9a-e8-af-8dlong-e3-80-81long-long-e3-80-81short-e3-80-81unsigned-e5-8f-8asigned/">Read More</a><div class="post-tags">
                 <i class="fas fa-tags fa-fw" aria-hidden="true"></i>&nbsp;<a href="/tags/objective-c/">Objective-C</a></div></div>
 </article><ul class="pagination"><li class="page-item ">
                     <span class="page-link">
