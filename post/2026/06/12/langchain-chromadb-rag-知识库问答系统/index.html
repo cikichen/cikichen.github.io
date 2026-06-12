@@ -1,975 +1,648 @@
-<!DOCTYPE html>
-<html lang="zh-CN">
-    <head>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <meta name="robots" content="noodp" />
-        <title>LangChain &#43; ChromaDB 实战：构建本地知识库 RAG 问答系统 - 编程心语</title><meta name="Description" content="手把手教你使用 LangChain 和 ChromaDB 构建一个完整的本地知识库 RAG 问答系统，从文档加载、向量化存储到检索增强生成，附完整可运行代码。"><meta property="og:url" content="https://www.ithome.me/post/2026/06/12/langchain-chromadb-rag-%E7%9F%A5%E8%AF%86%E5%BA%93%E9%97%AE%E7%AD%94%E7%B3%BB%E7%BB%9F/">
-  <meta property="og:site_name" content="编程心语">
-  <meta property="og:title" content="LangChain &#43; ChromaDB 实战：构建本地知识库 RAG 问答系统">
-  <meta property="og:description" content="手把手教你使用 LangChain 和 ChromaDB 构建一个完整的本地知识库 RAG 问答系统，从文档加载、向量化存储到检索增强生成，附完整可运行代码。">
-  <meta property="og:locale" content="zh_CN">
-  <meta property="og:type" content="article">
-    <meta property="article:section" content="posts">
-    <meta property="article:published_time" content="2026-06-12T08:00:00+08:00">
-    <meta property="article:modified_time" content="2026-06-12T08:00:00+08:00">
-    <meta property="article:tag" content="RAG">
-    <meta property="article:tag" content="LangChain">
-    <meta property="article:tag" content="ChromaDB">
-    <meta property="article:tag" content="LLM">
-    <meta property="article:tag" content="知识库">
-
-  <meta name="twitter:card" content="summary">
-  <meta name="twitter:title" content="LangChain &#43; ChromaDB 实战：构建本地知识库 RAG 问答系统">
-  <meta name="twitter:description" content="手把手教你使用 LangChain 和 ChromaDB 构建一个完整的本地知识库 RAG 问答系统，从文档加载、向量化存储到检索增强生成，附完整可运行代码。">
-      <meta name="twitter:site" content="@https://twitter.com/ChenCiki">
-<meta name="application-name" content="编程心语">
-<meta name="apple-mobile-web-app-title" content="编程心语"><meta name="theme-color" content="#ffffff"><meta name="msapplication-TileColor" content="#da532c"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
-        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
-        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5"><link rel="manifest" href="/site.webmanifest"><link rel="canonical" href="https://www.ithome.me/post/2026/06/12/langchain-chromadb-rag-%E7%9F%A5%E8%AF%86%E5%BA%93%E9%97%AE%E7%AD%94%E7%B3%BB%E7%BB%9F/" /><link rel="prev" href="https://www.ithome.me/post/2026/06/11/docker%E5%A4%9A%E9%98%B6%E6%AE%B5%E6%9E%84%E5%BB%BA%E5%AE%9E%E6%88%98-%E4%BC%98%E5%8C%96%E9%95%9C%E5%83%8F%E5%A4%A7%E5%B0%8F%E4%B8%8E%E6%9E%84%E5%BB%BA%E9%80%9F%E5%BA%A6/" /><link rel="next" href="https://www.ithome.me/post/2026/06/12/docker-multistage-build-go/" /><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/normalize.css@8.0.1/normalize.min.css"><link rel="stylesheet" href="/css/style.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css"><script type="application/ld+json">
-    {
-        "@context": "http://schema.org",
-        "@type": "BlogPosting",
-        "headline": "LangChain + ChromaDB 实战：构建本地知识库 RAG 问答系统",
-        "inLanguage": "zh-CN",
-        "mainEntityOfPage": {
-            "@type": "WebPage",
-            "@id": "https:\/\/www.ithome.me\/post\/2026\/06\/12\/langchain-chromadb-rag-%E7%9F%A5%E8%AF%86%E5%BA%93%E9%97%AE%E7%AD%94%E7%B3%BB%E7%BB%9F\/"
-        },"genre": "posts","keywords": "RAG, LangChain, ChromaDB, LLM, 知识库","wordcount":  1196 ,
-        "url": "https:\/\/www.ithome.me\/post\/2026\/06\/12\/langchain-chromadb-rag-%E7%9F%A5%E8%AF%86%E5%BA%93%E9%97%AE%E7%AD%94%E7%B3%BB%E7%BB%9F\/","datePublished": "2026-06-12T08:00:00+08:00","dateModified": "2026-06-12T08:00:00+08:00","publisher": {
-            "@type": "Organization",
-            "name": ""},"author": {
-                "@type": "Person",
-                "name": "Simon"
-            },"description": "手把手教你使用 LangChain 和 ChromaDB 构建一个完整的本地知识库 RAG 问答系统，从文档加载、向量化存储到检索增强生成，附完整可运行代码。"
-    }
-    </script></head>
-    <body data-header-desktop="fixed" data-header-mobile="auto"><script type="text/javascript">(window.localStorage && localStorage.getItem('theme') ? localStorage.getItem('theme') === 'dark' : ('auto' === 'auto' ? window.matchMedia('(prefers-color-scheme: dark)').matches : 'auto' === 'dark')) && document.body.setAttribute('theme', 'dark');</script>
-
-        <div id="mask"></div><div class="wrapper"><header class="desktop" id="header-desktop">
-    <div class="header-wrapper">
-        <div class="header-title">
-            <a href="/" title="编程心语">编程心语</a>
-        </div>
-        <div class="menu">
-            <div class="menu-inner"><a class="menu-item" href="/posts/"> 文章 </a><a class="menu-item" href="/categories/"> 分类 </a><a class="menu-item" href="/tags/"> 标签 </a><a class="menu-item" href="/about-me/"> 关于 </a><span class="menu-item delimiter"></span><span class="menu-item search" id="search-desktop">
-                        <input type="text" placeholder="搜索文章..." id="search-input-desktop">
-                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-desktop" title="Search">
-                            <i class="fas fa-search fa-fw" aria-hidden="true"></i>
-                        </a>
-                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-desktop" title="Clear">
-                            <i class="fas fa-times-circle fa-fw" aria-hidden="true"></i>
-                        </a>
-                        <span class="search-button search-loading" id="search-loading-desktop">
-                            <i class="fas fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
-                        </span>
-                    </span><a href="javascript:void(0);" class="menu-item theme-switch" title="Switch Theme">
-                    <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
-                </a>
-            </div>
-        </div>
-    </div>
-</header><header class="mobile" id="header-mobile">
-    <div class="header-container">
-        <div class="header-wrapper">
-            <div class="header-title">
-                <a href="/" title="编程心语">编程心语</a>
-            </div>
-            <div class="menu-toggle" id="menu-toggle-mobile">
-                <span></span><span></span><span></span>
-            </div>
-        </div>
-        <div class="menu" id="menu-mobile"><div class="search-wrapper">
-                    <div class="search mobile" id="search-mobile">
-                        <input type="text" placeholder="搜索文章..." id="search-input-mobile">
-                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-mobile" title="Search">
-                            <i class="fas fa-search fa-fw" aria-hidden="true"></i>
-                        </a>
-                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-mobile" title="Clear">
-                            <i class="fas fa-times-circle fa-fw" aria-hidden="true"></i>
-                        </a>
-                        <span class="search-button search-loading" id="search-loading-mobile">
-                            <i class="fas fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
-                        </span>
-                    </div>
-                    <a href="javascript:void(0);" class="search-cancel" id="search-cancel-mobile">
-                        Cancel
-                    </a>
-                </div><a class="menu-item" href="/posts/" title="">文章</a><a class="menu-item" href="/categories/" title="">分类</a><a class="menu-item" href="/tags/" title="">标签</a><a class="menu-item" href="/about-me/" title="">关于</a><a href="javascript:void(0);" class="menu-item theme-switch" title="Switch Theme">
-                <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
-            </a></div>
-    </div>
-</header><div class="search-dropdown desktop">
-        <div id="search-dropdown-desktop"></div>
-    </div>
-    <div class="search-dropdown mobile">
-        <div id="search-dropdown-mobile"></div>
-    </div><main class="main">
-                <div class="container"><div class="toc" id="toc-auto">
-            <h2 class="toc-title">Contents</h2>
-            <div class="toc-content" id="toc-content-auto"></div>
-        </div><article class="page single"><h1 class="single-title animate__animated animate__flipInX">LangChain &#43; ChromaDB 实战：构建本地知识库 RAG 问答系统</h1><div class="post-meta">
-            <div class="post-meta-line"><span class="post-author"><a href="https://www.ithome.me/" title="Author" target="_blank" rel="noopener noreferrer author" class="author"><i class="fas fa-user-circle fa-fw" aria-hidden="true"></i>Simon</a>
-</span>&nbsp;<span class="post-category">included in <a href="/categories/backend/"><i class="far fa-folder fa-fw" aria-hidden="true"></i>Backend</a></span></div>
-            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw" aria-hidden="true"></i>&nbsp;<time datetime="2026-06-12">2026-06-12</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden="true"></i>&nbsp;1196 words&nbsp;
-                <i class="far fa-clock fa-fw" aria-hidden="true"></i>&nbsp;6 minutes&nbsp;</div>
-        </div><div class="details toc" id="toc-static"  data-kept="true">
-                <div class="details-summary toc-title">
-                    <span>Contents</span>
-                    <span><i class="details-icon fas fa-angle-right" aria-hidden="true"></i></span>
-                </div>
-                <div class="details-content toc-content" id="toc-content-static"><nav id="TableOfContents">
-  <ul>
-    <li><a href="#前言">前言</a></li>
-    <li><a href="#环境准备">环境准备</a></li>
-    <li><a href="#第一步文档加载与预处理">第一步：文档加载与预处理</a></li>
-    <li><a href="#第二步向量化存储chromadb">第二步：向量化存储（ChromaDB）</a></li>
-    <li><a href="#第三步构建-rag-检索链">第三步：构建 RAG 检索链</a></li>
-    <li><a href="#第四步交互式问答">第四步：交互式问答</a></li>
-    <li><a href="#第五步进阶优化">第五步：进阶优化</a>
-      <ul>
-        <li><a href="#51-混合检索hybrid-search">5.1 混合检索（Hybrid Search）</a></li>
-        <li><a href="#52-查询重写query-rewriting">5.2 查询重写（Query Rewriting）</a></li>
-        <li><a href="#53-响应源追溯">5.3 响应源追溯</a></li>
-      </ul>
-    </li>
-    <li><a href="#性能与成本参考">性能与成本参考</a></li>
-    <li><a href="#常见问题排查">常见问题排查</a></li>
-    <li><a href="#总结">总结</a></li>
-  </ul>
-</nav></div>
-            </div><div class="content" id="content"><h2 id="前言">前言</h2>
-<p>大语言模型（LLM）虽然强大，但存在两个核心痛点：<strong>知识截断</strong>和<strong>幻觉问题</strong>。模型的训练数据有截止日期，且无法准确回答其训练数据之外的问题。RAG（Retrieval-Augmented Generation，检索增强生成）正是解决这两个问题的关键技术——它让模型在回答问题前，先从你提供的知识库中检索相关信息，再基于这些信息生成回答。</p>
-<p>本文将带你从零构建一个完整的本地 RAG 问答系统，技术栈为 <strong>LangChain + ChromaDB + OpenAI Embeddings</strong>，所有代码可直接运行。</p>
-<h2 id="环境准备">环境准备</h2>
-<p>首先安装必要的依赖包：</p>
-<div class="highlight"><div class="chroma">
-<table class="lntable"><tr><td class="lntd">
-<pre tabindex="0" class="chroma"><code><span class="lnt">1
-</span><span class="lnt">2
-</span><span class="lnt">3
-</span><span class="lnt">4
-</span><span class="lnt">5
-</span><span class="lnt">6
-</span></code></pre></td>
-<td class="lntd">
-<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl"><span class="c1"># 创建虚拟环境</span>
-</span></span><span class="line"><span class="cl">python -m venv rag-env
-</span></span><span class="line"><span class="cl"><span class="nb">source</span> rag-env/bin/activate
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="c1"># 安装依赖</span>
-</span></span><span class="line"><span class="cl">pip install langchain langchain-openai langchain-community chromadb unstructured pypdf
-</span></span></code></pre></td></tr></table>
-</div>
-</div><p>项目目录结构如下：</p>
-<div class="highlight"><div class="chroma">
-<table class="lntable"><tr><td class="lntd">
-<pre tabindex="0" class="chroma"><code><span class="lnt">1
-</span><span class="lnt">2
-</span><span class="lnt">3
-</span><span class="lnt">4
-</span><span class="lnt">5
-</span><span class="lnt">6
-</span></code></pre></td>
-<td class="lntd">
-<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">rag-knowledge-base/
-</span></span><span class="line"><span class="cl">├── docs/                    # 知识库文档目录（放入 PDF/TXT/MD 文件）
-</span></span><span class="line"><span class="cl">├── chroma_db/               # ChromaDB 持久化存储
-</span></span><span class="line"><span class="cl">├── rag_core.py              # RAG 核心逻辑
-</span></span><span class="line"><span class="cl">├── chat.py                  # 交互式问答入口
-</span></span><span class="line"><span class="cl">└── requirements.txt
-</span></span></code></pre></td></tr></table>
-</div>
-</div><h2 id="第一步文档加载与预处理">第一步：文档加载与预处理</h2>
-<p>RAG 系统的第一步是将各种格式的文档加载并切分成适合向量化的小块：</p>
-<div class="highlight"><div class="chroma">
-<table class="lntable"><tr><td class="lntd">
-<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
-</span><span class="lnt"> 2
-</span><span class="lnt"> 3
-</span><span class="lnt"> 4
-</span><span class="lnt"> 5
-</span><span class="lnt"> 6
-</span><span class="lnt"> 7
-</span><span class="lnt"> 8
-</span><span class="lnt"> 9
-</span><span class="lnt">10
-</span><span class="lnt">11
-</span><span class="lnt">12
-</span><span class="lnt">13
-</span><span class="lnt">14
-</span><span class="lnt">15
-</span><span class="lnt">16
-</span><span class="lnt">17
-</span><span class="lnt">18
-</span><span class="lnt">19
-</span><span class="lnt">20
-</span><span class="lnt">21
-</span><span class="lnt">22
-</span><span class="lnt">23
-</span><span class="lnt">24
-</span><span class="lnt">25
-</span><span class="lnt">26
-</span><span class="lnt">27
-</span><span class="lnt">28
-</span><span class="lnt">29
-</span><span class="lnt">30
-</span><span class="lnt">31
-</span><span class="lnt">32
-</span><span class="lnt">33
-</span><span class="lnt">34
-</span><span class="lnt">35
-</span><span class="lnt">36
-</span><span class="lnt">37
-</span><span class="lnt">38
-</span><span class="lnt">39
-</span><span class="lnt">40
-</span><span class="lnt">41
-</span><span class="lnt">42
-</span><span class="lnt">43
-</span><span class="lnt">44
-</span><span class="lnt">45
-</span><span class="lnt">46
-</span><span class="lnt">47
-</span><span class="lnt">48
-</span><span class="lnt">49
-</span><span class="lnt">50
-</span><span class="lnt">51
-</span><span class="lnt">52
-</span></code></pre></td>
-<td class="lntd">
-<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="c1"># rag_core.py</span>
-</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">langchain_community.document_loaders</span> <span class="kn">import</span> <span class="p">(</span>
-</span></span><span class="line"><span class="cl">    <span class="n">PyPDFLoader</span><span class="p">,</span>
-</span></span><span class="line"><span class="cl">    <span class="n">TextLoader</span><span class="p">,</span>
-</span></span><span class="line"><span class="cl">    <span class="n">UnstructuredMarkdownLoader</span><span class="p">,</span>
-</span></span><span class="line"><span class="cl"><span class="p">)</span>
-</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">langchain.text_splitter</span> <span class="kn">import</span> <span class="n">RecursiveCharacterTextSplitter</span>
-</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">langchain.schema</span> <span class="kn">import</span> <span class="n">Document</span>
-</span></span><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">os</span>
-</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">load_documents</span><span class="p">(</span><span class="n">docs_dir</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Document</span><span class="p">]:</span>
-</span></span><span class="line"><span class="cl">    <span class="s2">&#34;&#34;&#34;加载 docs 目录下所有支持格式的文档&#34;&#34;&#34;</span>
-</span></span><span class="line"><span class="cl">    <span class="n">loaders_map</span> <span class="o">=</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">        <span class="s2">&#34;.pdf&#34;</span><span class="p">:</span> <span class="n">PyPDFLoader</span><span class="p">,</span>
-</span></span><span class="line"><span class="cl">        <span class="s2">&#34;.txt&#34;</span><span class="p">:</span> <span class="n">TextLoader</span><span class="p">,</span>
-</span></span><span class="line"><span class="cl">        <span class="s2">&#34;.md&#34;</span><span class="p">:</span> <span class="n">UnstructuredMarkdownLoader</span><span class="p">,</span>
-</span></span><span class="line"><span class="cl">    <span class="p">}</span>
-</span></span><span class="line"><span class="cl">    
-</span></span><span class="line"><span class="cl">    <span class="n">documents</span> <span class="o">=</span> <span class="p">[]</span>
-</span></span><span class="line"><span class="cl">    <span class="n">docs_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">docs_dir</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">    
-</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="n">file_path</span> <span class="ow">in</span> <span class="n">docs_path</span><span class="o">.</span><span class="n">rglob</span><span class="p">(</span><span class="s2">&#34;*&#34;</span><span class="p">):</span>
-</span></span><span class="line"><span class="cl">        <span class="n">suffix</span> <span class="o">=</span> <span class="n">file_path</span><span class="o">.</span><span class="n">suffix</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
-</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="n">suffix</span> <span class="ow">in</span> <span class="n">loaders_map</span><span class="p">:</span>
-</span></span><span class="line"><span class="cl">            <span class="k">try</span><span class="p">:</span>
-</span></span><span class="line"><span class="cl">                <span class="n">loader</span> <span class="o">=</span> <span class="n">loaders_map</span><span class="p">[</span><span class="n">suffix</span><span class="p">](</span><span class="nb">str</span><span class="p">(</span><span class="n">file_path</span><span class="p">))</span>
-</span></span><span class="line"><span class="cl">                <span class="n">documents</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">loader</span><span class="o">.</span><span class="n">load</span><span class="p">())</span>
-</span></span><span class="line"><span class="cl">                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&#34;✅ 已加载: </span><span class="si">{</span><span class="n">file_path</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">documents</span><span class="p">)</span><span class="si">}</span><span class="s2"> 页)&#34;</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-</span></span><span class="line"><span class="cl">                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&#34;❌ 加载失败 </span><span class="si">{</span><span class="n">file_path</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&#34;</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">    
-</span></span><span class="line"><span class="cl">    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&#34;</span><span class="se">\n</span><span class="s2">共加载 </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">documents</span><span class="p">)</span><span class="si">}</span><span class="s2"> 个文档片段&#34;</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">documents</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">split_documents</span><span class="p">(</span>
-</span></span><span class="line"><span class="cl">    <span class="n">documents</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Document</span><span class="p">],</span>
-</span></span><span class="line"><span class="cl">    <span class="n">chunk_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">500</span><span class="p">,</span>
-</span></span><span class="line"><span class="cl">    <span class="n">chunk_overlap</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">100</span><span class="p">,</span>
-</span></span><span class="line"><span class="cl"><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Document</span><span class="p">]:</span>
-</span></span><span class="line"><span class="cl">    <span class="s2">&#34;&#34;&#34;将文档切分为小块，每个 chunk 之间有重叠以保持语义连贯&#34;&#34;&#34;</span>
-</span></span><span class="line"><span class="cl">    <span class="n">text_splitter</span> <span class="o">=</span> <span class="n">RecursiveCharacterTextSplitter</span><span class="p">(</span>
-</span></span><span class="line"><span class="cl">        <span class="n">chunk_size</span><span class="o">=</span><span class="n">chunk_size</span><span class="p">,</span>
-</span></span><span class="line"><span class="cl">        <span class="n">chunk_overlap</span><span class="o">=</span><span class="n">chunk_overlap</span><span class="p">,</span>
-</span></span><span class="line"><span class="cl">        <span class="n">length_function</span><span class="o">=</span><span class="nb">len</span><span class="p">,</span>
-</span></span><span class="line"><span class="cl">        <span class="n">separators</span><span class="o">=</span><span class="p">[</span><span class="s2">&#34;</span><span class="se">\n\n</span><span class="s2">&#34;</span><span class="p">,</span> <span class="s2">&#34;</span><span class="se">\n</span><span class="s2">&#34;</span><span class="p">,</span> <span class="s2">&#34;。&#34;</span><span class="p">,</span> <span class="s2">&#34;！&#34;</span><span class="p">,</span> <span class="s2">&#34;？&#34;</span><span class="p">,</span> <span class="s2">&#34;.&#34;</span><span class="p">,</span> <span class="s2">&#34;!&#34;</span><span class="p">,</span> <span class="s2">&#34;?&#34;</span><span class="p">,</span> <span class="s2">&#34; &#34;</span><span class="p">,</span> <span class="s2">&#34;&#34;</span><span class="p">],</span>
-</span></span><span class="line"><span class="cl">    <span class="p">)</span>
-</span></span><span class="line"><span class="cl">    <span class="n">chunks</span> <span class="o">=</span> <span class="n">text_splitter</span><span class="o">.</span><span class="n">split_documents</span><span class="p">(</span><span class="n">documents</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&#34;切分完成: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">documents</span><span class="p">)</span><span class="si">}</span><span class="s2"> 个文档 → </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">chunks</span><span class="p">)</span><span class="si">}</span><span class="s2"> 个片段&#34;</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">chunks</span>
-</span></span></code></pre></td></tr></table>
-</div>
-</div><p><strong>关键参数说明：</strong></p>
-<ul>
-<li><code>chunk_size=500</code>：每个文本块最大 500 字符。太大会引入噪声，太小会丢失上下文</li>
-<li><code>chunk_overlap=100</code>：相邻块重叠 100 字符，避免在句子中间截断导致语义断裂</li>
-<li><code>separators</code> 列表按优先级使用中文分隔符</li>
-</ul>
-<h2 id="第二步向量化存储chromadb">第二步：向量化存储（ChromaDB）</h2>
-<p>ChromaDB 是一个轻量级的向量数据库，无需独立部署服务，直接嵌入 Python 进程：</p>
-<div class="highlight"><div class="chroma">
-<table class="lntable"><tr><td class="lntd">
-<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
-</span><span class="lnt"> 2
-</span><span class="lnt"> 3
-</span><span class="lnt"> 4
-</span><span class="lnt"> 5
-</span><span class="lnt"> 6
-</span><span class="lnt"> 7
-</span><span class="lnt"> 8
-</span><span class="lnt"> 9
-</span><span class="lnt">10
-</span><span class="lnt">11
-</span><span class="lnt">12
-</span><span class="lnt">13
-</span><span class="lnt">14
-</span><span class="lnt">15
-</span><span class="lnt">16
-</span><span class="lnt">17
-</span><span class="lnt">18
-</span><span class="lnt">19
-</span><span class="lnt">20
-</span><span class="lnt">21
-</span><span class="lnt">22
-</span><span class="lnt">23
-</span><span class="lnt">24
-</span><span class="lnt">25
-</span><span class="lnt">26
-</span><span class="lnt">27
-</span><span class="lnt">28
-</span><span class="lnt">29
-</span><span class="lnt">30
-</span><span class="lnt">31
-</span><span class="lnt">32
-</span><span class="lnt">33
-</span><span class="lnt">34
-</span><span class="lnt">35
-</span><span class="lnt">36
-</span><span class="lnt">37
-</span><span class="lnt">38
-</span><span class="lnt">39
-</span><span class="lnt">40
-</span><span class="lnt">41
-</span><span class="lnt">42
-</span><span class="lnt">43
-</span><span class="lnt">44
-</span><span class="lnt">45
-</span></code></pre></td>
-<td class="lntd">
-<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">chromadb</span>
-</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">langchain_community.vectorstores</span> <span class="kn">import</span> <span class="n">Chroma</span>
-</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">langchain_openai</span> <span class="kn">import</span> <span class="n">OpenAIEmbeddings</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">build_vector_store</span><span class="p">(</span>
-</span></span><span class="line"><span class="cl">    <span class="n">chunks</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Document</span><span class="p">],</span>
-</span></span><span class="line"><span class="cl">    <span class="n">persist_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&#34;./chroma_db&#34;</span><span class="p">,</span>
-</span></span><span class="line"><span class="cl">    <span class="n">collection_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&#34;knowledge_base&#34;</span><span class="p">,</span>
-</span></span><span class="line"><span class="cl"><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Chroma</span><span class="p">:</span>
-</span></span><span class="line"><span class="cl">    <span class="s2">&#34;&#34;&#34;将文档片段向量化并存入 ChromaDB&#34;&#34;&#34;</span>
-</span></span><span class="line"><span class="cl">    
-</span></span><span class="line"><span class="cl">    <span class="c1"># 初始化 Embedding 模型</span>
-</span></span><span class="line"><span class="cl">    <span class="c1"># 使用 OpenAI 的 text-embedding-3-small，性价比最高</span>
-</span></span><span class="line"><span class="cl">    <span class="n">embeddings</span> <span class="o">=</span> <span class="n">OpenAIEmbeddings</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">&#34;text-embedding-3-small&#34;</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">    
-</span></span><span class="line"><span class="cl">    <span class="c1"># 构建向量数据库（自动调用 Embedding API 向量化）</span>
-</span></span><span class="line"><span class="cl">    <span class="n">vector_store</span> <span class="o">=</span> <span class="n">Chroma</span><span class="o">.</span><span class="n">from_documents</span><span class="p">(</span>
-</span></span><span class="line"><span class="cl">        <span class="n">documents</span><span class="o">=</span><span class="n">chunks</span><span class="p">,</span>
-</span></span><span class="line"><span class="cl">        <span class="n">embedding</span><span class="o">=</span><span class="n">embeddings</span><span class="p">,</span>
-</span></span><span class="line"><span class="cl">        <span class="n">persist_directory</span><span class="o">=</span><span class="n">persist_dir</span><span class="p">,</span>
-</span></span><span class="line"><span class="cl">        <span class="n">collection_name</span><span class="o">=</span><span class="n">collection_name</span><span class="p">,</span>
-</span></span><span class="line"><span class="cl">    <span class="p">)</span>
-</span></span><span class="line"><span class="cl">    
-</span></span><span class="line"><span class="cl">    <span class="c1"># 持久化到磁盘</span>
-</span></span><span class="line"><span class="cl">    <span class="n">vector_store</span><span class="o">.</span><span class="n">persist</span><span class="p">()</span>
-</span></span><span class="line"><span class="cl">    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&#34;✅ 向量数据库已构建: </span><span class="si">{</span><span class="n">persist_dir</span><span class="si">}</span><span class="s2">&#34;</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&#34;   共 </span><span class="si">{</span><span class="n">vector_store</span><span class="o">.</span><span class="n">_collection</span><span class="o">.</span><span class="n">count</span><span class="p">()</span><span class="si">}</span><span class="s2"> 个向量&#34;</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">    
-</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">vector_store</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">load_vector_store</span><span class="p">(</span>
-</span></span><span class="line"><span class="cl">    <span class="n">persist_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&#34;./chroma_db&#34;</span><span class="p">,</span>
-</span></span><span class="line"><span class="cl">    <span class="n">collection_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&#34;knowledge_base&#34;</span><span class="p">,</span>
-</span></span><span class="line"><span class="cl"><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Chroma</span><span class="p">:</span>
-</span></span><span class="line"><span class="cl">    <span class="s2">&#34;&#34;&#34;从磁盘加载已有的向量数据库&#34;&#34;&#34;</span>
-</span></span><span class="line"><span class="cl">    <span class="n">embeddings</span> <span class="o">=</span> <span class="n">OpenAIEmbeddings</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">&#34;text-embedding-3-small&#34;</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">    <span class="n">vector_store</span> <span class="o">=</span> <span class="n">Chroma</span><span class="p">(</span>
-</span></span><span class="line"><span class="cl">        <span class="n">persist_directory</span><span class="o">=</span><span class="n">persist_dir</span><span class="p">,</span>
-</span></span><span class="line"><span class="cl">        <span class="n">embedding_function</span><span class="o">=</span><span class="n">embeddings</span><span class="p">,</span>
-</span></span><span class="line"><span class="cl">        <span class="n">collection_name</span><span class="o">=</span><span class="n">collection_name</span><span class="p">,</span>
-</span></span><span class="line"><span class="cl">    <span class="p">)</span>
-</span></span><span class="line"><span class="cl">    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&#34;✅ 已加载向量数据库: </span><span class="si">{</span><span class="n">vector_store</span><span class="o">.</span><span class="n">_collection</span><span class="o">.</span><span class="n">count</span><span class="p">()</span><span class="si">}</span><span class="s2"> 个向量&#34;</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">vector_store</span>
-</span></span></code></pre></td></tr></table>
-</div>
-</div><blockquote>
-<p>💡 <strong>成本提示</strong>：<code>text-embedding-3-small</code> 模型每 1M token 约 $0.02，一个中等规模的知识库（100 页 PDF）向量化成本通常不到 $0.1。</p>
-</blockquote>
-<h2 id="第三步构建-rag-检索链">第三步：构建 RAG 检索链</h2>
-<p>这是整个系统的核心——将检索和生成串联起来：</p>
-<div class="highlight"><div class="chroma">
-<table class="lntable"><tr><td class="lntd">
-<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
-</span><span class="lnt"> 2
-</span><span class="lnt"> 3
-</span><span class="lnt"> 4
-</span><span class="lnt"> 5
-</span><span class="lnt"> 6
-</span><span class="lnt"> 7
-</span><span class="lnt"> 8
-</span><span class="lnt"> 9
-</span><span class="lnt">10
-</span><span class="lnt">11
-</span><span class="lnt">12
-</span><span class="lnt">13
-</span><span class="lnt">14
-</span><span class="lnt">15
-</span><span class="lnt">16
-</span><span class="lnt">17
-</span><span class="lnt">18
-</span><span class="lnt">19
-</span><span class="lnt">20
-</span><span class="lnt">21
-</span><span class="lnt">22
-</span><span class="lnt">23
-</span><span class="lnt">24
-</span><span class="lnt">25
-</span><span class="lnt">26
-</span><span class="lnt">27
-</span><span class="lnt">28
-</span><span class="lnt">29
-</span><span class="lnt">30
-</span><span class="lnt">31
-</span><span class="lnt">32
-</span><span class="lnt">33
-</span><span class="lnt">34
-</span><span class="lnt">35
-</span><span class="lnt">36
-</span><span class="lnt">37
-</span><span class="lnt">38
-</span><span class="lnt">39
-</span><span class="lnt">40
-</span><span class="lnt">41
-</span><span class="lnt">42
-</span><span class="lnt">43
-</span><span class="lnt">44
-</span><span class="lnt">45
-</span><span class="lnt">46
-</span><span class="lnt">47
-</span><span class="lnt">48
-</span><span class="lnt">49
-</span><span class="lnt">50
-</span><span class="lnt">51
-</span><span class="lnt">52
-</span><span class="lnt">53
-</span><span class="lnt">54
-</span><span class="lnt">55
-</span><span class="lnt">56
-</span><span class="lnt">57
-</span><span class="lnt">58
-</span><span class="lnt">59
-</span><span class="lnt">60
-</span></code></pre></td>
-<td class="lntd">
-<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">langchain_openai</span> <span class="kn">import</span> <span class="n">ChatOpenAI</span>
-</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">langchain.prompts</span> <span class="kn">import</span> <span class="n">ChatPromptTemplate</span>
-</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">langchain.schema.runnable</span> <span class="kn">import</span> <span class="n">RunnablePassthrough</span>
-</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">langchain.schema.output_parser</span> <span class="kn">import</span> <span class="n">StrOutputParser</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">format_docs</span><span class="p">(</span><span class="n">docs</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Document</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-</span></span><span class="line"><span class="cl">    <span class="s2">&#34;&#34;&#34;将检索到的文档片段格式化为纯文本&#34;&#34;&#34;</span>
-</span></span><span class="line"><span class="cl">    <span class="n">formatted</span> <span class="o">=</span> <span class="p">[]</span>
-</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">doc</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">docs</span><span class="p">,</span> <span class="mi">1</span><span class="p">):</span>
-</span></span><span class="line"><span class="cl">        <span class="n">source</span> <span class="o">=</span> <span class="n">doc</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&#34;source&#34;</span><span class="p">,</span> <span class="s2">&#34;未知来源&#34;</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">        <span class="n">page</span> <span class="o">=</span> <span class="n">doc</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&#34;page&#34;</span><span class="p">,</span> <span class="s2">&#34;&#34;</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">        <span class="n">page_info</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&#34;（第 </span><span class="si">{</span><span class="n">page</span><span class="si">}</span><span class="s2"> 页）&#34;</span> <span class="k">if</span> <span class="n">page</span> <span class="k">else</span> <span class="s2">&#34;&#34;</span>
-</span></span><span class="line"><span class="cl">        <span class="n">formatted</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&#34;[文档</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">] </span><span class="si">{</span><span class="n">source</span><span class="si">}{</span><span class="n">page_info</span><span class="si">}</span><span class="s2">:</span><span class="se">\n</span><span class="si">{</span><span class="n">doc</span><span class="o">.</span><span class="n">page_content</span><span class="si">}</span><span class="s2">&#34;</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="s2">&#34;</span><span class="se">\n\n</span><span class="s2">---</span><span class="se">\n\n</span><span class="s2">&#34;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">formatted</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">build_rag_chain</span><span class="p">(</span><span class="n">vector_store</span><span class="p">:</span> <span class="n">Chroma</span><span class="p">,</span> <span class="n">k</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">4</span><span class="p">):</span>
-</span></span><span class="line"><span class="cl">    <span class="s2">&#34;&#34;&#34;构建 RAG 检索增强生成链&#34;&#34;&#34;</span>
-</span></span><span class="line"><span class="cl">    
-</span></span><span class="line"><span class="cl">    <span class="c1"># 1. 配置 LLM</span>
-</span></span><span class="line"><span class="cl">    <span class="n">llm</span> <span class="o">=</span> <span class="n">ChatOpenAI</span><span class="p">(</span>
-</span></span><span class="line"><span class="cl">        <span class="n">model</span><span class="o">=</span><span class="s2">&#34;gpt-4o-mini&#34;</span><span class="p">,</span>
-</span></span><span class="line"><span class="cl">        <span class="n">temperature</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>  <span class="c1"># 知识问答场景使用低温度保证准确性</span>
-</span></span><span class="line"><span class="cl">    <span class="p">)</span>
-</span></span><span class="line"><span class="cl">    
-</span></span><span class="line"><span class="cl">    <span class="c1"># 2. 配置检索器</span>
-</span></span><span class="line"><span class="cl">    <span class="n">retriever</span> <span class="o">=</span> <span class="n">vector_store</span><span class="o">.</span><span class="n">as_retriever</span><span class="p">(</span>
-</span></span><span class="line"><span class="cl">        <span class="n">search_type</span><span class="o">=</span><span class="s2">&#34;similarity&#34;</span><span class="p">,</span>  <span class="c1"># 余弦相似度检索</span>
-</span></span><span class="line"><span class="cl">        <span class="n">search_kwargs</span><span class="o">=</span><span class="p">{</span><span class="s2">&#34;k&#34;</span><span class="p">:</span> <span class="n">k</span><span class="p">},</span>     <span class="c1"># 返回最相关的 k 个片段</span>
-</span></span><span class="line"><span class="cl">    <span class="p">)</span>
-</span></span><span class="line"><span class="cl">    
-</span></span><span class="line"><span class="cl">    <span class="c1"># 3. 定义 Prompt 模板</span>
-</span></span><span class="line"><span class="cl">    <span class="n">prompt</span> <span class="o">=</span> <span class="n">ChatPromptTemplate</span><span class="o">.</span><span class="n">from_template</span><span class="p">(</span><span class="s2">&#34;&#34;&#34;
-</span></span></span><span class="line"><span class="cl"><span class="s2">你是一个专业的技术助手。请根据以下提供的参考资料回答用户的问题。
-</span></span></span><span class="line"><span class="cl"><span class="s2">
-</span></span></span><span class="line"><span class="cl"><span class="s2">要求：
-</span></span></span><span class="line"><span class="cl"><span class="s2">1. 严格基于提供的资料回答，不要编造信息
-</span></span></span><span class="line"><span class="cl"><span class="s2">2. 如果资料中没有相关内容，请明确告知用户
-</span></span></span><span class="line"><span class="cl"><span class="s2">3. 回答时引用具体的文档来源
-</span></span></span><span class="line"><span class="cl"><span class="s2">
-</span></span></span><span class="line"><span class="cl"><span class="s2">参考资料：
-</span></span></span><span class="line"><span class="cl"><span class="s2"></span><span class="si">{context}</span><span class="s2">
-</span></span></span><span class="line"><span class="cl"><span class="s2">
-</span></span></span><span class="line"><span class="cl"><span class="s2">用户问题：</span><span class="si">{question}</span><span class="s2">
-</span></span></span><span class="line"><span class="cl"><span class="s2">
-</span></span></span><span class="line"><span class="cl"><span class="s2">请回答：&#34;&#34;&#34;</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">    
-</span></span><span class="line"><span class="cl">    <span class="c1"># 4. 使用 LCEL（LangChain Expression Language）组装链</span>
-</span></span><span class="line"><span class="cl">    <span class="n">rag_chain</span> <span class="o">=</span> <span class="p">(</span>
-</span></span><span class="line"><span class="cl">        <span class="p">{</span>
-</span></span><span class="line"><span class="cl">            <span class="s2">&#34;context&#34;</span><span class="p">:</span> <span class="n">retriever</span> <span class="o">|</span> <span class="n">format_docs</span><span class="p">,</span>  <span class="c1"># 检索 → 格式化</span>
-</span></span><span class="line"><span class="cl">            <span class="s2">&#34;question&#34;</span><span class="p">:</span> <span class="n">RunnablePassthrough</span><span class="p">(),</span>     <span class="c1"># 问题直接传递</span>
-</span></span><span class="line"><span class="cl">        <span class="p">}</span>
-</span></span><span class="line"><span class="cl">        <span class="o">|</span> <span class="n">prompt</span>    <span class="c1"># 填充 Prompt</span>
-</span></span><span class="line"><span class="cl">        <span class="o">|</span> <span class="n">llm</span>       <span class="c1"># 调用 LLM</span>
-</span></span><span class="line"><span class="cl">        <span class="o">|</span> <span class="n">StrOutputParser</span><span class="p">()</span>  <span class="c1"># 提取文本输出</span>
-</span></span><span class="line"><span class="cl">    <span class="p">)</span>
-</span></span><span class="line"><span class="cl">    
-</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">rag_chain</span><span class="p">,</span> <span class="n">retriever</span>
-</span></span></code></pre></td></tr></table>
-</div>
-</div><p><strong>检索策略解析：</strong></p>
-<ul>
-<li><code>search_type=&quot;similarity&quot;</code> 使用余弦相似度匹配，适合大多数场景</li>
-<li><code>k=4</code> 表示返回 4 个最相关的片段，足够覆盖问题所需信息</li>
-<li>也可以使用 <code>search_type=&quot;mmr&quot;</code>（最大边际相关性）来增加检索结果的多样性</li>
-</ul>
-<h2 id="第四步交互式问答">第四步：交互式问答</h2>
-<p>把所有组件串联起来，实现一个命令行交互式问答：</p>
-<div class="highlight"><div class="chroma">
-<table class="lntable"><tr><td class="lntd">
-<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
-</span><span class="lnt"> 2
-</span><span class="lnt"> 3
-</span><span class="lnt"> 4
-</span><span class="lnt"> 5
-</span><span class="lnt"> 6
-</span><span class="lnt"> 7
-</span><span class="lnt"> 8
-</span><span class="lnt"> 9
-</span><span class="lnt">10
-</span><span class="lnt">11
-</span><span class="lnt">12
-</span><span class="lnt">13
-</span><span class="lnt">14
-</span><span class="lnt">15
-</span><span class="lnt">16
-</span><span class="lnt">17
-</span><span class="lnt">18
-</span><span class="lnt">19
-</span><span class="lnt">20
-</span><span class="lnt">21
-</span><span class="lnt">22
-</span><span class="lnt">23
-</span><span class="lnt">24
-</span><span class="lnt">25
-</span><span class="lnt">26
-</span><span class="lnt">27
-</span><span class="lnt">28
-</span><span class="lnt">29
-</span><span class="lnt">30
-</span><span class="lnt">31
-</span><span class="lnt">32
-</span><span class="lnt">33
-</span><span class="lnt">34
-</span><span class="lnt">35
-</span><span class="lnt">36
-</span><span class="lnt">37
-</span><span class="lnt">38
-</span><span class="lnt">39
-</span><span class="lnt">40
-</span><span class="lnt">41
-</span><span class="lnt">42
-</span><span class="lnt">43
-</span><span class="lnt">44
-</span><span class="lnt">45
-</span><span class="lnt">46
-</span><span class="lnt">47
-</span><span class="lnt">48
-</span><span class="lnt">49
-</span><span class="lnt">50
-</span><span class="lnt">51
-</span><span class="lnt">52
-</span><span class="lnt">53
-</span><span class="lnt">54
-</span><span class="lnt">55
-</span><span class="lnt">56
-</span><span class="lnt">57
-</span><span class="lnt">58
-</span><span class="lnt">59
-</span><span class="lnt">60
-</span><span class="lnt">61
-</span><span class="lnt">62
-</span><span class="lnt">63
-</span><span class="lnt">64
-</span><span class="lnt">65
-</span><span class="lnt">66
-</span><span class="lnt">67
-</span><span class="lnt">68
-</span><span class="lnt">69
-</span><span class="lnt">70
-</span><span class="lnt">71
-</span><span class="lnt">72
-</span><span class="lnt">73
-</span><span class="lnt">74
-</span><span class="lnt">75
-</span><span class="lnt">76
-</span><span class="lnt">77
-</span><span class="lnt">78
-</span><span class="lnt">79
-</span><span class="lnt">80
-</span><span class="lnt">81
-</span><span class="lnt">82
-</span><span class="lnt">83
-</span><span class="lnt">84
-</span></code></pre></td>
-<td class="lntd">
-<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="c1"># chat.py</span>
-</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">rag_core</span> <span class="kn">import</span> <span class="p">(</span>
-</span></span><span class="line"><span class="cl">    <span class="n">load_documents</span><span class="p">,</span>
-</span></span><span class="line"><span class="cl">    <span class="n">split_documents</span><span class="p">,</span>
-</span></span><span class="line"><span class="cl">    <span class="n">build_vector_store</span><span class="p">,</span>
-</span></span><span class="line"><span class="cl">    <span class="n">load_vector_store</span><span class="p">,</span>
-</span></span><span class="line"><span class="cl">    <span class="n">build_rag_chain</span><span class="p">,</span>
-</span></span><span class="line"><span class="cl"><span class="p">)</span>
-</span></span><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">sys</span>
-</span></span><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">os</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">initialize</span><span class="p">(</span><span class="n">docs_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&#34;./docs&#34;</span><span class="p">,</span> <span class="n">force_rebuild</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
-</span></span><span class="line"><span class="cl">    <span class="s2">&#34;&#34;&#34;初始化 RAG 系统&#34;&#34;&#34;</span>
-</span></span><span class="line"><span class="cl">    <span class="n">persist_dir</span> <span class="o">=</span> <span class="s2">&#34;./chroma_db&#34;</span>
-</span></span><span class="line"><span class="cl">    
-</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">persist_dir</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">force_rebuild</span><span class="p">:</span>
-</span></span><span class="line"><span class="cl">        <span class="nb">print</span><span class="p">(</span><span class="s2">&#34;📦 加载已有向量数据库...&#34;</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">        <span class="n">vector_store</span> <span class="o">=</span> <span class="n">load_vector_store</span><span class="p">(</span><span class="n">persist_dir</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">    <span class="k">else</span><span class="p">:</span>
-</span></span><span class="line"><span class="cl">        <span class="nb">print</span><span class="p">(</span><span class="s2">&#34;📚 开始构建知识库...&#34;</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">        <span class="n">documents</span> <span class="o">=</span> <span class="n">load_documents</span><span class="p">(</span><span class="n">docs_dir</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="ow">not</span> <span class="n">documents</span><span class="p">:</span>
-</span></span><span class="line"><span class="cl">            <span class="nb">print</span><span class="p">(</span><span class="s2">&#34;❌ docs 目录为空，请先放入文档&#34;</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">            <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">        
-</span></span><span class="line"><span class="cl">        <span class="n">chunks</span> <span class="o">=</span> <span class="n">split_documents</span><span class="p">(</span><span class="n">documents</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">        <span class="n">vector_store</span> <span class="o">=</span> <span class="n">build_vector_store</span><span class="p">(</span><span class="n">chunks</span><span class="p">,</span> <span class="n">persist_dir</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">    
-</span></span><span class="line"><span class="cl">    <span class="n">rag_chain</span><span class="p">,</span> <span class="n">retriever</span> <span class="o">=</span> <span class="n">build_rag_chain</span><span class="p">(</span><span class="n">vector_store</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">rag_chain</span><span class="p">,</span> <span class="n">retriever</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">interactive_chat</span><span class="p">():</span>
-</span></span><span class="line"><span class="cl">    <span class="s2">&#34;&#34;&#34;交互式问答循环&#34;&#34;&#34;</span>
-</span></span><span class="line"><span class="cl">    <span class="n">rag_chain</span><span class="p">,</span> <span class="n">retriever</span> <span class="o">=</span> <span class="n">initialize</span><span class="p">()</span>
-</span></span><span class="line"><span class="cl">    
-</span></span><span class="line"><span class="cl">    <span class="nb">print</span><span class="p">(</span><span class="s2">&#34;</span><span class="se">\n</span><span class="s2">&#34;</span> <span class="o">+</span> <span class="s2">&#34;=&#34;</span> <span class="o">*</span> <span class="mi">60</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">    <span class="nb">print</span><span class="p">(</span><span class="s2">&#34;🤖 RAG 知识库问答系统已启动&#34;</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">    <span class="nb">print</span><span class="p">(</span><span class="s2">&#34;   输入问题开始对话，输入 &#39;quit&#39; 退出&#34;</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">    <span class="nb">print</span><span class="p">(</span><span class="s2">&#34;   输入 &#39;debug&#39; 查看检索到的文档片段&#34;</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">    <span class="nb">print</span><span class="p">(</span><span class="s2">&#34;=&#34;</span> <span class="o">*</span> <span class="mi">60</span> <span class="o">+</span> <span class="s2">&#34;</span><span class="se">\n</span><span class="s2">&#34;</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">    
-</span></span><span class="line"><span class="cl">    <span class="n">debug_mode</span> <span class="o">=</span> <span class="kc">False</span>
-</span></span><span class="line"><span class="cl">    
-</span></span><span class="line"><span class="cl">    <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
-</span></span><span class="line"><span class="cl">        <span class="k">try</span><span class="p">:</span>
-</span></span><span class="line"><span class="cl">            <span class="n">question</span> <span class="o">=</span> <span class="nb">input</span><span class="p">(</span><span class="s2">&#34;👤 你的问题: &#34;</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
-</span></span><span class="line"><span class="cl">        <span class="k">except</span> <span class="p">(</span><span class="ne">EOFError</span><span class="p">,</span> <span class="ne">KeyboardInterrupt</span><span class="p">):</span>
-</span></span><span class="line"><span class="cl">            <span class="nb">print</span><span class="p">(</span><span class="s2">&#34;</span><span class="se">\n</span><span class="s2">👋 再见！&#34;</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">            <span class="k">break</span>
-</span></span><span class="line"><span class="cl">        
-</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="ow">not</span> <span class="n">question</span><span class="p">:</span>
-</span></span><span class="line"><span class="cl">            <span class="k">continue</span>
-</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="n">question</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&#34;quit&#34;</span><span class="p">:</span>
-</span></span><span class="line"><span class="cl">            <span class="nb">print</span><span class="p">(</span><span class="s2">&#34;👋 再见！&#34;</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">            <span class="k">break</span>
-</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="n">question</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&#34;debug&#34;</span><span class="p">:</span>
-</span></span><span class="line"><span class="cl">            <span class="n">debug_mode</span> <span class="o">=</span> <span class="ow">not</span> <span class="n">debug_mode</span>
-</span></span><span class="line"><span class="cl">            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&#34;🔧 调试模式: </span><span class="si">{</span><span class="s1">&#39;开启&#39;</span> <span class="k">if</span> <span class="n">debug_mode</span> <span class="k">else</span> <span class="s1">&#39;关闭&#39;</span><span class="si">}</span><span class="s2">&#34;</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">            <span class="k">continue</span>
-</span></span><span class="line"><span class="cl">        
-</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="n">debug_mode</span><span class="p">:</span>
-</span></span><span class="line"><span class="cl">            <span class="c1"># 展示检索结果</span>
-</span></span><span class="line"><span class="cl">            <span class="n">docs</span> <span class="o">=</span> <span class="n">retriever</span><span class="o">.</span><span class="n">invoke</span><span class="p">(</span><span class="n">question</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">            <span class="nb">print</span><span class="p">(</span><span class="s2">&#34;</span><span class="se">\n</span><span class="s2">📄 检索到的文档片段:&#34;</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">doc</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">docs</span><span class="p">,</span> <span class="mi">1</span><span class="p">):</span>
-</span></span><span class="line"><span class="cl">                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&#34;</span><span class="se">\n</span><span class="s2">--- 片段 </span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2"> ---&#34;</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&#34;来源: </span><span class="si">{</span><span class="n">doc</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;source&#39;</span><span class="p">,</span> <span class="s1">&#39;未知&#39;</span><span class="p">)</span><span class="si">}</span><span class="s2">&#34;</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&#34;内容: </span><span class="si">{</span><span class="n">doc</span><span class="o">.</span><span class="n">page_content</span><span class="p">[:</span><span class="mi">200</span><span class="p">]</span><span class="si">}</span><span class="s2">...&#34;</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">        
-</span></span><span class="line"><span class="cl">        <span class="c1"># RAG 生成回答</span>
-</span></span><span class="line"><span class="cl">        <span class="nb">print</span><span class="p">(</span><span class="s2">&#34;</span><span class="se">\n</span><span class="s2">🤖 回答:&#34;</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">        <span class="k">try</span><span class="p">:</span>
-</span></span><span class="line"><span class="cl">            <span class="n">response</span> <span class="o">=</span> <span class="n">rag_chain</span><span class="o">.</span><span class="n">invoke</span><span class="p">(</span><span class="n">question</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">            <span class="nb">print</span><span class="p">(</span><span class="n">response</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-</span></span><span class="line"><span class="cl">            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&#34;❌ 生成失败: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&#34;</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">        
-</span></span><span class="line"><span class="cl">        <span class="nb">print</span><span class="p">()</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&#34;__main__&#34;</span><span class="p">:</span>
-</span></span><span class="line"><span class="cl">    <span class="n">interactive_chat</span><span class="p">()</span>
-</span></span></code></pre></td></tr></table>
-</div>
-</div><h2 id="第五步进阶优化">第五步：进阶优化</h2>
-<h3 id="51-混合检索hybrid-search">5.1 混合检索（Hybrid Search）</h3>
-<p>结合语义检索和关键词检索，提升召回率：</p>
-<div class="highlight"><div class="chroma">
-<table class="lntable"><tr><td class="lntd">
-<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
-</span><span class="lnt"> 2
-</span><span class="lnt"> 3
-</span><span class="lnt"> 4
-</span><span class="lnt"> 5
-</span><span class="lnt"> 6
-</span><span class="lnt"> 7
-</span><span class="lnt"> 8
-</span><span class="lnt"> 9
-</span><span class="lnt">10
-</span><span class="lnt">11
-</span><span class="lnt">12
-</span><span class="lnt">13
-</span><span class="lnt">14
-</span><span class="lnt">15
-</span><span class="lnt">16
-</span><span class="lnt">17
-</span><span class="lnt">18
-</span><span class="lnt">19
-</span><span class="lnt">20
-</span><span class="lnt">21
-</span></code></pre></td>
-<td class="lntd">
-<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">langchain.retrievers</span> <span class="kn">import</span> <span class="n">EnsembleRetriever</span>
-</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">langchain_community.retrievers</span> <span class="kn">import</span> <span class="n">BM25Retriever</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">build_hybrid_retriever</span><span class="p">(</span><span class="n">chunks</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Document</span><span class="p">],</span> <span class="n">vector_store</span><span class="p">:</span> <span class="n">Chroma</span><span class="p">,</span> <span class="n">k</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">4</span><span class="p">):</span>
-</span></span><span class="line"><span class="cl">    <span class="s2">&#34;&#34;&#34;混合检索：向量相似度 + BM25 关键词匹配&#34;&#34;&#34;</span>
-</span></span><span class="line"><span class="cl">    
-</span></span><span class="line"><span class="cl">    <span class="c1"># BM25 关键词检索器</span>
-</span></span><span class="line"><span class="cl">    <span class="n">bm25_retriever</span> <span class="o">=</span> <span class="n">BM25Retriever</span><span class="o">.</span><span class="n">from_documents</span><span class="p">(</span><span class="n">chunks</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">    <span class="n">bm25_retriever</span><span class="o">.</span><span class="n">k</span> <span class="o">=</span> <span class="n">k</span>
-</span></span><span class="line"><span class="cl">    
-</span></span><span class="line"><span class="cl">    <span class="c1"># 向量语义检索器</span>
-</span></span><span class="line"><span class="cl">    <span class="n">vector_retriever</span> <span class="o">=</span> <span class="n">vector_store</span><span class="o">.</span><span class="n">as_retriever</span><span class="p">(</span><span class="n">search_kwargs</span><span class="o">=</span><span class="p">{</span><span class="s2">&#34;k&#34;</span><span class="p">:</span> <span class="n">k</span><span class="p">})</span>
-</span></span><span class="line"><span class="cl">    
-</span></span><span class="line"><span class="cl">    <span class="c1"># 集成检索器，按权重混合</span>
-</span></span><span class="line"><span class="cl">    <span class="n">ensemble_retriever</span> <span class="o">=</span> <span class="n">EnsembleRetriever</span><span class="p">(</span>
-</span></span><span class="line"><span class="cl">        <span class="n">retrievers</span><span class="o">=</span><span class="p">[</span><span class="n">bm25_retriever</span><span class="p">,</span> <span class="n">vector_retriever</span><span class="p">],</span>
-</span></span><span class="line"><span class="cl">        <span class="n">weights</span><span class="o">=</span><span class="p">[</span><span class="mf">0.3</span><span class="p">,</span> <span class="mf">0.7</span><span class="p">],</span>  <span class="c1"># 语义检索权重更高</span>
-</span></span><span class="line"><span class="cl">    <span class="p">)</span>
-</span></span><span class="line"><span class="cl">    
-</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">ensemble_retriever</span>
-</span></span></code></pre></td></tr></table>
-</div>
-</div><h3 id="52-查询重写query-rewriting">5.2 查询重写（Query Rewriting）</h3>
-<p>用户的问题往往口语化，重写查询可以提升检索效果：</p>
-<div class="highlight"><div class="chroma">
-<table class="lntable"><tr><td class="lntd">
-<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
-</span><span class="lnt"> 2
-</span><span class="lnt"> 3
-</span><span class="lnt"> 4
-</span><span class="lnt"> 5
-</span><span class="lnt"> 6
-</span><span class="lnt"> 7
-</span><span class="lnt"> 8
-</span><span class="lnt"> 9
-</span><span class="lnt">10
-</span><span class="lnt">11
-</span><span class="lnt">12
-</span><span class="lnt">13
-</span><span class="lnt">14
-</span><span class="lnt">15
-</span><span class="lnt">16
-</span></code></pre></td>
-<td class="lntd">
-<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="n">rewrite_prompt</span> <span class="o">=</span> <span class="n">ChatPromptTemplate</span><span class="o">.</span><span class="n">from_template</span><span class="p">(</span><span class="s2">&#34;&#34;&#34;
-</span></span></span><span class="line"><span class="cl"><span class="s2">请将以下用户问题改写为更适合技术文档检索的查询语句。
-</span></span></span><span class="line"><span class="cl"><span class="s2">只输出改写后的查询，不要解释。
-</span></span></span><span class="line"><span class="cl"><span class="s2">
-</span></span></span><span class="line"><span class="cl"><span class="s2">原始问题：</span><span class="si">{question}</span><span class="s2">
-</span></span></span><span class="line"><span class="cl"><span class="s2">改写后的查询：&#34;&#34;&#34;</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">build_query_rewriter</span><span class="p">(</span><span class="n">llm</span><span class="p">):</span>
-</span></span><span class="line"><span class="cl">    <span class="s2">&#34;&#34;&#34;构建查询重写链&#34;&#34;&#34;</span>
-</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">rewrite_prompt</span> <span class="o">|</span> <span class="n">llm</span> <span class="o">|</span> <span class="n">StrOutputParser</span><span class="p">()</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="c1"># 在 RAG 链中使用：</span>
-</span></span><span class="line"><span class="cl"><span class="c1"># rewritten = query_rewriter.invoke(user_question)</span>
-</span></span><span class="line"><span class="cl"><span class="c1"># results = retriever.invoke(rewritten)</span>
-</span></span></code></pre></td></tr></table>
-</div>
-</div><h3 id="53-响应源追溯">5.3 响应源追溯</h3>
-<p>让用户知道回答来自哪些文档：</p>
-<div class="highlight"><div class="chroma">
-<table class="lntable"><tr><td class="lntd">
-<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
-</span><span class="lnt"> 2
-</span><span class="lnt"> 3
-</span><span class="lnt"> 4
-</span><span class="lnt"> 5
-</span><span class="lnt"> 6
-</span><span class="lnt"> 7
-</span><span class="lnt"> 8
-</span><span class="lnt"> 9
-</span><span class="lnt">10
-</span><span class="lnt">11
-</span><span class="lnt">12
-</span><span class="lnt">13
-</span><span class="lnt">14
-</span><span class="lnt">15
-</span><span class="lnt">16
-</span><span class="lnt">17
-</span><span class="lnt">18
-</span><span class="lnt">19
-</span><span class="lnt">20
-</span><span class="lnt">21
-</span><span class="lnt">22
-</span><span class="lnt">23
-</span></code></pre></td>
-<td class="lntd">
-<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">build_rag_chain_with_sources</span><span class="p">(</span><span class="n">vector_store</span><span class="p">:</span> <span class="n">Chroma</span><span class="p">):</span>
-</span></span><span class="line"><span class="cl">    <span class="s2">&#34;&#34;&#34;带源文档追溯的 RAG 链&#34;&#34;&#34;</span>
-</span></span><span class="line"><span class="cl">    <span class="n">retriever</span> <span class="o">=</span> <span class="n">vector_store</span><span class="o">.</span><span class="n">as_retriever</span><span class="p">(</span><span class="n">search_kwargs</span><span class="o">=</span><span class="p">{</span><span class="s2">&#34;k&#34;</span><span class="p">:</span> <span class="mi">4</span><span class="p">})</span>
-</span></span><span class="line"><span class="cl">    <span class="n">llm</span> <span class="o">=</span> <span class="n">ChatOpenAI</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">&#34;gpt-4o-mini&#34;</span><span class="p">,</span> <span class="n">temperature</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">    
-</span></span><span class="line"><span class="cl">    <span class="n">prompt</span> <span class="o">=</span> <span class="n">ChatPromptTemplate</span><span class="o">.</span><span class="n">from_template</span><span class="p">(</span><span class="s2">&#34;&#34;&#34;
-</span></span></span><span class="line"><span class="cl"><span class="s2">基于以下参考资料回答问题。在回答末尾标注引用的文档编号。
-</span></span></span><span class="line"><span class="cl"><span class="s2">
-</span></span></span><span class="line"><span class="cl"><span class="s2">参考资料：
-</span></span></span><span class="line"><span class="cl"><span class="s2"></span><span class="si">{context}</span><span class="s2">
-</span></span></span><span class="line"><span class="cl"><span class="s2">
-</span></span></span><span class="line"><span class="cl"><span class="s2">问题：</span><span class="si">{question}</span><span class="s2">
-</span></span></span><span class="line"><span class="cl"><span class="s2">
-</span></span></span><span class="line"><span class="cl"><span class="s2">回答：&#34;&#34;&#34;</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">    
-</span></span><span class="line"><span class="cl">    <span class="n">rag_chain</span> <span class="o">=</span> <span class="p">(</span>
-</span></span><span class="line"><span class="cl">        <span class="p">{</span><span class="s2">&#34;context&#34;</span><span class="p">:</span> <span class="n">retriever</span> <span class="o">|</span> <span class="n">format_docs</span><span class="p">,</span> <span class="s2">&#34;question&#34;</span><span class="p">:</span> <span class="n">RunnablePassthrough</span><span class="p">()}</span>
-</span></span><span class="line"><span class="cl">        <span class="o">|</span> <span class="n">prompt</span>
-</span></span><span class="line"><span class="cl">        <span class="o">|</span> <span class="n">llm</span>
-</span></span><span class="line"><span class="cl">        <span class="o">|</span> <span class="n">StrOutputParser</span><span class="p">()</span>
-</span></span><span class="line"><span class="cl">    <span class="p">)</span>
-</span></span><span class="line"><span class="cl">    
-</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">rag_chain</span><span class="p">,</span> <span class="n">retriever</span>
-</span></span></code></pre></td></tr></table>
-</div>
-</div><h2 id="性能与成本参考">性能与成本参考</h2>
-<table>
-<thead>
-<tr>
-<th>环节</th>
-<th>耗时</th>
-<th>成本</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>文档加载（100页 PDF）</td>
-<td>~2秒</td>
-<td>-</td>
-</tr>
-<tr>
-<td>文本切分</td>
-<td>&lt;0.1秒</td>
-<td>-</td>
-</tr>
-<tr>
-<td>Embedding 向量化</td>
-<td>~30秒</td>
-<td>~$0.05</td>
-</tr>
-<tr>
-<td>单次检索（4个片段）</td>
-<td>~0.2秒</td>
-<td>-</td>
-</tr>
-<tr>
-<td>GPT-4o-mini 生成</td>
-<td>~2秒</td>
-<td>~$0.002</td>
-</tr>
-<tr>
-<td><strong>总计（首次构建+问答）</strong></td>
-<td><strong>~32秒</strong></td>
-<td><strong>~$0.05</strong></td>
-</tr>
-<tr>
-<td><strong>后续问答（仅检索+生成）</strong></td>
-<td><strong>~2.2秒</strong></td>
-<td><strong>~$0.002/次</strong></td>
-</tr>
-</tbody>
-</table>
-<h2 id="常见问题排查">常见问题排查</h2>
-<p><strong>Q: ChromaDB 持久化后数据丢失？</strong>
-确认调用了 <code>vector_store.persist()</code>，且 <code>persist_directory</code> 路径存在。ChromaDB v0.4+ 可能需要显式调用 <code>chromadb.PersistentClient(path=...)</code>。</p>
-<p><strong>Q: 检索结果不相关？</strong></p>
-<ul>
-<li>检查 <code>chunk_size</code> 是否合适（代码类文档建议 800-1000）</li>
-<li>尝试混合检索（5.1 节）</li>
-<li>调整 <code>k</code> 值，增加检索数量</li>
-</ul>
-<p><strong>Q: Embedding API 调用报错？</strong>
-确认 <code>OPENAI_API_KEY</code> 环境变量已设置。国内网络需要配置代理或使用兼容 API：</p>
-<div class="highlight"><div class="chroma">
-<table class="lntable"><tr><td class="lntd">
-<pre tabindex="0" class="chroma"><code><span class="lnt">1
-</span><span class="lnt">2
-</span></code></pre></td>
-<td class="lntd">
-<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl"><span class="nb">export</span> <span class="nv">OPENAI_API_KEY</span><span class="o">=</span><span class="s2">&#34;sk-xxx&#34;</span>
-</span></span><span class="line"><span class="cl"><span class="nb">export</span> <span class="nv">OPENAI_BASE_URL</span><span class="o">=</span><span class="s2">&#34;https://api.openai.com/v1&#34;</span>  <span class="c1"># 或代理地址</span>
-</span></span></code></pre></td></tr></table>
-</div>
-</div><h2 id="总结">总结</h2>
-<p>本文完整演示了如何使用 LangChain + ChromaDB 构建一个本地 RAG 知识库问答系统，核心流程为：</p>
-<ol>
-<li><strong>文档加载</strong>：支持 PDF/TXT/MD 等多格式</li>
-<li><strong>文本切分</strong>：递归字符分割，保留语义连贯性</li>
-<li><strong>向量化存储</strong>：ChromaDB 本地持久化，无需额外部署</li>
-<li><strong>检索增强生成</strong>：相似度检索 + Prompt 工程 + LLM 生成</li>
-<li><strong>进阶优化</strong>：混合检索、查询重写、源追溯</li>
-</ol>
-<p>整套方案零运维成本，适合个人知识管理、团队文档问答、产品 FAQ 助手等场景。只需在 <code>docs/</code> 目录放入你的文档，即可快速搭建私有知识库。</p>
-</div><div class="post-footer" id="post-footer">
-    <div class="post-info">
-        <div class="post-info-line">
-            <div class="post-info-mod">
-                <span>Updated on 2026-06-12</span>
-            </div><div class="post-info-license">
-                <span>https://creativecommons.org/licenses/by-nc-nd/4.0/</span>
-            </div></div>
-        <div class="post-info-line">
-            <div class="post-info-md"></div>
-            <div class="post-info-share">
-                <span><a href="javascript:void(0);" title="Share on Twitter" data-sharer="twitter" data-url="https://www.ithome.me/post/2026/06/12/langchain-chromadb-rag-%E7%9F%A5%E8%AF%86%E5%BA%93%E9%97%AE%E7%AD%94%E7%B3%BB%E7%BB%9F/" data-title="LangChain &#43; ChromaDB 实战：构建本地知识库 RAG 问答系统" data-via="https://twitter.com/ChenCiki" data-hashtags="RAG,LangChain,ChromaDB,LLM,知识库"><i class="fab fa-twitter fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on Linkedin" data-sharer="linkedin" data-url="https://www.ithome.me/post/2026/06/12/langchain-chromadb-rag-%E7%9F%A5%E8%AF%86%E5%BA%93%E9%97%AE%E7%AD%94%E7%B3%BB%E7%BB%9F/"><i class="fab fa-linkedin fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on 微博" data-sharer="weibo" data-url="https://www.ithome.me/post/2026/06/12/langchain-chromadb-rag-%E7%9F%A5%E8%AF%86%E5%BA%93%E9%97%AE%E7%AD%94%E7%B3%BB%E7%BB%9F/" data-title="LangChain &#43; ChromaDB 实战：构建本地知识库 RAG 问答系统" data-ralateuid="xxx"><i class="fab fa-weibo fa-fw" aria-hidden="true"></i></a></span>
-            </div>
-        </div>
-    </div>
-
-    <div class="post-info-more">
-        <section class="post-tags"><i class="fas fa-tags fa-fw" aria-hidden="true"></i>&nbsp;<a href="/tags/rag/">RAG</a>,&nbsp;<a href="/tags/langchain/">LangChain</a>,&nbsp;<a href="/tags/chromadb/">ChromaDB</a>,&nbsp;<a href="/tags/llm/">LLM</a>,&nbsp;<a href="/tags/%E7%9F%A5%E8%AF%86%E5%BA%93/">知识库</a></section>
-        <section>
-            <span><a href="javascript:void(0);" onclick="window.history.back();">Back</a></span>&nbsp;|&nbsp;<span><a href="/">Home</a></span>
-        </section>
-    </div>
-
-    <div class="post-nav"><a href="/post/2026/06/11/docker%E5%A4%9A%E9%98%B6%E6%AE%B5%E6%9E%84%E5%BB%BA%E5%AE%9E%E6%88%98-%E4%BC%98%E5%8C%96%E9%95%9C%E5%83%8F%E5%A4%A7%E5%B0%8F%E4%B8%8E%E6%9E%84%E5%BB%BA%E9%80%9F%E5%BA%A6/" class="prev" rel="prev" title="Docker多阶段构建实战：优化镜像大小与构建速度的完整指南"><i class="fas fa-angle-left fa-fw" aria-hidden="true"></i>Docker多阶段构建实战：优化镜像大小与构建速度的完整指南</a>
-            <a href="/post/2026/06/12/docker-multistage-build-go/" class="next" rel="next" title="Docker多阶段构建实战：让你的Go镜像缩小90%">Docker多阶段构建实战：让你的Go镜像缩小90%<i class="fas fa-angle-right fa-fw" aria-hidden="true"></i></a></div>
-</div>
-<div id="comments"><div id="gitalk" class="comment"></div><noscript>
-                Please enable JavaScript to view the comments powered by <a href="https://github.com/gitalk/gitalk"></a>Gitalk</a>.
-            </noscript></div></article></div>
-            </main><footer class="footer">
-        <div class="footer-container"><div class="footer-line" itemscope itemtype="http://schema.org/CreativeWork"><i class="far fa-copyright fa-fw" aria-hidden="true"></i><span itemprop="copyrightYear">2011 - 2026</span><span class="author" itemprop="copyrightHolder">&nbsp;<a href="https://www.ithome.me/" target="_blank">Simon Chen</a></span></div>
-        </div>
-    </footer></div>
-
-        <div id="fixed-buttons"><a href="#" id="back-to-top" class="fixed-button" title="Back to Top">
-                <i class="fas fa-arrow-up fa-fw" aria-hidden="true"></i>
-            </a><a href="#" id="view-comments" class="fixed-button" title="View Comments">
-                <i class="fas fa-comment fa-fw" aria-hidden="true"></i>
-            </a>
-        </div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1.7.2/dist/gitalk.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/css/lightgallery-bundle.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/katex.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/copy-tex.min.css"><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/gitalk@1.7.2/dist/gitalk.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/autocomplete.js@0.38.1/dist/autocomplete.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lunr@2.3.9/lunr.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lazysizes@5.3.1/lazysizes.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/lightgallery.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/plugins/thumbnail/lg-thumbnail.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/plugins/zoom/lg-zoom.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/clipboard@2.0.11/dist/clipboard.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/sharer.js@0.5.1/sharer.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/katex.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/auto-render.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/copy-tex.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/mhchem.min.js"></script><script type="text/javascript">window.config={"code":{"copyTitle":"Copy to clipboard","maxShownLines":50},"comment":{"gitalk":{"admin":["cikichen"],"clientID":"be0f52370ed1285b6c7c","clientSecret":"734a7d8d0ded346ca7a3d565d57de3f8eeb2850b","id":"2026-06-12T00:00:00Z","owner":"cikichen","repo":"gitalk","title":"LangChain + ChromaDB 实战：构建本地知识库 RAG 问答系统"}},"lightgallery":true,"math":{"delimiters":[{"display":true,"left":"$$","right":"$$"},{"display":true,"left":"\\[","right":"\\]"},{"display":true,"left":"\\begin{equation}","right":"\\end{equation}"},{"display":true,"left":"\\begin{equation*}","right":"\\end{equation*}"},{"display":true,"left":"\\begin{align}","right":"\\end{align}"},{"display":true,"left":"\\begin{align*}","right":"\\end{align*}"},{"display":true,"left":"\\begin{alignat}","right":"\\end{alignat}"},{"display":true,"left":"\\begin{alignat*}","right":"\\end{alignat*}"},{"display":true,"left":"\\begin{gather}","right":"\\end{gather}"},{"display":true,"left":"\\begin{CD}","right":"\\end{CD}"},{"display":false,"left":"$","right":"$"},{"display":false,"left":"\\(","right":"\\)"}],"strict":false},"search":{"highlightTag":"em","maxResultLength":10,"noResultsFound":"No results found","snippetLength":50}};</script><script type="text/javascript" src="/js/theme.min.js"></script></body>
-</html>
+<!doctype html><html lang=zh-CN><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><meta name=robots content="noodp"><title>LangChain + ChromaDB 实战：构建本地知识库 RAG 问答系统 - 编程心语</title><meta name=Description content="手把手教你使用 LangChain 和 ChromaDB 构建一个完整的本地知识库 RAG 问答系统，从文档加载、向量化存储到检索增强生成，附完整可运行代码。"><meta property="og:url" content="https://www.ithome.me/post/2026/06/12/langchain-chromadb-rag-%E7%9F%A5%E8%AF%86%E5%BA%93%E9%97%AE%E7%AD%94%E7%B3%BB%E7%BB%9F/">
+<meta property="og:site_name" content="编程心语"><meta property="og:title" content="LangChain + ChromaDB 实战：构建本地知识库 RAG 问答系统"><meta property="og:description" content="手把手教你使用 LangChain 和 ChromaDB 构建一个完整的本地知识库 RAG 问答系统，从文档加载、向量化存储到检索增强生成，附完整可运行代码。"><meta property="og:locale" content="zh_CN"><meta property="og:type" content="article"><meta property="article:section" content="posts"><meta property="article:published_time" content="2026-06-12T08:00:00+08:00"><meta property="article:modified_time" content="2026-06-12T08:00:00+08:00"><meta property="article:tag" content="RAG"><meta property="article:tag" content="LangChain"><meta property="article:tag" content="ChromaDB"><meta property="article:tag" content="LLM"><meta property="article:tag" content="知识库"><meta name=twitter:card content="summary"><meta name=twitter:title content="LangChain + ChromaDB 实战：构建本地知识库 RAG 问答系统"><meta name=twitter:description content="手把手教你使用 LangChain 和 ChromaDB 构建一个完整的本地知识库 RAG 问答系统，从文档加载、向量化存储到检索增强生成，附完整可运行代码。"><meta name=twitter:site content="@https://twitter.com/ChenCiki"><meta name=application-name content="编程心语"><meta name=apple-mobile-web-app-title content="编程心语"><meta name=theme-color content="#ffffff"><meta name=msapplication-TileColor content="#da532c"><link rel="shortcut icon" type=image/x-icon href=/favicon.ico><link rel=icon type=image/png sizes=32x32 href=/favicon-32x32.png><link rel=icon type=image/png sizes=16x16 href=/favicon-16x16.png><link rel=apple-touch-icon sizes=180x180 href=/apple-touch-icon.png><link rel=mask-icon href=/safari-pinned-tab.svg color=#5bbad5><link rel=manifest href=/site.webmanifest><link rel=canonical href=https://www.ithome.me/post/2026/06/12/langchain-chromadb-rag-%E7%9F%A5%E8%AF%86%E5%BA%93%E9%97%AE%E7%AD%94%E7%B3%BB%E7%BB%9F/><link rel=prev href=https://www.ithome.me/post/2026/06/11/docker%E5%A4%9A%E9%98%B6%E6%AE%B5%E6%9E%84%E5%BB%BA%E5%AE%9E%E6%88%98-%E4%BC%98%E5%8C%96%E9%95%9C%E5%83%8F%E5%A4%A7%E5%B0%8F%E4%B8%8E%E6%9E%84%E5%BB%BA%E9%80%9F%E5%BA%A6/><link rel=next href=https://www.ithome.me/post/2026/06/12/docker-multistage-build-go/><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/normalize.css@8.0.1/normalize.min.css><link rel=stylesheet href=/css/style.min.css><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css><script type=application/ld+json>{"@context":"http://schema.org","@type":"BlogPosting","headline":"LangChain + ChromaDB 实战：构建本地知识库 RAG 问答系统","inLanguage":"zh-CN","mainEntityOfPage":{"@type":"WebPage","@id":"https:\/\/www.ithome.me\/post\/2026\/06\/12\/langchain-chromadb-rag-%E7%9F%A5%E8%AF%86%E5%BA%93%E9%97%AE%E7%AD%94%E7%B3%BB%E7%BB%9F\/"},"image":["https:\/\/www.ithome.me\/cover.png"],"genre":"posts","keywords":"RAG, LangChain, ChromaDB, LLM, 知识库","wordcount":3814,"url":"https:\/\/www.ithome.me\/post\/2026\/06\/12\/langchain-chromadb-rag-%E7%9F%A5%E8%AF%86%E5%BA%93%E9%97%AE%E7%AD%94%E7%B3%BB%E7%BB%9F\/","datePublished":"2026-06-12T08:00:00+08:00","dateModified":"2026-06-12T08:00:00+08:00","publisher":{"@type":"Organization","name":"SimonChen","logo":"https:\/\/www.ithome.me\/logo.png"},"author":{"@type":"Person","name":"Simon"},"description":"手把手教你使用 LangChain 和 ChromaDB 构建一个完整的本地知识库 RAG 问答系统，从文档加载、向量化存储到检索增强生成，附完整可运行代码。"}</script></head><body data-header-desktop=fixed data-header-mobile=auto><script type=text/javascript>(window.localStorage&&localStorage.getItem("theme")?localStorage.getItem("theme")==="dark":"auto"==="auto"?window.matchMedia("(prefers-color-scheme: dark)").matches:"auto"==="dark")&&document.body.setAttribute("theme","dark")</script><div id=mask></div><div class=wrapper><header class=desktop id=header-desktop><div class=header-wrapper><div class=header-title><a href=/ title=编程心语>编程心语</a></div><div class=menu><div class=menu-inner><a class=menu-item href=/posts/>文章 </a><a class=menu-item href=/categories/>分类 </a><a class=menu-item href=/tags/>标签 </a><a class=menu-item href=/about-me/>关于 </a><span class="menu-item delimiter"></span><span class="menu-item search" id=search-desktop>
+<input type=text placeholder=搜索文章... id=search-input-desktop>
+<a href=javascript:void(0); class="search-button search-toggle" id=search-toggle-desktop title=Search><i class="fas fa-search fa-fw" aria-hidden=true></i>
+</a><a href=javascript:void(0); class="search-button search-clear" id=search-clear-desktop title=Clear><i class="fas fa-times-circle fa-fw" aria-hidden=true></i>
+</a><span class="search-button search-loading" id=search-loading-desktop><i class="fas fa-spinner fa-fw fa-spin" aria-hidden=true></i>
+</span></span><a href=javascript:void(0); class="menu-item theme-switch" title="Switch Theme"><i class="fas fa-adjust fa-fw" aria-hidden=true></i></a></div></div></div></header><header class=mobile id=header-mobile><div class=header-container><div class=header-wrapper><div class=header-title><a href=/ title=编程心语>编程心语</a></div><div class=menu-toggle id=menu-toggle-mobile><span></span><span></span><span></span></div></div><div class=menu id=menu-mobile><div class=search-wrapper><div class="search mobile" id=search-mobile><input type=text placeholder=搜索文章... id=search-input-mobile>
+<a href=javascript:void(0); class="search-button search-toggle" id=search-toggle-mobile title=Search><i class="fas fa-search fa-fw" aria-hidden=true></i>
+</a><a href=javascript:void(0); class="search-button search-clear" id=search-clear-mobile title=Clear><i class="fas fa-times-circle fa-fw" aria-hidden=true></i>
+</a><span class="search-button search-loading" id=search-loading-mobile><i class="fas fa-spinner fa-fw fa-spin" aria-hidden=true></i></span></div><a href=javascript:void(0); class=search-cancel id=search-cancel-mobile>Cancel</a></div><a class=menu-item href=/posts/ title>文章</a><a class=menu-item href=/categories/ title>分类</a><a class=menu-item href=/tags/ title>标签</a><a class=menu-item href=/about-me/ title>关于</a><a href=javascript:void(0); class="menu-item theme-switch" title="Switch Theme">
+<i class="fas fa-adjust fa-fw" aria-hidden=true></i></a></div></div></header><div class="search-dropdown desktop"><div id=search-dropdown-desktop></div></div><div class="search-dropdown mobile"><div id=search-dropdown-mobile></div></div><main class=main><div class=container><div class=toc id=toc-auto><h2 class=toc-title>Contents</h2><div class=toc-content id=toc-content-auto></div></div><article class="page single"><h1 class="single-title animate__animated animate__flipInX">LangChain + ChromaDB 实战：构建本地知识库 RAG 问答系统</h1><div class=post-meta><div class=post-meta-line><span class=post-author><a href=https://www.ithome.me/ title=Author target=_blank rel="noopener noreferrer author" class=author><i class="fas fa-user-circle fa-fw" aria-hidden=true></i>Simon</a>
+</span>&nbsp;<span class=post-category>included in <a href=/categories/backend/><i class="far fa-folder fa-fw" aria-hidden=true></i>Backend</a></span></div><div class=post-meta-line><i class="far fa-calendar-alt fa-fw" aria-hidden=true></i>&nbsp;<time datetime=2026-06-12>2026-06-12</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden=true></i>&nbsp;3814 words&nbsp;
+<i class="far fa-clock fa-fw" aria-hidden=true></i>&nbsp;8 minutes&nbsp;</div></div><div class="details toc" id=toc-static data-kept=true><div class="details-summary toc-title"><span>Contents</span>
+<span><i class="details-icon fas fa-angle-right" aria-hidden=true></i></span></div><div class="details-content toc-content" id=toc-content-static><nav id=TableOfContents><ul><li><a href=#前言>前言</a></li><li><a href=#环境准备>环境准备</a></li><li><a href=#第一步文档加载与预处理>第一步：文档加载与预处理</a></li><li><a href=#第二步向量化存储chromadb>第二步：向量化存储（ChromaDB）</a></li><li><a href=#第三步构建-rag-检索链>第三步：构建 RAG 检索链</a></li><li><a href=#第四步交互式问答>第四步：交互式问答</a></li><li><a href=#第五步进阶优化>第五步：进阶优化</a><ul><li><a href=#51-混合检索hybrid-search>5.1 混合检索（Hybrid Search）</a></li><li><a href=#52-查询重写query-rewriting>5.2 查询重写（Query Rewriting）</a></li><li><a href=#53-响应源追溯>5.3 响应源追溯</a></li></ul></li><li><a href=#性能与成本参考>性能与成本参考</a></li><li><a href=#常见问题排查>常见问题排查</a></li><li><a href=#总结>总结</a></li></ul></nav></div></div><div class=content id=content><h2 id=前言>前言</h2><p>大语言模型（LLM）虽然强大，但存在两个核心痛点：<strong>知识截断</strong>和<strong>幻觉问题</strong>。模型的训练数据有截止日期，且无法准确回答其训练数据之外的问题。RAG（Retrieval-Augmented Generation，检索增强生成）正是解决这两个问题的关键技术——它让模型在回答问题前，先从你提供的知识库中检索相关信息，再基于这些信息生成回答。</p><p>本文将带你从零构建一个完整的本地 RAG 问答系统，技术栈为 <strong>LangChain + ChromaDB + OpenAI Embeddings</strong>，所有代码可直接运行。</p><h2 id=环境准备>环境准备</h2><p>首先安装必要的依赖包：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span><span class=lnt>4
+</span><span class=lnt>5
+</span><span class=lnt>6
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl><span class=c1># 创建虚拟环境</span>
+</span></span><span class=line><span class=cl>python -m venv rag-env
+</span></span><span class=line><span class=cl><span class=nb>source</span> rag-env/bin/activate
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1># 安装依赖</span>
+</span></span><span class=line><span class=cl>pip install langchain langchain-openai langchain-community chromadb unstructured pypdf
+</span></span></code></pre></td></tr></table></div></div><p>项目目录结构如下：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span><span class=lnt>4
+</span><span class=lnt>5
+</span><span class=lnt>6
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-fallback data-lang=fallback><span class=line><span class=cl>rag-knowledge-base/
+</span></span><span class=line><span class=cl>├── docs/                    # 知识库文档目录（放入 PDF/TXT/MD 文件）
+</span></span><span class=line><span class=cl>├── chroma_db/               # ChromaDB 持久化存储
+</span></span><span class=line><span class=cl>├── rag_core.py              # RAG 核心逻辑
+</span></span><span class=line><span class=cl>├── chat.py                  # 交互式问答入口
+</span></span><span class=line><span class=cl>└── requirements.txt
+</span></span></code></pre></td></tr></table></div></div><h2 id=第一步文档加载与预处理>第一步：文档加载与预处理</h2><p>RAG 系统的第一步是将各种格式的文档加载并切分成适合向量化的小块：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span><span class=lnt>17
+</span><span class=lnt>18
+</span><span class=lnt>19
+</span><span class=lnt>20
+</span><span class=lnt>21
+</span><span class=lnt>22
+</span><span class=lnt>23
+</span><span class=lnt>24
+</span><span class=lnt>25
+</span><span class=lnt>26
+</span><span class=lnt>27
+</span><span class=lnt>28
+</span><span class=lnt>29
+</span><span class=lnt>30
+</span><span class=lnt>31
+</span><span class=lnt>32
+</span><span class=lnt>33
+</span><span class=lnt>34
+</span><span class=lnt>35
+</span><span class=lnt>36
+</span><span class=lnt>37
+</span><span class=lnt>38
+</span><span class=lnt>39
+</span><span class=lnt>40
+</span><span class=lnt>41
+</span><span class=lnt>42
+</span><span class=lnt>43
+</span><span class=lnt>44
+</span><span class=lnt>45
+</span><span class=lnt>46
+</span><span class=lnt>47
+</span><span class=lnt>48
+</span><span class=lnt>49
+</span><span class=lnt>50
+</span><span class=lnt>51
+</span><span class=lnt>52
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-python data-lang=python><span class=line><span class=cl><span class=c1># rag_core.py</span>
+</span></span><span class=line><span class=cl><span class=kn>from</span> <span class=nn>langchain_community.document_loaders</span> <span class=kn>import</span> <span class=p>(</span>
+</span></span><span class=line><span class=cl>    <span class=n>PyPDFLoader</span><span class=p>,</span>
+</span></span><span class=line><span class=cl>    <span class=n>TextLoader</span><span class=p>,</span>
+</span></span><span class=line><span class=cl>    <span class=n>UnstructuredMarkdownLoader</span><span class=p>,</span>
+</span></span><span class=line><span class=cl><span class=p>)</span>
+</span></span><span class=line><span class=cl><span class=kn>from</span> <span class=nn>langchain.text_splitter</span> <span class=kn>import</span> <span class=n>RecursiveCharacterTextSplitter</span>
+</span></span><span class=line><span class=cl><span class=kn>from</span> <span class=nn>langchain.schema</span> <span class=kn>import</span> <span class=n>Document</span>
+</span></span><span class=line><span class=cl><span class=kn>import</span> <span class=nn>os</span>
+</span></span><span class=line><span class=cl><span class=kn>from</span> <span class=nn>pathlib</span> <span class=kn>import</span> <span class=n>Path</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=k>def</span> <span class=nf>load_documents</span><span class=p>(</span><span class=n>docs_dir</span><span class=p>:</span> <span class=nb>str</span><span class=p>)</span> <span class=o>-&gt;</span> <span class=nb>list</span><span class=p>[</span><span class=n>Document</span><span class=p>]:</span>
+</span></span><span class=line><span class=cl>    <span class=s2>&#34;&#34;&#34;加载 docs 目录下所有支持格式的文档&#34;&#34;&#34;</span>
+</span></span><span class=line><span class=cl>    <span class=n>loaders_map</span> <span class=o>=</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>        <span class=s2>&#34;.pdf&#34;</span><span class=p>:</span> <span class=n>PyPDFLoader</span><span class=p>,</span>
+</span></span><span class=line><span class=cl>        <span class=s2>&#34;.txt&#34;</span><span class=p>:</span> <span class=n>TextLoader</span><span class=p>,</span>
+</span></span><span class=line><span class=cl>        <span class=s2>&#34;.md&#34;</span><span class=p>:</span> <span class=n>UnstructuredMarkdownLoader</span><span class=p>,</span>
+</span></span><span class=line><span class=cl>    <span class=p>}</span>
+</span></span><span class=line><span class=cl>    
+</span></span><span class=line><span class=cl>    <span class=n>documents</span> <span class=o>=</span> <span class=p>[]</span>
+</span></span><span class=line><span class=cl>    <span class=n>docs_path</span> <span class=o>=</span> <span class=n>Path</span><span class=p>(</span><span class=n>docs_dir</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>    
+</span></span><span class=line><span class=cl>    <span class=k>for</span> <span class=n>file_path</span> <span class=ow>in</span> <span class=n>docs_path</span><span class=o>.</span><span class=n>rglob</span><span class=p>(</span><span class=s2>&#34;*&#34;</span><span class=p>):</span>
+</span></span><span class=line><span class=cl>        <span class=n>suffix</span> <span class=o>=</span> <span class=n>file_path</span><span class=o>.</span><span class=n>suffix</span><span class=o>.</span><span class=n>lower</span><span class=p>()</span>
+</span></span><span class=line><span class=cl>        <span class=k>if</span> <span class=n>suffix</span> <span class=ow>in</span> <span class=n>loaders_map</span><span class=p>:</span>
+</span></span><span class=line><span class=cl>            <span class=k>try</span><span class=p>:</span>
+</span></span><span class=line><span class=cl>                <span class=n>loader</span> <span class=o>=</span> <span class=n>loaders_map</span><span class=p>[</span><span class=n>suffix</span><span class=p>](</span><span class=nb>str</span><span class=p>(</span><span class=n>file_path</span><span class=p>))</span>
+</span></span><span class=line><span class=cl>                <span class=n>documents</span><span class=o>.</span><span class=n>extend</span><span class=p>(</span><span class=n>loader</span><span class=o>.</span><span class=n>load</span><span class=p>())</span>
+</span></span><span class=line><span class=cl>                <span class=nb>print</span><span class=p>(</span><span class=sa>f</span><span class=s2>&#34;✅ 已加载: </span><span class=si>{</span><span class=n>file_path</span><span class=o>.</span><span class=n>name</span><span class=si>}</span><span class=s2> (</span><span class=si>{</span><span class=nb>len</span><span class=p>(</span><span class=n>documents</span><span class=p>)</span><span class=si>}</span><span class=s2> 页)&#34;</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>            <span class=k>except</span> <span class=ne>Exception</span> <span class=k>as</span> <span class=n>e</span><span class=p>:</span>
+</span></span><span class=line><span class=cl>                <span class=nb>print</span><span class=p>(</span><span class=sa>f</span><span class=s2>&#34;❌ 加载失败 </span><span class=si>{</span><span class=n>file_path</span><span class=o>.</span><span class=n>name</span><span class=si>}</span><span class=s2>: </span><span class=si>{</span><span class=n>e</span><span class=si>}</span><span class=s2>&#34;</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>    
+</span></span><span class=line><span class=cl>    <span class=nb>print</span><span class=p>(</span><span class=sa>f</span><span class=s2>&#34;</span><span class=se>\n</span><span class=s2>共加载 </span><span class=si>{</span><span class=nb>len</span><span class=p>(</span><span class=n>documents</span><span class=p>)</span><span class=si>}</span><span class=s2> 个文档片段&#34;</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>    <span class=k>return</span> <span class=n>documents</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=k>def</span> <span class=nf>split_documents</span><span class=p>(</span>
+</span></span><span class=line><span class=cl>    <span class=n>documents</span><span class=p>:</span> <span class=nb>list</span><span class=p>[</span><span class=n>Document</span><span class=p>],</span>
+</span></span><span class=line><span class=cl>    <span class=n>chunk_size</span><span class=p>:</span> <span class=nb>int</span> <span class=o>=</span> <span class=mi>500</span><span class=p>,</span>
+</span></span><span class=line><span class=cl>    <span class=n>chunk_overlap</span><span class=p>:</span> <span class=nb>int</span> <span class=o>=</span> <span class=mi>100</span><span class=p>,</span>
+</span></span><span class=line><span class=cl><span class=p>)</span> <span class=o>-&gt;</span> <span class=nb>list</span><span class=p>[</span><span class=n>Document</span><span class=p>]:</span>
+</span></span><span class=line><span class=cl>    <span class=s2>&#34;&#34;&#34;将文档切分为小块，每个 chunk 之间有重叠以保持语义连贯&#34;&#34;&#34;</span>
+</span></span><span class=line><span class=cl>    <span class=n>text_splitter</span> <span class=o>=</span> <span class=n>RecursiveCharacterTextSplitter</span><span class=p>(</span>
+</span></span><span class=line><span class=cl>        <span class=n>chunk_size</span><span class=o>=</span><span class=n>chunk_size</span><span class=p>,</span>
+</span></span><span class=line><span class=cl>        <span class=n>chunk_overlap</span><span class=o>=</span><span class=n>chunk_overlap</span><span class=p>,</span>
+</span></span><span class=line><span class=cl>        <span class=n>length_function</span><span class=o>=</span><span class=nb>len</span><span class=p>,</span>
+</span></span><span class=line><span class=cl>        <span class=n>separators</span><span class=o>=</span><span class=p>[</span><span class=s2>&#34;</span><span class=se>\n\n</span><span class=s2>&#34;</span><span class=p>,</span> <span class=s2>&#34;</span><span class=se>\n</span><span class=s2>&#34;</span><span class=p>,</span> <span class=s2>&#34;。&#34;</span><span class=p>,</span> <span class=s2>&#34;！&#34;</span><span class=p>,</span> <span class=s2>&#34;？&#34;</span><span class=p>,</span> <span class=s2>&#34;.&#34;</span><span class=p>,</span> <span class=s2>&#34;!&#34;</span><span class=p>,</span> <span class=s2>&#34;?&#34;</span><span class=p>,</span> <span class=s2>&#34; &#34;</span><span class=p>,</span> <span class=s2>&#34;&#34;</span><span class=p>],</span>
+</span></span><span class=line><span class=cl>    <span class=p>)</span>
+</span></span><span class=line><span class=cl>    <span class=n>chunks</span> <span class=o>=</span> <span class=n>text_splitter</span><span class=o>.</span><span class=n>split_documents</span><span class=p>(</span><span class=n>documents</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>    <span class=nb>print</span><span class=p>(</span><span class=sa>f</span><span class=s2>&#34;切分完成: </span><span class=si>{</span><span class=nb>len</span><span class=p>(</span><span class=n>documents</span><span class=p>)</span><span class=si>}</span><span class=s2> 个文档 → </span><span class=si>{</span><span class=nb>len</span><span class=p>(</span><span class=n>chunks</span><span class=p>)</span><span class=si>}</span><span class=s2> 个片段&#34;</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>    <span class=k>return</span> <span class=n>chunks</span>
+</span></span></code></pre></td></tr></table></div></div><p><strong>关键参数说明：</strong></p><ul><li><code>chunk_size=500</code>：每个文本块最大 500 字符。太大会引入噪声，太小会丢失上下文</li><li><code>chunk_overlap=100</code>：相邻块重叠 100 字符，避免在句子中间截断导致语义断裂</li><li><code>separators</code> 列表按优先级使用中文分隔符</li></ul><h2 id=第二步向量化存储chromadb>第二步：向量化存储（ChromaDB）</h2><p>ChromaDB 是一个轻量级的向量数据库，无需独立部署服务，直接嵌入 Python 进程：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span><span class=lnt>17
+</span><span class=lnt>18
+</span><span class=lnt>19
+</span><span class=lnt>20
+</span><span class=lnt>21
+</span><span class=lnt>22
+</span><span class=lnt>23
+</span><span class=lnt>24
+</span><span class=lnt>25
+</span><span class=lnt>26
+</span><span class=lnt>27
+</span><span class=lnt>28
+</span><span class=lnt>29
+</span><span class=lnt>30
+</span><span class=lnt>31
+</span><span class=lnt>32
+</span><span class=lnt>33
+</span><span class=lnt>34
+</span><span class=lnt>35
+</span><span class=lnt>36
+</span><span class=lnt>37
+</span><span class=lnt>38
+</span><span class=lnt>39
+</span><span class=lnt>40
+</span><span class=lnt>41
+</span><span class=lnt>42
+</span><span class=lnt>43
+</span><span class=lnt>44
+</span><span class=lnt>45
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-python data-lang=python><span class=line><span class=cl><span class=kn>import</span> <span class=nn>chromadb</span>
+</span></span><span class=line><span class=cl><span class=kn>from</span> <span class=nn>langchain_community.vectorstores</span> <span class=kn>import</span> <span class=n>Chroma</span>
+</span></span><span class=line><span class=cl><span class=kn>from</span> <span class=nn>langchain_openai</span> <span class=kn>import</span> <span class=n>OpenAIEmbeddings</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=k>def</span> <span class=nf>build_vector_store</span><span class=p>(</span>
+</span></span><span class=line><span class=cl>    <span class=n>chunks</span><span class=p>:</span> <span class=nb>list</span><span class=p>[</span><span class=n>Document</span><span class=p>],</span>
+</span></span><span class=line><span class=cl>    <span class=n>persist_dir</span><span class=p>:</span> <span class=nb>str</span> <span class=o>=</span> <span class=s2>&#34;./chroma_db&#34;</span><span class=p>,</span>
+</span></span><span class=line><span class=cl>    <span class=n>collection_name</span><span class=p>:</span> <span class=nb>str</span> <span class=o>=</span> <span class=s2>&#34;knowledge_base&#34;</span><span class=p>,</span>
+</span></span><span class=line><span class=cl><span class=p>)</span> <span class=o>-&gt;</span> <span class=n>Chroma</span><span class=p>:</span>
+</span></span><span class=line><span class=cl>    <span class=s2>&#34;&#34;&#34;将文档片段向量化并存入 ChromaDB&#34;&#34;&#34;</span>
+</span></span><span class=line><span class=cl>    
+</span></span><span class=line><span class=cl>    <span class=c1># 初始化 Embedding 模型</span>
+</span></span><span class=line><span class=cl>    <span class=c1># 使用 OpenAI 的 text-embedding-3-small，性价比最高</span>
+</span></span><span class=line><span class=cl>    <span class=n>embeddings</span> <span class=o>=</span> <span class=n>OpenAIEmbeddings</span><span class=p>(</span><span class=n>model</span><span class=o>=</span><span class=s2>&#34;text-embedding-3-small&#34;</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>    
+</span></span><span class=line><span class=cl>    <span class=c1># 构建向量数据库（自动调用 Embedding API 向量化）</span>
+</span></span><span class=line><span class=cl>    <span class=n>vector_store</span> <span class=o>=</span> <span class=n>Chroma</span><span class=o>.</span><span class=n>from_documents</span><span class=p>(</span>
+</span></span><span class=line><span class=cl>        <span class=n>documents</span><span class=o>=</span><span class=n>chunks</span><span class=p>,</span>
+</span></span><span class=line><span class=cl>        <span class=n>embedding</span><span class=o>=</span><span class=n>embeddings</span><span class=p>,</span>
+</span></span><span class=line><span class=cl>        <span class=n>persist_directory</span><span class=o>=</span><span class=n>persist_dir</span><span class=p>,</span>
+</span></span><span class=line><span class=cl>        <span class=n>collection_name</span><span class=o>=</span><span class=n>collection_name</span><span class=p>,</span>
+</span></span><span class=line><span class=cl>    <span class=p>)</span>
+</span></span><span class=line><span class=cl>    
+</span></span><span class=line><span class=cl>    <span class=c1># 持久化到磁盘</span>
+</span></span><span class=line><span class=cl>    <span class=n>vector_store</span><span class=o>.</span><span class=n>persist</span><span class=p>()</span>
+</span></span><span class=line><span class=cl>    <span class=nb>print</span><span class=p>(</span><span class=sa>f</span><span class=s2>&#34;✅ 向量数据库已构建: </span><span class=si>{</span><span class=n>persist_dir</span><span class=si>}</span><span class=s2>&#34;</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>    <span class=nb>print</span><span class=p>(</span><span class=sa>f</span><span class=s2>&#34;   共 </span><span class=si>{</span><span class=n>vector_store</span><span class=o>.</span><span class=n>_collection</span><span class=o>.</span><span class=n>count</span><span class=p>()</span><span class=si>}</span><span class=s2> 个向量&#34;</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>    
+</span></span><span class=line><span class=cl>    <span class=k>return</span> <span class=n>vector_store</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=k>def</span> <span class=nf>load_vector_store</span><span class=p>(</span>
+</span></span><span class=line><span class=cl>    <span class=n>persist_dir</span><span class=p>:</span> <span class=nb>str</span> <span class=o>=</span> <span class=s2>&#34;./chroma_db&#34;</span><span class=p>,</span>
+</span></span><span class=line><span class=cl>    <span class=n>collection_name</span><span class=p>:</span> <span class=nb>str</span> <span class=o>=</span> <span class=s2>&#34;knowledge_base&#34;</span><span class=p>,</span>
+</span></span><span class=line><span class=cl><span class=p>)</span> <span class=o>-&gt;</span> <span class=n>Chroma</span><span class=p>:</span>
+</span></span><span class=line><span class=cl>    <span class=s2>&#34;&#34;&#34;从磁盘加载已有的向量数据库&#34;&#34;&#34;</span>
+</span></span><span class=line><span class=cl>    <span class=n>embeddings</span> <span class=o>=</span> <span class=n>OpenAIEmbeddings</span><span class=p>(</span><span class=n>model</span><span class=o>=</span><span class=s2>&#34;text-embedding-3-small&#34;</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>    <span class=n>vector_store</span> <span class=o>=</span> <span class=n>Chroma</span><span class=p>(</span>
+</span></span><span class=line><span class=cl>        <span class=n>persist_directory</span><span class=o>=</span><span class=n>persist_dir</span><span class=p>,</span>
+</span></span><span class=line><span class=cl>        <span class=n>embedding_function</span><span class=o>=</span><span class=n>embeddings</span><span class=p>,</span>
+</span></span><span class=line><span class=cl>        <span class=n>collection_name</span><span class=o>=</span><span class=n>collection_name</span><span class=p>,</span>
+</span></span><span class=line><span class=cl>    <span class=p>)</span>
+</span></span><span class=line><span class=cl>    <span class=nb>print</span><span class=p>(</span><span class=sa>f</span><span class=s2>&#34;✅ 已加载向量数据库: </span><span class=si>{</span><span class=n>vector_store</span><span class=o>.</span><span class=n>_collection</span><span class=o>.</span><span class=n>count</span><span class=p>()</span><span class=si>}</span><span class=s2> 个向量&#34;</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>    <span class=k>return</span> <span class=n>vector_store</span>
+</span></span></code></pre></td></tr></table></div></div><blockquote><p>💡 <strong>成本提示</strong>：<code>text-embedding-3-small</code> 模型每 1M token 约 $0.02，一个中等规模的知识库（100 页 PDF）向量化成本通常不到 $0.1。</p></blockquote><h2 id=第三步构建-rag-检索链>第三步：构建 RAG 检索链</h2><p>这是整个系统的核心——将检索和生成串联起来：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span><span class=lnt>17
+</span><span class=lnt>18
+</span><span class=lnt>19
+</span><span class=lnt>20
+</span><span class=lnt>21
+</span><span class=lnt>22
+</span><span class=lnt>23
+</span><span class=lnt>24
+</span><span class=lnt>25
+</span><span class=lnt>26
+</span><span class=lnt>27
+</span><span class=lnt>28
+</span><span class=lnt>29
+</span><span class=lnt>30
+</span><span class=lnt>31
+</span><span class=lnt>32
+</span><span class=lnt>33
+</span><span class=lnt>34
+</span><span class=lnt>35
+</span><span class=lnt>36
+</span><span class=lnt>37
+</span><span class=lnt>38
+</span><span class=lnt>39
+</span><span class=lnt>40
+</span><span class=lnt>41
+</span><span class=lnt>42
+</span><span class=lnt>43
+</span><span class=lnt>44
+</span><span class=lnt>45
+</span><span class=lnt>46
+</span><span class=lnt>47
+</span><span class=lnt>48
+</span><span class=lnt>49
+</span><span class=lnt>50
+</span><span class=lnt>51
+</span><span class=lnt>52
+</span><span class=lnt>53
+</span><span class=lnt>54
+</span><span class=lnt>55
+</span><span class=lnt>56
+</span><span class=lnt>57
+</span><span class=lnt>58
+</span><span class=lnt>59
+</span><span class=lnt>60
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-python data-lang=python><span class=line><span class=cl><span class=kn>from</span> <span class=nn>langchain_openai</span> <span class=kn>import</span> <span class=n>ChatOpenAI</span>
+</span></span><span class=line><span class=cl><span class=kn>from</span> <span class=nn>langchain.prompts</span> <span class=kn>import</span> <span class=n>ChatPromptTemplate</span>
+</span></span><span class=line><span class=cl><span class=kn>from</span> <span class=nn>langchain.schema.runnable</span> <span class=kn>import</span> <span class=n>RunnablePassthrough</span>
+</span></span><span class=line><span class=cl><span class=kn>from</span> <span class=nn>langchain.schema.output_parser</span> <span class=kn>import</span> <span class=n>StrOutputParser</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=k>def</span> <span class=nf>format_docs</span><span class=p>(</span><span class=n>docs</span><span class=p>:</span> <span class=nb>list</span><span class=p>[</span><span class=n>Document</span><span class=p>])</span> <span class=o>-&gt;</span> <span class=nb>str</span><span class=p>:</span>
+</span></span><span class=line><span class=cl>    <span class=s2>&#34;&#34;&#34;将检索到的文档片段格式化为纯文本&#34;&#34;&#34;</span>
+</span></span><span class=line><span class=cl>    <span class=n>formatted</span> <span class=o>=</span> <span class=p>[]</span>
+</span></span><span class=line><span class=cl>    <span class=k>for</span> <span class=n>i</span><span class=p>,</span> <span class=n>doc</span> <span class=ow>in</span> <span class=nb>enumerate</span><span class=p>(</span><span class=n>docs</span><span class=p>,</span> <span class=mi>1</span><span class=p>):</span>
+</span></span><span class=line><span class=cl>        <span class=n>source</span> <span class=o>=</span> <span class=n>doc</span><span class=o>.</span><span class=n>metadata</span><span class=o>.</span><span class=n>get</span><span class=p>(</span><span class=s2>&#34;source&#34;</span><span class=p>,</span> <span class=s2>&#34;未知来源&#34;</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>        <span class=n>page</span> <span class=o>=</span> <span class=n>doc</span><span class=o>.</span><span class=n>metadata</span><span class=o>.</span><span class=n>get</span><span class=p>(</span><span class=s2>&#34;page&#34;</span><span class=p>,</span> <span class=s2>&#34;&#34;</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>        <span class=n>page_info</span> <span class=o>=</span> <span class=sa>f</span><span class=s2>&#34;（第 </span><span class=si>{</span><span class=n>page</span><span class=si>}</span><span class=s2> 页）&#34;</span> <span class=k>if</span> <span class=n>page</span> <span class=k>else</span> <span class=s2>&#34;&#34;</span>
+</span></span><span class=line><span class=cl>        <span class=n>formatted</span><span class=o>.</span><span class=n>append</span><span class=p>(</span><span class=sa>f</span><span class=s2>&#34;[文档</span><span class=si>{</span><span class=n>i</span><span class=si>}</span><span class=s2>] </span><span class=si>{</span><span class=n>source</span><span class=si>}{</span><span class=n>page_info</span><span class=si>}</span><span class=s2>:</span><span class=se>\n</span><span class=si>{</span><span class=n>doc</span><span class=o>.</span><span class=n>page_content</span><span class=si>}</span><span class=s2>&#34;</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>    <span class=k>return</span> <span class=s2>&#34;</span><span class=se>\n\n</span><span class=s2>---</span><span class=se>\n\n</span><span class=s2>&#34;</span><span class=o>.</span><span class=n>join</span><span class=p>(</span><span class=n>formatted</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=k>def</span> <span class=nf>build_rag_chain</span><span class=p>(</span><span class=n>vector_store</span><span class=p>:</span> <span class=n>Chroma</span><span class=p>,</span> <span class=n>k</span><span class=p>:</span> <span class=nb>int</span> <span class=o>=</span> <span class=mi>4</span><span class=p>):</span>
+</span></span><span class=line><span class=cl>    <span class=s2>&#34;&#34;&#34;构建 RAG 检索增强生成链&#34;&#34;&#34;</span>
+</span></span><span class=line><span class=cl>    
+</span></span><span class=line><span class=cl>    <span class=c1># 1. 配置 LLM</span>
+</span></span><span class=line><span class=cl>    <span class=n>llm</span> <span class=o>=</span> <span class=n>ChatOpenAI</span><span class=p>(</span>
+</span></span><span class=line><span class=cl>        <span class=n>model</span><span class=o>=</span><span class=s2>&#34;gpt-4o-mini&#34;</span><span class=p>,</span>
+</span></span><span class=line><span class=cl>        <span class=n>temperature</span><span class=o>=</span><span class=mi>0</span><span class=p>,</span>  <span class=c1># 知识问答场景使用低温度保证准确性</span>
+</span></span><span class=line><span class=cl>    <span class=p>)</span>
+</span></span><span class=line><span class=cl>    
+</span></span><span class=line><span class=cl>    <span class=c1># 2. 配置检索器</span>
+</span></span><span class=line><span class=cl>    <span class=n>retriever</span> <span class=o>=</span> <span class=n>vector_store</span><span class=o>.</span><span class=n>as_retriever</span><span class=p>(</span>
+</span></span><span class=line><span class=cl>        <span class=n>search_type</span><span class=o>=</span><span class=s2>&#34;similarity&#34;</span><span class=p>,</span>  <span class=c1># 余弦相似度检索</span>
+</span></span><span class=line><span class=cl>        <span class=n>search_kwargs</span><span class=o>=</span><span class=p>{</span><span class=s2>&#34;k&#34;</span><span class=p>:</span> <span class=n>k</span><span class=p>},</span>     <span class=c1># 返回最相关的 k 个片段</span>
+</span></span><span class=line><span class=cl>    <span class=p>)</span>
+</span></span><span class=line><span class=cl>    
+</span></span><span class=line><span class=cl>    <span class=c1># 3. 定义 Prompt 模板</span>
+</span></span><span class=line><span class=cl>    <span class=n>prompt</span> <span class=o>=</span> <span class=n>ChatPromptTemplate</span><span class=o>.</span><span class=n>from_template</span><span class=p>(</span><span class=s2>&#34;&#34;&#34;
+</span></span></span><span class=line><span class=cl><span class=s2>你是一个专业的技术助手。请根据以下提供的参考资料回答用户的问题。
+</span></span></span><span class=line><span class=cl><span class=s2>
+</span></span></span><span class=line><span class=cl><span class=s2>要求：
+</span></span></span><span class=line><span class=cl><span class=s2>1. 严格基于提供的资料回答，不要编造信息
+</span></span></span><span class=line><span class=cl><span class=s2>2. 如果资料中没有相关内容，请明确告知用户
+</span></span></span><span class=line><span class=cl><span class=s2>3. 回答时引用具体的文档来源
+</span></span></span><span class=line><span class=cl><span class=s2>
+</span></span></span><span class=line><span class=cl><span class=s2>参考资料：
+</span></span></span><span class=line><span class=cl><span class=s2></span><span class=si>{context}</span><span class=s2>
+</span></span></span><span class=line><span class=cl><span class=s2>
+</span></span></span><span class=line><span class=cl><span class=s2>用户问题：</span><span class=si>{question}</span><span class=s2>
+</span></span></span><span class=line><span class=cl><span class=s2>
+</span></span></span><span class=line><span class=cl><span class=s2>请回答：&#34;&#34;&#34;</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>    
+</span></span><span class=line><span class=cl>    <span class=c1># 4. 使用 LCEL（LangChain Expression Language）组装链</span>
+</span></span><span class=line><span class=cl>    <span class=n>rag_chain</span> <span class=o>=</span> <span class=p>(</span>
+</span></span><span class=line><span class=cl>        <span class=p>{</span>
+</span></span><span class=line><span class=cl>            <span class=s2>&#34;context&#34;</span><span class=p>:</span> <span class=n>retriever</span> <span class=o>|</span> <span class=n>format_docs</span><span class=p>,</span>  <span class=c1># 检索 → 格式化</span>
+</span></span><span class=line><span class=cl>            <span class=s2>&#34;question&#34;</span><span class=p>:</span> <span class=n>RunnablePassthrough</span><span class=p>(),</span>     <span class=c1># 问题直接传递</span>
+</span></span><span class=line><span class=cl>        <span class=p>}</span>
+</span></span><span class=line><span class=cl>        <span class=o>|</span> <span class=n>prompt</span>    <span class=c1># 填充 Prompt</span>
+</span></span><span class=line><span class=cl>        <span class=o>|</span> <span class=n>llm</span>       <span class=c1># 调用 LLM</span>
+</span></span><span class=line><span class=cl>        <span class=o>|</span> <span class=n>StrOutputParser</span><span class=p>()</span>  <span class=c1># 提取文本输出</span>
+</span></span><span class=line><span class=cl>    <span class=p>)</span>
+</span></span><span class=line><span class=cl>    
+</span></span><span class=line><span class=cl>    <span class=k>return</span> <span class=n>rag_chain</span><span class=p>,</span> <span class=n>retriever</span>
+</span></span></code></pre></td></tr></table></div></div><p><strong>检索策略解析：</strong></p><ul><li><code>search_type="similarity"</code> 使用余弦相似度匹配，适合大多数场景</li><li><code>k=4</code> 表示返回 4 个最相关的片段，足够覆盖问题所需信息</li><li>也可以使用 <code>search_type="mmr"</code>（最大边际相关性）来增加检索结果的多样性</li></ul><h2 id=第四步交互式问答>第四步：交互式问答</h2><p>把所有组件串联起来，实现一个命令行交互式问答：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span><span class=lnt>17
+</span><span class=lnt>18
+</span><span class=lnt>19
+</span><span class=lnt>20
+</span><span class=lnt>21
+</span><span class=lnt>22
+</span><span class=lnt>23
+</span><span class=lnt>24
+</span><span class=lnt>25
+</span><span class=lnt>26
+</span><span class=lnt>27
+</span><span class=lnt>28
+</span><span class=lnt>29
+</span><span class=lnt>30
+</span><span class=lnt>31
+</span><span class=lnt>32
+</span><span class=lnt>33
+</span><span class=lnt>34
+</span><span class=lnt>35
+</span><span class=lnt>36
+</span><span class=lnt>37
+</span><span class=lnt>38
+</span><span class=lnt>39
+</span><span class=lnt>40
+</span><span class=lnt>41
+</span><span class=lnt>42
+</span><span class=lnt>43
+</span><span class=lnt>44
+</span><span class=lnt>45
+</span><span class=lnt>46
+</span><span class=lnt>47
+</span><span class=lnt>48
+</span><span class=lnt>49
+</span><span class=lnt>50
+</span><span class=lnt>51
+</span><span class=lnt>52
+</span><span class=lnt>53
+</span><span class=lnt>54
+</span><span class=lnt>55
+</span><span class=lnt>56
+</span><span class=lnt>57
+</span><span class=lnt>58
+</span><span class=lnt>59
+</span><span class=lnt>60
+</span><span class=lnt>61
+</span><span class=lnt>62
+</span><span class=lnt>63
+</span><span class=lnt>64
+</span><span class=lnt>65
+</span><span class=lnt>66
+</span><span class=lnt>67
+</span><span class=lnt>68
+</span><span class=lnt>69
+</span><span class=lnt>70
+</span><span class=lnt>71
+</span><span class=lnt>72
+</span><span class=lnt>73
+</span><span class=lnt>74
+</span><span class=lnt>75
+</span><span class=lnt>76
+</span><span class=lnt>77
+</span><span class=lnt>78
+</span><span class=lnt>79
+</span><span class=lnt>80
+</span><span class=lnt>81
+</span><span class=lnt>82
+</span><span class=lnt>83
+</span><span class=lnt>84
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-python data-lang=python><span class=line><span class=cl><span class=c1># chat.py</span>
+</span></span><span class=line><span class=cl><span class=kn>from</span> <span class=nn>rag_core</span> <span class=kn>import</span> <span class=p>(</span>
+</span></span><span class=line><span class=cl>    <span class=n>load_documents</span><span class=p>,</span>
+</span></span><span class=line><span class=cl>    <span class=n>split_documents</span><span class=p>,</span>
+</span></span><span class=line><span class=cl>    <span class=n>build_vector_store</span><span class=p>,</span>
+</span></span><span class=line><span class=cl>    <span class=n>load_vector_store</span><span class=p>,</span>
+</span></span><span class=line><span class=cl>    <span class=n>build_rag_chain</span><span class=p>,</span>
+</span></span><span class=line><span class=cl><span class=p>)</span>
+</span></span><span class=line><span class=cl><span class=kn>import</span> <span class=nn>sys</span>
+</span></span><span class=line><span class=cl><span class=kn>import</span> <span class=nn>os</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=k>def</span> <span class=nf>initialize</span><span class=p>(</span><span class=n>docs_dir</span><span class=p>:</span> <span class=nb>str</span> <span class=o>=</span> <span class=s2>&#34;./docs&#34;</span><span class=p>,</span> <span class=n>force_rebuild</span><span class=p>:</span> <span class=nb>bool</span> <span class=o>=</span> <span class=kc>False</span><span class=p>):</span>
+</span></span><span class=line><span class=cl>    <span class=s2>&#34;&#34;&#34;初始化 RAG 系统&#34;&#34;&#34;</span>
+</span></span><span class=line><span class=cl>    <span class=n>persist_dir</span> <span class=o>=</span> <span class=s2>&#34;./chroma_db&#34;</span>
+</span></span><span class=line><span class=cl>    
+</span></span><span class=line><span class=cl>    <span class=k>if</span> <span class=n>os</span><span class=o>.</span><span class=n>path</span><span class=o>.</span><span class=n>exists</span><span class=p>(</span><span class=n>persist_dir</span><span class=p>)</span> <span class=ow>and</span> <span class=ow>not</span> <span class=n>force_rebuild</span><span class=p>:</span>
+</span></span><span class=line><span class=cl>        <span class=nb>print</span><span class=p>(</span><span class=s2>&#34;📦 加载已有向量数据库...&#34;</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>        <span class=n>vector_store</span> <span class=o>=</span> <span class=n>load_vector_store</span><span class=p>(</span><span class=n>persist_dir</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>    <span class=k>else</span><span class=p>:</span>
+</span></span><span class=line><span class=cl>        <span class=nb>print</span><span class=p>(</span><span class=s2>&#34;📚 开始构建知识库...&#34;</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>        <span class=n>documents</span> <span class=o>=</span> <span class=n>load_documents</span><span class=p>(</span><span class=n>docs_dir</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>        <span class=k>if</span> <span class=ow>not</span> <span class=n>documents</span><span class=p>:</span>
+</span></span><span class=line><span class=cl>            <span class=nb>print</span><span class=p>(</span><span class=s2>&#34;❌ docs 目录为空，请先放入文档&#34;</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>            <span class=n>sys</span><span class=o>.</span><span class=n>exit</span><span class=p>(</span><span class=mi>1</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>        
+</span></span><span class=line><span class=cl>        <span class=n>chunks</span> <span class=o>=</span> <span class=n>split_documents</span><span class=p>(</span><span class=n>documents</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>        <span class=n>vector_store</span> <span class=o>=</span> <span class=n>build_vector_store</span><span class=p>(</span><span class=n>chunks</span><span class=p>,</span> <span class=n>persist_dir</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>    
+</span></span><span class=line><span class=cl>    <span class=n>rag_chain</span><span class=p>,</span> <span class=n>retriever</span> <span class=o>=</span> <span class=n>build_rag_chain</span><span class=p>(</span><span class=n>vector_store</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>    <span class=k>return</span> <span class=n>rag_chain</span><span class=p>,</span> <span class=n>retriever</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=k>def</span> <span class=nf>interactive_chat</span><span class=p>():</span>
+</span></span><span class=line><span class=cl>    <span class=s2>&#34;&#34;&#34;交互式问答循环&#34;&#34;&#34;</span>
+</span></span><span class=line><span class=cl>    <span class=n>rag_chain</span><span class=p>,</span> <span class=n>retriever</span> <span class=o>=</span> <span class=n>initialize</span><span class=p>()</span>
+</span></span><span class=line><span class=cl>    
+</span></span><span class=line><span class=cl>    <span class=nb>print</span><span class=p>(</span><span class=s2>&#34;</span><span class=se>\n</span><span class=s2>&#34;</span> <span class=o>+</span> <span class=s2>&#34;=&#34;</span> <span class=o>*</span> <span class=mi>60</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>    <span class=nb>print</span><span class=p>(</span><span class=s2>&#34;🤖 RAG 知识库问答系统已启动&#34;</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>    <span class=nb>print</span><span class=p>(</span><span class=s2>&#34;   输入问题开始对话，输入 &#39;quit&#39; 退出&#34;</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>    <span class=nb>print</span><span class=p>(</span><span class=s2>&#34;   输入 &#39;debug&#39; 查看检索到的文档片段&#34;</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>    <span class=nb>print</span><span class=p>(</span><span class=s2>&#34;=&#34;</span> <span class=o>*</span> <span class=mi>60</span> <span class=o>+</span> <span class=s2>&#34;</span><span class=se>\n</span><span class=s2>&#34;</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>    
+</span></span><span class=line><span class=cl>    <span class=n>debug_mode</span> <span class=o>=</span> <span class=kc>False</span>
+</span></span><span class=line><span class=cl>    
+</span></span><span class=line><span class=cl>    <span class=k>while</span> <span class=kc>True</span><span class=p>:</span>
+</span></span><span class=line><span class=cl>        <span class=k>try</span><span class=p>:</span>
+</span></span><span class=line><span class=cl>            <span class=n>question</span> <span class=o>=</span> <span class=nb>input</span><span class=p>(</span><span class=s2>&#34;👤 你的问题: &#34;</span><span class=p>)</span><span class=o>.</span><span class=n>strip</span><span class=p>()</span>
+</span></span><span class=line><span class=cl>        <span class=k>except</span> <span class=p>(</span><span class=ne>EOFError</span><span class=p>,</span> <span class=ne>KeyboardInterrupt</span><span class=p>):</span>
+</span></span><span class=line><span class=cl>            <span class=nb>print</span><span class=p>(</span><span class=s2>&#34;</span><span class=se>\n</span><span class=s2>👋 再见！&#34;</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>            <span class=k>break</span>
+</span></span><span class=line><span class=cl>        
+</span></span><span class=line><span class=cl>        <span class=k>if</span> <span class=ow>not</span> <span class=n>question</span><span class=p>:</span>
+</span></span><span class=line><span class=cl>            <span class=k>continue</span>
+</span></span><span class=line><span class=cl>        <span class=k>if</span> <span class=n>question</span><span class=o>.</span><span class=n>lower</span><span class=p>()</span> <span class=o>==</span> <span class=s2>&#34;quit&#34;</span><span class=p>:</span>
+</span></span><span class=line><span class=cl>            <span class=nb>print</span><span class=p>(</span><span class=s2>&#34;👋 再见！&#34;</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>            <span class=k>break</span>
+</span></span><span class=line><span class=cl>        <span class=k>if</span> <span class=n>question</span><span class=o>.</span><span class=n>lower</span><span class=p>()</span> <span class=o>==</span> <span class=s2>&#34;debug&#34;</span><span class=p>:</span>
+</span></span><span class=line><span class=cl>            <span class=n>debug_mode</span> <span class=o>=</span> <span class=ow>not</span> <span class=n>debug_mode</span>
+</span></span><span class=line><span class=cl>            <span class=nb>print</span><span class=p>(</span><span class=sa>f</span><span class=s2>&#34;🔧 调试模式: </span><span class=si>{</span><span class=s1>&#39;开启&#39;</span> <span class=k>if</span> <span class=n>debug_mode</span> <span class=k>else</span> <span class=s1>&#39;关闭&#39;</span><span class=si>}</span><span class=s2>&#34;</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>            <span class=k>continue</span>
+</span></span><span class=line><span class=cl>        
+</span></span><span class=line><span class=cl>        <span class=k>if</span> <span class=n>debug_mode</span><span class=p>:</span>
+</span></span><span class=line><span class=cl>            <span class=c1># 展示检索结果</span>
+</span></span><span class=line><span class=cl>            <span class=n>docs</span> <span class=o>=</span> <span class=n>retriever</span><span class=o>.</span><span class=n>invoke</span><span class=p>(</span><span class=n>question</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>            <span class=nb>print</span><span class=p>(</span><span class=s2>&#34;</span><span class=se>\n</span><span class=s2>📄 检索到的文档片段:&#34;</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>            <span class=k>for</span> <span class=n>i</span><span class=p>,</span> <span class=n>doc</span> <span class=ow>in</span> <span class=nb>enumerate</span><span class=p>(</span><span class=n>docs</span><span class=p>,</span> <span class=mi>1</span><span class=p>):</span>
+</span></span><span class=line><span class=cl>                <span class=nb>print</span><span class=p>(</span><span class=sa>f</span><span class=s2>&#34;</span><span class=se>\n</span><span class=s2>--- 片段 </span><span class=si>{</span><span class=n>i</span><span class=si>}</span><span class=s2> ---&#34;</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>                <span class=nb>print</span><span class=p>(</span><span class=sa>f</span><span class=s2>&#34;来源: </span><span class=si>{</span><span class=n>doc</span><span class=o>.</span><span class=n>metadata</span><span class=o>.</span><span class=n>get</span><span class=p>(</span><span class=s1>&#39;source&#39;</span><span class=p>,</span> <span class=s1>&#39;未知&#39;</span><span class=p>)</span><span class=si>}</span><span class=s2>&#34;</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>                <span class=nb>print</span><span class=p>(</span><span class=sa>f</span><span class=s2>&#34;内容: </span><span class=si>{</span><span class=n>doc</span><span class=o>.</span><span class=n>page_content</span><span class=p>[:</span><span class=mi>200</span><span class=p>]</span><span class=si>}</span><span class=s2>...&#34;</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>        
+</span></span><span class=line><span class=cl>        <span class=c1># RAG 生成回答</span>
+</span></span><span class=line><span class=cl>        <span class=nb>print</span><span class=p>(</span><span class=s2>&#34;</span><span class=se>\n</span><span class=s2>🤖 回答:&#34;</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>        <span class=k>try</span><span class=p>:</span>
+</span></span><span class=line><span class=cl>            <span class=n>response</span> <span class=o>=</span> <span class=n>rag_chain</span><span class=o>.</span><span class=n>invoke</span><span class=p>(</span><span class=n>question</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>            <span class=nb>print</span><span class=p>(</span><span class=n>response</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>        <span class=k>except</span> <span class=ne>Exception</span> <span class=k>as</span> <span class=n>e</span><span class=p>:</span>
+</span></span><span class=line><span class=cl>            <span class=nb>print</span><span class=p>(</span><span class=sa>f</span><span class=s2>&#34;❌ 生成失败: </span><span class=si>{</span><span class=n>e</span><span class=si>}</span><span class=s2>&#34;</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>        
+</span></span><span class=line><span class=cl>        <span class=nb>print</span><span class=p>()</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=k>if</span> <span class=vm>__name__</span> <span class=o>==</span> <span class=s2>&#34;__main__&#34;</span><span class=p>:</span>
+</span></span><span class=line><span class=cl>    <span class=n>interactive_chat</span><span class=p>()</span>
+</span></span></code></pre></td></tr></table></div></div><h2 id=第五步进阶优化>第五步：进阶优化</h2><h3 id=51-混合检索hybrid-search>5.1 混合检索（Hybrid Search）</h3><p>结合语义检索和关键词检索，提升召回率：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span><span class=lnt>17
+</span><span class=lnt>18
+</span><span class=lnt>19
+</span><span class=lnt>20
+</span><span class=lnt>21
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-python data-lang=python><span class=line><span class=cl><span class=kn>from</span> <span class=nn>langchain.retrievers</span> <span class=kn>import</span> <span class=n>EnsembleRetriever</span>
+</span></span><span class=line><span class=cl><span class=kn>from</span> <span class=nn>langchain_community.retrievers</span> <span class=kn>import</span> <span class=n>BM25Retriever</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=k>def</span> <span class=nf>build_hybrid_retriever</span><span class=p>(</span><span class=n>chunks</span><span class=p>:</span> <span class=nb>list</span><span class=p>[</span><span class=n>Document</span><span class=p>],</span> <span class=n>vector_store</span><span class=p>:</span> <span class=n>Chroma</span><span class=p>,</span> <span class=n>k</span><span class=p>:</span> <span class=nb>int</span> <span class=o>=</span> <span class=mi>4</span><span class=p>):</span>
+</span></span><span class=line><span class=cl>    <span class=s2>&#34;&#34;&#34;混合检索：向量相似度 + BM25 关键词匹配&#34;&#34;&#34;</span>
+</span></span><span class=line><span class=cl>    
+</span></span><span class=line><span class=cl>    <span class=c1># BM25 关键词检索器</span>
+</span></span><span class=line><span class=cl>    <span class=n>bm25_retriever</span> <span class=o>=</span> <span class=n>BM25Retriever</span><span class=o>.</span><span class=n>from_documents</span><span class=p>(</span><span class=n>chunks</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>    <span class=n>bm25_retriever</span><span class=o>.</span><span class=n>k</span> <span class=o>=</span> <span class=n>k</span>
+</span></span><span class=line><span class=cl>    
+</span></span><span class=line><span class=cl>    <span class=c1># 向量语义检索器</span>
+</span></span><span class=line><span class=cl>    <span class=n>vector_retriever</span> <span class=o>=</span> <span class=n>vector_store</span><span class=o>.</span><span class=n>as_retriever</span><span class=p>(</span><span class=n>search_kwargs</span><span class=o>=</span><span class=p>{</span><span class=s2>&#34;k&#34;</span><span class=p>:</span> <span class=n>k</span><span class=p>})</span>
+</span></span><span class=line><span class=cl>    
+</span></span><span class=line><span class=cl>    <span class=c1># 集成检索器，按权重混合</span>
+</span></span><span class=line><span class=cl>    <span class=n>ensemble_retriever</span> <span class=o>=</span> <span class=n>EnsembleRetriever</span><span class=p>(</span>
+</span></span><span class=line><span class=cl>        <span class=n>retrievers</span><span class=o>=</span><span class=p>[</span><span class=n>bm25_retriever</span><span class=p>,</span> <span class=n>vector_retriever</span><span class=p>],</span>
+</span></span><span class=line><span class=cl>        <span class=n>weights</span><span class=o>=</span><span class=p>[</span><span class=mf>0.3</span><span class=p>,</span> <span class=mf>0.7</span><span class=p>],</span>  <span class=c1># 语义检索权重更高</span>
+</span></span><span class=line><span class=cl>    <span class=p>)</span>
+</span></span><span class=line><span class=cl>    
+</span></span><span class=line><span class=cl>    <span class=k>return</span> <span class=n>ensemble_retriever</span>
+</span></span></code></pre></td></tr></table></div></div><h3 id=52-查询重写query-rewriting>5.2 查询重写（Query Rewriting）</h3><p>用户的问题往往口语化，重写查询可以提升检索效果：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-python data-lang=python><span class=line><span class=cl><span class=n>rewrite_prompt</span> <span class=o>=</span> <span class=n>ChatPromptTemplate</span><span class=o>.</span><span class=n>from_template</span><span class=p>(</span><span class=s2>&#34;&#34;&#34;
+</span></span></span><span class=line><span class=cl><span class=s2>请将以下用户问题改写为更适合技术文档检索的查询语句。
+</span></span></span><span class=line><span class=cl><span class=s2>只输出改写后的查询，不要解释。
+</span></span></span><span class=line><span class=cl><span class=s2>
+</span></span></span><span class=line><span class=cl><span class=s2>原始问题：</span><span class=si>{question}</span><span class=s2>
+</span></span></span><span class=line><span class=cl><span class=s2>改写后的查询：&#34;&#34;&#34;</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=k>def</span> <span class=nf>build_query_rewriter</span><span class=p>(</span><span class=n>llm</span><span class=p>):</span>
+</span></span><span class=line><span class=cl>    <span class=s2>&#34;&#34;&#34;构建查询重写链&#34;&#34;&#34;</span>
+</span></span><span class=line><span class=cl>    <span class=k>return</span> <span class=n>rewrite_prompt</span> <span class=o>|</span> <span class=n>llm</span> <span class=o>|</span> <span class=n>StrOutputParser</span><span class=p>()</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1># 在 RAG 链中使用：</span>
+</span></span><span class=line><span class=cl><span class=c1># rewritten = query_rewriter.invoke(user_question)</span>
+</span></span><span class=line><span class=cl><span class=c1># results = retriever.invoke(rewritten)</span>
+</span></span></code></pre></td></tr></table></div></div><h3 id=53-响应源追溯>5.3 响应源追溯</h3><p>让用户知道回答来自哪些文档：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span><span class=lnt>17
+</span><span class=lnt>18
+</span><span class=lnt>19
+</span><span class=lnt>20
+</span><span class=lnt>21
+</span><span class=lnt>22
+</span><span class=lnt>23
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-python data-lang=python><span class=line><span class=cl><span class=k>def</span> <span class=nf>build_rag_chain_with_sources</span><span class=p>(</span><span class=n>vector_store</span><span class=p>:</span> <span class=n>Chroma</span><span class=p>):</span>
+</span></span><span class=line><span class=cl>    <span class=s2>&#34;&#34;&#34;带源文档追溯的 RAG 链&#34;&#34;&#34;</span>
+</span></span><span class=line><span class=cl>    <span class=n>retriever</span> <span class=o>=</span> <span class=n>vector_store</span><span class=o>.</span><span class=n>as_retriever</span><span class=p>(</span><span class=n>search_kwargs</span><span class=o>=</span><span class=p>{</span><span class=s2>&#34;k&#34;</span><span class=p>:</span> <span class=mi>4</span><span class=p>})</span>
+</span></span><span class=line><span class=cl>    <span class=n>llm</span> <span class=o>=</span> <span class=n>ChatOpenAI</span><span class=p>(</span><span class=n>model</span><span class=o>=</span><span class=s2>&#34;gpt-4o-mini&#34;</span><span class=p>,</span> <span class=n>temperature</span><span class=o>=</span><span class=mi>0</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>    
+</span></span><span class=line><span class=cl>    <span class=n>prompt</span> <span class=o>=</span> <span class=n>ChatPromptTemplate</span><span class=o>.</span><span class=n>from_template</span><span class=p>(</span><span class=s2>&#34;&#34;&#34;
+</span></span></span><span class=line><span class=cl><span class=s2>基于以下参考资料回答问题。在回答末尾标注引用的文档编号。
+</span></span></span><span class=line><span class=cl><span class=s2>
+</span></span></span><span class=line><span class=cl><span class=s2>参考资料：
+</span></span></span><span class=line><span class=cl><span class=s2></span><span class=si>{context}</span><span class=s2>
+</span></span></span><span class=line><span class=cl><span class=s2>
+</span></span></span><span class=line><span class=cl><span class=s2>问题：</span><span class=si>{question}</span><span class=s2>
+</span></span></span><span class=line><span class=cl><span class=s2>
+</span></span></span><span class=line><span class=cl><span class=s2>回答：&#34;&#34;&#34;</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>    
+</span></span><span class=line><span class=cl>    <span class=n>rag_chain</span> <span class=o>=</span> <span class=p>(</span>
+</span></span><span class=line><span class=cl>        <span class=p>{</span><span class=s2>&#34;context&#34;</span><span class=p>:</span> <span class=n>retriever</span> <span class=o>|</span> <span class=n>format_docs</span><span class=p>,</span> <span class=s2>&#34;question&#34;</span><span class=p>:</span> <span class=n>RunnablePassthrough</span><span class=p>()}</span>
+</span></span><span class=line><span class=cl>        <span class=o>|</span> <span class=n>prompt</span>
+</span></span><span class=line><span class=cl>        <span class=o>|</span> <span class=n>llm</span>
+</span></span><span class=line><span class=cl>        <span class=o>|</span> <span class=n>StrOutputParser</span><span class=p>()</span>
+</span></span><span class=line><span class=cl>    <span class=p>)</span>
+</span></span><span class=line><span class=cl>    
+</span></span><span class=line><span class=cl>    <span class=k>return</span> <span class=n>rag_chain</span><span class=p>,</span> <span class=n>retriever</span>
+</span></span></code></pre></td></tr></table></div></div><h2 id=性能与成本参考>性能与成本参考</h2><table><thead><tr><th>环节</th><th>耗时</th><th>成本</th></tr></thead><tbody><tr><td>文档加载（100页 PDF）</td><td>~2秒</td><td>-</td></tr><tr><td>文本切分</td><td>&lt;0.1秒</td><td>-</td></tr><tr><td>Embedding 向量化</td><td>~30秒</td><td>~$0.05</td></tr><tr><td>单次检索（4个片段）</td><td>~0.2秒</td><td>-</td></tr><tr><td>GPT-4o-mini 生成</td><td>~2秒</td><td>~$0.002</td></tr><tr><td><strong>总计（首次构建+问答）</strong></td><td><strong>~32秒</strong></td><td><strong>~$0.05</strong></td></tr><tr><td><strong>后续问答（仅检索+生成）</strong></td><td><strong>~2.2秒</strong></td><td><strong>~$0.002/次</strong></td></tr></tbody></table><h2 id=常见问题排查>常见问题排查</h2><p><strong>Q: ChromaDB 持久化后数据丢失？</strong>
+确认调用了 <code>vector_store.persist()</code>，且 <code>persist_directory</code> 路径存在。ChromaDB v0.4+ 可能需要显式调用 <code>chromadb.PersistentClient(path=...)</code>。</p><p><strong>Q: 检索结果不相关？</strong></p><ul><li>检查 <code>chunk_size</code> 是否合适（代码类文档建议 800-1000）</li><li>尝试混合检索（5.1 节）</li><li>调整 <code>k</code> 值，增加检索数量</li></ul><p><strong>Q: Embedding API 调用报错？</strong>
+确认 <code>OPENAI_API_KEY</code> 环境变量已设置。国内网络需要配置代理或使用兼容 API：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl><span class=nb>export</span> <span class=nv>OPENAI_API_KEY</span><span class=o>=</span><span class=s2>&#34;sk-xxx&#34;</span>
+</span></span><span class=line><span class=cl><span class=nb>export</span> <span class=nv>OPENAI_BASE_URL</span><span class=o>=</span><span class=s2>&#34;https://api.openai.com/v1&#34;</span>  <span class=c1># 或代理地址</span>
+</span></span></code></pre></td></tr></table></div></div><h2 id=总结>总结</h2><p>本文完整演示了如何使用 LangChain + ChromaDB 构建一个本地 RAG 知识库问答系统，核心流程为：</p><ol><li><strong>文档加载</strong>：支持 PDF/TXT/MD 等多格式</li><li><strong>文本切分</strong>：递归字符分割，保留语义连贯性</li><li><strong>向量化存储</strong>：ChromaDB 本地持久化，无需额外部署</li><li><strong>检索增强生成</strong>：相似度检索 + Prompt 工程 + LLM 生成</li><li><strong>进阶优化</strong>：混合检索、查询重写、源追溯</li></ol><p>整套方案零运维成本，适合个人知识管理、团队文档问答、产品 FAQ 助手等场景。只需在 <code>docs/</code> 目录放入你的文档，即可快速搭建私有知识库。</p></div><div class=post-footer id=post-footer><div class=post-info><div class=post-info-line><div class=post-info-mod><span>Updated on 2026-06-12</span></div><div class=post-info-license><span>https://creativecommons.org/licenses/by-nc-nd/4.0/</span></div></div><div class=post-info-line><div class=post-info-md></div><div class=post-info-share><span><a href=javascript:void(0); title="Share on Twitter" data-sharer=twitter data-url=https://www.ithome.me/post/2026/06/12/langchain-chromadb-rag-%E7%9F%A5%E8%AF%86%E5%BA%93%E9%97%AE%E7%AD%94%E7%B3%BB%E7%BB%9F/ data-title="LangChain + ChromaDB 实战：构建本地知识库 RAG 问答系统" data-via=https://twitter.com/ChenCiki data-hashtags=RAG,LangChain,ChromaDB,LLM,知识库><i class="fab fa-twitter fa-fw" aria-hidden=true></i></a><a href=javascript:void(0); title="Share on Linkedin" data-sharer=linkedin data-url=https://www.ithome.me/post/2026/06/12/langchain-chromadb-rag-%E7%9F%A5%E8%AF%86%E5%BA%93%E9%97%AE%E7%AD%94%E7%B3%BB%E7%BB%9F/><i class="fab fa-linkedin fa-fw" aria-hidden=true></i></a><a href=javascript:void(0); title="Share on 微博" data-sharer=weibo data-url=https://www.ithome.me/post/2026/06/12/langchain-chromadb-rag-%E7%9F%A5%E8%AF%86%E5%BA%93%E9%97%AE%E7%AD%94%E7%B3%BB%E7%BB%9F/ data-title="LangChain + ChromaDB 实战：构建本地知识库 RAG 问答系统" data-ralateuid=xxx><i class="fab fa-weibo fa-fw" aria-hidden=true></i></a></span></div></div></div><div class=post-info-more><section class=post-tags><i class="fas fa-tags fa-fw" aria-hidden=true></i>&nbsp;<a href=/tags/rag/>RAG</a>,&nbsp;<a href=/tags/langchain/>LangChain</a>,&nbsp;<a href=/tags/chromadb/>ChromaDB</a>,&nbsp;<a href=/tags/llm/>LLM</a>,&nbsp;<a href=/tags/%E7%9F%A5%E8%AF%86%E5%BA%93/>知识库</a></section><section><span><a href=javascript:void(0); onclick=window.history.back()>Back</a></span>&nbsp;|&nbsp;<span><a href=/>Home</a></span></section></div><div class=post-nav><a href=/post/2026/06/11/docker%E5%A4%9A%E9%98%B6%E6%AE%B5%E6%9E%84%E5%BB%BA%E5%AE%9E%E6%88%98-%E4%BC%98%E5%8C%96%E9%95%9C%E5%83%8F%E5%A4%A7%E5%B0%8F%E4%B8%8E%E6%9E%84%E5%BB%BA%E9%80%9F%E5%BA%A6/ class=prev rel=prev title=Docker多阶段构建实战：优化镜像大小与构建速度的完整指南><i class="fas fa-angle-left fa-fw" aria-hidden=true></i>Docker多阶段构建实战：优化镜像大小与构建速度的完整指南</a>
+<a href=/post/2026/06/12/docker-multistage-build-go/ class=next rel=next title=Docker多阶段构建实战：让你的Go镜像缩小90%>Docker多阶段构建实战：让你的Go镜像缩小90%<i class="fas fa-angle-right fa-fw" aria-hidden=true></i></a></div></div><div id=comments><div id=gitalk class=comment></div><noscript>Please enable JavaScript to view the comments powered by <a href=https://github.com/gitalk/gitalk></a>Gitalk</a>.</noscript></div></article></div></main><footer class=footer><div class=footer-container><div class=footer-line itemscope itemtype=http://schema.org/CreativeWork><i class="far fa-copyright fa-fw" aria-hidden=true></i><span itemprop=copyrightYear>2011 - 2026</span><span class=author itemprop=copyrightHolder>&nbsp;<a href=https://www.ithome.me/ target=_blank>Simon Chen</a></span>&nbsp;|&nbsp;<span class=license><a rel="license external nofollow noopener noreferrer" href=https://creativecommons.org/licenses/by-nc-nd/4.0/ target=_blank>CC BY-NC-ND 4.0</a></span></div></div></footer></div><div id=fixed-buttons><a href=# id=back-to-top class=fixed-button title="Back to Top"><i class="fas fa-arrow-up fa-fw" aria-hidden=true></i>
+</a><a href=# id=view-comments class=fixed-button title="View Comments"><i class="fas fa-comment fa-fw" aria-hidden=true></i></a></div><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/gitalk@1.7.2/dist/gitalk.min.css><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/css/lightgallery-bundle.min.css><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/katex.min.css><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/copy-tex.min.css><script type=text/javascript src=https://cdn.jsdelivr.net/npm/gitalk@1.7.2/dist/gitalk.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/autocomplete.js@0.38.1/dist/autocomplete.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/lunr@2.3.9/lunr.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/lazysizes@5.3.1/lazysizes.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/lightgallery.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/plugins/thumbnail/lg-thumbnail.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/plugins/zoom/lg-zoom.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/clipboard@2.0.11/dist/clipboard.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/sharer.js@0.5.1/sharer.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/katex.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/auto-render.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/copy-tex.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/mhchem.min.js></script><script type=text/javascript>window.config={code:{copyTitle:"Copy to clipboard",maxShownLines:50},comment:{gitalk:{admin:["cikichen"],clientID:"be0f52370ed1285b6c7c",clientSecret:"734a7d8d0ded346ca7a3d565d57de3f8eeb2850b",id:"2026-06-12T00:00:00Z",owner:"cikichen",repo:"gitalk",title:"LangChain + ChromaDB 实战：构建本地知识库 RAG 问答系统"}},lightgallery:!0,math:{delimiters:[{display:!0,left:"$$",right:"$$"},{display:!0,left:"\\[",right:"\\]"},{display:!0,left:"\\begin{equation}",right:"\\end{equation}"},{display:!0,left:"\\begin{equation*}",right:"\\end{equation*}"},{display:!0,left:"\\begin{align}",right:"\\end{align}"},{display:!0,left:"\\begin{align*}",right:"\\end{align*}"},{display:!0,left:"\\begin{alignat}",right:"\\end{alignat}"},{display:!0,left:"\\begin{alignat*}",right:"\\end{alignat*}"},{display:!0,left:"\\begin{gather}",right:"\\end{gather}"},{display:!0,left:"\\begin{CD}",right:"\\end{CD}"},{display:!1,left:"$",right:"$"},{display:!1,left:"\\(",right:"\\)"}],strict:!1},search:{highlightTag:"em",lunrIndexURL:"/index.json",maxResultLength:10,noResultsFound:"No results found",snippetLength:50,type:"lunr"}}</script><script type=text/javascript src=/js/theme.min.js></script></body></html>
