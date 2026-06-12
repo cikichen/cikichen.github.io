@@ -100,6 +100,15 @@
         alt="https://www.gravatar.com/avatar/7a0c24f697ea1587001c36d00039b60f?s=240&amp;d=mp"
         title="https://www.gravatar.com/avatar/7a0c24f697ea1587001c36d00039b60f?s=240&amp;d=mp" /></a></div><div class="home-subtitle"><div id="id-1" class="typeit"></div></div></div>
 <article class="single summary" itemscope itemtype="http://schema.org/Article"><h1 class="single-title" itemprop="name headline">
+        <a href="/post/2021/06/24/centos7%E4%B8%8A%E6%9B%B4%E6%96%B0redis%E5%88%B06/">2021 06 24 Centos7上更新Redis到最新版</a>
+    </h1><div class="post-meta"><span class="post-author"><a href="https://www.ithome.me/" title="Author" target="_blank" rel="noopener noreferrer author" class="author"><i class="fas fa-user-circle fa-fw" aria-hidden="true"></i>Simon</a>
+</span>&nbsp;<span class="post-publish">published on <time datetime="2021-06-24">2021-06-24</time></span>&nbsp;<span class="post-category">included in <a href="/categories/%E7%BC%96%E7%A8%8B/"><i class="far fa-folder fa-fw" aria-hidden="true"></i>编程</a></span></div><div class="content">1. 首先需要安装Remi的软件源，官网地址 我们选择中国的镜像地址：
+1 2 //centos 7 yum install -y https://mirrors.tuna.tsinghua.edu.cn/remi/enterprise/remi-release-7.rpm 1 2 //centos 8 yum install -y https://mirrors.tuna.tsinghua.edu.cn/remi/enterprise/remi-release-8.rpm 2. 输入 yum --enablerepo=remi install redis 中途会提示输入y
+3. 安装完成后输入systemctl start redis启动redis 如果之前已经在运行redis3.x，可以输入systemctl restart redis重启一次
+1 2 //查看运行状态 systemctl status redis 4. 查看redis版本 1 redis-server -v </div><div class="post-footer">
+        <a href="/post/2021/06/24/centos7%E4%B8%8A%E6%9B%B4%E6%96%B0redis%E5%88%B06/">Read More</a><div class="post-tags">
+                <i class="fas fa-tags fa-fw" aria-hidden="true"></i>&nbsp;<a href="/tags/centos/">Centos</a>,&nbsp;<a href="/tags/redis/">Redis</a></div></div>
+</article><article class="single summary" itemscope itemtype="http://schema.org/Article"><h1 class="single-title" itemprop="name headline">
         <a href="/post/2021/05/16/nginx%E9%85%8D%E7%BD%AEssl%E8%AF%81%E4%B9%A6%E6%97%A0%E6%B3%95%E8%AE%BF%E9%97%AE%E7%9A%84%E9%97%AE%E9%A2%98/">Nginx配置ssl证书无法访问的问题</a>
     </h1><div class="post-meta"><span class="post-author"><a href="https://www.ithome.me/" title="Author" target="_blank" rel="noopener noreferrer author" class="author"><i class="fas fa-user-circle fa-fw" aria-hidden="true"></i>Simon</a>
 </span>&nbsp;<span class="post-publish">published on <time datetime="2021-05-16">2021-05-16</time></span>&nbsp;<span class="post-category">included in <a href="/categories/%E7%BC%96%E7%A8%8B/"><i class="far fa-folder fa-fw" aria-hidden="true"></i>编程</a></span></div><div class="content">nginx配置了SSL证书，但是http能访问，https不行 检查443端口是否已经开放 腾讯云和阿里云的安全策略组里面放行端口80和443 防火墙端口放开。通过SSH登录到服务器(centos为例) centos通过firewall-cmd --list-all查看是否开放了443端口 若没有，运行firewall-cmd --zone=public --add-port=443/tcp --permanent systemctl restart firewalld重启防火墙生效 检查证书是否配置正确 1 2 3 4 5 6 7 8 9 10 11 12 server { listen 443 ssl; server_name your domain; client_max_body_size 1024m; ssl_certificate /www/server/nginx/conf/cert/555.pem; ssl_certificate_key /www/server/nginx/conf/cert/555.key; ssl_session_timeout 5m; ssl_ciphers ECDHE-RSA-AES128-GCM-SHA256:ECDHE:ECDH:AES:HIGH:!NULL:!aNULL:!MD5:!ADH:!RC4; ssl_protocols TLSv1 TLSv1.1 TLSv1.2; ssl_prefer_server_ciphers on; } 强制http跳转到https，提示重定向过多 你使用了rewrite，并且在一个server里面同时监听了80和443 解决方法：80和443分别拆分到不同的server，80里面做301重定向，下面是配置文件，仅供参考。
@@ -140,19 +149,6 @@
 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 Exception in thread &#34;main&#34; java.lang.UnsatisfiedLinkError: Could not load SWT library. Reasons: no swt-cocoa-4936r26 in java.library.path no swt-cocoa in java.library.path Can&#39;t load library: /Users/xxx/.swt/lib/macosx/aarch64/libswt-cocoa-4936r26.jnilib Can&#39;t load library: /Users/xxx/.</div><div class="post-footer">
         <a href="/post/2021/04/06/%E8%A7%A3%E5%86%B3macbook-m1%E4%B8%8B%E6%97%A0%E6%B3%95%E8%BF%90%E8%A1%8Cuiautomatorviewer/">Read More</a><div class="post-tags">
                 <i class="fas fa-tags fa-fw" aria-hidden="true"></i>&nbsp;<a href="/tags/uiautomatorviewer/">Uiautomatorviewer</a>,&nbsp;<a href="/tags/aarch64/">Aarch64</a></div></div>
-</article><article class="single summary" itemscope itemtype="http://schema.org/Article"><h1 class="single-title" itemprop="name headline">
-        <a href="/post/2020/12/31/macbook-m1%E5%BC%80%E5%8F%91flutter%E9%81%87%E5%88%B0%E7%9A%84%E9%97%AE%E9%A2%98/">MacBook M1开发Flutter遇到的问题</a>
-    </h1><div class="post-meta"><span class="post-author"><a href="https://www.ithome.me/" title="Author" target="_blank" rel="noopener noreferrer author" class="author"><i class="fas fa-user-circle fa-fw" aria-hidden="true"></i>Simon</a>
-</span>&nbsp;<span class="post-publish">published on <time datetime="2020-12-31">2020-12-31</time></span>&nbsp;<span class="post-category">included in <a href="/categories/%E7%BC%96%E7%A8%8B/"><i class="far fa-folder fa-fw" aria-hidden="true"></i>编程</a>&nbsp;<a href="/categories/%E7%A7%BB%E5%8A%A8%E5%BC%80%E5%8F%91/"><i class="far fa-folder fa-fw" aria-hidden="true"></i>移动开发</a></span></div><div class="content">前言 前一台MacBook已经战了6年，去年准备换16寸，因为各种原因一直等到了今年，又因为得知ARM架构的MacBook要上了，等等党永不为奴，终于等到了它。
-我买的是MacBook Pro M1 16+512的配置，用了几天觉得等M2才是真香，M1离真香还差点意思，尤其是系统bug，太致命，开发工具目前原生适配的也不多，用起来提升没那么明显。
-搭建flutter环境 这个不细说，官网已经很详细了：https://flutterchina.club/setup-macos/
-M1开发Flutter靠谱吗？ 整体还行，但是目前来说，因为适配的问题，想模拟器运行都要调试一番，iPhone和Android都是。不过M1可以直接把自己的udid注册到开发者账号中去，原生直接运行iPhone App，这个确实骚，但是为什么我的MacBook注册后设备类型是ipod? 目前M1上iphone模拟器运行flutter app可能遇到一些问题，主要是三方依赖的插件很多没适配arm64，需要大量调试（参考:https://stackoverflow.com/questions/63607158/xcode-12-building-for-ios-simulator-but-linking-in-object-file-built-for-ios） android模拟器只有个测试版，问题一大堆，也基本不可用，所以现在这个阶段想在M1上开发app的话，调试需要真机走起。(模拟器查看：https://androidstudio.googleblog.com/2020/12/android-emulator-apple-silicon-preview.html)
-偶尔会有一些无法理解的错误，命令行flutter clean可能有惊喜。
-常见错误 webview_plugin &lsquo;Flutter/Flutter.h&rsquo; file not found 旧项目迁移到M1上后，可能会出现这个错误 解决方案:
-1 2 $ rm ios/Flutter/Flutter.podspec $ flutter clean vm-service: Error: Unhandled exception 运行时报这个错，应该是你在运行小猫咪 解决方案：
-1 2 export NO_PROXY=localhost,127.0.0.1 source ~/.zshrc </div><div class="post-footer">
-        <a href="/post/2020/12/31/macbook-m1%E5%BC%80%E5%8F%91flutter%E9%81%87%E5%88%B0%E7%9A%84%E9%97%AE%E9%A2%98/">Read More</a><div class="post-tags">
-                <i class="fas fa-tags fa-fw" aria-hidden="true"></i>&nbsp;<a href="/tags/%E8%B7%A8%E5%B9%B3%E5%8F%B0/">跨平台</a>,&nbsp;<a href="/tags/flutter/">Flutter</a>,&nbsp;<a href="/tags/macbook/">Macbook</a>,&nbsp;<a href="/tags/m1/">M1</a></div></div>
 </article><ul class="pagination"><li class="page-item ">
                     <span class="page-link">
                         <a href="/">1</a>
