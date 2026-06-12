@@ -21,9 +21,9 @@
     <guid>https://www.ithome.me/post/2021/04/06/%E8%A7%A3%E5%86%B3macbook-m1%E4%B8%8B%E6%97%A0%E6%B3%95%E8%BF%90%E8%A1%8Cuiautomatorviewer/</guid>
     <description><![CDATA[MacBook使用ARM芯片后虽然带来了性能和续航的提升，但是也带来了不少兼容性问题，好在发布几个月后主流的开发工具都慢慢适配完毕，然而一些小众的工具迟迟无法引来更新。所以Rosetta 2模式仍然非常重要。
 默认情况下，我们执行./uiautomatorviewer会报错:
-SWT folder &#39;/Users/xxx/Library/Android/sdk/tools/lib/aarch64&#39; does not exist. Please export ANDROID_SWT to point to the folder containing swt.jar for your platform. 意思是lib下没有aarch64这个目录。
+1 2 SWT folder &#39;/Users/xxx/Library/Android/sdk/tools/lib/aarch64&#39; does not exist. Please export ANDROID_SWT to point to the folder containing swt.jar for your platform. 意思是lib下没有aarch64这个目录。
 尝试方案1： 在lib下建立aarch64目录，网上找aarch64版本的swt.jar，无果。 最终报错如下：
-Exception in thread &#34;main&#34; java.lang.UnsatisfiedLinkError: Could not load SWT library. Reasons: no swt-cocoa-4936r26 in java.library.path no swt-cocoa in java.library.path Can&#39;t load library: /Users/xxx/.swt/lib/macosx/aarch64/libswt-cocoa-4936r26.jnilib Can&#39;t load library: /Users/xxx/.swt/lib/macosx/aarch64/libswt-cocoa.jnilib /Users/xxx/.swt/lib/macosx/aarch64/libswt-cocoa-4936r26.jnilib: dlopen(/Users/xxx/.swt/lib/macosx/aarch64/libswt-cocoa-4936r26.jnilib, 1): no suitable image found. Did find: /Users/xxx/.swt/lib/macosx/aarch64/libswt-cocoa-4936r26.jnilib: mach-o, but wrong architecture /Users/xxx/.swt/lib/macosx/aarch64/libswt-cocoa-4936r26.jnilib: mach-o, but wrong architecture at org.]]></description>
+1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 Exception in thread &#34;main&#34; java.lang.UnsatisfiedLinkError: Could not load SWT library. Reasons: no swt-cocoa-4936r26 in java.library.path no swt-cocoa in java.library.path Can&#39;t load library: /Users/xxx/.swt/lib/macosx/aarch64/libswt-cocoa-4936r26.jnilib Can&#39;t load library: /Users/xxx/.]]></description>
 </item>
 <item>
     <title>MacBook M1开发Flutter遇到的问题</title>
@@ -37,8 +37,8 @@ Exception in thread &#34;main&#34; java.lang.UnsatisfiedLinkError: Could not loa
 M1开发Flutter靠谱吗？ 整体还行，但是目前来说，因为适配的问题，想模拟器运行都要调试一番，iPhone和Android都是。不过M1可以直接把自己的udid注册到开发者账号中去，原生直接运行iPhone App，这个确实骚，但是为什么我的MacBook注册后设备类型是ipod? 目前M1上iphone模拟器运行flutter app可能遇到一些问题，主要是三方依赖的插件很多没适配arm64，需要大量调试（参考:https://stackoverflow.com/questions/63607158/xcode-12-building-for-ios-simulator-but-linking-in-object-file-built-for-ios） android模拟器只有个测试版，问题一大堆，也基本不可用，所以现在这个阶段想在M1上开发app的话，调试需要真机走起。(模拟器查看：https://androidstudio.googleblog.com/2020/12/android-emulator-apple-silicon-preview.html)
 偶尔会有一些无法理解的错误，命令行flutter clean可能有惊喜。
 常见错误 webview_plugin &lsquo;Flutter/Flutter.h&rsquo; file not found 旧项目迁移到M1上后，可能会出现这个错误 解决方案:
-$ rm ios/Flutter/Flutter.podspec $ flutter clean vm-service: Error: Unhandled exception 运行时报这个错，应该是你在运行小猫咪 解决方案：
-export NO_PROXY=localhost,127.0.0.1 source ~/.zshrc ]]></description>
+1 2 $ rm ios/Flutter/Flutter.podspec $ flutter clean vm-service: Error: Unhandled exception 运行时报这个错，应该是你在运行小猫咪 解决方案：
+1 2 export NO_PROXY=localhost,127.0.0.1 source ~/.zshrc ]]></description>
 </item>
 <item>
     <title>Flutter、JetPack Compose和SwiftUI对比</title>
@@ -62,9 +62,7 @@ SwiftUI Apple未来的UI统一方案，能用于Apple全家桶的UI构建，以A
     <description><![CDATA[本文主要介绍DataBinding在Android App中的使用方法。数据绑定是将“提供器”的数据源与“消费者”绑定并使其同步的一种通用技术。
 1. Android应用程序使用数据绑定 1.1 介绍DataBinding Android通过DataBinding提供了编写声明型布局的支持。这样可以最大程度简化布局和逻辑相关联的代码。
 数据绑定要求修改文件，外层需要包裹一个layout布局。主要通过@{} 或 @={}语法把布局中的元素和表达式的引用写入到属性中。
-&lt;?xml version=&#34;1.0&#34; encoding=&#34;utf-8&#34;?&gt; &lt;layout xmlns:android=&#34;http://schemas.android.com/apk/res/android&#34; xmlns:app=&#34;http://schemas.android.com/apk/res-auto&#34; xmlns:tools=&#34;http://schemas.android.com/tools&#34;&gt; &lt;data&gt; &lt;variable name=&#34;mainModel&#34; type=&#34;me.ithome.jetpack.model.MainViewModel&#34; /&gt;① &lt;/data&gt; &lt;androidx.constraintlayout.widget.ConstraintLayout android:layout_width=&#34;match_parent&#34; android:layout_height=&#34;match_parent&#34; tools:context=&#34;.MainActivity&#34;&gt;② &lt;TextView android:id=&#34;@+id/tv_userinfo&#34; android:layout_width=&#34;wrap_content&#34; android:layout_height=&#34;wrap_content&#34; android:text=&#34;@{mainModel.userData.toString()}&#34; app:layout_constraintBottom_toBottomOf=&#34;parent&#34; app:layout_constraintLeft_toLeftOf=&#34;parent&#34; app:layout_constraintRight_toRightOf=&#34;parent&#34; app:layout_constraintTop_toTopOf=&#34;parent&#34; /&gt; &lt;Button android:id=&#34;@+id/button&#34; android:layout_width=&#34;wrap_content&#34; android:layout_height=&#34;wrap_content&#34; android:layout_marginTop=&#34;56dp&#34; android:onClick=&#34;@{(view) -&gt; mainModel.getClick(view)}&#34; android:text=&#34;@string/btn_getUserInfo&#34; app:layout_constraintBottom_toTopOf=&#34;@+id/tv_userinfo&#34; app:layout_constraintEnd_toEndOf=&#34;parent&#34; app:layout_constraintHorizontal_bias=&#34;0.498&#34; app:layout_constraintStart_toStartOf=&#34;parent&#34; app:layout_constraintTop_toTopOf=&#34;parent&#34; /&gt; &lt;/androidx.constraintlayout.widget.ConstraintLayout&gt; &lt;/layout&gt; ①用户变量，定义了能在这个布局里面使用的属性和类 ②常规布局
-DataBinding会基于layout创建一个Binding class，这个类包含了布局属性(定义的变量)到相关视图的所有绑定，并且会为布局中的数据元素生成setter，生成的类的名称是基于layout的名称(驼峰命名，加上Binding后缀)。比如布局名是activity_main.xml，生成的类就是ActivityMainBinding。你能通过这个类去inflate布局和数据模型，也可以通过DataBindingUtil类。
-DataBindingUtils加载布局 val mainBindingUtil = DataBindingUtil.setContentView&lt;ActivityMainBinding&gt;(this, R.layout.activity_main) mainBindingUtil.lifecycleOwner = this inflate加载布局(此方法也能用于RecyclerView, ViewPager) val mainBindingUtil = ActivityMainBinding.]]></description>
+1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40 41 &lt;?xml version=&#34;1.0&#34; encoding=&#34;utf-8&#34;?&gt; &lt;layout xmlns:android=&#34;http://schemas.android.com/apk/res/android&#34; xmlns:app=&#34;http://schemas.android.com/apk/res-auto&#34; xmlns:tools=&#34;http://schemas.android.com/tools&#34;&gt; &lt;data&gt; &lt;variable name=&#34;mainModel&#34; type=&#34;me.ithome.jetpack.model.MainViewModel&#34; /&gt;① &lt;/data&gt; &lt;androidx.constraintlayout.widget.ConstraintLayout android:layout_width=&#34;match_parent&#34; android:layout_height=&#34;match_parent&#34; tools:context=&#34;.MainActivity&#34;&gt;② &lt;TextView android:id=&#34;@+id/tv_userinfo&#34; android:layout_width=&#34;wrap_content&#34; android:layout_height=&#34;wrap_content&#34; android:text=&#34;@{mainModel.]]></description>
 </item>
 <item>
     <title>Android内存泄漏分析</title>
@@ -107,8 +105,8 @@ Handler泄漏 由于Activity已经关闭，Handler任务还未执行完成，其
 抽象工厂模式 一个工厂创建一类产品，一类产品对应一个工厂。
 比如汽车制造工厂是个抽象工厂，它既可以生产宝马X1，也可以生产X2，X3。罐头厂是一个抽象工厂，它可以生产橘子罐头，也可以生产黄桃罐头。
 单例模式 这个没啥好说的，保证一个类仅有一个实例，并提供一个访问它的全局访问点。 需要记忆的是懒汉式和饿汉式。 懒汉式：需要的时候才实例化，常用的例子就是非空检查和双重检查式的实现。 饿汉式：类加载的时候就先实例化。 类似这样的
-private static Singleton instance = new Singleton(); 饿汉式会线程安全些。 我们用的最主流的方式是静态内部类的方式。
-public class SingleInstance{ private SingleInstance(){} private static class SingleInstanceHolder{ private static SingleInstance INSTANCE = new SingleInstance(); } public static SingleInstance getInstance(){ return SingleInstanceHolder.]]></description>
+1 private static Singleton instance = new Singleton(); 饿汉式会线程安全些。 我们用的最主流的方式是静态内部类的方式。
+1 2 3 4 5 6 7 8 9 10 11 public class SingleInstance{ private SingleInstance(){} private static class SingleInstanceHolder{ private static SingleInstance INSTANCE = new SingleInstance(); } public static SingleInstance getInstance(){ return SingleInstanceHolder.]]></description>
 </item>
 <item>
     <title>Sign in With Apple 从登陆到服务器验证</title>
@@ -117,14 +115,13 @@ public class SingleInstance{ private SingleInstance(){} private static class Sin
     <author>张龙</author>
     <guid>https://www.ithome.me/post/2020/04/07/sign-in-with-apple-%E4%BB%8E%E7%99%BB%E9%99%86%E5%88%B0%E6%9C%8D%E5%8A%A1%E5%99%A8%E9%AA%8C%E8%AF%81/</guid>
     <description><![CDATA[关于手机端登录的代码，这里不做多余介绍，我们看下登录成功后， Apple返回给手机端的一些参数
-open var user: String { get } open var state: String? { get } open var authorizedScopes: [ASAuthorization.Scope] { get } open var authorizationCode: Data? { get } open var identityToken: Data? { get } open var email: String? { get } open var fullName: PersonNameComponents? { get } open var realUserStatus: ASUserDetectionStatus 这里初步登录成功，从 Apple 拿到 user 、 identityToken 、 authorizationCode 等相关信息。
-1. 首先手机端先做一个验证 identityToken 是一个 JWT 格式的加密数据 （JWT相关知识介绍 JSON Web Token ），我们通过如下代码拿到 header 和 payload 中的数据]]></description>
+1 2 3 4 5 6 7 8 open var user: String { get } open var state: String? { get } open var authorizedScopes: [ASAuthorization.Scope] { get } open var authorizationCode: Data? { get } open var identityToken: Data? { get } open var email: String? { get } open var fullName: PersonNameComponents? { get } open var realUserStatus: ASUserDetectionStatus 这里初步登录成功，从 Apple 拿到 user 、 identityToken 、 authorizationCode 等相关信息。]]></description>
 </item>
 <item>
     <title>Flutter开发App常见问题解决方案</title>
     <link>https://www.ithome.me/post/2019/12/13/flutter%E5%BC%80%E5%8F%91app%E5%B8%B8%E8%A7%81%E9%97%AE%E9%A2%98%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88/</link>
     <pubDate>Fri, 13 Dec 2019 00:00:00 &#43;0000</pubDate>
-    <author>SimonChen</author>
+    <author>Simon Chen</author>
     <guid>https://www.ithome.me/post/2019/12/13/flutter%E5%BC%80%E5%8F%91app%E5%B8%B8%E8%A7%81%E9%97%AE%E9%A2%98%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88/</guid>
     <description><![CDATA[Flutter开发真的会遇到各种各样的坑爹问题，Android运行起来了可能发现iOS出问题了。遇到过不少问题，因此写这个文章做个汇总，也免得以后遇到了再次翻车。
 当成FAQ使用吧

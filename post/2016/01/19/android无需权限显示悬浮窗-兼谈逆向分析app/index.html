@@ -32,12 +32,12 @@
         "mainEntityOfPage": {
             "@type": "WebPage",
             "@id": "https:\/\/www.ithome.me\/post\/2016\/01\/19\/android%E6%97%A0%E9%9C%80%E6%9D%83%E9%99%90%E6%98%BE%E7%A4%BA%E6%82%AC%E6%B5%AE%E7%AA%97-%E5%85%BC%E8%B0%88%E9%80%86%E5%90%91%E5%88%86%E6%9E%90app\/"
-        },"genre": "posts","keywords": "android, 悬浮框","wordcount":  234 ,
+        },"genre": "posts","keywords": "android, 悬浮框","wordcount":  270 ,
         "url": "https:\/\/www.ithome.me\/post\/2016\/01\/19\/android%E6%97%A0%E9%9C%80%E6%9D%83%E9%99%90%E6%98%BE%E7%A4%BA%E6%82%AC%E6%B5%AE%E7%AA%97-%E5%85%BC%E8%B0%88%E9%80%86%E5%90%91%E5%88%86%E6%9E%90app\/","datePublished": "2016-01-19T11:29:46+08:00","dateModified": "2016-01-19T11:29:46+08:00","publisher": {
             "@type": "Organization",
             "name": ""},"author": {
                 "@type": "Person",
-                "name": "SimonChen"
+                "name": "Simon Chen"
             },"description": "android悬浮框权限"
     }
     </script></head>
@@ -106,11 +106,11 @@
             <h2 class="toc-title">Contents</h2>
             <div class="toc-content" id="toc-content-auto"></div>
         </div><article class="page single"><h1 class="single-title animate__animated animate__flipInX">Android无需权限显示悬浮窗, 兼谈逆向分析app</h1><div class="post-meta">
-            <div class="post-meta-line"><span class="post-author"><a href="/" title="Author" rel=" author" class="author"><i class="fas fa-user-circle fa-fw" aria-hidden="true"></i>SimonChen</a>
+            <div class="post-meta-line"><span class="post-author"><a href="https://www.ithome.me/" title="Author" target="_blank" rel="noopener noreferrer author" class="author"><i class="fas fa-user-circle fa-fw" aria-hidden="true"></i>Simon Chen</a>
 </span></div>
-            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw" aria-hidden="true"></i>&nbsp;<time datetime="2016-01-19">2016-01-19</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden="true"></i>&nbsp;234 words&nbsp;
+            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw" aria-hidden="true"></i>&nbsp;<time datetime="2016-01-19">2016-01-19</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden="true"></i>&nbsp;270 words&nbsp;
                 <i class="far fa-clock fa-fw" aria-hidden="true"></i>&nbsp;2 minutes&nbsp;</div>
-        </div><div class="details toc" id="toc-static"  data-kept="">
+        </div><div class="details toc" id="toc-static"  data-kept="true">
                 <div class="details-summary toc-title">
                     <span>Contents</span>
                     <span><i class="details-icon fas fa-angle-right" aria-hidden="true"></i></span>
@@ -146,43 +146,85 @@
 <h3 id="验证">验证</h3>
 <p>实际测试了一下, 将type设置成TYPE_TOAST果然有奇效, 不需要<code>android.permission.SYSTEM_ALERT_WINDOW</code>权限就能显示一个悬浮窗.</p>
 <p>之前我一直以为调用了系统<code>WindowManager.addView</code>需要<code>android.permission.SYSTEM_ALERT_WINDOW</code>权限, 但实际上调用这个方法是不需要权限的, 在Android源码中有这么一段</p>
-<pre tabindex="0"><code>public int checkAddPermission(WindowManager.LayoutParams attrs) {
-    int type = attrs.type;
-
-    if (type &lt; WindowManager.LayoutParams.FIRST_SYSTEM_WINDOW
-            || type &gt; WindowManager.LayoutParams.LAST_SYSTEM_WINDOW) {
-        return WindowManagerImpl.ADD_OKAY;
-    }
-    String permission = null;
-    switch (type) {
-        case TYPE_TOAST:
-            // XXX right now the app process has complete control over
-            // this...  should introduce a token to let the system
-            // monitor/control what they are doing.
-            break;
-        case TYPE_INPUT_METHOD:
-        case TYPE_WALLPAPER:
-            // The window manager will check these.
-            break;
-        case TYPE_PHONE:
-        case TYPE_PRIORITY_PHONE:
-        case TYPE_SYSTEM_ALERT:
-        case TYPE_SYSTEM_ERROR:
-        case TYPE_SYSTEM_OVERLAY:
-            permission = android.Manifest.permission.SYSTEM_ALERT_WINDOW;
-            break;
-        default:
-            permission = android.Manifest.permission.INTERNAL_SYSTEM_WINDOW;
-    }
-    if (permission != null) {
-        if (mContext.checkCallingOrSelfPermission(permission)
-                != PackageManager.PERMISSION_GRANTED) {
-            return WindowManagerImpl.ADD_PERMISSION_DENIED;
-        }
-    }
-    return WindowManagerImpl.ADD_OKAY;
-}
-</code></pre><p>可以猜到这个方法是往系统的WindowManager里addView的时候做权限检查用的, 那个<code>type</code>就是我们在构造<code>WindowManager.LayoutParams</code>时赋值的<code>type</code>, 可以看到, 除了<code>TYPE_TOAST</code>, 其他都是要权限的, 而且非常喜感的是, 代码中的注释还说他们现在对这种type毫无限制, 应该引入标记来限制开发者.</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-zed" data-lang="zed"><span class="line"><span class="cl"><span class="n">public</span><span class="w"> </span><span class="n">int</span><span class="w"> </span><span class="n">checkAddPermission</span><span class="p">(</span><span class="n">WindowManager</span><span class="p">.</span><span class="n">LayoutParams</span><span class="w"> </span><span class="n">attrs</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="n">int</span><span class="w"> </span><span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">attrs</span><span class="p">.</span><span class="n">type</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="n">if</span><span class="w"> </span><span class="p">(</span><span class="n">type</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">WindowManager</span><span class="p">.</span><span class="n">LayoutParams</span><span class="p">.</span><span class="n">FIRST_SYSTEM_WINDOW</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="o">||</span><span class="w"> </span><span class="n">type</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="n">WindowManager</span><span class="p">.</span><span class="n">LayoutParams</span><span class="p">.</span><span class="n">LAST_SYSTEM_WINDOW</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">return</span><span class="w"> </span><span class="n">WindowManagerImpl</span><span class="p">.</span><span class="n">ADD_OKAY</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="n">String</span><span class="w"> </span><span class="kd">permission</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">null</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="n">switch</span><span class="w"> </span><span class="p">(</span><span class="n">type</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">case</span><span class="w"> </span><span class="n">TYPE_TOAST</span><span class="o">:</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="c1">// XXX right now the app process has complete control over
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="w">            </span><span class="c1">// this...  should introduce a token to let the system
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="w">            </span><span class="c1">// monitor/control what they are doing.
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="w">            </span><span class="n">break</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">case</span><span class="w"> </span><span class="n">TYPE_INPUT_METHOD</span><span class="o">:</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">case</span><span class="w"> </span><span class="n">TYPE_WALLPAPER</span><span class="o">:</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="c1">// The window manager will check these.
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="w">            </span><span class="n">break</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">case</span><span class="w"> </span><span class="n">TYPE_PHONE</span><span class="o">:</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">case</span><span class="w"> </span><span class="n">TYPE_PRIORITY_PHONE</span><span class="o">:</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">case</span><span class="w"> </span><span class="n">TYPE_SYSTEM_ALERT</span><span class="o">:</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">case</span><span class="w"> </span><span class="n">TYPE_SYSTEM_ERROR</span><span class="o">:</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">case</span><span class="w"> </span><span class="n">TYPE_SYSTEM_OVERLAY</span><span class="o">:</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="kd">permission</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">android</span><span class="p">.</span><span class="n">Manifest</span><span class="p">.</span><span class="kd">permission</span><span class="p">.</span><span class="n">SYSTEM_ALERT_WINDOW</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="n">break</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">default</span><span class="o">:</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="kd">permission</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">android</span><span class="p">.</span><span class="n">Manifest</span><span class="p">.</span><span class="kd">permission</span><span class="p">.</span><span class="n">INTERNAL_SYSTEM_WINDOW</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="n">if</span><span class="w"> </span><span class="p">(</span><span class="kd">permission</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="n">null</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">if</span><span class="w"> </span><span class="p">(</span><span class="n">mContext</span><span class="p">.</span><span class="n">checkCallingOrSelfPermission</span><span class="p">(</span><span class="kd">permission</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">                </span><span class="o">!=</span><span class="w"> </span><span class="n">PackageManager</span><span class="p">.</span><span class="n">PERMISSION_GRANTED</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="n">return</span><span class="w"> </span><span class="n">WindowManagerImpl</span><span class="p">.</span><span class="n">ADD_PERMISSION_DENIED</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="n">return</span><span class="w"> </span><span class="n">WindowManagerImpl</span><span class="p">.</span><span class="n">ADD_OKAY</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="p">}</span><span class="w">
+</span></span></span></code></pre></td></tr></table>
+</div>
+</div><p>可以猜到这个方法是往系统的WindowManager里addView的时候做权限检查用的, 那个<code>type</code>就是我们在构造<code>WindowManager.LayoutParams</code>时赋值的<code>type</code>, 可以看到, 除了<code>TYPE_TOAST</code>, 其他都是要权限的, 而且非常喜感的是, 代码中的注释还说他们现在对这种type毫无限制, 应该引入标记来限制开发者.</p>
 <h3 id="处理兼容性">处理兼容性</h3>
 <p>在这篇文章刚刚公布的时候, 就有同学反馈悬浮窗无法接收事件, 刚开始我并没有特别在意, 在廖祜秋大神做了一个demo之后, 这篇文章阅读量又涨了不少, 随即收到更多反馈事件的问题, 我今天晚上借了台MIUI V5 4.2.2实测了一下, 这台机器上UC的快速搜索功能也无法正常使用.</p>
 <p>在这个ROM上表现为:
@@ -191,7 +233,7 @@
 使用<code>TYPE_TOAST</code>这个不需要权限的<code>type</code>时, <strong>悬浮窗正常显示, 但不能接受触摸事件</strong>.</p>
 <p>原因是: <code>API level &gt;= 19</code>的时候, 使用<code>TYPE_TOAST</code>, 能接受到触摸事件。其他情况使用<code>TYPE_PHONE</code>(需要权限).</p>
 <p>可能是为了规避在低版本<code>TYPE_TOAST</code>不能接受事件的问题.</p>
-<p>关于针对源代码的分析, 请看<a href="http://www.jianshu.com/p/634cd056b90c" target="_blank" rel="noopener noreffer">Android悬浮窗使用TYPE_TOAST的小结</a>
+<p>关于针对源代码的分析, 请看<a href="http://www.jianshu.com/p/634cd056b90c" target="_blank" rel="noopener noreferrer">Android悬浮窗使用TYPE_TOAST的小结</a>
 </p>
 <h3 id="实测效果">实测效果</h3>
 <p>我之前写的一个app有悬浮窗播放功能, 支持拖动窗口和点击暂停, 关闭窗口等等, 在4.4.4上实测功能正常.</p>
@@ -212,7 +254,7 @@
         data-sizes="auto"
         alt="http://ww1.sinaimg.cn/large/62b0904dgw1f04v6mky30g20di0jgn29.gif"
         title="http://ww1.sinaimg.cn/large/62b0904dgw1f04v6mky30g20di0jgn29.gif" /></p>
-<p>关于这个, 他也写了一篇<a href="http://www.liaohuqiu.net/cn/posts/android-windows-manager/" target="_blank" rel="noopener noreffer">Android 悬浮窗的小结</a>
+<p>关于这个, 他也写了一篇<a href="http://www.liaohuqiu.net/cn/posts/android-windows-manager/" target="_blank" rel="noopener noreferrer">Android 悬浮窗的小结</a>
 </p>
 <h3 id="其他补充">其他补充</h3>
 <p>评论区的浮海大虾同学有更多补充如下:
@@ -238,7 +280,7 @@
 <code>TYPE_PHONE</code>：属于悬浮窗（并且给一个Activity的话按下HOME键会出现看不到桌面上的图标异常情况）  <br>
 <code>TYPE_TOAST</code>：不属于悬浮窗，但有悬浮窗的功能，缺点是在Android2.3上无法接收点击事件  <br>
 <code>TYPE_SYSTEM_ALERT</code>：属于悬浮窗，但是会被禁止<br></p>
-<p>大家如果对具体的逆向过程有兴趣，请参考原文: <a href="http://www.jianshu.com/p/167fd5f47d5c" target="_blank" rel="noopener noreffer">http://www.jianshu.com/p/167fd5f47d5c</a>
+<p>大家如果对具体的逆向过程有兴趣，请参考原文: <a href="http://www.jianshu.com/p/167fd5f47d5c" target="_blank" rel="noopener noreferrer">http://www.jianshu.com/p/167fd5f47d5c</a>
 </p>
 </div><div class="post-footer" id="post-footer">
     <div class="post-info">
@@ -249,7 +291,7 @@
         <div class="post-info-line">
             <div class="post-info-md"></div>
             <div class="post-info-share">
-                <span><a href="javascript:void(0);" title="Share on Twitter" data-sharer="twitter" data-url="https://www.ithome.me/post/2016/01/19/android%E6%97%A0%E9%9C%80%E6%9D%83%E9%99%90%E6%98%BE%E7%A4%BA%E6%82%AC%E6%B5%AE%E7%AA%97-%E5%85%BC%E8%B0%88%E9%80%86%E5%90%91%E5%88%86%E6%9E%90app/" data-title="Android无需权限显示悬浮窗, 兼谈逆向分析app" data-via="https://twitter.com/ChenCiki" data-hashtags="android,悬浮框"><i class="fab fa-twitter fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on Facebook" data-sharer="facebook" data-url="https://www.ithome.me/post/2016/01/19/android%E6%97%A0%E9%9C%80%E6%9D%83%E9%99%90%E6%98%BE%E7%A4%BA%E6%82%AC%E6%B5%AE%E7%AA%97-%E5%85%BC%E8%B0%88%E9%80%86%E5%90%91%E5%88%86%E6%9E%90app/" data-hashtag="android"><i class="fab fa-facebook-square fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on Hacker News" data-sharer="hackernews" data-url="https://www.ithome.me/post/2016/01/19/android%E6%97%A0%E9%9C%80%E6%9D%83%E9%99%90%E6%98%BE%E7%A4%BA%E6%82%AC%E6%B5%AE%E7%AA%97-%E5%85%BC%E8%B0%88%E9%80%86%E5%90%91%E5%88%86%E6%9E%90app/" data-title="Android无需权限显示悬浮窗, 兼谈逆向分析app"><i class="fab fa-hacker-news fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on Line" data-sharer="line" data-url="https://www.ithome.me/post/2016/01/19/android%E6%97%A0%E9%9C%80%E6%9D%83%E9%99%90%E6%98%BE%E7%A4%BA%E6%82%AC%E6%B5%AE%E7%AA%97-%E5%85%BC%E8%B0%88%E9%80%86%E5%90%91%E5%88%86%E6%9E%90app/" data-title="Android无需权限显示悬浮窗, 兼谈逆向分析app"><i data-svg-src="https://cdn.jsdelivr.net/npm/simple-icons@6.20.0/icons/line.svg" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on 微博" data-sharer="weibo" data-url="https://www.ithome.me/post/2016/01/19/android%E6%97%A0%E9%9C%80%E6%9D%83%E9%99%90%E6%98%BE%E7%A4%BA%E6%82%AC%E6%B5%AE%E7%AA%97-%E5%85%BC%E8%B0%88%E9%80%86%E5%90%91%E5%88%86%E6%9E%90app/" data-title="Android无需权限显示悬浮窗, 兼谈逆向分析app" data-ralateuid="xxx"><i class="fab fa-weibo fa-fw" aria-hidden="true"></i></a></span>
+                <span><a href="javascript:void(0);" title="Share on Twitter" data-sharer="twitter" data-url="https://www.ithome.me/post/2016/01/19/android%E6%97%A0%E9%9C%80%E6%9D%83%E9%99%90%E6%98%BE%E7%A4%BA%E6%82%AC%E6%B5%AE%E7%AA%97-%E5%85%BC%E8%B0%88%E9%80%86%E5%90%91%E5%88%86%E6%9E%90app/" data-title="Android无需权限显示悬浮窗, 兼谈逆向分析app" data-via="https://twitter.com/ChenCiki" data-hashtags="android,悬浮框"><i class="fab fa-twitter fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on Linkedin" data-sharer="linkedin" data-url="https://www.ithome.me/post/2016/01/19/android%E6%97%A0%E9%9C%80%E6%9D%83%E9%99%90%E6%98%BE%E7%A4%BA%E6%82%AC%E6%B5%AE%E7%AA%97-%E5%85%BC%E8%B0%88%E9%80%86%E5%90%91%E5%88%86%E6%9E%90app/"><i class="fab fa-linkedin fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on 微博" data-sharer="weibo" data-url="https://www.ithome.me/post/2016/01/19/android%E6%97%A0%E9%9C%80%E6%9D%83%E9%99%90%E6%98%BE%E7%A4%BA%E6%82%AC%E6%B5%AE%E7%AA%97-%E5%85%BC%E8%B0%88%E9%80%86%E5%90%91%E5%88%86%E6%9E%90app/" data-title="Android无需权限显示悬浮窗, 兼谈逆向分析app" data-ralateuid="xxx"><i class="fab fa-weibo fa-fw" aria-hidden="true"></i></a></span>
             </div>
         </div>
     </div>
@@ -264,9 +306,11 @@
     <div class="post-nav"><a href="/post/2016/01/19/git-%E4%BB%A3%E7%A0%81%E5%86%B2%E7%AA%81%E5%B8%B8%E8%A7%81%E8%A7%A3%E5%86%B3%E6%96%B9%E6%B3%95/" class="prev" rel="prev" title="Git:代码冲突常见解决方法"><i class="fas fa-angle-left fa-fw" aria-hidden="true"></i>Git:代码冲突常见解决方法</a>
             <a href="/post/2016/01/19/android-gc-%E9%82%A3%E7%82%B9%E4%BA%8B/" class="next" rel="next" title="Android GC 那点事">Android GC 那点事<i class="fas fa-angle-right fa-fw" aria-hidden="true"></i></a></div>
 </div>
-</article></div>
+<div id="comments"><div id="gitalk" class="comment"></div><noscript>
+                Please enable JavaScript to view the comments powered by <a href="https://github.com/gitalk/gitalk"></a>Gitalk</a>.
+            </noscript></div></article></div>
             </main><footer class="footer">
-        <div class="footer-container"><div class="footer-line" itemscope itemtype="http://schema.org/CreativeWork"><i class="far fa-copyright fa-fw" aria-hidden="true"></i><span itemprop="copyrightYear">2011 - 2026</span><span class="author" itemprop="copyrightHolder">&nbsp;<a href="/" target="_blank">SimonChen</a></span></div>
+        <div class="footer-container"><div class="footer-line" itemscope itemtype="http://schema.org/CreativeWork"><i class="far fa-copyright fa-fw" aria-hidden="true"></i><span itemprop="copyrightYear">2011 - 2026</span><span class="author" itemprop="copyrightHolder">&nbsp;<a href="https://www.ithome.me/" target="_blank">Simon Chen</a></span></div>
         </div>
     </footer></div>
 
@@ -275,5 +319,5 @@
             </a><a href="#" id="view-comments" class="fixed-button" title="View Comments">
                 <i class="fas fa-comment fa-fw" aria-hidden="true"></i>
             </a>
-        </div><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/autocomplete.js@0.38.1/dist/autocomplete.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lunr@2.3.9/lunr.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lazysizes@5.3.1/lazysizes.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/clipboard@2.0.11/dist/clipboard.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/sharer.js@0.5.1/sharer.min.js"></script><script type="text/javascript">window.config={"code":{"copyTitle":"Copy to clipboard","maxShownLines":50},"comment":{},"search":{"highlightTag":"em","maxResultLength":10,"noResultsFound":"No results found","snippetLength":50}};</script><script type="text/javascript" src="/js/theme.min.js"></script></body>
+        </div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1.7.2/dist/gitalk.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/css/lightgallery-bundle.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/katex.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/copy-tex.min.css"><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/gitalk@1.7.2/dist/gitalk.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/autocomplete.js@0.38.1/dist/autocomplete.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lunr@2.3.9/lunr.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lazysizes@5.3.1/lazysizes.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/lightgallery.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/plugins/thumbnail/lg-thumbnail.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/plugins/zoom/lg-zoom.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/clipboard@2.0.11/dist/clipboard.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/sharer.js@0.5.1/sharer.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/katex.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/auto-render.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/copy-tex.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/mhchem.min.js"></script><script type="text/javascript">window.config={"code":{"copyTitle":"Copy to clipboard","maxShownLines":50},"comment":{"gitalk":{"admin":["cikichen"],"clientID":"be0f52370ed1285b6c7c","clientSecret":"734a7d8d0ded346ca7a3d565d57de3f8eeb2850b","id":"2016-01-19T00:00:00Z","owner":"cikichen","repo":"gitalk","title":"Android无需权限显示悬浮窗, 兼谈逆向分析app"}},"lightgallery":true,"math":{"delimiters":[{"display":true,"left":"$$","right":"$$"},{"display":true,"left":"\\[","right":"\\]"},{"display":true,"left":"\\begin{equation}","right":"\\end{equation}"},{"display":true,"left":"\\begin{equation*}","right":"\\end{equation*}"},{"display":true,"left":"\\begin{align}","right":"\\end{align}"},{"display":true,"left":"\\begin{align*}","right":"\\end{align*}"},{"display":true,"left":"\\begin{alignat}","right":"\\end{alignat}"},{"display":true,"left":"\\begin{alignat*}","right":"\\end{alignat*}"},{"display":true,"left":"\\begin{gather}","right":"\\end{gather}"},{"display":true,"left":"\\begin{CD}","right":"\\end{CD}"},{"display":false,"left":"$","right":"$"},{"display":false,"left":"\\(","right":"\\)"}],"strict":false},"search":{"highlightTag":"em","maxResultLength":10,"noResultsFound":"No results found","snippetLength":50}};</script><script type="text/javascript" src="/js/theme.min.js"></script></body>
 </html>

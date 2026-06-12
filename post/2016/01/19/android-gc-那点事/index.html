@@ -32,12 +32,12 @@
         "mainEntityOfPage": {
             "@type": "WebPage",
             "@id": "https:\/\/www.ithome.me\/post\/2016\/01\/19\/android-gc-%E9%82%A3%E7%82%B9%E4%BA%8B\/"
-        },"genre": "posts","keywords": "android, GC","wordcount":  253 ,
+        },"genre": "posts","keywords": "android, GC","wordcount":  255 ,
         "url": "https:\/\/www.ithome.me\/post\/2016\/01\/19\/android-gc-%E9%82%A3%E7%82%B9%E4%BA%8B\/","datePublished": "2016-01-19T16:06:32+08:00","dateModified": "2016-01-19T16:06:32+08:00","publisher": {
             "@type": "Organization",
             "name": ""},"author": {
                 "@type": "Person",
-                "name": "SimonChen"
+                "name": "Simon Chen"
             },"description": "android内存回收"
     }
     </script></head>
@@ -106,11 +106,11 @@
             <h2 class="toc-title">Contents</h2>
             <div class="toc-content" id="toc-content-auto"></div>
         </div><article class="page single"><h1 class="single-title animate__animated animate__flipInX">Android GC 那点事</h1><div class="post-meta">
-            <div class="post-meta-line"><span class="post-author"><a href="/" title="Author" rel=" author" class="author"><i class="fas fa-user-circle fa-fw" aria-hidden="true"></i>SimonChen</a>
+            <div class="post-meta-line"><span class="post-author"><a href="https://www.ithome.me/" title="Author" target="_blank" rel="noopener noreferrer author" class="author"><i class="fas fa-user-circle fa-fw" aria-hidden="true"></i>Simon Chen</a>
 </span></div>
-            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw" aria-hidden="true"></i>&nbsp;<time datetime="2016-01-19">2016-01-19</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden="true"></i>&nbsp;253 words&nbsp;
+            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw" aria-hidden="true"></i>&nbsp;<time datetime="2016-01-19">2016-01-19</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden="true"></i>&nbsp;255 words&nbsp;
                 <i class="far fa-clock fa-fw" aria-hidden="true"></i>&nbsp;2 minutes&nbsp;</div>
-        </div><div class="details toc" id="toc-static"  data-kept="">
+        </div><div class="details toc" id="toc-static"  data-kept="true">
                 <div class="details-summary toc-title">
                     <span>Contents</span>
                     <span><i class="details-icon fas fa-angle-right" aria-hidden="true"></i></span>
@@ -119,10 +119,45 @@
   <ul>
     <li>
       <ul>
-        <li><a href="#1-jvm内存回收机制">1. JVM内存回收机制</a></li>
-        <li><a href="#2-dalvik虚拟机">2. Dalvik虚拟机</a></li>
-        <li><a href="#3-art内存回收机制">3. ART内存回收机制</a></li>
-        <li><a href="#4-gc-log">4. GC Log</a></li>
+        <li><a href="#1-jvm内存回收机制">1. JVM内存回收机制</a>
+          <ul>
+            <li><a href="#11-回收算法">1.1. 回收算法</a>
+              <ul>
+                <li><a href="#标记回收算法mark-and-sweep-gc">标记回收算法（Mark and Sweep GC）</a></li>
+                <li><a href="#复制算法-copying">复制算法 (Copying）</a></li>
+                <li><a href="#标记-压缩算法-mark-compact">标记-压缩算法 (Mark-Compact)</a></li>
+                <li><a href="#分代">分代</a></li>
+              </ul>
+            </li>
+            <li><a href="#12-复制和标记-压缩算法的区别">1.2. 复制和标记-压缩算法的区别</a></li>
+          </ul>
+        </li>
+        <li><a href="#2-dalvik虚拟机">2. Dalvik虚拟机</a>
+          <ul>
+            <li><a href="#21-java堆">2.1. Java堆</a></li>
+            <li><a href="#22-和gc有关的一些指标">2.2. 和GC有关的一些指标</a></li>
+            <li><a href="#23-gc的类型">2.3. GC的类型</a></li>
+            <li><a href="#24-对象的分配和gc触发时机">2.4. 对象的分配和GC触发时机</a></li>
+            <li><a href="#25-回收算法和内存碎片">2.5. 回收算法和内存碎片</a></li>
+          </ul>
+        </li>
+        <li><a href="#3-art内存回收机制">3. ART内存回收机制</a>
+          <ul>
+            <li><a href="#31-java堆">3.1. Java堆</a></li>
+            <li><a href="#32-gc的类型">3.2. GC的类型</a></li>
+            <li><a href="#33-对象的分配和gc触发时机">3.3. 对象的分配和GC触发时机</a></li>
+            <li><a href="#34-并发和非并发gc">3.4. 并发和非并发GC</a></li>
+            <li><a href="#35-art并发和dalvik并发gc的差异">3.5. ART并发和Dalvik并发GC的差异</a></li>
+            <li><a href="#36-前后台gc">3.6. 前后台GC</a></li>
+            <li><a href="#37-art大法好">3.7. ART大法好</a></li>
+          </ul>
+        </li>
+        <li><a href="#4-gc-log">4. GC Log</a>
+          <ul>
+            <li><a href="#41-dalvik-gc日志">4.1. Dalvik GC日志</a></li>
+            <li><a href="#42-art-gc日志">4.2. ART GC日志</a></li>
+          </ul>
+        </li>
       </ul>
     </li>
   </ul>
@@ -293,15 +328,29 @@ Dalvik GC：</p>
 <p>当我们想要根据GC日志来追查一些GC可能造成的卡顿时，我们需要了解GC日志的组成，不同信息代表了什么含义。</p>
 <h4 id="41-dalvik-gc日志">4.1. Dalvik GC日志</h4>
 <p>Dalvik的日志格式基本如下：</p>
-<pre tabindex="0"><code>D/dalvikvm:&lt;GC_Reason&gt;&lt;Amount_freed&gt;,&lt;Heap_stats&gt;,&lt;Pause_time&gt;,&lt;Total_time&gt;
-</code></pre><p><code>GC_Reason</code>: 就是我们上文提到的，是gc_alloc还是gc_concurrent，了解到不同的原因方便我们做不同的处理。
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">D/dalvikvm:&lt;GC_Reason&gt;&lt;Amount_freed&gt;,&lt;Heap_stats&gt;,&lt;Pause_time&gt;,&lt;Total_time&gt;
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p><code>GC_Reason</code>: 就是我们上文提到的，是gc_alloc还是gc_concurrent，了解到不同的原因方便我们做不同的处理。
 <code>Amount_freed</code>: 表示系统通过这次GC操作释放了多少内存。
 <code>Heap_stats</code>: 中会显示当前内存的空闲比例以及使用情况（活动对象所占内存 / 当前程序总内存）。
 <code>Pause_time</code>: 表示这次GC操作导致应用程序暂停的时间。关于这个暂停的时间，在2.3之前GC操作是不能并发进行的，也就是系统正在进行GC，那么应用程序就只能阻塞住等待GC结束。而自2.3之后，GC操作改成了并发的方式进行，就是说GC的过程中不会影响到应用程序的正常运行，但是在GC操作的开始和结束的时候会短暂阻塞一段时间，所以还有后续的一个total_time。
 <code>Total_time</code>: 表示本次GC所花费的总时间和上面的Pause_time,也就是stop all是不一样的，卡顿时间主要看上面的pause_time。</p>
 <h4 id="42-art-gc日志">4.2. ART GC日志</h4>
-<pre tabindex="0"><code>I/art:&lt;GC_Reason&gt;&lt;Amount_freed&gt;,&lt;LOS_Space_Status&gt;,&lt;Heap_stats&gt;,&lt;Pause_time&gt;,&lt;Total_time&gt;
-</code></pre><p>基本情况和Dalvik没有什么差别，GC的Reason更多了，还多了一个OS_Space_Status.
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">I/art:&lt;GC_Reason&gt;&lt;Amount_freed&gt;,&lt;LOS_Space_Status&gt;,&lt;Heap_stats&gt;,&lt;Pause_time&gt;,&lt;Total_time&gt;
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>基本情况和Dalvik没有什么差别，GC的Reason更多了，还多了一个OS_Space_Status.
 <code>LOS_Space_Status</code>：Large Object Space，大对象占用的空间，这部分内存并不是分配在堆上的，但仍属于应用程序内存空间，主要用来管理 bitmap 等占内存大的对象，避免因分配大内存导致堆频繁 GC。
 写在最后：图片来源自网络，特别鸣谢罗升阳。</p>
 <p>原文地址:http://mp.weixin.qq.com/s?__biz=MzI1MTA1MzM2Nw==&amp;mid=400021278&amp;idx=1&amp;sn=0e971807eb0e9dcc1a81853189a092f3&amp;scene=0#rd 版权由原作者所有</p>
@@ -314,7 +363,7 @@ Dalvik GC：</p>
         <div class="post-info-line">
             <div class="post-info-md"></div>
             <div class="post-info-share">
-                <span><a href="javascript:void(0);" title="Share on Twitter" data-sharer="twitter" data-url="https://www.ithome.me/post/2016/01/19/android-gc-%E9%82%A3%E7%82%B9%E4%BA%8B/" data-title="Android GC 那点事" data-via="https://twitter.com/ChenCiki" data-hashtags="android,GC"><i class="fab fa-twitter fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on Facebook" data-sharer="facebook" data-url="https://www.ithome.me/post/2016/01/19/android-gc-%E9%82%A3%E7%82%B9%E4%BA%8B/" data-hashtag="android"><i class="fab fa-facebook-square fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on Hacker News" data-sharer="hackernews" data-url="https://www.ithome.me/post/2016/01/19/android-gc-%E9%82%A3%E7%82%B9%E4%BA%8B/" data-title="Android GC 那点事"><i class="fab fa-hacker-news fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on Line" data-sharer="line" data-url="https://www.ithome.me/post/2016/01/19/android-gc-%E9%82%A3%E7%82%B9%E4%BA%8B/" data-title="Android GC 那点事"><i data-svg-src="https://cdn.jsdelivr.net/npm/simple-icons@6.20.0/icons/line.svg" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on 微博" data-sharer="weibo" data-url="https://www.ithome.me/post/2016/01/19/android-gc-%E9%82%A3%E7%82%B9%E4%BA%8B/" data-title="Android GC 那点事" data-ralateuid="xxx"><i class="fab fa-weibo fa-fw" aria-hidden="true"></i></a></span>
+                <span><a href="javascript:void(0);" title="Share on Twitter" data-sharer="twitter" data-url="https://www.ithome.me/post/2016/01/19/android-gc-%E9%82%A3%E7%82%B9%E4%BA%8B/" data-title="Android GC 那点事" data-via="https://twitter.com/ChenCiki" data-hashtags="android,GC"><i class="fab fa-twitter fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on Linkedin" data-sharer="linkedin" data-url="https://www.ithome.me/post/2016/01/19/android-gc-%E9%82%A3%E7%82%B9%E4%BA%8B/"><i class="fab fa-linkedin fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on 微博" data-sharer="weibo" data-url="https://www.ithome.me/post/2016/01/19/android-gc-%E9%82%A3%E7%82%B9%E4%BA%8B/" data-title="Android GC 那点事" data-ralateuid="xxx"><i class="fab fa-weibo fa-fw" aria-hidden="true"></i></a></span>
             </div>
         </div>
     </div>
@@ -329,9 +378,11 @@ Dalvik GC：</p>
     <div class="post-nav"><a href="/post/2016/01/19/android%E6%97%A0%E9%9C%80%E6%9D%83%E9%99%90%E6%98%BE%E7%A4%BA%E6%82%AC%E6%B5%AE%E7%AA%97-%E5%85%BC%E8%B0%88%E9%80%86%E5%90%91%E5%88%86%E6%9E%90app/" class="prev" rel="prev" title="Android无需权限显示悬浮窗, 兼谈逆向分析app"><i class="fas fa-angle-left fa-fw" aria-hidden="true"></i>Android无需权限显示悬浮窗, 兼谈逆向分析app</a>
             <a href="/post/2016/01/21/react-native%E9%A6%96%E6%AC%A1%E8%BF%90%E8%A1%8C%E6%8F%90%E7%A4%BA-referenceerror-can-t-find-variable-fbbatchedbridge/" class="next" rel="next" title="React Native首次运行提示&#39;ReferenceError: Can&#39;t find variable: _fbBatchedBridge&#39;">React Native首次运行提示&#39;ReferenceError: Can&#39;t find variable: _fbBatchedBridge&#39;<i class="fas fa-angle-right fa-fw" aria-hidden="true"></i></a></div>
 </div>
-</article></div>
+<div id="comments"><div id="gitalk" class="comment"></div><noscript>
+                Please enable JavaScript to view the comments powered by <a href="https://github.com/gitalk/gitalk"></a>Gitalk</a>.
+            </noscript></div></article></div>
             </main><footer class="footer">
-        <div class="footer-container"><div class="footer-line" itemscope itemtype="http://schema.org/CreativeWork"><i class="far fa-copyright fa-fw" aria-hidden="true"></i><span itemprop="copyrightYear">2011 - 2026</span><span class="author" itemprop="copyrightHolder">&nbsp;<a href="/" target="_blank">SimonChen</a></span></div>
+        <div class="footer-container"><div class="footer-line" itemscope itemtype="http://schema.org/CreativeWork"><i class="far fa-copyright fa-fw" aria-hidden="true"></i><span itemprop="copyrightYear">2011 - 2026</span><span class="author" itemprop="copyrightHolder">&nbsp;<a href="https://www.ithome.me/" target="_blank">Simon Chen</a></span></div>
         </div>
     </footer></div>
 
@@ -340,5 +391,5 @@ Dalvik GC：</p>
             </a><a href="#" id="view-comments" class="fixed-button" title="View Comments">
                 <i class="fas fa-comment fa-fw" aria-hidden="true"></i>
             </a>
-        </div><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/autocomplete.js@0.38.1/dist/autocomplete.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lunr@2.3.9/lunr.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lazysizes@5.3.1/lazysizes.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/clipboard@2.0.11/dist/clipboard.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/sharer.js@0.5.1/sharer.min.js"></script><script type="text/javascript">window.config={"code":{"copyTitle":"Copy to clipboard","maxShownLines":50},"comment":{},"search":{"highlightTag":"em","maxResultLength":10,"noResultsFound":"No results found","snippetLength":50}};</script><script type="text/javascript" src="/js/theme.min.js"></script></body>
+        </div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1.7.2/dist/gitalk.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/css/lightgallery-bundle.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/katex.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/copy-tex.min.css"><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/gitalk@1.7.2/dist/gitalk.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/autocomplete.js@0.38.1/dist/autocomplete.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lunr@2.3.9/lunr.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lazysizes@5.3.1/lazysizes.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/lightgallery.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/plugins/thumbnail/lg-thumbnail.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/plugins/zoom/lg-zoom.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/clipboard@2.0.11/dist/clipboard.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/sharer.js@0.5.1/sharer.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/katex.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/auto-render.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/copy-tex.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/mhchem.min.js"></script><script type="text/javascript">window.config={"code":{"copyTitle":"Copy to clipboard","maxShownLines":50},"comment":{"gitalk":{"admin":["cikichen"],"clientID":"be0f52370ed1285b6c7c","clientSecret":"734a7d8d0ded346ca7a3d565d57de3f8eeb2850b","id":"2016-01-19T00:00:00Z","owner":"cikichen","repo":"gitalk","title":"Android GC 那点事"}},"lightgallery":true,"math":{"delimiters":[{"display":true,"left":"$$","right":"$$"},{"display":true,"left":"\\[","right":"\\]"},{"display":true,"left":"\\begin{equation}","right":"\\end{equation}"},{"display":true,"left":"\\begin{equation*}","right":"\\end{equation*}"},{"display":true,"left":"\\begin{align}","right":"\\end{align}"},{"display":true,"left":"\\begin{align*}","right":"\\end{align*}"},{"display":true,"left":"\\begin{alignat}","right":"\\end{alignat}"},{"display":true,"left":"\\begin{alignat*}","right":"\\end{alignat*}"},{"display":true,"left":"\\begin{gather}","right":"\\end{gather}"},{"display":true,"left":"\\begin{CD}","right":"\\end{CD}"},{"display":false,"left":"$","right":"$"},{"display":false,"left":"\\(","right":"\\)"}],"strict":false},"search":{"highlightTag":"em","maxResultLength":10,"noResultsFound":"No results found","snippetLength":50}};</script><script type="text/javascript" src="/js/theme.min.js"></script></body>
 </html>
