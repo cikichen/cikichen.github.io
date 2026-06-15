@@ -35,7 +35,7 @@
         "mainEntityOfPage": {
             "@type": "WebPage",
             "@id": "https:\/\/www.ithome.me\/post\/2026\/06\/15\/%E6%89%93%E9%80%A0%E9%B8%9F%E7%B1%BB%E8%AF%86%E5%88%AB%E6%99%BA%E8%83%BD%E4%BD%93%E7%94%A8%E5%A4%9A%E6%A8%A1%E6%80%81ai%E8%AE%A9%E6%89%8B%E6%9C%BA%E5%8F%98%E6%88%90%E8%A7%82%E9%B8%9F%E5%8A%A9%E6%89%8B\/"
-        },"image": ["https:\/\/www.ithome.me\/cover.png"],"genre": "posts","keywords": "AI Agent, 多模态, 计算机视觉, 鸟类识别, 图像分类","wordcount":  6160 ,
+        },"image": ["https:\/\/www.ithome.me\/cover.png"],"genre": "posts","keywords": "AI Agent, 多模态, 计算机视觉, 鸟类识别, 图像分类","wordcount":  9866 ,
         "url": "https:\/\/www.ithome.me\/post\/2026\/06\/15\/%E6%89%93%E9%80%A0%E9%B8%9F%E7%B1%BB%E8%AF%86%E5%88%AB%E6%99%BA%E8%83%BD%E4%BD%93%E7%94%A8%E5%A4%9A%E6%A8%A1%E6%80%81ai%E8%AE%A9%E6%89%8B%E6%9C%BA%E5%8F%98%E6%88%90%E8%A7%82%E9%B8%9F%E5%8A%A9%E6%89%8B\/","datePublished": "2026-06-15T08:00:00+08:00","dateModified": "2026-06-15T08:00:00+08:00","publisher": {
             "@type": "Organization",
             "name": "SimonChen","logo": "https:\/\/www.ithome.me\/logo.png"},"author": {
@@ -117,8 +117,8 @@
         </div><article class="page single"><h1 class="single-title animate__animated animate__flipInX">打造鸟类识别智能体：用多模态AI让手机变成观鸟助手</h1><div class="post-meta">
             <div class="post-meta-line"><span class="post-author"><a href="https://www.ithome.me/" title="Author" target="_blank" rel="noopener noreferrer author" class="author"><i class="fas fa-user-circle fa-fw" aria-hidden="true"></i>Simon Chen</a>
 </span></div>
-            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw" aria-hidden="true"></i>&nbsp;<time datetime="2026-06-15">2026-06-15</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden="true"></i>&nbsp;6160 words&nbsp;
-                <i class="far fa-clock fa-fw" aria-hidden="true"></i>&nbsp;13 minutes&nbsp;</div>
+            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw" aria-hidden="true"></i>&nbsp;<time datetime="2026-06-15">2026-06-15</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden="true"></i>&nbsp;9866 words&nbsp;
+                <i class="far fa-clock fa-fw" aria-hidden="true"></i>&nbsp;20 minutes&nbsp;</div>
         </div><div class="details toc" id="toc-static"  data-kept="true">
                 <div class="details-summary toc-title">
                     <span>Contents</span>
@@ -140,6 +140,25 @@
     <li><a href="#第三步agent核心架构">第三步：Agent核心架构</a></li>
     <li><a href="#第四步cli交互界面">第四步：CLI交互界面</a></li>
     <li><a href="#使用示例">使用示例</a></li>
+    <li><a href="#进阶自训练鸟类图像识别模型">进阶：自训练鸟类图像识别模型</a>
+      <ul>
+        <li><a href="#方案对比-1">方案对比</a></li>
+        <li><a href="#10000-种鸟的训练-pipeline">10000+ 种鸟的训练 Pipeline</a>
+          <ul>
+            <li><a href="#第一步数据组织">第一步：数据组织</a></li>
+            <li><a href="#第二步训练脚本efficientnet-b4">第二步：训练脚本（EfficientNet-B4）</a></li>
+            <li><a href="#第三步模型量化部署到手机边缘设备">第三步：模型量化（部署到手机/边缘设备）</a></li>
+            <li><a href="#第四步地理位置过滤merlin-的秘密武器">第四步：地理位置过滤（Merlin 的秘密武器）</a></li>
+            <li><a href="#第五步推理-api">第五步：推理 API</a></li>
+          </ul>
+        </li>
+        <li><a href="#clip-零样本识别无训练数据时的备选">CLIP 零样本识别（无训练数据时的备选）</a></li>
+        <li><a href="#merlin-bird-id-技术揭秘">Merlin Bird ID 技术揭秘</a></li>
+        <li><a href="#中国本土实践whatbirdcn">中国本土实践：whatbird.cn</a></li>
+        <li><a href="#关键优化技巧">关键优化技巧</a></li>
+        <li><a href="#训练资源估算">训练资源估算</a></li>
+      </ul>
+    </li>
     <li><a href="#踩坑记录">踩坑记录</a></li>
     <li><a href="#扩展方向">扩展方向</a></li>
     <li><a href="#总结">总结</a></li>
@@ -183,8 +202,8 @@
 </span></span><span class="line"><span class="cl">│              鸟类识别 Agent                       │
 </span></span><span class="line"><span class="cl">│                                                 │
 </span></span><span class="line"><span class="cl">│  ┌──────────┐  ┌──────────┐  ┌──────────────┐ │
-</span></span><span class="line"><span class="cl">│  │ 图像识别  │  │ 知识检索  │  │  日志管理    │ │
-</span></span><span class="line"><span class="cl">│  │ BirdNET  │  │ 鸟类知识库 │  │  SQLite      │ │
+</span></span><span class="line"><span class="cl">│  │ 声音识别  │  │ 图像识别   │  │  日志管理    │ │
+</span></span><span class="line"><span class="cl">│  │ BirdNET  │  │ GPT-5.4   │  │  SQLite      │ │
 </span></span><span class="line"><span class="cl">│  └────┬─────┘  └────┬─────┘  └──────┬───────┘ │
 </span></span><span class="line"><span class="cl">│       │              │               │          │
 </span></span><span class="line"><span class="cl">│       └──────────────┼───────────────┘          │
@@ -243,13 +262,13 @@
 <td>BirdNET</td>
 <td>6000+鸟种，声音识别，科学级准确</td>
 <td>仅支持音频，需安装模型</td>
-<td>专业观鸟</td>
+<td>声音辨鸟</td>
 </tr>
 <tr>
 <td>多模态LLM</td>
 <td>零配置，图像+对话</td>
 <td>鸟种覆盖不够精细</td>
-<td>业余爱好</td>
+<td>图像辨鸟</td>
 </tr>
 <tr>
 <td>自训练模型</td>
@@ -259,7 +278,7 @@
 </tr>
 </tbody>
 </table>
-<p>我们采用<strong>双通道策略</strong>：BirdNET做声音精确分类，多模态LLM做图像识别和描述生成。</p>
+<p>我们采用<strong>双通道策略</strong>：BirdNET 做<strong>声音</strong>精确分类（输入音频文件），多模态LLM 做<strong>图像</strong>识别和描述生成（输入照片）。两者互补——听到鸟叫声用 BirdNET，拍到照片用 GPT-5.4。</p>
 <h3 id="birdnet识别器">BirdNET识别器</h3>
 <div class="highlight"><div class="chroma">
 <table class="lntable"><tr><td class="lntd">
@@ -1194,7 +1213,836 @@
 </span></span><span class="line"><span class="cl">  - 2026-06-13 09:15 | 麻雀 | 置信度99%
 </span></span></code></pre></td></tr></table>
 </div>
-</div><h2 id="踩坑记录">踩坑记录</h2>
+</div><h2 id="进阶自训练鸟类图像识别模型">进阶：自训练鸟类图像识别模型</h2>
+<p>上述方案中，GPT-5.4 Vision 是通用模型，对细粒度鸟种（如不同柳莺）区分力有限。如果你有 <strong>10,000+ 种鸟的训练图片</strong>，完全可以训练一个专属的高精度鸟类分类器。</p>
+<h3 id="方案对比-1">方案对比</h3>
+<table>
+<thead>
+<tr>
+<th>方案</th>
+<th>准确率</th>
+<th>训练成本</th>
+<th>推理速度</th>
+<th>适用场景</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>GPT-5.4 Vision</td>
+<td>~70-80%</td>
+<td>零（API调用）</td>
+<td>慢（网络延迟）</td>
+<td>快速原型、少量鸟种</td>
+</tr>
+<tr>
+<td>CLIP 零样本</td>
+<td>~60-75%</td>
+<td>零</td>
+<td>中等</td>
+<td>无训练数据时的基线</td>
+</tr>
+<tr>
+<td><strong>EfficientNet 微调</strong></td>
+<td><strong>90-95%</strong></td>
+<td>中等（GPU 几小时）</td>
+<td><strong>快（端侧推理）</strong></td>
+<td><strong>推荐：精度+速度最佳</strong></td>
+</tr>
+<tr>
+<td>Vision Transformer (ViT)</td>
+<td>92-96%</td>
+<td>较高</td>
+<td>较慢</td>
+<td>追求极致精度</td>
+</tr>
+</tbody>
+</table>
+<h3 id="10000-种鸟的训练-pipeline">10000+ 种鸟的训练 Pipeline</h3>
+<h4 id="第一步数据组织">第一步：数据组织</h4>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl"><span class="c1"># 按鸟种分文件夹，每个文件夹一种鸟</span>
+</span></span><span class="line"><span class="cl">birds/
+</span></span><span class="line"><span class="cl">├── 麻雀/
+</span></span><span class="line"><span class="cl">│   ├── sparrow_001.jpg
+</span></span><span class="line"><span class="cl">│   ├── sparrow_002.jpg
+</span></span><span class="line"><span class="cl">│   └── ...  <span class="o">(</span>建议每种至少 <span class="m">50</span> 张，理想 200+ 张<span class="o">)</span>
+</span></span><span class="line"><span class="cl">├── 翠鸟/
+</span></span><span class="line"><span class="cl">│   ├── kingfisher_001.jpg
+</span></span><span class="line"><span class="cl">│   └── ...
+</span></span><span class="line"><span class="cl">├── 白鹭/
+</span></span><span class="line"><span class="cl">│   └── ...
+</span></span><span class="line"><span class="cl">└── ... <span class="o">(</span>10000+ 个文件夹<span class="o">)</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p><strong>数据来源推荐：</strong></p>
+<ul>
+<li><strong>eBird/Macaulay Library</strong>：全球最大鸟类影像库，数亿张标注照片</li>
+<li><strong>OrientalBirdImages</strong>：亚洲鸟种为主，适合中国场景</li>
+<li><strong>Flickr Creative Commons</strong>：按物种名搜索，注意清洗质量</li>
+<li><strong>中国观鸟记录中心</strong> (birdreport.cn)：本土数据</li>
+<li><strong>鸟网</strong> (birdnet.cn)：国内最大鸟类图库</li>
+</ul>
+<h4 id="第二步训练脚本efficientnet-b4">第二步：训练脚本（EfficientNet-B4）</h4>
+<p>为什么选 EfficientNet-B4：精度和速度的最佳平衡点，10000 类分类实测 top-1 准确率可达 93%+。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">  1
+</span><span class="lnt">  2
+</span><span class="lnt">  3
+</span><span class="lnt">  4
+</span><span class="lnt">  5
+</span><span class="lnt">  6
+</span><span class="lnt">  7
+</span><span class="lnt">  8
+</span><span class="lnt">  9
+</span><span class="lnt"> 10
+</span><span class="lnt"> 11
+</span><span class="lnt"> 12
+</span><span class="lnt"> 13
+</span><span class="lnt"> 14
+</span><span class="lnt"> 15
+</span><span class="lnt"> 16
+</span><span class="lnt"> 17
+</span><span class="lnt"> 18
+</span><span class="lnt"> 19
+</span><span class="lnt"> 20
+</span><span class="lnt"> 21
+</span><span class="lnt"> 22
+</span><span class="lnt"> 23
+</span><span class="lnt"> 24
+</span><span class="lnt"> 25
+</span><span class="lnt"> 26
+</span><span class="lnt"> 27
+</span><span class="lnt"> 28
+</span><span class="lnt"> 29
+</span><span class="lnt"> 30
+</span><span class="lnt"> 31
+</span><span class="lnt"> 32
+</span><span class="lnt"> 33
+</span><span class="lnt"> 34
+</span><span class="lnt"> 35
+</span><span class="lnt"> 36
+</span><span class="lnt"> 37
+</span><span class="lnt"> 38
+</span><span class="lnt"> 39
+</span><span class="lnt"> 40
+</span><span class="lnt"> 41
+</span><span class="lnt"> 42
+</span><span class="lnt"> 43
+</span><span class="lnt"> 44
+</span><span class="lnt"> 45
+</span><span class="lnt"> 46
+</span><span class="lnt"> 47
+</span><span class="lnt"> 48
+</span><span class="lnt"> 49
+</span><span class="lnt"> 50
+</span><span class="lnt"> 51
+</span><span class="lnt"> 52
+</span><span class="lnt"> 53
+</span><span class="lnt"> 54
+</span><span class="lnt"> 55
+</span><span class="lnt"> 56
+</span><span class="lnt"> 57
+</span><span class="lnt"> 58
+</span><span class="lnt"> 59
+</span><span class="lnt"> 60
+</span><span class="lnt"> 61
+</span><span class="lnt"> 62
+</span><span class="lnt"> 63
+</span><span class="lnt"> 64
+</span><span class="lnt"> 65
+</span><span class="lnt"> 66
+</span><span class="lnt"> 67
+</span><span class="lnt"> 68
+</span><span class="lnt"> 69
+</span><span class="lnt"> 70
+</span><span class="lnt"> 71
+</span><span class="lnt"> 72
+</span><span class="lnt"> 73
+</span><span class="lnt"> 74
+</span><span class="lnt"> 75
+</span><span class="lnt"> 76
+</span><span class="lnt"> 77
+</span><span class="lnt"> 78
+</span><span class="lnt"> 79
+</span><span class="lnt"> 80
+</span><span class="lnt"> 81
+</span><span class="lnt"> 82
+</span><span class="lnt"> 83
+</span><span class="lnt"> 84
+</span><span class="lnt"> 85
+</span><span class="lnt"> 86
+</span><span class="lnt"> 87
+</span><span class="lnt"> 88
+</span><span class="lnt"> 89
+</span><span class="lnt"> 90
+</span><span class="lnt"> 91
+</span><span class="lnt"> 92
+</span><span class="lnt"> 93
+</span><span class="lnt"> 94
+</span><span class="lnt"> 95
+</span><span class="lnt"> 96
+</span><span class="lnt"> 97
+</span><span class="lnt"> 98
+</span><span class="lnt"> 99
+</span><span class="lnt">100
+</span><span class="lnt">101
+</span><span class="lnt">102
+</span><span class="lnt">103
+</span><span class="lnt">104
+</span><span class="lnt">105
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">torch</span>
+</span></span><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">torch.nn</span> <span class="k">as</span> <span class="nn">nn</span>
+</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">torchvision</span> <span class="kn">import</span> <span class="n">models</span><span class="p">,</span> <span class="n">transforms</span><span class="p">,</span> <span class="n">datasets</span>
+</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">torch.utils.data</span> <span class="kn">import</span> <span class="n">DataLoader</span><span class="p">,</span> <span class="n">WeightedRandomSampler</span>
+</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">torch.optim.lr_scheduler</span> <span class="kn">import</span> <span class="n">CosineAnnealingLR</span>
+</span></span><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">os</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># ============ 配置 ============</span>
+</span></span><span class="line"><span class="cl"><span class="n">DATA_DIR</span> <span class="o">=</span> <span class="s2">&#34;birds/&#34;</span>
+</span></span><span class="line"><span class="cl"><span class="n">NUM_CLASSES</span> <span class="o">=</span> <span class="mi">10000</span>  <span class="c1"># 鸟种数量</span>
+</span></span><span class="line"><span class="cl"><span class="n">BATCH_SIZE</span> <span class="o">=</span> <span class="mi">64</span>
+</span></span><span class="line"><span class="cl"><span class="n">EPOCHS</span> <span class="o">=</span> <span class="mi">30</span>
+</span></span><span class="line"><span class="cl"><span class="n">LR</span> <span class="o">=</span> <span class="mf">1e-3</span>
+</span></span><span class="line"><span class="cl"><span class="n">DEVICE</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s2">&#34;cuda&#34;</span> <span class="k">if</span> <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">is_available</span><span class="p">()</span> <span class="k">else</span> <span class="s2">&#34;cpu&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># ============ 数据增强（鸟类照片的关键） ============</span>
+</span></span><span class="line"><span class="cl"><span class="n">train_transform</span> <span class="o">=</span> <span class="n">transforms</span><span class="o">.</span><span class="n">Compose</span><span class="p">([</span>
+</span></span><span class="line"><span class="cl">    <span class="n">transforms</span><span class="o">.</span><span class="n">RandomResizedCrop</span><span class="p">(</span><span class="mi">380</span><span class="p">),</span>           <span class="c1"># EfficientNet-B4 输入 380x380</span>
+</span></span><span class="line"><span class="cl">    <span class="n">transforms</span><span class="o">.</span><span class="n">RandomHorizontalFlip</span><span class="p">(),</span>
+</span></span><span class="line"><span class="cl">    <span class="n">transforms</span><span class="o">.</span><span class="n">ColorJitter</span><span class="p">(</span><span class="n">brightness</span><span class="o">=</span><span class="mf">0.4</span><span class="p">,</span> <span class="n">contrast</span><span class="o">=</span><span class="mf">0.4</span><span class="p">,</span> <span class="n">saturation</span><span class="o">=</span><span class="mf">0.4</span><span class="p">),</span>
+</span></span><span class="line"><span class="cl">    <span class="n">transforms</span><span class="o">.</span><span class="n">RandomRotation</span><span class="p">(</span><span class="mi">20</span><span class="p">),</span>               <span class="c1"># 鸟的角度不确定</span>
+</span></span><span class="line"><span class="cl">    <span class="n">transforms</span><span class="o">.</span><span class="n">RandomAffine</span><span class="p">(</span><span class="n">degrees</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">translate</span><span class="o">=</span><span class="p">(</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">)),</span>  <span class="c1"># 位置偏移</span>
+</span></span><span class="line"><span class="cl">    <span class="n">transforms</span><span class="o">.</span><span class="n">ToTensor</span><span class="p">(),</span>
+</span></span><span class="line"><span class="cl">    <span class="n">transforms</span><span class="o">.</span><span class="n">Normalize</span><span class="p">([</span><span class="mf">0.485</span><span class="p">,</span> <span class="mf">0.456</span><span class="p">,</span> <span class="mf">0.406</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.229</span><span class="p">,</span> <span class="mf">0.224</span><span class="p">,</span> <span class="mf">0.225</span><span class="p">]),</span>
+</span></span><span class="line"><span class="cl">    <span class="n">transforms</span><span class="o">.</span><span class="n">RandomErasing</span><span class="p">(</span><span class="n">p</span><span class="o">=</span><span class="mf">0.3</span><span class="p">),</span>             <span class="c1"># 模拟遮挡（树叶、树枝）</span>
+</span></span><span class="line"><span class="cl"><span class="p">])</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">val_transform</span> <span class="o">=</span> <span class="n">transforms</span><span class="o">.</span><span class="n">Compose</span><span class="p">([</span>
+</span></span><span class="line"><span class="cl">    <span class="n">transforms</span><span class="o">.</span><span class="n">Resize</span><span class="p">(</span><span class="mi">420</span><span class="p">),</span>
+</span></span><span class="line"><span class="cl">    <span class="n">transforms</span><span class="o">.</span><span class="n">CenterCrop</span><span class="p">(</span><span class="mi">380</span><span class="p">),</span>
+</span></span><span class="line"><span class="cl">    <span class="n">transforms</span><span class="o">.</span><span class="n">ToTensor</span><span class="p">(),</span>
+</span></span><span class="line"><span class="cl">    <span class="n">transforms</span><span class="o">.</span><span class="n">Normalize</span><span class="p">([</span><span class="mf">0.485</span><span class="p">,</span> <span class="mf">0.456</span><span class="p">,</span> <span class="mf">0.406</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.229</span><span class="p">,</span> <span class="mf">0.224</span><span class="p">,</span> <span class="mf">0.225</span><span class="p">]),</span>
+</span></span><span class="line"><span class="cl"><span class="p">])</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># ============ 加载数据 ============</span>
+</span></span><span class="line"><span class="cl"><span class="n">train_dataset</span> <span class="o">=</span> <span class="n">datasets</span><span class="o">.</span><span class="n">ImageFolder</span><span class="p">(</span><span class="n">DATA_DIR</span><span class="p">,</span> <span class="n">transform</span><span class="o">=</span><span class="n">train_transform</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">val_dataset</span> <span class="o">=</span> <span class="n">datasets</span><span class="o">.</span><span class="n">ImageFolder</span><span class="p">(</span><span class="n">DATA_DIR</span><span class="p">,</span> <span class="n">transform</span><span class="o">=</span><span class="n">val_transform</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 处理类别不平衡（稀有鸟种图片少，常见鸟种图片多）</span>
+</span></span><span class="line"><span class="cl"><span class="n">class_counts</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">NUM_CLASSES</span>
+</span></span><span class="line"><span class="cl"><span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">label</span> <span class="ow">in</span> <span class="n">train_dataset</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="n">class_counts</span><span class="p">[</span><span class="n">label</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+</span></span><span class="line"><span class="cl"><span class="n">weights</span> <span class="o">=</span> <span class="p">[</span><span class="mf">1.0</span> <span class="o">/</span> <span class="n">class_counts</span><span class="p">[</span><span class="n">label</span><span class="p">]</span> <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">label</span> <span class="ow">in</span> <span class="n">train_dataset</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl"><span class="n">sampler</span> <span class="o">=</span> <span class="n">WeightedRandomSampler</span><span class="p">(</span><span class="n">weights</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">weights</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">train_loader</span> <span class="o">=</span> <span class="n">DataLoader</span><span class="p">(</span><span class="n">train_dataset</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="n">BATCH_SIZE</span><span class="p">,</span> <span class="n">sampler</span><span class="o">=</span><span class="n">sampler</span><span class="p">,</span> <span class="n">num_workers</span><span class="o">=</span><span class="mi">8</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">val_loader</span> <span class="o">=</span> <span class="n">DataLoader</span><span class="p">(</span><span class="n">val_dataset</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="n">BATCH_SIZE</span><span class="p">,</span> <span class="n">shuffle</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">num_workers</span><span class="o">=</span><span class="mi">8</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># ============ 构建模型 ============</span>
+</span></span><span class="line"><span class="cl"><span class="n">model</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">efficientnet_b4</span><span class="p">(</span><span class="n">weights</span><span class="o">=</span><span class="s1">&#39;DEFAULT&#39;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 替换分类头</span>
+</span></span><span class="line"><span class="cl"><span class="n">model</span><span class="o">.</span><span class="n">classifier</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Sequential</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">    <span class="n">nn</span><span class="o">.</span><span class="n">Dropout</span><span class="p">(</span><span class="n">p</span><span class="o">=</span><span class="mf">0.5</span><span class="p">),</span>
+</span></span><span class="line"><span class="cl">    <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">classifier</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">in_features</span><span class="p">,</span> <span class="n">NUM_CLASSES</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">model</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">DEVICE</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># ============ 训练 ============</span>
+</span></span><span class="line"><span class="cl"><span class="n">optimizer</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">optim</span><span class="o">.</span><span class="n">AdamW</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">parameters</span><span class="p">(),</span> <span class="n">lr</span><span class="o">=</span><span class="n">LR</span><span class="p">,</span> <span class="n">weight_decay</span><span class="o">=</span><span class="mf">0.01</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">scheduler</span> <span class="o">=</span> <span class="n">CosineAnnealingLR</span><span class="p">(</span><span class="n">optimizer</span><span class="p">,</span> <span class="n">T_max</span><span class="o">=</span><span class="n">EPOCHS</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">criterion</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">CrossEntropyLoss</span><span class="p">(</span><span class="n">label_smoothing</span><span class="o">=</span><span class="mf">0.1</span><span class="p">)</span>  <span class="c1"># 标签平滑，防过拟合</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">best_acc</span> <span class="o">=</span> <span class="mf">0.0</span>
+</span></span><span class="line"><span class="cl"><span class="k">for</span> <span class="n">epoch</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">EPOCHS</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">    <span class="c1"># --- 训练 ---</span>
+</span></span><span class="line"><span class="cl">    <span class="n">model</span><span class="o">.</span><span class="n">train</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">    <span class="n">correct</span> <span class="o">=</span> <span class="mi">0</span>
+</span></span><span class="line"><span class="cl">    <span class="n">total</span> <span class="o">=</span> <span class="mi">0</span>
+</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="n">images</span><span class="p">,</span> <span class="n">labels</span> <span class="ow">in</span> <span class="n">train_loader</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="n">images</span><span class="p">,</span> <span class="n">labels</span> <span class="o">=</span> <span class="n">images</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">DEVICE</span><span class="p">),</span> <span class="n">labels</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">DEVICE</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="n">outputs</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="n">images</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="n">loss</span> <span class="o">=</span> <span class="n">criterion</span><span class="p">(</span><span class="n">outputs</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">        <span class="n">optimizer</span><span class="o">.</span><span class="n">zero_grad</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">        <span class="n">loss</span><span class="o">.</span><span class="n">backward</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">        <span class="n">optimizer</span><span class="o">.</span><span class="n">step</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">        <span class="n">_</span><span class="p">,</span> <span class="n">predicted</span> <span class="o">=</span> <span class="n">outputs</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="n">correct</span> <span class="o">+=</span> <span class="n">predicted</span><span class="o">.</span><span class="n">eq</span><span class="p">(</span><span class="n">labels</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">        <span class="n">total</span> <span class="o">+=</span> <span class="n">labels</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="n">train_acc</span> <span class="o">=</span> <span class="n">correct</span> <span class="o">/</span> <span class="n">total</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="c1"># --- 验证 ---</span>
+</span></span><span class="line"><span class="cl">    <span class="n">model</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">    <span class="n">val_correct</span> <span class="o">=</span> <span class="mi">0</span>
+</span></span><span class="line"><span class="cl">    <span class="n">val_total</span> <span class="o">=</span> <span class="mi">0</span>
+</span></span><span class="line"><span class="cl">    <span class="k">with</span> <span class="n">torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">():</span>
+</span></span><span class="line"><span class="cl">        <span class="k">for</span> <span class="n">images</span><span class="p">,</span> <span class="n">labels</span> <span class="ow">in</span> <span class="n">val_loader</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">            <span class="n">images</span><span class="p">,</span> <span class="n">labels</span> <span class="o">=</span> <span class="n">images</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">DEVICE</span><span class="p">),</span> <span class="n">labels</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">DEVICE</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">            <span class="n">outputs</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="n">images</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">            <span class="n">_</span><span class="p">,</span> <span class="n">predicted</span> <span class="o">=</span> <span class="n">outputs</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">            <span class="n">val_correct</span> <span class="o">+=</span> <span class="n">predicted</span><span class="o">.</span><span class="n">eq</span><span class="p">(</span><span class="n">labels</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">            <span class="n">val_total</span> <span class="o">+=</span> <span class="n">labels</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="n">val_acc</span> <span class="o">=</span> <span class="n">val_correct</span> <span class="o">/</span> <span class="n">val_total</span>
+</span></span><span class="line"><span class="cl">    <span class="n">scheduler</span><span class="o">.</span><span class="n">step</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&#34;Epoch </span><span class="si">{</span><span class="n">epoch</span><span class="o">+</span><span class="mi">1</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">EPOCHS</span><span class="si">}</span><span class="s2"> | Train: </span><span class="si">{</span><span class="n">train_acc</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2"> | Val: </span><span class="si">{</span><span class="n">val_acc</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="n">val_acc</span> <span class="o">&gt;</span> <span class="n">best_acc</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="n">best_acc</span> <span class="o">=</span> <span class="n">val_acc</span>
+</span></span><span class="line"><span class="cl">        <span class="n">torch</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">state_dict</span><span class="p">(),</span> <span class="s2">&#34;bird_classifier_best.pth&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&#34;  ✅ 保存最佳模型 (acc=</span><span class="si">{</span><span class="n">val_acc</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">)&#34;</span><span class="p">)</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h4 id="第三步模型量化部署到手机边缘设备">第三步：模型量化（部署到手机/边缘设备）</h4>
+<p>10000 类的 Float32 模型约 75MB，量化后可以压缩到 ~20MB，手机端推理 50ms/张。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">torch.quantization</span> <span class="k">as</span> <span class="nn">quant</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 加载最佳模型</span>
+</span></span><span class="line"><span class="cl"><span class="n">model</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">efficientnet_b4</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl"><span class="n">model</span><span class="o">.</span><span class="n">classifier</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Sequential</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">    <span class="n">nn</span><span class="o">.</span><span class="n">Dropout</span><span class="p">(</span><span class="n">p</span><span class="o">=</span><span class="mf">0.5</span><span class="p">),</span>
+</span></span><span class="line"><span class="cl">    <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">classifier</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">in_features</span><span class="p">,</span> <span class="n">NUM_CLASSES</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">model</span><span class="o">.</span><span class="n">load_state_dict</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s2">&#34;bird_classifier_best.pth&#34;</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl"><span class="n">model</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 动态量化（CPU 推理优化）</span>
+</span></span><span class="line"><span class="cl"><span class="n">quantized_model</span> <span class="o">=</span> <span class="n">quant</span><span class="o">.</span><span class="n">quantize_dynamic</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">    <span class="n">model</span><span class="p">,</span> <span class="p">{</span><span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">},</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">qint8</span>
+</span></span><span class="line"><span class="cl"><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">torch</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">quantized_model</span><span class="o">.</span><span class="n">state_dict</span><span class="p">(),</span> <span class="s2">&#34;bird_classifier_quantized.pth&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&#34;量化完成：</span><span class="si">{</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">getsize</span><span class="p">(</span><span class="s1">&#39;bird_classifier_quantized.pth&#39;</span><span class="p">)</span> <span class="o">/</span> <span class="mi">1024</span> <span class="o">/</span> <span class="mi">1024</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2">MB&#34;</span><span class="p">)</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h4 id="第四步地理位置过滤merlin-的秘密武器">第四步：地理位置过滤（Merlin 的秘密武器）</h4>
+<p>Merlin Bird ID 准确率高的关键不只是模型好，而是<strong>用地理位置缩小候选范围</strong>——在你那个地方、那个季节，可能只会出现 200-500 种鸟，识别难度大幅降低。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">json</span>
+</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">datetime</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 鸟种分布数据（需要自己整理，或从 eBird API 获取）</span>
+</span></span><span class="line"><span class="cl"><span class="c1"># 格式: { &#34;species_id&#34;: { &#34;name&#34;: &#34;麻雀&#34;, &#34;regions&#34;: [&#34;华东&#34;,&#34;华北&#34;], &#34;months&#34;: [1-12] } }</span>
+</span></span><span class="line"><span class="cl"><span class="n">SPECIES_DB</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="s2">&#34;species_distribution.json&#34;</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">get_candidate_species</span><span class="p">(</span><span class="n">latitude</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">longitude</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">month</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="s2">&#34;&#34;&#34;根据经纬度和月份，返回该地区可能出现的鸟种&#34;&#34;&#34;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">candidates</span> <span class="o">=</span> <span class="p">[]</span>
+</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="n">sp_id</span><span class="p">,</span> <span class="n">info</span> <span class="ow">in</span> <span class="n">SPECIES_DB</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+</span></span><span class="line"><span class="cl">        <span class="c1"># 简化版：按区域和月份过滤</span>
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="n">month</span> <span class="ow">in</span> <span class="n">info</span><span class="p">[</span><span class="s2">&#34;months&#34;</span><span class="p">]</span> <span class="ow">and</span> <span class="nb">any</span><span class="p">(</span><span class="n">r</span> <span class="ow">in</span> <span class="n">info</span><span class="p">[</span><span class="s2">&#34;regions&#34;</span><span class="p">]</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">get_regions</span><span class="p">(</span><span class="n">latitude</span><span class="p">,</span> <span class="n">longitude</span><span class="p">)):</span>
+</span></span><span class="line"><span class="cl">            <span class="n">candidates</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sp_id</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">candidates</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">predict_with_location</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">latitude</span><span class="p">,</span> <span class="n">longitude</span><span class="p">,</span> <span class="n">month</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">    <span class="s2">&#34;&#34;&#34;带地理位置过滤的预测&#34;&#34;&#34;</span>
+</span></span><span class="line"><span class="cl">    <span class="c1"># 1. 先用模型预测所有类别的概率</span>
+</span></span><span class="line"><span class="cl">    <span class="n">all_probs</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>  <span class="c1"># shape: [1, 10000]</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="c1"># 2. 获取该地区候选鸟种</span>
+</span></span><span class="line"><span class="cl">    <span class="n">candidates</span> <span class="o">=</span> <span class="n">get_candidate_species</span><span class="p">(</span><span class="n">latitude</span><span class="p">,</span> <span class="n">longitude</span><span class="p">,</span> <span class="n">month</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="c1"># 3. 只保留候选鸟种的概率，其余设为 0</span>
+</span></span><span class="line"><span class="cl">    <span class="n">filtered_probs</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">all_probs</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">candidates</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="n">filtered_probs</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="n">c</span><span class="p">]</span> <span class="o">=</span> <span class="n">all_probs</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="n">c</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="c1"># 4. 重新归一化</span>
+</span></span><span class="line"><span class="cl">    <span class="n">filtered_probs</span> <span class="o">=</span> <span class="n">filtered_probs</span> <span class="o">/</span> <span class="n">filtered_probs</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="c1"># 5. 取 top-5</span>
+</span></span><span class="line"><span class="cl">    <span class="n">top5</span> <span class="o">=</span> <span class="n">filtered_probs</span><span class="o">.</span><span class="n">topk</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">top5</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h4 id="第五步推理-api">第五步：推理 API</h4>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">fastapi</span> <span class="kn">import</span> <span class="n">FastAPI</span><span class="p">,</span> <span class="n">UploadFile</span>
+</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">PIL</span> <span class="kn">import</span> <span class="n">Image</span>
+</span></span><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">io</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">app</span> <span class="o">=</span> <span class="n">FastAPI</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 加载模型</span>
+</span></span><span class="line"><span class="cl"><span class="n">model</span> <span class="o">=</span> <span class="n">load_trained_model</span><span class="p">(</span><span class="s2">&#34;bird_classifier_quantized.pth&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">class_names</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="s2">&#34;class_names.json&#34;</span><span class="p">))</span>  <span class="c1"># {0: &#34;麻雀&#34;, 1: &#34;翠鸟&#34;, ...}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="nd">@app.post</span><span class="p">(</span><span class="s2">&#34;/identify&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="k">async</span> <span class="k">def</span> <span class="nf">identify_bird</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">    <span class="n">file</span><span class="p">:</span> <span class="n">UploadFile</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="n">latitude</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="n">longitude</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="kc">None</span>
+</span></span><span class="line"><span class="cl"><span class="p">):</span>
+</span></span><span class="line"><span class="cl">    <span class="c1"># 读取图片</span>
+</span></span><span class="line"><span class="cl">    <span class="n">image_bytes</span> <span class="o">=</span> <span class="k">await</span> <span class="n">file</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">    <span class="n">image</span> <span class="o">=</span> <span class="n">Image</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">io</span><span class="o">.</span><span class="n">BytesIO</span><span class="p">(</span><span class="n">image_bytes</span><span class="p">))</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="s2">&#34;RGB&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="c1"># 预处理</span>
+</span></span><span class="line"><span class="cl">    <span class="n">tensor</span> <span class="o">=</span> <span class="n">val_transform</span><span class="p">(</span><span class="n">image</span><span class="p">)</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="c1"># 地理位置过滤</span>
+</span></span><span class="line"><span class="cl">    <span class="n">month</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">month</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="n">latitude</span> <span class="ow">and</span> <span class="n">longitude</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="n">top5</span> <span class="o">=</span> <span class="n">predict_with_location</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">tensor</span><span class="p">,</span> <span class="n">latitude</span><span class="p">,</span> <span class="n">longitude</span><span class="p">,</span> <span class="n">month</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="k">else</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="n">top5</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="n">tensor</span><span class="p">)</span><span class="o">.</span><span class="n">topk</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="c1"># 返回结果</span>
+</span></span><span class="line"><span class="cl">    <span class="n">results</span> <span class="o">=</span> <span class="p">[]</span>
+</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="n">prob</span><span class="p">,</span> <span class="n">idx</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">top5</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">top5</span><span class="o">.</span><span class="n">indices</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+</span></span><span class="line"><span class="cl">        <span class="n">results</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
+</span></span><span class="line"><span class="cl">            <span class="s2">&#34;species&#34;</span><span class="p">:</span> <span class="n">class_names</span><span class="p">[</span><span class="n">idx</span><span class="o">.</span><span class="n">item</span><span class="p">()],</span>
+</span></span><span class="line"><span class="cl">            <span class="s2">&#34;confidence&#34;</span><span class="p">:</span> <span class="nb">round</span><span class="p">(</span><span class="n">prob</span><span class="o">.</span><span class="n">item</span><span class="p">(),</span> <span class="mi">4</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="p">})</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="p">{</span><span class="s2">&#34;results&#34;</span><span class="p">:</span> <span class="n">results</span><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h3 id="clip-零样本识别无训练数据时的备选">CLIP 零样本识别（无训练数据时的备选）</h3>
+<p>如果你还没有足够的训练数据，OpenAI 的 CLIP 模型可以<strong>零样本</strong>做鸟类分类——不需要任何训练，直接用文字描述匹配图片：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span><span class="lnt">42
+</span><span class="lnt">43
+</span><span class="lnt">44
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">torch</span>
+</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">clip</span> <span class="kn">import</span> <span class="n">clip</span>
+</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">PIL</span> <span class="kn">import</span> <span class="n">Image</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 加载 CLIP 模型</span>
+</span></span><span class="line"><span class="cl"><span class="n">device</span> <span class="o">=</span> <span class="s2">&#34;cuda&#34;</span> <span class="k">if</span> <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">is_available</span><span class="p">()</span> <span class="k">else</span> <span class="s2">&#34;cpu&#34;</span>
+</span></span><span class="line"><span class="cl"><span class="n">model</span><span class="p">,</span> <span class="n">preprocess</span> <span class="o">=</span> <span class="n">clip</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s2">&#34;ViT-B/32&#34;</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 候选鸟种的文字描述（越具体越好）</span>
+</span></span><span class="line"><span class="cl"><span class="n">candidate_birds</span> <span class="o">=</span> <span class="p">[</span>
+</span></span><span class="line"><span class="cl">    <span class="s2">&#34;a photo of a Eurasian Tree Sparrow, small brown bird with black bib&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="s2">&#34;a photo of a Common Kingfisher, bright blue and orange bird&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="s2">&#34;a photo of a Little Egret, white heron with black legs and yellow feet&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="s2">&#34;a photo of a Red-billed Blue Magpie, long tail with red bill&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="s2">&#34;a photo of a Light-vented Bulbul, white nape with brown body&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="c1"># ... 添加更多鸟种描述</span>
+</span></span><span class="line"><span class="cl"><span class="p">]</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">classify_with_clip</span><span class="p">(</span><span class="n">image_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">candidates</span><span class="p">:</span> <span class="nb">list</span><span class="p">,</span> <span class="n">top_k</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">5</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">    <span class="s2">&#34;&#34;&#34;CLIP 零样本鸟类分类&#34;&#34;&#34;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">image</span> <span class="o">=</span> <span class="n">preprocess</span><span class="p">(</span><span class="n">Image</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">image_path</span><span class="p">))</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="n">text</span> <span class="o">=</span> <span class="n">clip</span><span class="o">.</span><span class="n">tokenize</span><span class="p">(</span><span class="n">candidates</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">with</span> <span class="n">torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">():</span>
+</span></span><span class="line"><span class="cl">        <span class="n">image_features</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">encode_image</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="n">text_features</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">encode_text</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">        <span class="c1"># 余弦相似度</span>
+</span></span><span class="line"><span class="cl">        <span class="n">similarity</span> <span class="o">=</span> <span class="p">(</span><span class="n">image_features</span> <span class="o">@</span> <span class="n">text_features</span><span class="o">.</span><span class="n">T</span><span class="p">)</span><span class="o">.</span><span class="n">softmax</span><span class="p">(</span><span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="n">values</span><span class="p">,</span> <span class="n">indices</span> <span class="o">=</span> <span class="n">similarity</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">topk</span><span class="p">(</span><span class="n">top_k</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="n">results</span> <span class="o">=</span> <span class="p">[]</span>
+</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="n">val</span><span class="p">,</span> <span class="n">idx</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">indices</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">        <span class="n">results</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
+</span></span><span class="line"><span class="cl">            <span class="s2">&#34;species&#34;</span><span class="p">:</span> <span class="n">candidates</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&#34;a photo of a &#34;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&#34;,&#34;</span><span class="p">)[</span><span class="mi">0</span><span class="p">],</span>
+</span></span><span class="line"><span class="cl">            <span class="s2">&#34;confidence&#34;</span><span class="p">:</span> <span class="nb">round</span><span class="p">(</span><span class="n">val</span><span class="o">.</span><span class="n">item</span><span class="p">(),</span> <span class="mi">4</span><span class="p">),</span>
+</span></span><span class="line"><span class="cl">            <span class="s2">&#34;description&#34;</span><span class="p">:</span> <span class="n">candidates</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&#34;, &#34;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span> <span class="k">if</span> <span class="s2">&#34;, &#34;</span> <span class="ow">in</span> <span class="n">candidates</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="k">else</span> <span class="s2">&#34;&#34;</span>
+</span></span><span class="line"><span class="cl">        <span class="p">})</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">results</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 使用</span>
+</span></span><span class="line"><span class="cl"><span class="n">results</span> <span class="o">=</span> <span class="n">classify_with_clip</span><span class="p">(</span><span class="s2">&#34;bird_photo.jpg&#34;</span><span class="p">,</span> <span class="n">candidate_birds</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">results</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&#34;</span><span class="si">{</span><span class="n">r</span><span class="p">[</span><span class="s1">&#39;species&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">r</span><span class="p">[</span><span class="s1">&#39;confidence&#39;</span><span class="p">]</span><span class="si">:</span><span class="s2">.1%</span><span class="si">}</span><span class="s2">&#34;</span><span class="p">)</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><blockquote>
+<p><strong>CLIP 的局限</strong>：准确率约 60-75%，对相似鸟种（如三种白鹭）区分力弱。优势是<strong>零训练</strong>、支持任意鸟种（只需写文字描述）、跨语言能力强。适合作为初筛或无训练数据时的 baseline。</p>
+</blockquote>
+<h3 id="merlin-bird-id-技术揭秘">Merlin Bird ID 技术揭秘</h3>
+<p>Merlin Bird ID（康奈尔鸟类学实验室出品）是目前公认最好的鸟类识别 App，日均处理数百万次识别请求。它的核心架构：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">┌─────────────────────────────────────────────────┐
+</span></span><span class="line"><span class="cl">│              Merlin Bird ID 架构                 │
+</span></span><span class="line"><span class="cl">├─────────────────────────────────────────────────┤
+</span></span><span class="line"><span class="cl">│                                                 │
+</span></span><span class="line"><span class="cl">│  📸 用户输入（照片 or 声音）                      │
+</span></span><span class="line"><span class="cl">│       │                                         │
+</span></span><span class="line"><span class="cl">│       ├─── 照片 ──→ CNN 分类器                   │
+</span></span><span class="line"><span class="cl">│       │              (EfficientNet/ResNet)       │
+</span></span><span class="line"><span class="cl">│       │                    │                     │
+</span></span><span class="line"><span class="cl">│       ├─── 声音 ──→ BirdNET 网络                 │
+</span></span><span class="line"><span class="cl">│       │              (时频谱 CNN)                 │
+</span></span><span class="line"><span class="cl">│       │                    │                     │
+</span></span><span class="line"><span class="cl">│       │              ┌─────▼──────┐              │
+</span></span><span class="line"><span class="cl">│       │              │ 地理位置过滤 │ ← 🗺️ GPS    │
+</span></span><span class="line"><span class="cl">│       │              │ (核心创新)  │ ← 📅 季节    │
+</span></span><span class="line"><span class="cl">│       │              └─────┬──────┘              │
+</span></span><span class="line"><span class="cl">│       │                    │                     │
+</span></span><span class="line"><span class="cl">│       │           10000种 → 200-500种            │
+</span></span><span class="line"><span class="cl">│       │                    │                     │
+</span></span><span class="line"><span class="cl">│       │              ┌─────▼──────┐              │
+</span></span><span class="line"><span class="cl">│       │              │ 模型在候选集 │              │
+</span></span><span class="line"><span class="cl">│       │              │ 中精确排序  │              │
+</span></span><span class="line"><span class="cl">│       │              └─────┬──────┘              │
+</span></span><span class="line"><span class="cl">│       │                    │                     │
+</span></span><span class="line"><span class="cl">│       ▼                    ▼                     │
+</span></span><span class="line"><span class="cl">│  ┌─────────────────────────────────────┐        │
+</span></span><span class="line"><span class="cl">│  │  Top-5 结果 + 习性/栖息地/鸣声描述   │        │
+</span></span><span class="line"><span class="cl">│  └─────────────────────────────────────┘        │
+</span></span><span class="line"><span class="cl">│                                                 │
+</span></span><span class="line"><span class="cl">│  📦 数据来源：eBird（全球 10 亿+观察记录）         │
+</span></span><span class="line"><span class="cl">│  🧠 模型：端侧推理，离线可用                      │
+</span></span><span class="line"><span class="cl">└─────────────────────────────────────────────────┘
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p><strong>Merlin 准确率高的三个秘密：</strong></p>
+<ol>
+<li><strong>地理位置过滤</strong>：GPS + 季节把候选从 10000 种压缩到 200-500 种（本文第四步已实现）</li>
+<li><strong>海量标注数据</strong>：eBird 平台累积了全球观鸟者的 <strong>10 亿+</strong> 物种观察记录，数据量远超任何学术数据集</li>
+<li><strong>多模态融合</strong>：照片和声音可以联合判断，进一步提高置信度</li>
+</ol>
+<h3 id="中国本土实践whatbirdcn">中国本土实践：whatbird.cn</h3>
+<p><a href="https://whatbird.cn" target="_blank" rel="noopener noreferrer">whatbird.cn</a>
+ 是一个基于深度学习的中国鸟类识别网站，收录了 <strong>1352 种</strong> 中国鸟类，top-1 准确率 <strong>85%</strong>，top-5 准确率 <strong>96%</strong>。训练数据来自 Flickr 和 OrientalBirdImages，参考《中国鸟类野外手册》分类体系。</p>
+<p>如果你要做中国鸟类识别项目，whatbird.cn 的分类体系和数据组织方式值得参考——它覆盖了几乎所有中国有记录的鸟种，包括很多国内特有的雀形目鸟类。</p>
+<h3 id="关键优化技巧">关键优化技巧</h3>
+<p><strong>1. 处理类别不平衡</strong></p>
+<p>10000 种鸟的图片数量差异巨大（麻雀可能有 10 万张，某些极危鸟种只有十几张）：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="c1"># 方案 A：WeightedRandomSampler（上面已用）</span>
+</span></span><span class="line"><span class="cl"><span class="c1"># 方案 B：过采样稀有类别</span>
+</span></span><span class="line"><span class="cl"><span class="c1"># 方案 C：Focal Loss（对难分类样本给予更高权重）</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">class</span> <span class="nc">FocalLoss</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">gamma</span><span class="o">=</span><span class="mi">2</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">        <span class="bp">self</span><span class="o">.</span><span class="n">alpha</span> <span class="o">=</span> <span class="n">alpha</span>
+</span></span><span class="line"><span class="cl">        <span class="bp">self</span><span class="o">.</span><span class="n">gamma</span> <span class="o">=</span> <span class="n">gamma</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">targets</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">        <span class="n">ce_loss</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">functional</span><span class="o">.</span><span class="n">cross_entropy</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">targets</span><span class="p">,</span> <span class="n">reduction</span><span class="o">=</span><span class="s1">&#39;none&#39;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="n">pt</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">ce_loss</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="n">focal_loss</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">alpha</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">pt</span><span class="p">)</span> <span class="o">**</span> <span class="bp">self</span><span class="o">.</span><span class="n">gamma</span> <span class="o">*</span> <span class="n">ce_loss</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="n">focal_loss</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p><strong>2. 数据清洗</strong></p>
+<p>训练数据质量直接决定模型上限：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="c1"># 自动清洗：移除损坏图片和异常图片</span>
+</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
+</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">PIL</span> <span class="kn">import</span> <span class="n">Image</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">clean_dataset</span><span class="p">(</span><span class="n">data_dir</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">    <span class="n">removed</span> <span class="o">=</span> <span class="mi">0</span>
+</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="n">img_path</span> <span class="ow">in</span> <span class="n">Path</span><span class="p">(</span><span class="n">data_dir</span><span class="p">)</span><span class="o">.</span><span class="n">rglob</span><span class="p">(</span><span class="s2">&#34;*.jpg&#34;</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">        <span class="k">try</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">            <span class="n">img</span> <span class="o">=</span> <span class="n">Image</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">img_path</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">            <span class="n">img</span><span class="o">.</span><span class="n">verify</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">            <span class="c1"># 移除太小的图片（可能是缩略图）</span>
+</span></span><span class="line"><span class="cl">            <span class="k">if</span> <span class="n">img</span><span class="o">.</span><span class="n">size</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mi">100</span> <span class="ow">or</span> <span class="n">img</span><span class="o">.</span><span class="n">size</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mi">100</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">                <span class="n">img_path</span><span class="o">.</span><span class="n">unlink</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">                <span class="n">removed</span> <span class="o">+=</span> <span class="mi">1</span>
+</span></span><span class="line"><span class="cl">        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">            <span class="n">img_path</span><span class="o">.</span><span class="n">unlink</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">            <span class="n">removed</span> <span class="o">+=</span> <span class="mi">1</span>
+</span></span><span class="line"><span class="cl">    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&#34;清理完成：移除 </span><span class="si">{</span><span class="n">removed</span><span class="si">}</span><span class="s2"> 张无效图片&#34;</span><span class="p">)</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p><strong>3. 预训练权重选择</strong></p>
+<table>
+<thead>
+<tr>
+<th>权重</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ImageNet-1K</td>
+<td>通用预训练，1000 类，适合起步</td>
+</tr>
+<tr>
+<td><strong>ImageNet-21K</strong></td>
+<td><strong>21000 类预训练，推荐，10000 类鸟种分类效果更好</strong></td>
+</tr>
+<tr>
+<td>BirdCLEF 竞赛权重</td>
+<td>如果能找到，针对性最强</td>
+</tr>
+</tbody>
+</table>
+<h3 id="训练资源估算">训练资源估算</h3>
+<table>
+<thead>
+<tr>
+<th>项目</th>
+<th>10,000 种鸟</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>总图片量</td>
+<td>50-200 万张</td>
+</tr>
+<tr>
+<td>存储空间</td>
+<td>50-200 GB</td>
+</tr>
+<tr>
+<td>训练时间（单卡 3090）</td>
+<td>8-15 小时</td>
+</tr>
+<tr>
+<td>训练时间（单卡 A100）</td>
+<td>3-6 小时</td>
+</tr>
+<tr>
+<td>最终模型大小（量化后）</td>
+<td>15-25 MB</td>
+</tr>
+<tr>
+<td>推理速度（手机端）</td>
+<td>30-80 ms/张</td>
+</tr>
+</tbody>
+</table>
+<h2 id="踩坑记录">踩坑记录</h2>
 <p><strong>1. 图片质量影响识别</strong></p>
 <p>模糊、逆光、远距离拍摄的照片识别率很低。建议：</p>
 <ul>

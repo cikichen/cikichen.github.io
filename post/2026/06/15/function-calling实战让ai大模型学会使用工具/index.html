@@ -35,7 +35,7 @@
         "mainEntityOfPage": {
             "@type": "WebPage",
             "@id": "https:\/\/www.ithome.me\/post\/2026\/06\/15\/function-calling%E5%AE%9E%E6%88%98%E8%AE%A9ai%E5%A4%A7%E6%A8%A1%E5%9E%8B%E5%AD%A6%E4%BC%9A%E4%BD%BF%E7%94%A8%E5%B7%A5%E5%85%B7\/"
-        },"image": ["https:\/\/www.ithome.me\/cover.png"],"genre": "posts","keywords": "AI Agent, Function Calling, 大模型, 工具调用, OpenAI","wordcount":  15866 ,
+        },"image": ["https:\/\/www.ithome.me\/cover.png"],"genre": "posts","keywords": "AI Agent, Function Calling, 大模型, 工具调用, OpenAI","wordcount":  15935 ,
         "url": "https:\/\/www.ithome.me\/post\/2026\/06\/15\/function-calling%E5%AE%9E%E6%88%98%E8%AE%A9ai%E5%A4%A7%E6%A8%A1%E5%9E%8B%E5%AD%A6%E4%BC%9A%E4%BD%BF%E7%94%A8%E5%B7%A5%E5%85%B7\/","datePublished": "2026-06-15T08:00:00+08:00","dateModified": "2026-06-15T08:00:00+08:00","publisher": {
             "@type": "Organization",
             "name": "SimonChen","logo": "https:\/\/www.ithome.me\/logo.png"},"author": {
@@ -117,7 +117,7 @@
         </div><article class="page single"><h1 class="single-title animate__animated animate__flipInX">Function Calling实战：让AI大模型学会使用工具</h1><div class="post-meta">
             <div class="post-meta-line"><span class="post-author"><a href="https://www.ithome.me/" title="Author" target="_blank" rel="noopener noreferrer author" class="author"><i class="fas fa-user-circle fa-fw" aria-hidden="true"></i>Simon Chen</a>
 </span></div>
-            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw" aria-hidden="true"></i>&nbsp;<time datetime="2026-06-15">2026-06-15</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden="true"></i>&nbsp;15866 words&nbsp;
+            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw" aria-hidden="true"></i>&nbsp;<time datetime="2026-06-15">2026-06-15</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden="true"></i>&nbsp;15935 words&nbsp;
                 <i class="far fa-clock fa-fw" aria-hidden="true"></i>&nbsp;32 minutes&nbsp;</div>
         </div><div class="details toc" id="toc-static"  data-kept="true">
                 <div class="details-summary toc-title">
@@ -377,16 +377,20 @@
 <td>GPT-5.4</td>
 <td>$2.50/百万tokens</td>
 <td>$15.00/百万tokens</td>
-<td>1M tokens</td>
+<td>270K tokens</td>
 </tr>
 <tr>
 <td>GPT-5.4-mini</td>
 <td>$0.75/百万tokens</td>
 <td>$4.50/百万tokens</td>
-<td>1M tokens</td>
+<td>270K tokens</td>
 </tr>
 </tbody>
 </table>
+<blockquote>
+<p>⚠️ 注：上述价格为标准处理模式（Standard）下上下文长度 <strong>≤270K tokens</strong> 的定价。更长上下文会产生额外费用，请参考 <a href="https://openai.com/api/pricing" target="_blank" rel="noopener noreferrer">OpenAI 官方定价页面</a>
+。</p>
+</blockquote>
 <p>Function Calling 在工具较多时会增加 system prompt 的 token 消耗（工具描述会占用上下文），建议在非关键场景使用 <code>gpt-5.4-mini</code> 以降低成本。</p>
 <h3 id="32-基础用法单工具调用">3.2 基础用法：单工具调用</h3>
 <p>首先安装 OpenAI SDK：</p>
@@ -1093,8 +1097,8 @@
 </span></span><span class="line"><span class="cl">    <span class="p">}</span>
 </span></span><span class="line"><span class="cl">    
 </span></span><span class="line"><span class="cl">    <span class="k">def</span> <span class="nf">_eval</span><span class="p">(</span><span class="n">node</span><span class="p">):</span>
-</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">Num</span><span class="p">):</span>
-</span></span><span class="line"><span class="cl">            <span class="k">return</span> <span class="n">node</span><span class="o">.</span><span class="n">n</span>
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">Constant</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">)):</span>
+</span></span><span class="line"><span class="cl">            <span class="k">return</span> <span class="n">node</span><span class="o">.</span><span class="n">value</span>
 </span></span><span class="line"><span class="cl">        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">BinOp</span><span class="p">):</span>
 </span></span><span class="line"><span class="cl">            <span class="n">left</span> <span class="o">=</span> <span class="n">_eval</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">left</span><span class="p">)</span>
 </span></span><span class="line"><span class="cl">            <span class="n">right</span> <span class="o">=</span> <span class="n">_eval</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">right</span><span class="p">)</span>
