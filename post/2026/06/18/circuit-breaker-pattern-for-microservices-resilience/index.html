@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="robots" content="noodp" />
+        <title>微服务雪崩自救指南：从代码到架构的Circuit Breaker熔断模式实战 - 编程心语</title><meta name="Description" content="详解Circuit Breaker熔断模式的原理、状态机、三种实现方案（Resilience4j、Sentinel、手写），附完整代码和生产配置，帮你从根源上防止微服务雪崩。"><meta property="og:url" content="https://www.ithome.me/post/2026/06/18/circuit-breaker-pattern-for-microservices-resilience/">
+  <meta property="og:site_name" content="编程心语">
+  <meta property="og:title" content="微服务雪崩自救指南：从代码到架构的Circuit Breaker熔断模式实战">
+  <meta property="og:description" content="详解Circuit Breaker熔断模式的原理、状态机、三种实现方案（Resilience4j、Sentinel、手写），附完整代码和生产配置，帮你从根源上防止微服务雪崩。">
+  <meta property="og:locale" content="zh_CN">
+  <meta property="og:type" content="article">
+    <meta property="article:section" content="posts">
+    <meta property="article:published_time" content="2026-06-18T09:00:00+08:00">
+    <meta property="article:modified_time" content="2026-06-19T09:02:33+08:00">
+    <meta property="article:tag" content="微服务">
+    <meta property="article:tag" content="架构设计">
+    <meta property="article:tag" content="熔断">
+    <meta property="article:tag" content="高可用">
+
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="微服务雪崩自救指南：从代码到架构的Circuit Breaker熔断模式实战">
+  <meta name="twitter:description" content="详解Circuit Breaker熔断模式的原理、状态机、三种实现方案（Resilience4j、Sentinel、手写），附完整代码和生产配置，帮你从根源上防止微服务雪崩。">
+      <meta name="twitter:site" content="@ChenCiki">
+<meta name="application-name" content="编程心语">
+<meta name="apple-mobile-web-app-title" content="编程心语"><meta name="theme-color" content="#ffffff"><meta name="msapplication-TileColor" content="#da532c"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5"><link rel="manifest" href="/site.webmanifest"><link rel="canonical" href="https://www.ithome.me/post/2026/06/18/circuit-breaker-pattern-for-microservices-resilience/" /><link rel="prev" href="https://www.ithome.me/post/2026/06/17/ai-agent%E8%AF%84%E4%BC%B0%E6%B5%8B%E8%AF%95%E5%A6%82%E4%BD%95%E7%A7%91%E5%AD%A6%E8%A1%A1%E9%87%8F%E6%99%BA%E8%83%BD%E4%BD%93%E8%A1%A8%E7%8E%B0/" /><link rel="next" href="https://www.ithome.me/post/2026/06/19/github-actions-cicd-pipeline/" /><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/normalize.css@8.0.1/normalize.min.css"><link rel="stylesheet" href="/css/style.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css"><script type="application/ld+json">
+    {
+        "@context": "http://schema.org",
+        "@type": "BlogPosting",
+        "headline": "微服务雪崩自救指南：从代码到架构的Circuit Breaker熔断模式实战",
+        "inLanguage": "zh-CN",
+        "mainEntityOfPage": {
+            "@type": "WebPage",
+            "@id": "https:\/\/www.ithome.me\/post\/2026\/06\/18\/circuit-breaker-pattern-for-microservices-resilience\/"
+        },"image": ["https:\/\/www.ithome.me\/cover.png"],"genre": "posts","keywords": "微服务, 架构设计, 熔断, 高可用","wordcount":  1883 ,
+        "url": "https:\/\/www.ithome.me\/post\/2026\/06\/18\/circuit-breaker-pattern-for-microservices-resilience\/","datePublished": "2026-06-18T09:00:00+08:00","dateModified": "2026-06-19T09:02:33+08:00","publisher": {
+            "@type": "Organization",
+            "name": "SimonChen","logo": "https:\/\/www.ithome.me\/logo.png"},"author": {
+                "@type": "Person",
+                "name": "Simon Chen"
+            },"description": "详解Circuit Breaker熔断模式的原理、状态机、三种实现方案（Resilience4j、Sentinel、手写），附完整代码和生产配置，帮你从根源上防止微服务雪崩。"
+    }
+    </script><script async src="https://www.googletagmanager.com/gtag/js?id=G-H1Q5563VR8"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-H1Q5563VR8', { 'anonymize_ip': true });
+</script></head>
+    <body data-header-desktop="fixed" data-header-mobile="auto"><script type="text/javascript">(window.localStorage && localStorage.getItem('theme') ? localStorage.getItem('theme') === 'dark' : ('auto' === 'auto' ? window.matchMedia('(prefers-color-scheme: dark)').matches : 'auto' === 'dark')) && document.body.setAttribute('theme', 'dark');</script>
+
+        <div id="mask"></div><div class="wrapper"><header class="desktop" id="header-desktop">
+    <div class="header-wrapper">
+        <div class="header-title">
+            <a href="/" title="编程心语">编程心语</a>
+        </div>
+        <div class="menu">
+            <div class="menu-inner"><a class="menu-item" href="/posts/"> 文章 </a><a class="menu-item" href="/categories/"> 分类 </a><a class="menu-item" href="/tags/"> 标签 </a><a class="menu-item" href="/about-me/"> 关于 </a><span class="menu-item delimiter"></span><span class="menu-item search" id="search-desktop">
+                        <input type="text" placeholder="搜索文章..." id="search-input-desktop">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-desktop" title="Search">
+                            <i class="fas fa-search fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-desktop" title="Clear">
+                            <i class="fas fa-times-circle fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-desktop">
+                            <i class="fas fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+                        </span>
+                    </span><a href="javascript:void(0);" class="menu-item theme-switch" title="Switch Theme">
+                    <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</header><header class="mobile" id="header-mobile">
+    <div class="header-container">
+        <div class="header-wrapper">
+            <div class="header-title">
+                <a href="/" title="编程心语">编程心语</a>
+            </div>
+            <div class="menu-toggle" id="menu-toggle-mobile">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+        <div class="menu" id="menu-mobile"><div class="search-wrapper">
+                    <div class="search mobile" id="search-mobile">
+                        <input type="text" placeholder="搜索文章..." id="search-input-mobile">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-mobile" title="Search">
+                            <i class="fas fa-search fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-mobile" title="Clear">
+                            <i class="fas fa-times-circle fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-mobile">
+                            <i class="fas fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+                        </span>
+                    </div>
+                    <a href="javascript:void(0);" class="search-cancel" id="search-cancel-mobile">
+                        Cancel
+                    </a>
+                </div><a class="menu-item" href="/posts/" title="">文章</a><a class="menu-item" href="/categories/" title="">分类</a><a class="menu-item" href="/tags/" title="">标签</a><a class="menu-item" href="/about-me/" title="">关于</a><a href="javascript:void(0);" class="menu-item theme-switch" title="Switch Theme">
+                <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
+            </a></div>
+    </div>
+</header><div class="search-dropdown desktop">
+        <div id="search-dropdown-desktop"></div>
+    </div>
+    <div class="search-dropdown mobile">
+        <div id="search-dropdown-mobile"></div>
+    </div><main class="main">
+                <div class="container"><div class="toc" id="toc-auto">
+            <h2 class="toc-title">Contents</h2>
+            <div class="toc-content" id="toc-content-auto"></div>
+        </div><article class="page single"><h1 class="single-title animate__animated animate__flipInX">微服务雪崩自救指南：从代码到架构的Circuit Breaker熔断模式实战</h1><div class="post-meta">
+            <div class="post-meta-line"><span class="post-author"><a href="https://www.ithome.me/" title="Author" target="_blank" rel="noopener noreferrer author" class="author"><i class="fas fa-user-circle fa-fw" aria-hidden="true"></i>Simon Chen</a>
+</span>&nbsp;<span class="post-category">included in <a href="/categories/essay/"><i class="far fa-folder fa-fw" aria-hidden="true"></i>Essay</a></span></div>
+            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw" aria-hidden="true"></i>&nbsp;<time datetime="2026-06-18">2026-06-18</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden="true"></i>&nbsp;1883 words&nbsp;
+                <i class="far fa-clock fa-fw" aria-hidden="true"></i>&nbsp;4 minutes&nbsp;</div>
+        </div><div class="details toc" id="toc-static"  data-kept="true">
+                <div class="details-summary toc-title">
+                    <span>Contents</span>
+                    <span><i class="details-icon fas fa-angle-right" aria-hidden="true"></i></span>
+                </div>
+                <div class="details-content toc-content" id="toc-content-static"><nav id="TableOfContents">
+  <ul>
+    <li><a href="#一个真实的故事">一个真实的故事</a></li>
+    <li><a href="#circuit-breaker-到底是什么">Circuit Breaker 到底是什么？</a></li>
+    <li><a href="#方案一resilience4j推荐轻量级">方案一：Resilience4j（推荐，轻量级）</a>
+      <ul>
+        <li><a href="#依赖配置">依赖配置</a></li>
+        <li><a href="#代码使用">代码使用</a></li>
+        <li><a href="#组合使用熔断--限流--重试">组合使用：熔断 + 限流 + 重试</a></li>
+      </ul>
+    </li>
+    <li><a href="#方案二阿里-sentinel适合复杂流控场景">方案二：阿里 Sentinel（适合复杂流控场景）</a>
+      <ul>
+        <li><a href="#核心配置">核心配置</a></li>
+        <li><a href="#sentinel-dashboard">Sentinel Dashboard</a></li>
+      </ul>
+    </li>
+    <li><a href="#方案三手写一个简易熔断器">方案三：手写一个简易熔断器</a></li>
+    <li><a href="#生产环境的几个关键参数">生产环境的几个关键参数</a></li>
+    <li><a href="#最佳实践">最佳实践</a></li>
+    <li><a href="#小结">小结</a></li>
+  </ul>
+</nav></div>
+            </div><div class="content" id="content"><h2 id="一个真实的故事">一个真实的故事</h2>
+<p>上周五晚上11点，我们线上某个核心链路突然超时告警。排查发现，下游一个用户服务响应变慢（P99 从 50ms 飙到 8s），导致上游所有调用它的服务线程池被耗尽，最终整条链路雪崩。</p>
+<p>最终根因：用户服务依赖的 Redis 实例内存打满了。</p>
+<p><strong>但真正的问题不是 Redis 挂了，而是系统没有任何熔断机制。</strong></p>
+<p>今天聊的就是如何用 Circuit Breaker 模式从根源上防止这种雪崩。</p>
+<h2 id="circuit-breaker-到底是什么">Circuit Breaker 到底是什么？</h2>
+<p>Circuit Breaker 的核心思想来自电路中的保险丝——当下游服务异常过多时，自动&quot;断开&quot;调用，快速失败，避免问题扩散。</p>
+<p>它有三个状态：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">                    超过阈值
+</span></span><span class="line"><span class="cl">  ┌──────────┐  ───────────►  ┌──────────┐
+</span></span><span class="line"><span class="cl">  │  CLOSED  │                │   OPEN   │
+</span></span><span class="line"><span class="cl">  │ (正常放行) │                │ (拒绝请求) │
+</span></span><span class="line"><span class="cl">  └──────────┘                └──────────┘
+</span></span><span class="line"><span class="cl">       ▲                            │
+</span></span><span class="line"><span class="cl">       │     探测成功，恢复           │  超过等待时间
+</span></span><span class="line"><span class="cl">       └────────────────────────────┘
+</span></span><span class="line"><span class="cl">                     ▼
+</span></span><span class="line"><span class="cl">              ┌──────────┐
+</span></span><span class="line"><span class="cl">              │HALF-OPEN │
+</span></span><span class="line"><span class="cl">              │(试探性放行) │
+</span></span><span class="line"><span class="cl">              └──────────┘
+</span></span></code></pre></td></tr></table>
+</div>
+</div><ul>
+<li><strong>CLOSED</strong>：正常状态，所有请求正常通过，同时统计失败率</li>
+<li><strong>OPEN</strong>：熔断状态，所有请求直接快速失败（不再调用下游）</li>
+<li><strong>HALF-OPEN</strong>：探测状态，放少量请求试探下游是否恢复，成功则回到 CLOSED，失败则回到 OPEN</li>
+</ul>
+<h2 id="方案一resilience4j推荐轻量级">方案一：Resilience4j（推荐，轻量级）</h2>
+<p>Spring Boot 2 时代的 Hystrix 已经停止维护，Resilience4j 是目前 Java 生态最主流的选择。</p>
+<h3 id="依赖配置">依赖配置</h3>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-xml" data-lang="xml"><span class="line"><span class="cl"><span class="nt">&lt;dependency&gt;</span>
+</span></span><span class="line"><span class="cl">    <span class="nt">&lt;groupId&gt;</span>io.github.resilience4j<span class="nt">&lt;/groupId&gt;</span>
+</span></span><span class="line"><span class="cl">    <span class="nt">&lt;artifactId&gt;</span>resilience4j-spring-boot3<span class="nt">&lt;/artifactId&gt;</span>
+</span></span><span class="line"><span class="cl">    <span class="nt">&lt;version&gt;</span>2.1.0<span class="nt">&lt;/version&gt;</span>
+</span></span><span class="line"><span class="cl"><span class="nt">&lt;/dependency&gt;</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-yaml" data-lang="yaml"><span class="line"><span class="cl"><span class="c"># application.yml</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="nt">resilience4j</span><span class="p">:</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="nt">circuitbreaker</span><span class="p">:</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nt">instances</span><span class="p">:</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">      </span><span class="nt">user-service</span><span class="p">:</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="nt">slidingWindowSize</span><span class="p">:</span><span class="w"> </span><span class="m">10</span><span class="w">          </span><span class="c"># 统计窗口大小：最近10次调用</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="nt">minimumNumberOfCalls</span><span class="p">:</span><span class="w"> </span><span class="m">5</span><span class="w">         </span><span class="c"># 至少调用5次才开始计算失败率</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="nt">failureRateThreshold</span><span class="p">:</span><span class="w"> </span><span class="m">50</span><span class="w">        </span><span class="c"># 失败率超过50%触发熔断</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="nt">waitDurationInOpenState</span><span class="p">:</span><span class="w"> </span><span class="l">30s   </span><span class="w"> </span><span class="c"># OPEN状态持续30秒后进入HALF-OPEN</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="nt">permittedNumberOfCallsInHalfOpenState</span><span class="p">:</span><span class="w"> </span><span class="m">3</span><span class="w">  </span><span class="c"># HALF-OPEN状态允许3次探测调用</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="nt">automaticTransitionFromOpenToHalfOpenEnabled</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="w">
+</span></span></span></code></pre></td></tr></table>
+</div>
+</div><h3 id="代码使用">代码使用</h3>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="nd">@Service</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="nd">@Slf4j</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="kd">public</span><span class="w"> </span><span class="kd">class</span> <span class="nc">UserServiceClient</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="kd">final</span><span class="w"> </span><span class="n">RestTemplate</span><span class="w"> </span><span class="n">restTemplate</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="nf">UserServiceClient</span><span class="p">(</span><span class="n">RestTemplate</span><span class="w"> </span><span class="n">restTemplate</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">this</span><span class="p">.</span><span class="na">restTemplate</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">restTemplate</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nd">@CircuitBreaker</span><span class="p">(</span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&#34;user-service&#34;</span><span class="p">,</span><span class="w"> </span><span class="n">fallbackMethod</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&#34;getUserFallback&#34;</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="n">UserDTO</span><span class="w"> </span><span class="nf">getUser</span><span class="p">(</span><span class="n">Long</span><span class="w"> </span><span class="n">userId</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">restTemplate</span><span class="p">.</span><span class="na">getForObject</span><span class="p">(</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="s">&#34;http://user-service/api/users/&#34;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">userId</span><span class="p">,</span><span class="w"> 
+</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="n">UserDTO</span><span class="p">.</span><span class="na">class</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="c1">// 熔断时的降级逻辑</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="n">UserDTO</span><span class="w"> </span><span class="nf">getUserFallback</span><span class="p">(</span><span class="n">Long</span><span class="w"> </span><span class="n">userId</span><span class="p">,</span><span class="w"> </span><span class="n">Throwable</span><span class="w"> </span><span class="n">t</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">log</span><span class="p">.</span><span class="na">warn</span><span class="p">(</span><span class="s">&#34;User service 熔断降级, userId={}, reason={}&#34;</span><span class="p">,</span><span class="w"> 
+</span></span></span><span class="line"><span class="cl"><span class="w">                 </span><span class="n">userId</span><span class="p">,</span><span class="w"> </span><span class="n">t</span><span class="p">.</span><span class="na">getMessage</span><span class="p">());</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="c1">// 返回缓存数据或默认值</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">UserDTO</span><span class="p">.</span><span class="na">builder</span><span class="p">()</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="p">.</span><span class="na">id</span><span class="p">(</span><span class="n">userId</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="p">.</span><span class="na">name</span><span class="p">(</span><span class="s">&#34;服务暂不可用&#34;</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="p">.</span><span class="na">fromCache</span><span class="p">(</span><span class="kc">true</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="p">.</span><span class="na">build</span><span class="p">();</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="p">}</span><span class="w">
+</span></span></span></code></pre></td></tr></table>
+</div>
+</div><h3 id="组合使用熔断--限流--重试">组合使用：熔断 + 限流 + 重试</h3>
+<p>Resilience4j 的优势在于可以自由组合：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span><span class="lnt">7
+</span><span class="lnt">8
+</span><span class="lnt">9
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="nd">@CircuitBreaker</span><span class="p">(</span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&#34;user-service&#34;</span><span class="p">,</span><span class="w"> </span><span class="n">fallbackMethod</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&#34;getUserFallback&#34;</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="nd">@RateLimiter</span><span class="p">(</span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&#34;user-service&#34;</span><span class="p">)</span><span class="w">  </span><span class="c1">// 额外加限流</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="nd">@Retry</span><span class="p">(</span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&#34;user-service&#34;</span><span class="p">)</span><span class="w">        </span><span class="c1">// 额外加重试</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="kd">public</span><span class="w"> </span><span class="n">UserDTO</span><span class="w"> </span><span class="nf">getUserWithAllProtection</span><span class="p">(</span><span class="n">Long</span><span class="w"> </span><span class="n">userId</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">restTemplate</span><span class="p">.</span><span class="na">getForObject</span><span class="p">(</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="s">&#34;http://user-service/api/users/&#34;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">userId</span><span class="p">,</span><span class="w"> 
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">UserDTO</span><span class="p">.</span><span class="na">class</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="p">}</span><span class="w">
+</span></span></span></code></pre></td></tr></table>
+</div>
+</div><h2 id="方案二阿里-sentinel适合复杂流控场景">方案二：阿里 Sentinel（适合复杂流控场景）</h2>
+<p>如果你已经在用 Spring Cloud Alibaba 生态，Sentinel 是更自然的选择。它除了熔断，还内置了流量控制、热点参数限流、系统自适应保护等功能。</p>
+<h3 id="核心配置">核心配置</h3>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="c1">// Sentinel 通过定义规则来控制</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="nd">@PostConstruct</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="kd">public</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">initDegradeRule</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="n">DegradeRule</span><span class="w"> </span><span class="n">rule</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">DegradeRule</span><span class="p">(</span><span class="s">&#34;user-service&#34;</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="p">.</span><span class="na">setGrade</span><span class="p">(</span><span class="n">CircuitBreakerStrategy</span><span class="p">.</span><span class="na">SLOW_REQUEST_RATIO</span><span class="p">.</span><span class="na">getType</span><span class="p">())</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="p">.</span><span class="na">setCount</span><span class="p">(</span><span class="n">0</span><span class="p">.</span><span class="na">5</span><span class="p">)</span><span class="w">              </span><span class="c1">// 慢调用比例阈值</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="p">.</span><span class="na">setSlowRatioThreshold</span><span class="p">(</span><span class="n">1000</span><span class="p">)</span><span class="w"> </span><span class="c1">// 慢调用 RT 阈值（ms）</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="p">.</span><span class="na">setTimeWindow</span><span class="p">(</span><span class="n">30</span><span class="p">)</span><span class="w">           </span><span class="c1">// 熔断时长（秒）</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="p">.</span><span class="na">setMinRequestAmount</span><span class="p">(</span><span class="n">5</span><span class="p">)</span><span class="w">      </span><span class="c1">// 最小请求数</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="p">.</span><span class="na">setStatIntervalMs</span><span class="p">(</span><span class="n">10000</span><span class="p">);</span><span class="w">   </span><span class="c1">// 统计窗口（ms）</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="n">DegradeRuleManager</span><span class="p">.</span><span class="na">loadRules</span><span class="p">(</span><span class="n">List</span><span class="p">.</span><span class="na">of</span><span class="p">(</span><span class="n">rule</span><span class="p">));</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="p">}</span><span class="w">
+</span></span></span></code></pre></td></tr></table>
+</div>
+</div><h3 id="sentinel-dashboard">Sentinel Dashboard</h3>
+<p>Sentinel 提供了一个可视化的 Dashboard，可以在运行时动态调整规则，不需要重启服务：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl"><span class="c1"># 启动 Sentinel Dashboard</span>
+</span></span><span class="line"><span class="cl">java -Dserver.port<span class="o">=</span><span class="m">8080</span> <span class="se">\
+</span></span></span><span class="line"><span class="cl"><span class="se"></span>     -Dcsp.sentinel.dashboard.server<span class="o">=</span>localhost:8080 <span class="se">\
+</span></span></span><span class="line"><span class="cl"><span class="se"></span>     -jar sentinel-dashboard-1.8.8.jar
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h2 id="方案三手写一个简易熔断器">方案三：手写一个简易熔断器</h2>
+<p>理解原理比依赖框架更重要。下面是一个不到 80 行的完整实现：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span><span class="lnt">42
+</span><span class="lnt">43
+</span><span class="lnt">44
+</span><span class="lnt">45
+</span><span class="lnt">46
+</span><span class="lnt">47
+</span><span class="lnt">48
+</span><span class="lnt">49
+</span><span class="lnt">50
+</span><span class="lnt">51
+</span><span class="lnt">52
+</span><span class="lnt">53
+</span><span class="lnt">54
+</span><span class="lnt">55
+</span><span class="lnt">56
+</span><span class="lnt">57
+</span><span class="lnt">58
+</span><span class="lnt">59
+</span><span class="lnt">60
+</span><span class="lnt">61
+</span><span class="lnt">62
+</span><span class="lnt">63
+</span><span class="lnt">64
+</span><span class="lnt">65
+</span><span class="lnt">66
+</span><span class="lnt">67
+</span><span class="lnt">68
+</span><span class="lnt">69
+</span><span class="lnt">70
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kd">class</span> <span class="nc">CircuitBreaker</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kd">enum</span><span class="w"> </span><span class="n">State</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">CLOSED</span><span class="p">,</span><span class="w"> </span><span class="n">OPEN</span><span class="p">,</span><span class="w"> </span><span class="n">HALF_OPEN</span><span class="w"> </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="kd">final</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">failureThreshold</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="kd">final</span><span class="w"> </span><span class="kt">long</span><span class="w"> </span><span class="n">openDurationMs</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="kd">final</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">halfOpenMaxCalls</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="kd">volatile</span><span class="w"> </span><span class="n">State</span><span class="w"> </span><span class="n">state</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">State</span><span class="p">.</span><span class="na">CLOSED</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="n">AtomicInteger</span><span class="w"> </span><span class="n">failureCount</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">AtomicInteger</span><span class="p">(</span><span class="n">0</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="kd">volatile</span><span class="w"> </span><span class="kt">long</span><span class="w"> </span><span class="n">lastFailureTime</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">0</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="n">AtomicInteger</span><span class="w"> </span><span class="n">halfOpenCalls</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">AtomicInteger</span><span class="p">(</span><span class="n">0</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="nf">CircuitBreaker</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">failureThreshold</span><span class="p">,</span><span class="w"> 
+</span></span></span><span class="line"><span class="cl"><span class="w">                          </span><span class="kt">long</span><span class="w"> </span><span class="n">openDurationMs</span><span class="p">,</span><span class="w"> 
+</span></span></span><span class="line"><span class="cl"><span class="w">                          </span><span class="kt">int</span><span class="w"> </span><span class="n">halfOpenMaxCalls</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">this</span><span class="p">.</span><span class="na">failureThreshold</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">failureThreshold</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">this</span><span class="p">.</span><span class="na">openDurationMs</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">openDurationMs</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">this</span><span class="p">.</span><span class="na">halfOpenMaxCalls</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">halfOpenMaxCalls</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span><span class="w"> </span><span class="n">T</span><span class="w"> </span><span class="nf">execute</span><span class="p">(</span><span class="n">Supplier</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span><span class="w"> </span><span class="n">action</span><span class="p">,</span><span class="w"> </span><span class="n">Supplier</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span><span class="w"> </span><span class="n">fallback</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">switch</span><span class="w"> </span><span class="p">(</span><span class="n">state</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="k">case</span><span class="w"> </span><span class="n">OPEN</span><span class="p">:</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">                </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">System</span><span class="p">.</span><span class="na">currentTimeMillis</span><span class="p">()</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">lastFailureTime</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="n">openDurationMs</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">                    </span><span class="n">state</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">State</span><span class="p">.</span><span class="na">HALF_OPEN</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">                    </span><span class="n">halfOpenCalls</span><span class="p">.</span><span class="na">set</span><span class="p">(</span><span class="n">0</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">                </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">                    </span><span class="k">return</span><span class="w"> </span><span class="n">fallback</span><span class="p">.</span><span class="na">get</span><span class="p">();</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">                </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">                </span><span class="k">break</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="k">case</span><span class="w"> </span><span class="n">HALF_OPEN</span><span class="p">:</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">                </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">halfOpenCalls</span><span class="p">.</span><span class="na">get</span><span class="p">()</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="n">halfOpenMaxCalls</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">                    </span><span class="k">return</span><span class="w"> </span><span class="n">fallback</span><span class="p">.</span><span class="na">get</span><span class="p">();</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">                </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">                </span><span class="k">break</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">try</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="n">T</span><span class="w"> </span><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">action</span><span class="p">.</span><span class="na">get</span><span class="p">();</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="n">onSuccess</span><span class="p">();</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="n">result</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="n">Exception</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="n">onFailure</span><span class="p">();</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="n">fallback</span><span class="p">.</span><span class="na">get</span><span class="p">();</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">onSuccess</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">state</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">State</span><span class="p">.</span><span class="na">HALF_OPEN</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">halfOpenCalls</span><span class="p">.</span><span class="na">incrementAndGet</span><span class="p">()</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="n">halfOpenMaxCalls</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">                </span><span class="n">state</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">State</span><span class="p">.</span><span class="na">CLOSED</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">                </span><span class="n">failureCount</span><span class="p">.</span><span class="na">set</span><span class="p">(</span><span class="n">0</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="n">failureCount</span><span class="p">.</span><span class="na">set</span><span class="p">(</span><span class="n">0</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">onFailure</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">lastFailureTime</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">System</span><span class="p">.</span><span class="na">currentTimeMillis</span><span class="p">();</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">state</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">State</span><span class="p">.</span><span class="na">HALF_OPEN</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="n">state</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">State</span><span class="p">.</span><span class="na">OPEN</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">failureCount</span><span class="p">.</span><span class="na">incrementAndGet</span><span class="p">()</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="n">failureThreshold</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="n">state</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">State</span><span class="p">.</span><span class="na">OPEN</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="n">State</span><span class="w"> </span><span class="nf">getState</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="n">state</span><span class="p">;</span><span class="w"> </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="p">}</span><span class="w">
+</span></span></span></code></pre></td></tr></table>
+</div>
+</div><p>使用示例：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="n">CircuitBreaker</span><span class="w"> </span><span class="n">cb</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">CircuitBreaker</span><span class="p">(</span><span class="n">5</span><span class="p">,</span><span class="w"> </span><span class="n">30_000</span><span class="p">,</span><span class="w"> </span><span class="n">3</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="n">String</span><span class="w"> </span><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">cb</span><span class="p">.</span><span class="na">execute</span><span class="p">(</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">()</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">restTemplate</span><span class="p">.</span><span class="na">getForObject</span><span class="p">(</span><span class="s">&#34;/api/users/1&#34;</span><span class="p">,</span><span class="w"> </span><span class="n">String</span><span class="p">.</span><span class="na">class</span><span class="p">),</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">()</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="s">&#34;{\&#34;name\&#34;: \&#34;fallback\&#34;}&#34;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="p">);</span><span class="w">
+</span></span></span></code></pre></td></tr></table>
+</div>
+</div><h2 id="生产环境的几个关键参数">生产环境的几个关键参数</h2>
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>推荐值</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>slidingWindowSize</td>
+<td>10~20</td>
+<td>太小波动大，太大反应慢</td>
+</tr>
+<tr>
+<td>failureRateThreshold</td>
+<td>40%~60%</td>
+<td>过低会误熔断，过高保护不及时</td>
+</tr>
+<tr>
+<td>waitDurationInOpenState</td>
+<td>15~60s</td>
+<td>取决于下游恢复速度</td>
+</tr>
+<tr>
+<td>minimumNumberOfCalls</td>
+<td>5~10</td>
+<td>避免少量调用触发误判</td>
+</tr>
+</tbody>
+</table>
+<h2 id="最佳实践">最佳实践</h2>
+<ol>
+<li><strong>每个下游服务独立一个 CircuitBreaker 实例</strong>，不要共用——否则一个服务挂了会连累所有服务被熔断</li>
+<li><strong>Fallback 必须有实际意义</strong>——返回缓存数据、默认值或降级逻辑，不要直接返回 null</li>
+<li><strong>配合监控使用</strong>——接入 Prometheus + Grafana，实时观察熔断状态和失败率</li>
+<li><strong>渐进式上线</strong>——先在非核心链路灰度，确认参数合理后再推广到核心链路</li>
+</ol>
+<h2 id="小结">小结</h2>
+<p>微服务架构下，<strong>没有熔断的调用链就是定时炸弹</strong>。Resilience4j 适合大多数 Java 项目的轻量级方案，Sentinel 适合需要复杂流控和动态规则的场景，而手写熔断器则能帮你真正理解原理。</p>
+<p>回到开头的故事：我们在用户服务调用链路上加了 Resilience4j 熔断后，即使下游再出问题，上游最多影响 30 秒，之后自动降级到缓存数据，用户几乎无感知。</p>
+<p><strong>防御性编程不是悲观主义，而是对用户负责。</strong></p>
+</div><div class="post-footer" id="post-footer">
+    <div class="post-info">
+        <div class="post-info-line">
+            <div class="post-info-mod">
+                <span>Updated on 2026-06-19&nbsp;<a class="git-hash" href="https://github.com/cikichen/hugo-sync/commit/4a93f6d3386f7fc20f23c841bf84a49bd7bc03a6" target="_blank" title="commit by cikichen(cikichen@github.com) 4a93f6d3386f7fc20f23c841bf84a49bd7bc03a6: Auto: 2026-06-19 - GitHub Actions CI/CD 实战">
+                                    <i class="fas fa-hashtag fa-fw" aria-hidden="true"></i>4a93f6d3</a></span>
+            </div></div>
+        <div class="post-info-line">
+            <div class="post-info-md"></div>
+            <div class="post-info-share">
+                <span><a href="javascript:void(0);" title="Share on Twitter" data-sharer="twitter" data-url="https://www.ithome.me/post/2026/06/18/circuit-breaker-pattern-for-microservices-resilience/" data-title="微服务雪崩自救指南：从代码到架构的Circuit Breaker熔断模式实战" data-via="ChenCiki" data-hashtags="微服务,架构设计,熔断,高可用"><i class="fab fa-twitter fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on Linkedin" data-sharer="linkedin" data-url="https://www.ithome.me/post/2026/06/18/circuit-breaker-pattern-for-microservices-resilience/"><i class="fab fa-linkedin fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on 微博" data-sharer="weibo" data-url="https://www.ithome.me/post/2026/06/18/circuit-breaker-pattern-for-microservices-resilience/" data-title="微服务雪崩自救指南：从代码到架构的Circuit Breaker熔断模式实战" data-ralateuid="xxx"><i class="fab fa-weibo fa-fw" aria-hidden="true"></i></a></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="post-info-more">
+        <section class="post-tags"><i class="fas fa-tags fa-fw" aria-hidden="true"></i>&nbsp;<a href="/tags/%E5%BE%AE%E6%9C%8D%E5%8A%A1/">微服务</a>,&nbsp;<a href="/tags/%E6%9E%B6%E6%9E%84%E8%AE%BE%E8%AE%A1/">架构设计</a>,&nbsp;<a href="/tags/%E7%86%94%E6%96%AD/">熔断</a>,&nbsp;<a href="/tags/%E9%AB%98%E5%8F%AF%E7%94%A8/">高可用</a></section>
+        <section>
+            <span><a href="javascript:void(0);" onclick="window.history.back();">Back</a></span>&nbsp;|&nbsp;<span><a href="/">Home</a></span>
+        </section>
+    </div>
+
+    <div class="post-nav"><a href="/post/2026/06/17/ai-agent%E8%AF%84%E4%BC%B0%E6%B5%8B%E8%AF%95%E5%A6%82%E4%BD%95%E7%A7%91%E5%AD%A6%E8%A1%A1%E9%87%8F%E6%99%BA%E8%83%BD%E4%BD%93%E8%A1%A8%E7%8E%B0/" class="prev" rel="prev" title="AI Agent评估测试：如何科学衡量智能体表现？"><i class="fas fa-angle-left fa-fw" aria-hidden="true"></i>AI Agent评估测试：如何科学衡量智能体表现？</a>
+            <a href="/post/2026/06/19/github-actions-cicd-pipeline/" class="next" rel="next" title="GitHub Actions 实战：为你的项目搭建完整的 CI/CD 自动化流水线">GitHub Actions 实战：为你的项目搭建完整的 CI/CD 自动化流水线<i class="fas fa-angle-right fa-fw" aria-hidden="true"></i></a></div>
+</div>
+<div id="comments"><div id="gitalk" class="comment"></div><noscript>
+                Please enable JavaScript to view the comments powered by <a href="https://github.com/gitalk/gitalk"></a>Gitalk</a>.
+            </noscript></div></article></div>
+            </main><footer class="footer">
+        <div class="footer-container"><div class="footer-line" itemscope itemtype="http://schema.org/CreativeWork"><i class="far fa-copyright fa-fw" aria-hidden="true"></i><span itemprop="copyrightYear">2011 - 2026</span><span class="author" itemprop="copyrightHolder">&nbsp;<a href="https://www.ithome.me/" target="_blank">Simon Chen</a></span>&nbsp;|&nbsp;<span class="license"><a rel="license external nofollow noopener noreferrer" href="https://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank">CC BY-NC-ND 4.0</a></span></div>
+        </div>
+    </footer></div>
+
+        <div id="fixed-buttons"><a href="#" id="back-to-top" class="fixed-button" title="Back to Top">
+                <i class="fas fa-arrow-up fa-fw" aria-hidden="true"></i>
+            </a><a href="#" id="view-comments" class="fixed-button" title="View Comments">
+                <i class="fas fa-comment fa-fw" aria-hidden="true"></i>
+            </a>
+        </div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1.8.0/dist/gitalk.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/css/lightgallery-bundle.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/katex.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/copy-tex.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.css"><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/gitalk@1.8.0/dist/gitalk.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/autocomplete.js@0.38.1/dist/autocomplete.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lunr@2.3.9/lunr.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lazysizes@5.3.1/lazysizes.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/lightgallery.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/plugins/thumbnail/lg-thumbnail.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/plugins/zoom/lg-zoom.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/clipboard@2.0.11/dist/clipboard.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/sharer.js@0.5.1/sharer.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/katex.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/auto-render.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/copy-tex.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/mhchem.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.js"></script><script type="text/javascript">window.config={"code":{"copyTitle":"Copy to clipboard","maxShownLines":50},"comment":{"gitalk":{"admin":["cikichen"],"clientID":"be0f52370ed1285b6c7c","clientSecret":"734a7d8d0ded346ca7a3d565d57de3f8eeb2850b","id":"2026-06-18T00:00:00Z","owner":"cikichen","repo":"gitalk","title":"微服务雪崩自救指南：从代码到架构的Circuit Breaker熔断模式实战"}},"cookieconsent":{"content":{"dismiss":"我知道了","link":"了解更多","message":"本网站使用 Cookies 来改善您的浏览体验."},"enable":true,"palette":{"button":{"background":"#f0f0f0"},"popup":{"background":"#1aa3ff"}},"theme":"edgeless"},"lightgallery":true,"math":{"delimiters":[{"display":true,"left":"$$","right":"$$"},{"display":true,"left":"\\[","right":"\\]"},{"display":true,"left":"\\begin{equation}","right":"\\end{equation}"},{"display":true,"left":"\\begin{equation*}","right":"\\end{equation*}"},{"display":true,"left":"\\begin{align}","right":"\\end{align}"},{"display":true,"left":"\\begin{align*}","right":"\\end{align*}"},{"display":true,"left":"\\begin{alignat}","right":"\\end{alignat}"},{"display":true,"left":"\\begin{alignat*}","right":"\\end{alignat*}"},{"display":true,"left":"\\begin{gather}","right":"\\end{gather}"},{"display":true,"left":"\\begin{CD}","right":"\\end{CD}"},{"display":false,"left":"$","right":"$"},{"display":false,"left":"\\(","right":"\\)"}],"strict":false},"search":{"highlightTag":"em","lunrIndexURL":"/index.json","maxResultLength":10,"noResultsFound":"No results found","snippetLength":50,"type":"lunr"}};</script><script type="text/javascript" src="/js/theme.min.js"></script></body>
+</html>
