@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="robots" content="noodp" />
+        <title>mise：一个工具取代nvm、pyenv、rbenv——多语言开发环境管理的终极方案 - 编程心语</title><meta name="Description" content="告别nvm、pyenv、rbenv的碎片化管理，用mise一个工具搞定所有语言的版本切换。支持40&#43;语言，.mise.toml配置即代码，团队协作零摩擦。"><meta property="og:url" content="https://www.ithome.me/post/2026/06/22/mise-universal-version-manager-for-dev-environments/">
+  <meta property="og:site_name" content="编程心语">
+  <meta property="og:title" content="mise：一个工具取代nvm、pyenv、rbenv——多语言开发环境管理的终极方案">
+  <meta property="og:description" content="告别nvm、pyenv、rbenv的碎片化管理，用mise一个工具搞定所有语言的版本切换。支持40&#43;语言，.mise.toml配置即代码，团队协作零摩擦。">
+  <meta property="og:locale" content="zh_CN">
+  <meta property="og:type" content="article">
+    <meta property="article:section" content="posts">
+    <meta property="article:published_time" content="2026-06-22T09:00:00+08:00">
+    <meta property="article:modified_time" content="2026-06-22T09:00:00+08:00">
+    <meta property="article:tag" content="Mise">
+    <meta property="article:tag" content="版本管理">
+    <meta property="article:tag" content="开发环境">
+    <meta property="article:tag" content="工具链">
+    <meta property="article:tag" content="多语言">
+
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="mise：一个工具取代nvm、pyenv、rbenv——多语言开发环境管理的终极方案">
+  <meta name="twitter:description" content="告别nvm、pyenv、rbenv的碎片化管理，用mise一个工具搞定所有语言的版本切换。支持40&#43;语言，.mise.toml配置即代码，团队协作零摩擦。">
+      <meta name="twitter:site" content="@ChenCiki">
+<meta name="application-name" content="编程心语">
+<meta name="apple-mobile-web-app-title" content="编程心语"><meta name="theme-color" content="#ffffff"><meta name="msapplication-TileColor" content="#da532c"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5"><link rel="manifest" href="/site.webmanifest"><link rel="canonical" href="https://www.ithome.me/post/2026/06/22/mise-universal-version-manager-for-dev-environments/" /><link rel="prev" href="https://www.ithome.me/post/2026/06/21/nginx-reverse-proxy-load-balancing/" /><link rel="next" href="https://www.ithome.me/post/2026/06/23/uv-%E4%B8%8B%E4%B8%80%E4%BB%A3python%E5%8C%85%E7%AE%A1%E7%90%86%E5%B7%A5%E5%85%B7%E5%AE%8C%E5%85%A8%E6%8C%87%E5%8D%97/" /><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/normalize.css@8.0.1/normalize.min.css"><link rel="stylesheet" href="/css/style.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css"><script type="application/ld+json">
+    {
+        "@context": "http://schema.org",
+        "@type": "BlogPosting",
+        "headline": "mise：一个工具取代nvm、pyenv、rbenv——多语言开发环境管理的终极方案",
+        "inLanguage": "zh-CN",
+        "mainEntityOfPage": {
+            "@type": "WebPage",
+            "@id": "https:\/\/www.ithome.me\/post\/2026\/06\/22\/mise-universal-version-manager-for-dev-environments\/"
+        },"image": ["https:\/\/www.ithome.me\/cover.png"],"genre": "posts","keywords": "mise, 版本管理, 开发环境, 工具链, 多语言","wordcount":  2057 ,
+        "url": "https:\/\/www.ithome.me\/post\/2026\/06\/22\/mise-universal-version-manager-for-dev-environments\/","datePublished": "2026-06-22T09:00:00+08:00","dateModified": "2026-06-22T09:00:00+08:00","publisher": {
+            "@type": "Organization",
+            "name": "SimonChen","logo": "https:\/\/www.ithome.me\/logo.png"},"author": {
+                "@type": "Person",
+                "name": "Simon Chen"
+            },"description": "告别nvm、pyenv、rbenv的碎片化管理，用mise一个工具搞定所有语言的版本切换。支持40+语言，.mise.toml配置即代码，团队协作零摩擦。"
+    }
+    </script><script async src="https://www.googletagmanager.com/gtag/js?id=G-H1Q5563VR8"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-H1Q5563VR8', { 'anonymize_ip': true });
+</script></head>
+    <body data-header-desktop="fixed" data-header-mobile="auto"><script type="text/javascript">(window.localStorage && localStorage.getItem('theme') ? localStorage.getItem('theme') === 'dark' : ('auto' === 'auto' ? window.matchMedia('(prefers-color-scheme: dark)').matches : 'auto' === 'dark')) && document.body.setAttribute('theme', 'dark');</script>
+
+        <div id="mask"></div><div class="wrapper"><header class="desktop" id="header-desktop">
+    <div class="header-wrapper">
+        <div class="header-title">
+            <a href="/" title="编程心语">编程心语</a>
+        </div>
+        <div class="menu">
+            <div class="menu-inner"><a class="menu-item" href="/posts/"> 文章 </a><a class="menu-item" href="/categories/"> 分类 </a><a class="menu-item" href="/tags/"> 标签 </a><a class="menu-item" href="/about-me/"> 关于 </a><span class="menu-item delimiter"></span><span class="menu-item search" id="search-desktop">
+                        <input type="text" placeholder="搜索文章..." id="search-input-desktop">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-desktop" title="Search">
+                            <i class="fas fa-search fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-desktop" title="Clear">
+                            <i class="fas fa-times-circle fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-desktop">
+                            <i class="fas fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+                        </span>
+                    </span><a href="javascript:void(0);" class="menu-item theme-switch" title="Switch Theme">
+                    <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</header><header class="mobile" id="header-mobile">
+    <div class="header-container">
+        <div class="header-wrapper">
+            <div class="header-title">
+                <a href="/" title="编程心语">编程心语</a>
+            </div>
+            <div class="menu-toggle" id="menu-toggle-mobile">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+        <div class="menu" id="menu-mobile"><div class="search-wrapper">
+                    <div class="search mobile" id="search-mobile">
+                        <input type="text" placeholder="搜索文章..." id="search-input-mobile">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-mobile" title="Search">
+                            <i class="fas fa-search fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-mobile" title="Clear">
+                            <i class="fas fa-times-circle fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-mobile">
+                            <i class="fas fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+                        </span>
+                    </div>
+                    <a href="javascript:void(0);" class="search-cancel" id="search-cancel-mobile">
+                        Cancel
+                    </a>
+                </div><a class="menu-item" href="/posts/" title="">文章</a><a class="menu-item" href="/categories/" title="">分类</a><a class="menu-item" href="/tags/" title="">标签</a><a class="menu-item" href="/about-me/" title="">关于</a><a href="javascript:void(0);" class="menu-item theme-switch" title="Switch Theme">
+                <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
+            </a></div>
+    </div>
+</header><div class="search-dropdown desktop">
+        <div id="search-dropdown-desktop"></div>
+    </div>
+    <div class="search-dropdown mobile">
+        <div id="search-dropdown-mobile"></div>
+    </div><main class="main">
+                <div class="container"><div class="toc" id="toc-auto">
+            <h2 class="toc-title">Contents</h2>
+            <div class="toc-content" id="toc-content-auto"></div>
+        </div><article class="page single"><h1 class="single-title animate__animated animate__flipInX">mise：一个工具取代nvm、pyenv、rbenv——多语言开发环境管理的终极方案</h1><div class="post-meta">
+            <div class="post-meta-line"><span class="post-author"><a href="https://www.ithome.me/" title="Author" target="_blank" rel="noopener noreferrer author" class="author"><i class="fas fa-user-circle fa-fw" aria-hidden="true"></i>Simon Chen</a>
+</span>&nbsp;<span class="post-category">included in <a href="/categories/essay/"><i class="far fa-folder fa-fw" aria-hidden="true"></i>Essay</a></span></div>
+            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw" aria-hidden="true"></i>&nbsp;<time datetime="2026-06-22">2026-06-22</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden="true"></i>&nbsp;2057 words&nbsp;
+                <i class="far fa-clock fa-fw" aria-hidden="true"></i>&nbsp;5 minutes&nbsp;</div>
+        </div><div class="details toc" id="toc-static"  data-kept="true">
+                <div class="details-summary toc-title">
+                    <span>Contents</span>
+                    <span><i class="details-icon fas fa-angle-right" aria-hidden="true"></i></span>
+                </div>
+                <div class="details-content toc-content" id="toc-content-static"><nav id="TableOfContents">
+  <ul>
+    <li><a href="#碎片化的版本管理之痛">碎片化的版本管理之痛</a></li>
+    <li><a href="#mise-是什么">mise 是什么？</a></li>
+    <li><a href="#安装-mise">安装 mise</a></li>
+    <li><a href="#基础用法5-分钟上手">基础用法：5 分钟上手</a>
+      <ul>
+        <li><a href="#安装语言运行时">安装语言运行时</a></li>
+        <li><a href="#切换版本">切换版本</a></li>
+        <li><a href="#查看当前版本">查看当前版本</a></li>
+      </ul>
+    </li>
+    <li><a href="#misetoml-配置详解">.mise.toml 配置详解</a>
+      <ul>
+        <li><a href="#完整示例">完整示例</a></li>
+        <li><a href="#语法版本号规则">语法版本号规则</a></li>
+      </ul>
+    </li>
+    <li><a href="#实战多语言项目的工作流">实战：多语言项目的工作流</a>
+      <ul>
+        <li><a href="#第一步初始化配置">第一步：初始化配置</a></li>
+        <li><a href="#第二步提交配置">第二步：提交配置</a></li>
+        <li><a href="#第三步新同事克隆项目后">第三步：新同事克隆项目后</a></li>
+      </ul>
+    </li>
+    <li><a href="#进阶技巧">进阶技巧</a>
+      <ul>
+        <li><a href="#自动切换auto-activate">自动切换（auto activate）</a></li>
+        <li><a href="#整合-dockerfile">整合 Dockerfile</a></li>
+        <li><a href="#用-mise-替代-nvmpyenv-的已有配置">用 mise 替代 nvm/pyenv 的已有配置</a></li>
+        <li><a href="#shims-模式">Shims 模式</a></li>
+        <li><a href="#与-cicd-集成">与 CI/CD 集成</a></li>
+      </ul>
+    </li>
+    <li><a href="#mise-vs-其他工具">mise vs 其他工具</a></li>
+    <li><a href="#写在最后">写在最后</a></li>
+  </ul>
+</nav></div>
+            </div><div class="content" id="content"><h2 id="碎片化的版本管理之痛">碎片化的版本管理之痛</h2>
+<p>如果你同时维护多个项目，大概率经历过这种场景：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">$ python --version
+</span></span><span class="line"><span class="cl">Python 3.9.7
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">$ cd ~/project-b
+</span></span><span class="line"><span class="cl">$ python --version
+</span></span><span class="line"><span class="cl"># 报错：需要 Python 3.11+
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"># 于是你装了 pyenv
+</span></span><span class="line"><span class="cl">$ pyenv install 3.11.4
+</span></span><span class="line"><span class="cl">$ pyenv local 3.11.4
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"># 然后又接到一个 Ruby 项目
+</span></span><span class="line"><span class="cl">$ rbenv install 3.2.2
+</span></span><span class="line"><span class="cl">$ rbenv local 3.2.2
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"># 前端同事说 Node 要用 18
+</span></span><span class="line"><span class="cl">$ nvm install 18
+</span></span><span class="line"><span class="cl">$ nvm use 18
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p><strong>三个语言，三个版本管理器，三套配置语法。</strong> 桌面图标摆满了，心智负担拉满了。</p>
+<p>今天介绍的 <code>mise</code>（前身 <code>rtx</code>）只用一个工具就能管理所有语言的版本，配置统一，体验丝滑。</p>
+<h2 id="mise-是什么">mise 是什么？</h2>
+<p>mise 是一个<strong>多语言版本管理器</strong>（polyglot version manager），目标是成为 nvm、pyenv、rbenv、goenv、jenv、volta 等工具的统一替代品。</p>
+<p>核心特点：</p>
+<ul>
+<li><strong>一个工具管所有</strong>：Node、Python、Ruby、Go、Java、Rust、PHP 等 40+ 语言</li>
+<li><strong>兼容已有生态</strong>：可以调用 nvm、pyenv、rbenv 等已有插件</li>
+<li><strong>配置即代码</strong>：<code>.mise.toml</code> 文件随项目走，团队共享同一版本</li>
+<li><strong>全局 + 项目级</strong>：类似 <code>.nvmrc</code>，但更强大</li>
+<li><strong>性能极快</strong>：Go 编写，毫秒级切换</li>
+</ul>
+<h2 id="安装-mise">安装 mise</h2>
+<p>macOS（Homebrew）：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">brew install mise
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>Linux/macOS（通用安装脚本）：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">curl https://mise.run <span class="p">|</span> sh
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>安装后激活（添加到 shell 配置）：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span><span class="lnt">7
+</span><span class="lnt">8
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl"><span class="c1"># bash 用户</span>
+</span></span><span class="line"><span class="cl"><span class="nb">echo</span> <span class="s1">&#39;eval &#34;$(~/.local/bin/mise activate bash)&#34;&#39;</span> &gt;&gt; ~/.bashrc
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># zsh 用户</span>
+</span></span><span class="line"><span class="cl"><span class="nb">echo</span> <span class="s1">&#39;eval &#34;$(~/.local/bin/mise activate zsh)&#34;&#39;</span> &gt;&gt; ~/.zshrc
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># fish 用户</span>
+</span></span><span class="line"><span class="cl"><span class="nb">echo</span> <span class="s1">&#39;~/.local/bin/mise activate fish | source&#39;</span> &gt;&gt; ~/.config/fish/config.fish
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>重启终端后，输入 <code>mise --version</code> 验证安装。</p>
+<h2 id="基础用法5-分钟上手">基础用法：5 分钟上手</h2>
+<h3 id="安装语言运行时">安装语言运行时</h3>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl"><span class="c1"># 安装 Python 3.12</span>
+</span></span><span class="line"><span class="cl">mise install python@3.12
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 安装 Node 20 LTS</span>
+</span></span><span class="line"><span class="cl">mise install node@20
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 安装 Ruby 3.3</span>
+</span></span><span class="line"><span class="cl">mise install ruby@3.3
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 一次安装多个</span>
+</span></span><span class="line"><span class="cl">mise install python@3.12 node@20 go@1.22
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h3 id="切换版本">切换版本</h3>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl"><span class="c1"># 全局切换（影响所有终端会话）</span>
+</span></span><span class="line"><span class="cl">mise use --global python@3.11
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 项目级切换（只在当前目录生效）</span>
+</span></span><span class="line"><span class="cl">mise use python@3.12
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>执行 <code>mise use</code> 后，会在当前目录生成 <code>.mise.toml</code> 文件：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-toml" data-lang="toml"><span class="line"><span class="cl"><span class="p">[</span><span class="nx">tools</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl"><span class="nx">python</span> <span class="p">=</span> <span class="s2">&#34;3.12&#34;</span>
+</span></span><span class="line"><span class="cl"><span class="nx">node</span> <span class="p">=</span> <span class="s2">&#34;20&#34;</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p><strong>把这个文件提交到 Git 仓库</strong>，团队成员执行 <code>mise install</code> 即可自动安装完全一致的版本。</p>
+<h3 id="查看当前版本">查看当前版本</h3>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span><span class="lnt">7
+</span><span class="lnt">8
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl"><span class="c1"># 查看所有已激活的版本</span>
+</span></span><span class="line"><span class="cl">mise current
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 查看某个语言的已安装版本</span>
+</span></span><span class="line"><span class="cl">mise list python
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 查看某个语言的所有可用版本</span>
+</span></span><span class="line"><span class="cl">mise ls-remote python
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h2 id="misetoml-配置详解">.mise.toml 配置详解</h2>
+<p><code>.mise.toml</code> 是 mise 的核心配置文件，支持项目级和全局级（<code>~/.config/mise/config.toml</code>）。</p>
+<h3 id="完整示例">完整示例</h3>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-toml" data-lang="toml"><span class="line"><span class="cl"><span class="c"># 项目级配置</span>
+</span></span><span class="line"><span class="cl"><span class="p">[</span><span class="nx">tools</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl"><span class="nx">python</span> <span class="p">=</span> <span class="s2">&#34;3.12&#34;</span>            <span class="c"># 精确版本</span>
+</span></span><span class="line"><span class="cl"><span class="nx">node</span> <span class="p">=</span> <span class="s2">&#34;20&#34;</span>                <span class="c"># 最新的 20.x</span>
+</span></span><span class="line"><span class="cl"><span class="nx">ruby</span> <span class="p">=</span> <span class="s2">&#34;3.3&#34;</span>               <span class="c"># 最新的 3.3.x</span>
+</span></span><span class="line"><span class="cl"><span class="nx">go</span> <span class="p">=</span> <span class="s2">&#34;1.22&#34;</span>                <span class="c"># 精确版本</span>
+</span></span><span class="line"><span class="cl"><span class="nx">java</span> <span class="p">=</span> <span class="s2">&#34;temurin-21&#34;</span>        <span class="c"># 指定发行版</span>
+</span></span><span class="line"><span class="cl"><span class="nx">rust</span> <span class="p">=</span> <span class="s2">&#34;latest&#34;</span>            <span class="c"># 最新稳定版</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c"># 环境变量（只在该项目生效）</span>
+</span></span><span class="line"><span class="cl"><span class="p">[</span><span class="nx">env</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl"><span class="nx">DATABASE_URL</span> <span class="p">=</span> <span class="s2">&#34;postgresql://localhost:5432/mydb&#34;</span>
+</span></span><span class="line"><span class="cl"><span class="nx">PYTHONPATH</span> <span class="p">=</span> <span class="s2">&#34;./src&#34;</span>
+</span></span><span class="line"><span class="cl"><span class="nx">LOG_LEVEL</span> <span class="p">=</span> <span class="s2">&#34;debug&#34;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c"># 别名：给版本号起个好记的名字</span>
+</span></span><span class="line"><span class="cl"><span class="p">[</span><span class="nx">alias</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl"><span class="nx">py3</span> <span class="p">=</span> <span class="s2">&#34;python@3.12&#34;</span>
+</span></span><span class="line"><span class="cl"><span class="nx">py2</span> <span class="p">=</span> <span class="s2">&#34;python@2.7&#34;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c"># PATH 操作</span>
+</span></span><span class="line"><span class="cl"><span class="p">[</span><span class="nx">env</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl"><span class="nx">_</span><span class="p">.</span><span class="nx">path</span> <span class="p">=</span> <span class="p">[</span>
+</span></span><span class="line"><span class="cl">  <span class="s2">&#34;./node_modules/.bin&#34;</span><span class="p">,</span>   <span class="c"># 把项目的 node_modules/.bin 加入 PATH</span>
+</span></span><span class="line"><span class="cl">  <span class="s2">&#34;./scripts&#34;</span>
+</span></span><span class="line"><span class="cl"><span class="p">]</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h3 id="语法版本号规则">语法版本号规则</h3>
+<p>mise 支持灵活的版本号语法：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">mise install python@3.12.4    <span class="c1"># 精确到 patch</span>
+</span></span><span class="line"><span class="cl">mise install python@3.12      <span class="c1"># 最新的 3.12.x</span>
+</span></span><span class="line"><span class="cl">mise install python@3         <span class="c1"># 最新的 3.x</span>
+</span></span><span class="line"><span class="cl">mise install python@latest    <span class="c1"># 最新稳定版</span>
+</span></span><span class="line"><span class="cl">mise install python@3.12.4:latest  <span class="c1"># &gt;=3.12.4 的最新版</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h2 id="实战多语言项目的工作流">实战：多语言项目的工作流</h2>
+<p>假设你有一个全栈项目：后端 Python，前端 Node，还有个 Go 写的 CLI 工具。</p>
+<h3 id="第一步初始化配置">第一步：初始化配置</h3>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl"><span class="nb">cd</span> ~/my-fullstack-project
+</span></span><span class="line"><span class="cl">mise use python@3.12 node@20 go@1.22
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>生成的 <code>.mise.toml</code>：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-toml" data-lang="toml"><span class="line"><span class="cl"><span class="p">[</span><span class="nx">tools</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl"><span class="nx">python</span> <span class="p">=</span> <span class="s2">&#34;3.12&#34;</span>
+</span></span><span class="line"><span class="cl"><span class="nx">node</span> <span class="p">=</span> <span class="s2">&#34;20&#34;</span>
+</span></span><span class="line"><span class="cl"><span class="nx">go</span> <span class="p">=</span> <span class="s2">&#34;1.22&#34;</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h3 id="第二步提交配置">第二步：提交配置</h3>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">git add .mise.toml
+</span></span><span class="line"><span class="cl">git commit -m <span class="s2">&#34;chore: pin tool versions with mise&#34;</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h3 id="第三步新同事克隆项目后">第三步：新同事克隆项目后</h3>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">git clone https://github.com/xxx/my-fullstack-project.git
+</span></span><span class="line"><span class="cl"><span class="nb">cd</span> my-fullstack-project
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 自动安装所有指定版本</span>
+</span></span><span class="line"><span class="cl">mise install
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 验证</span>
+</span></span><span class="line"><span class="cl">python --version   <span class="c1"># Python 3.12.x</span>
+</span></span><span class="line"><span class="cl">node --version     <span class="c1"># v20.x.x</span>
+</span></span><span class="line"><span class="cl">go version         <span class="c1"># go1.22.x</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p><strong>一条 <code>mise install</code>，三种语言版本全部就绪。</strong> 不需要再教新人装 nvm、配 pyenv、折腾 rbenv 了。</p>
+<h2 id="进阶技巧">进阶技巧</h2>
+<h3 id="自动切换auto-activate">自动切换（auto activate）</h3>
+<p>在项目目录下执行 <code>mise use</code> 后，每次 <code>cd</code> 进入该目录，mise 会自动切换版本，离开时自动恢复。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl"><span class="c1"># 启用自动切换（默认已开启，确认配置）</span>
+</span></span><span class="line"><span class="cl">mise settings autoActivate on
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h3 id="整合-dockerfile">整合 Dockerfile</h3>
+<p>在 Docker 多阶段构建中使用 mise：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-dockerfile" data-lang="dockerfile"><span class="line"><span class="cl"><span class="k">FROM</span><span class="s"> ubuntu:22.04</span><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="c"># 安装 mise</span><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="k">RUN</span> curl https://mise.run <span class="p">|</span> sh<span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="k">ENV</span> <span class="nv">PATH</span><span class="o">=</span><span class="s2">&#34;/root/.local/bin:</span><span class="nv">$PATH</span><span class="s2">&#34;</span><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="c"># 复制配置并安装</span><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="k">COPY</span> .mise.toml .<span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="k">RUN</span> mise install<span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="c"># 激活版本</span><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="k">RUN</span> <span class="nb">eval</span> <span class="s2">&#34;</span><span class="k">$(</span>mise activate bash<span class="k">)</span><span class="s2">&#34;</span><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="c"># 现在可以直接用 node、python 等命令</span><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="k">RUN</span> node --version <span class="o">&amp;&amp;</span> python --version<span class="err">
+</span></span></span></code></pre></td></tr></table>
+</div>
+</div><h3 id="用-mise-替代-nvmpyenv-的已有配置">用 mise 替代 nvm/pyenv 的已有配置</h3>
+<p>如果你已经在用 nvm 或 pyenv，mise 可以无缝接管：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl"><span class="c1"># mise 可以调用已有的 nvm 安装的 Node 版本</span>
+</span></span><span class="line"><span class="cl"><span class="c1"># 不需要重新下载，直接复用</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 如果想完全迁移到 mise，先卸载旧工具</span>
+</span></span><span class="line"><span class="cl"><span class="c1"># nvm 用户</span>
+</span></span><span class="line"><span class="cl"><span class="nb">export</span> <span class="nv">NVM_DIR</span><span class="o">=</span><span class="s2">&#34;&#34;</span>
+</span></span><span class="line"><span class="cl"><span class="nb">unset</span> NVM_DIR
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># pyenv 用户</span>
+</span></span><span class="line"><span class="cl"><span class="c1"># 注释掉 ~/.bashrc 中的 pyenv init 相关行</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h3 id="shims-模式">Shims 模式</h3>
+<p>mise 默认通过修改 <code>PATH</code> 来切换版本。如果你更喜欢 shim 模式（类似 rbenv）：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl"><span class="c1"># 启用 shims 模式</span>
+</span></span><span class="line"><span class="cl">mise settings shims_dir ~/.local/share/mise/shims
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 生成所有已安装工具的 shim</span>
+</span></span><span class="line"><span class="cl">mise reshim
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h3 id="与-cicd-集成">与 CI/CD 集成</h3>
+<p>GitHub Actions 示例：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-yaml" data-lang="yaml"><span class="line"><span class="cl"><span class="nt">jobs</span><span class="p">:</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="nt">build</span><span class="p">:</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nt">runs-on</span><span class="p">:</span><span class="w"> </span><span class="l">ubuntu-latest</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nt">steps</span><span class="p">:</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">      </span>- <span class="nt">uses</span><span class="p">:</span><span class="w"> </span><span class="l">actions/checkout@v4</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">      </span>- <span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l">Install mise</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="nt">uses</span><span class="p">:</span><span class="w"> </span><span class="l">jdx/mise-action@v2</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="nt">with</span><span class="p">:</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">          </span><span class="nt">install</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="w">  </span><span class="c"># 自动读取 .mise.toml 并安装</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">      </span>- <span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l">Build</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="nt">run</span><span class="p">:</span><span class="w"> </span><span class="p">|</span><span class="sd">
+</span></span></span><span class="line"><span class="cl"><span class="sd">          python --version
+</span></span></span><span class="line"><span class="cl"><span class="sd">          node --version
+</span></span></span><span class="line"><span class="cl"><span class="sd">          make build</span><span class="w">          
+</span></span></span></code></pre></td></tr></table>
+</div>
+</div><h2 id="mise-vs-其他工具">mise vs 其他工具</h2>
+<table>
+<thead>
+<tr>
+<th>特性</th>
+<th>mise</th>
+<th>nvm</th>
+<th>pyenv</th>
+<th>volta</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>多语言支持</td>
+<td>✅ 40+</td>
+<td>❌ 仅 Node</td>
+<td>❌ 仅 Python</td>
+<td>❌ 仅 Node</td>
+</tr>
+<tr>
+<td>配置文件</td>
+<td><code>.mise.toml</code></td>
+<td><code>.nvmrc</code></td>
+<td><code>.python-version</code></td>
+<td><code>package.json</code></td>
+</tr>
+<tr>
+<td>安装速度</td>
+<td>极快(Go)</td>
+<td>慢(Shell)</td>
+<td>中等</td>
+<td>快(Rust)</td>
+</tr>
+<tr>
+<td>兼容已有工具</td>
+<td>✅</td>
+<td>❌</td>
+<td>❌</td>
+<td>❌</td>
+</tr>
+<tr>
+<td>自动切换</td>
+<td>✅</td>
+<td>需插件</td>
+<td>需插件</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>全局+项目级</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>❌</td>
+</tr>
+</tbody>
+</table>
+<h2 id="写在最后">写在最后</h2>
+<p>mise 不是什么革命性的发明，它只是把&quot;用不同工具管理不同语言版本&quot;这件事统一了。但正是这种<strong>减少摩擦</strong>的小改进，日积月累下来，对开发体验的提升是巨大的。</p>
+<p>如果你的项目涉及两种以上语言，或者你受够了终端里装满 nvm/pyenv/rbenv，试试 mise。一条 <code>curl https://mise.run | sh</code> 的投入，换来的是整洁的开发环境和不再需要解释的团队配置。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl"><span class="c1"># 最后，检查你的 mise 版本</span>
+</span></span><span class="line"><span class="cl">mise --version
+</span></span><span class="line"><span class="cl"><span class="c1"># 应该输出类似：mise 2026.x.x</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><blockquote>
+<p><strong>小提示</strong>：mise 的前身叫 rtx，2023 年底更名。如果你搜索时看到 rtx 相关的内容，它们实际上指向的是同一个工具。</p>
+</blockquote>
+</div><div class="post-footer" id="post-footer">
+    <div class="post-info">
+        <div class="post-info-line">
+            <div class="post-info-mod">
+                <span>Updated on 2026-06-22</span>
+            </div></div>
+        <div class="post-info-line">
+            <div class="post-info-md"></div>
+            <div class="post-info-share">
+                <span><a href="javascript:void(0);" title="Share on Twitter" data-sharer="twitter" data-url="https://www.ithome.me/post/2026/06/22/mise-universal-version-manager-for-dev-environments/" data-title="mise：一个工具取代nvm、pyenv、rbenv——多语言开发环境管理的终极方案" data-via="ChenCiki" data-hashtags="mise,版本管理,开发环境,工具链,多语言"><i class="fab fa-twitter fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on Linkedin" data-sharer="linkedin" data-url="https://www.ithome.me/post/2026/06/22/mise-universal-version-manager-for-dev-environments/"><i class="fab fa-linkedin fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on 微博" data-sharer="weibo" data-url="https://www.ithome.me/post/2026/06/22/mise-universal-version-manager-for-dev-environments/" data-title="mise：一个工具取代nvm、pyenv、rbenv——多语言开发环境管理的终极方案" data-ralateuid="xxx"><i class="fab fa-weibo fa-fw" aria-hidden="true"></i></a></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="post-info-more">
+        <section class="post-tags"><i class="fas fa-tags fa-fw" aria-hidden="true"></i>&nbsp;<a href="/tags/mise/">Mise</a>,&nbsp;<a href="/tags/%E7%89%88%E6%9C%AC%E7%AE%A1%E7%90%86/">版本管理</a>,&nbsp;<a href="/tags/%E5%BC%80%E5%8F%91%E7%8E%AF%E5%A2%83/">开发环境</a>,&nbsp;<a href="/tags/%E5%B7%A5%E5%85%B7%E9%93%BE/">工具链</a>,&nbsp;<a href="/tags/%E5%A4%9A%E8%AF%AD%E8%A8%80/">多语言</a></section>
+        <section>
+            <span><a href="javascript:void(0);" onclick="window.history.back();">Back</a></span>&nbsp;|&nbsp;<span><a href="/">Home</a></span>
+        </section>
+    </div>
+
+    <div class="post-nav"><a href="/post/2026/06/21/nginx-reverse-proxy-load-balancing/" class="prev" rel="prev" title="Nginx 反向代理、负载均衡与 HTTPS 配置实战"><i class="fas fa-angle-left fa-fw" aria-hidden="true"></i>Nginx 反向代理、负载均衡与 HTTPS 配置实战</a>
+            <a href="/post/2026/06/23/uv-%E4%B8%8B%E4%B8%80%E4%BB%A3python%E5%8C%85%E7%AE%A1%E7%90%86%E5%B7%A5%E5%85%B7%E5%AE%8C%E5%85%A8%E6%8C%87%E5%8D%97/" class="next" rel="next" title="uv：下一代Python包管理工具完全指南">uv：下一代Python包管理工具完全指南<i class="fas fa-angle-right fa-fw" aria-hidden="true"></i></a></div>
+</div>
+<div id="comments"><div id="gitalk" class="comment"></div><noscript>
+                Please enable JavaScript to view the comments powered by <a href="https://github.com/gitalk/gitalk"></a>Gitalk</a>.
+            </noscript></div></article></div>
+            </main><footer class="footer">
+        <div class="footer-container"><div class="footer-line" itemscope itemtype="http://schema.org/CreativeWork"><i class="far fa-copyright fa-fw" aria-hidden="true"></i><span itemprop="copyrightYear">2011 - 2026</span><span class="author" itemprop="copyrightHolder">&nbsp;<a href="https://www.ithome.me/" target="_blank">Simon Chen</a></span>&nbsp;|&nbsp;<span class="license"><a rel="license external nofollow noopener noreferrer" href="https://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank">CC BY-NC-ND 4.0</a></span></div>
+        </div>
+    </footer></div>
+
+        <div id="fixed-buttons"><a href="#" id="back-to-top" class="fixed-button" title="Back to Top">
+                <i class="fas fa-arrow-up fa-fw" aria-hidden="true"></i>
+            </a><a href="#" id="view-comments" class="fixed-button" title="View Comments">
+                <i class="fas fa-comment fa-fw" aria-hidden="true"></i>
+            </a>
+        </div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1.8.0/dist/gitalk.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/css/lightgallery-bundle.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/katex.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/copy-tex.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.css"><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/gitalk@1.8.0/dist/gitalk.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/autocomplete.js@0.38.1/dist/autocomplete.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lunr@2.3.9/lunr.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lazysizes@5.3.1/lazysizes.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/lightgallery.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/plugins/thumbnail/lg-thumbnail.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/plugins/zoom/lg-zoom.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/clipboard@2.0.11/dist/clipboard.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/sharer.js@0.5.1/sharer.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/katex.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/auto-render.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/copy-tex.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/mhchem.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.js"></script><script type="text/javascript">window.config={"code":{"copyTitle":"Copy to clipboard","maxShownLines":50},"comment":{"gitalk":{"admin":["cikichen"],"clientID":"be0f52370ed1285b6c7c","clientSecret":"734a7d8d0ded346ca7a3d565d57de3f8eeb2850b","id":"2026-06-22T00:00:00Z","owner":"cikichen","repo":"gitalk","title":"mise：一个工具取代nvm、pyenv、rbenv——多语言开发环境管理的终极方案"}},"cookieconsent":{"content":{"dismiss":"我知道了","link":"了解更多","message":"本网站使用 Cookies 来改善您的浏览体验."},"enable":true,"palette":{"button":{"background":"#f0f0f0"},"popup":{"background":"#1aa3ff"}},"theme":"edgeless"},"lightgallery":true,"math":{"delimiters":[{"display":true,"left":"$$","right":"$$"},{"display":true,"left":"\\[","right":"\\]"},{"display":true,"left":"\\begin{equation}","right":"\\end{equation}"},{"display":true,"left":"\\begin{equation*}","right":"\\end{equation*}"},{"display":true,"left":"\\begin{align}","right":"\\end{align}"},{"display":true,"left":"\\begin{align*}","right":"\\end{align*}"},{"display":true,"left":"\\begin{alignat}","right":"\\end{alignat}"},{"display":true,"left":"\\begin{alignat*}","right":"\\end{alignat*}"},{"display":true,"left":"\\begin{gather}","right":"\\end{gather}"},{"display":true,"left":"\\begin{CD}","right":"\\end{CD}"},{"display":false,"left":"$","right":"$"},{"display":false,"left":"\\(","right":"\\)"}],"strict":false},"search":{"highlightTag":"em","lunrIndexURL":"/index.json","maxResultLength":10,"noResultsFound":"No results found","snippetLength":50,"type":"lunr"}};</script><script type="text/javascript" src="/js/theme.min.js"></script></body>
+</html>
