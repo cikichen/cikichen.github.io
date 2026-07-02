@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="robots" content="noodp" />
+        <title>Go 服务优雅退出实战：从信号捕获到连接排空，告别连接中断 - 编程心语</title><meta name="Description" content="深入讲解 Go HTTP 服务的优雅退出机制——信号捕获、连接排空、超时兜底，包含完整可运行的代码示例和生产环境踩坑经验，帮你彻底告别部署时的连接中断问题。"><meta property="og:url" content="https://www.ithome.me/post/2026/07/01/go-graceful-shutdown-signal-handling/">
+  <meta property="og:site_name" content="编程心语">
+  <meta property="og:title" content="Go 服务优雅退出实战：从信号捕获到连接排空，告别连接中断">
+  <meta property="og:description" content="深入讲解 Go HTTP 服务的优雅退出机制——信号捕获、连接排空、超时兜底，包含完整可运行的代码示例和生产环境踩坑经验，帮你彻底告别部署时的连接中断问题。">
+  <meta property="og:locale" content="zh_CN">
+  <meta property="og:type" content="article">
+    <meta property="article:section" content="posts">
+    <meta property="article:published_time" content="2026-07-01T09:00:00+08:00">
+    <meta property="article:modified_time" content="2026-07-01T08:33:17+08:00">
+    <meta property="article:tag" content="Go">
+    <meta property="article:tag" content="优雅退出">
+    <meta property="article:tag" content="Graceful Shutdown">
+    <meta property="article:tag" content="信号处理">
+    <meta property="article:tag" content="HTTP Server">
+    <meta property="article:tag" content="零停机部署">
+
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Go 服务优雅退出实战：从信号捕获到连接排空，告别连接中断">
+  <meta name="twitter:description" content="深入讲解 Go HTTP 服务的优雅退出机制——信号捕获、连接排空、超时兜底，包含完整可运行的代码示例和生产环境踩坑经验，帮你彻底告别部署时的连接中断问题。">
+      <meta name="twitter:site" content="@ChenCiki">
+<meta name="application-name" content="编程心语">
+<meta name="apple-mobile-web-app-title" content="编程心语"><meta name="theme-color" content="#ffffff"><meta name="msapplication-TileColor" content="#da532c"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5"><link rel="manifest" href="/site.webmanifest"><link rel="canonical" href="https://www.ithome.me/post/2026/07/01/go-graceful-shutdown-signal-handling/" /><link rel="prev" href="https://www.ithome.me/post/2026/06/30/%E6%9C%AB%E4%B8%96%E6%B1%82%E7%94%9F%E7%9B%AE%E5%BD%95/" /><link rel="next" href="https://www.ithome.me/post/2026/07/02/postgresql-jsonb-gin-index-optimization/" /><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/normalize.css@8.0.1/normalize.min.css"><link rel="stylesheet" href="/css/style.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css"><script type="application/ld+json">
+    {
+        "@context": "http://schema.org",
+        "@type": "BlogPosting",
+        "headline": "Go 服务优雅退出实战：从信号捕获到连接排空，告别连接中断",
+        "inLanguage": "zh-CN",
+        "mainEntityOfPage": {
+            "@type": "WebPage",
+            "@id": "https:\/\/www.ithome.me\/post\/2026\/07\/01\/go-graceful-shutdown-signal-handling\/"
+        },"image": ["https:\/\/www.ithome.me\/cover.png"],"genre": "posts","keywords": "Go, 优雅退出, Graceful Shutdown, 信号处理, HTTP Server, 零停机部署","wordcount":  2203 ,
+        "url": "https:\/\/www.ithome.me\/post\/2026\/07\/01\/go-graceful-shutdown-signal-handling\/","datePublished": "2026-07-01T09:00:00+08:00","dateModified": "2026-07-01T08:33:17+08:00","publisher": {
+            "@type": "Organization",
+            "name": "SimonChen","logo": "https:\/\/www.ithome.me\/logo.png"},"author": {
+                "@type": "Person",
+                "name": "Simon"
+            },"description": "深入讲解 Go HTTP 服务的优雅退出机制——信号捕获、连接排空、超时兜底，包含完整可运行的代码示例和生产环境踩坑经验，帮你彻底告别部署时的连接中断问题。"
+    }
+    </script><script async src="https://www.googletagmanager.com/gtag/js?id=G-H1Q5563VR8"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-H1Q5563VR8', { 'anonymize_ip': true });
+</script></head>
+    <body data-header-desktop="fixed" data-header-mobile="auto"><script type="text/javascript">(window.localStorage && localStorage.getItem('theme') ? localStorage.getItem('theme') === 'dark' : ('auto' === 'auto' ? window.matchMedia('(prefers-color-scheme: dark)').matches : 'auto' === 'dark')) && document.body.setAttribute('theme', 'dark');</script>
+
+        <div id="mask"></div><div class="wrapper"><header class="desktop" id="header-desktop">
+    <div class="header-wrapper">
+        <div class="header-title">
+            <a href="/" title="编程心语">编程心语</a>
+        </div>
+        <div class="menu">
+            <div class="menu-inner"><a class="menu-item" href="/posts/"> 文章 </a><a class="menu-item" href="/categories/"> 分类 </a><a class="menu-item" href="/tags/"> 标签 </a><a class="menu-item" href="/about-me/"> 关于 </a><span class="menu-item delimiter"></span><span class="menu-item search" id="search-desktop">
+                        <input type="text" placeholder="搜索文章..." id="search-input-desktop">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-desktop" title="Search">
+                            <i class="fas fa-search fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-desktop" title="Clear">
+                            <i class="fas fa-times-circle fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-desktop">
+                            <i class="fas fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+                        </span>
+                    </span><a href="javascript:void(0);" class="menu-item theme-switch" title="Switch Theme">
+                    <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</header><header class="mobile" id="header-mobile">
+    <div class="header-container">
+        <div class="header-wrapper">
+            <div class="header-title">
+                <a href="/" title="编程心语">编程心语</a>
+            </div>
+            <div class="menu-toggle" id="menu-toggle-mobile">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+        <div class="menu" id="menu-mobile"><div class="search-wrapper">
+                    <div class="search mobile" id="search-mobile">
+                        <input type="text" placeholder="搜索文章..." id="search-input-mobile">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-mobile" title="Search">
+                            <i class="fas fa-search fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-mobile" title="Clear">
+                            <i class="fas fa-times-circle fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-mobile">
+                            <i class="fas fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+                        </span>
+                    </div>
+                    <a href="javascript:void(0);" class="search-cancel" id="search-cancel-mobile">
+                        Cancel
+                    </a>
+                </div><a class="menu-item" href="/posts/" title="">文章</a><a class="menu-item" href="/categories/" title="">分类</a><a class="menu-item" href="/tags/" title="">标签</a><a class="menu-item" href="/about-me/" title="">关于</a><a href="javascript:void(0);" class="menu-item theme-switch" title="Switch Theme">
+                <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
+            </a></div>
+    </div>
+</header><div class="search-dropdown desktop">
+        <div id="search-dropdown-desktop"></div>
+    </div>
+    <div class="search-dropdown mobile">
+        <div id="search-dropdown-mobile"></div>
+    </div><main class="main">
+                <div class="container"><div class="toc" id="toc-auto">
+            <h2 class="toc-title">Contents</h2>
+            <div class="toc-content" id="toc-content-auto"></div>
+        </div><article class="page single"><h1 class="single-title animate__animated animate__flipInX">Go 服务优雅退出实战：从信号捕获到连接排空，告别连接中断</h1><div class="post-meta">
+            <div class="post-meta-line"><span class="post-author"><a href="https://www.ithome.me/" title="Author" target="_blank" rel="noopener noreferrer author" class="author"><i class="fas fa-user-circle fa-fw" aria-hidden="true"></i>Simon</a>
+</span>&nbsp;<span class="post-category">included in <a href="/categories/backend/"><i class="far fa-folder fa-fw" aria-hidden="true"></i>Backend</a></span></div>
+            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw" aria-hidden="true"></i>&nbsp;<time datetime="2026-07-01">2026-07-01</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden="true"></i>&nbsp;2203 words&nbsp;
+                <i class="far fa-clock fa-fw" aria-hidden="true"></i>&nbsp;5 minutes&nbsp;</div>
+        </div><div class="details toc" id="toc-static"  data-kept="true">
+                <div class="details-summary toc-title">
+                    <span>Contents</span>
+                    <span><i class="details-icon fas fa-angle-right" aria-hidden="true"></i></span>
+                </div>
+                <div class="details-content toc-content" id="toc-content-static"><nav id="TableOfContents">
+  <ul>
+    <li><a href="#部署时你的用户正在被踢下线">部署时你的用户正在被踢下线</a></li>
+    <li><a href="#核心机制信号--context--waitgroup">核心机制：信号 + Context + WaitGroup</a>
+      <ul>
+        <li><a href="#完整的可运行示例">完整的可运行示例</a></li>
+      </ul>
+    </li>
+    <li><a href="#每一步都在解决一个真实问题">每一步都在解决一个真实问题</a>
+      <ul>
+        <li><a href="#第一步信号捕获">第一步：信号捕获</a></li>
+        <li><a href="#第二步健康检查降级">第二步：健康检查降级</a></li>
+        <li><a href="#第三步等待摘除传播">第三步：等待摘除传播</a></li>
+        <li><a href="#第四步shutdown--超时兜底">第四步：Shutdown + 超时兜底</a></li>
+      </ul>
+    </li>
+    <li><a href="#生产环境踩坑清单">生产环境踩坑清单</a>
+      <ul>
+        <li><a href="#坑-1忘了处理后台-goroutine">坑 1：忘了处理后台 goroutine</a></li>
+        <li><a href="#坑-2k8s-的-terminationgraceperiodseconds-太短">坑 2：k8s 的 <code>terminationGracePeriodSeconds</code> 太短</a></li>
+        <li><a href="#坑-3数据库连接没关">坑 3：数据库连接没关</a></li>
+        <li><a href="#坑-4用了-httplistenandserve-而不是-httpserver">坑 4：用了 <code>http.ListenAndServe</code> 而不是 <code>http.Server</code></a></li>
+      </ul>
+    </li>
+    <li><a href="#用脚本验证你的退出流程">用脚本验证你的退出流程</a></li>
+    <li><a href="#总结">总结</a></li>
+  </ul>
+</nav></div>
+            </div><div class="content" id="content"><h2 id="部署时你的用户正在被踢下线">部署时你的用户正在被踢下线</h2>
+<p>每次 <code>kubectl rollout</code> 或者 <code>systemctl restart</code>，你的服务收到 SIGTERM 信号后会发生什么？如果答案是&quot;进程直接退出&quot;，那你的用户正在经历连接中断——正在处理的请求被截断，正在上传的文件丢失，数据库事务回滚，甚至触发客户端的重试风暴。</p>
+<p><strong>优雅退出（Graceful Shutdown）</strong> 的目标很简单：收到退出信号后，<strong>停止接收新请求，等待已有请求处理完毕，然后才退出进程</strong>。听起来简单，但生产环境的坑远比你想象的多。</p>
+<h2 id="核心机制信号--context--waitgroup">核心机制：信号 + Context + WaitGroup</h2>
+<p>Go 标准库从 1.8 起就内置了 <code>http.Server.Shutdown()</code> 方法，它会优雅地关闭所有监听的端口，并等待所有活跃连接处理完毕。但光有这个还不够，你需要一套完整的退出流程。</p>
+<h3 id="完整的可运行示例">完整的可运行示例</h3>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span><span class="lnt">42
+</span><span class="lnt">43
+</span><span class="lnt">44
+</span><span class="lnt">45
+</span><span class="lnt">46
+</span><span class="lnt">47
+</span><span class="lnt">48
+</span><span class="lnt">49
+</span><span class="lnt">50
+</span><span class="lnt">51
+</span><span class="lnt">52
+</span><span class="lnt">53
+</span><span class="lnt">54
+</span><span class="lnt">55
+</span><span class="lnt">56
+</span><span class="lnt">57
+</span><span class="lnt">58
+</span><span class="lnt">59
+</span><span class="lnt">60
+</span><span class="lnt">61
+</span><span class="lnt">62
+</span><span class="lnt">63
+</span><span class="lnt">64
+</span><span class="lnt">65
+</span><span class="lnt">66
+</span><span class="lnt">67
+</span><span class="lnt">68
+</span><span class="lnt">69
+</span><span class="lnt">70
+</span><span class="lnt">71
+</span><span class="lnt">72
+</span><span class="lnt">73
+</span><span class="lnt">74
+</span><span class="lnt">75
+</span><span class="lnt">76
+</span><span class="lnt">77
+</span><span class="lnt">78
+</span><span class="lnt">79
+</span><span class="lnt">80
+</span><span class="lnt">81
+</span><span class="lnt">82
+</span><span class="lnt">83
+</span><span class="lnt">84
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="kn">package</span> <span class="nx">main</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kn">import</span> <span class="p">(</span>
+</span></span><span class="line"><span class="cl">	<span class="s">&#34;context&#34;</span>
+</span></span><span class="line"><span class="cl">	<span class="s">&#34;log&#34;</span>
+</span></span><span class="line"><span class="cl">	<span class="s">&#34;net/http&#34;</span>
+</span></span><span class="line"><span class="cl">	<span class="s">&#34;os&#34;</span>
+</span></span><span class="line"><span class="cl">	<span class="s">&#34;os/signal&#34;</span>
+</span></span><span class="line"><span class="cl">	<span class="s">&#34;sync&#34;</span>
+</span></span><span class="line"><span class="cl">	<span class="s">&#34;syscall&#34;</span>
+</span></span><span class="line"><span class="cl">	<span class="s">&#34;time&#34;</span>
+</span></span><span class="line"><span class="cl"><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kd">func</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="kd">var</span> <span class="nx">wg</span> <span class="nx">sync</span><span class="p">.</span><span class="nx">WaitGroup</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="nx">mux</span> <span class="o">:=</span> <span class="nx">http</span><span class="p">.</span><span class="nf">NewServeMux</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">mux</span><span class="p">.</span><span class="nf">HandleFunc</span><span class="p">(</span><span class="s">&#34;/work&#34;</span><span class="p">,</span> <span class="kd">func</span><span class="p">(</span><span class="nx">w</span> <span class="nx">http</span><span class="p">.</span><span class="nx">ResponseWriter</span><span class="p">,</span> <span class="nx">r</span> <span class="o">*</span><span class="nx">http</span><span class="p">.</span><span class="nx">Request</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">wg</span><span class="p">.</span><span class="nf">Add</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">		<span class="k">defer</span> <span class="nx">wg</span><span class="p">.</span><span class="nf">Done</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">		<span class="c1">// 模拟耗时请求
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>		<span class="k">select</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="k">case</span> <span class="o">&lt;-</span><span class="nx">time</span><span class="p">.</span><span class="nf">After</span><span class="p">(</span><span class="mi">5</span> <span class="o">*</span> <span class="nx">time</span><span class="p">.</span><span class="nx">Second</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">			<span class="nx">w</span><span class="p">.</span><span class="nf">Write</span><span class="p">([]</span><span class="nb">byte</span><span class="p">(</span><span class="s">&#34;done&#34;</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl">		<span class="k">case</span> <span class="o">&lt;-</span><span class="nx">r</span><span class="p">.</span><span class="nf">Context</span><span class="p">().</span><span class="nf">Done</span><span class="p">():</span>
+</span></span><span class="line"><span class="cl">			<span class="nx">log</span><span class="p">.</span><span class="nf">Println</span><span class="p">(</span><span class="s">&#34;客户端已断开连接&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">			<span class="k">return</span>
+</span></span><span class="line"><span class="cl">		<span class="p">}</span>
+</span></span><span class="line"><span class="cl">	<span class="p">})</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">mux</span><span class="p">.</span><span class="nf">HandleFunc</span><span class="p">(</span><span class="s">&#34;/health&#34;</span><span class="p">,</span> <span class="kd">func</span><span class="p">(</span><span class="nx">w</span> <span class="nx">http</span><span class="p">.</span><span class="nx">ResponseWriter</span><span class="p">,</span> <span class="nx">r</span> <span class="o">*</span><span class="nx">http</span><span class="p">.</span><span class="nx">Request</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">w</span><span class="p">.</span><span class="nf">WriteHeader</span><span class="p">(</span><span class="nx">http</span><span class="p">.</span><span class="nx">StatusOK</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">w</span><span class="p">.</span><span class="nf">Write</span><span class="p">([]</span><span class="nb">byte</span><span class="p">(</span><span class="s">&#34;ok&#34;</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl">	<span class="p">})</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="nx">srv</span> <span class="o">:=</span> <span class="o">&amp;</span><span class="nx">http</span><span class="p">.</span><span class="nx">Server</span><span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">Addr</span><span class="p">:</span>         <span class="s">&#34;:8080&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">Handler</span><span class="p">:</span>      <span class="nx">mux</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">ReadTimeout</span><span class="p">:</span>  <span class="mi">10</span> <span class="o">*</span> <span class="nx">time</span><span class="p">.</span><span class="nx">Second</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">WriteTimeout</span><span class="p">:</span> <span class="mi">30</span> <span class="o">*</span> <span class="nx">time</span><span class="p">.</span><span class="nx">Second</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">IdleTimeout</span><span class="p">:</span>  <span class="mi">60</span> <span class="o">*</span> <span class="nx">time</span><span class="p">.</span><span class="nx">Second</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="c1">// 启动 HTTP 服务
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="k">go</span> <span class="kd">func</span><span class="p">()</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">log</span><span class="p">.</span><span class="nf">Printf</span><span class="p">(</span><span class="s">&#34;服务启动，监听 %s&#34;</span><span class="p">,</span> <span class="nx">srv</span><span class="p">.</span><span class="nx">Addr</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">		<span class="k">if</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">srv</span><span class="p">.</span><span class="nf">ListenAndServe</span><span class="p">();</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="o">&amp;&amp;</span> <span class="nx">err</span> <span class="o">!=</span> <span class="nx">http</span><span class="p">.</span><span class="nx">ErrServerClosed</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">			<span class="nx">log</span><span class="p">.</span><span class="nf">Fatalf</span><span class="p">(</span><span class="s">&#34;服务异常: %v&#34;</span><span class="p">,</span> <span class="nx">err</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">		<span class="p">}</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}()</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="c1">// 等待退出信号
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="nx">quit</span> <span class="o">:=</span> <span class="nb">make</span><span class="p">(</span><span class="kd">chan</span> <span class="nx">os</span><span class="p">.</span><span class="nx">Signal</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">signal</span><span class="p">.</span><span class="nf">Notify</span><span class="p">(</span><span class="nx">quit</span><span class="p">,</span> <span class="nx">syscall</span><span class="p">.</span><span class="nx">SIGINT</span><span class="p">,</span> <span class="nx">syscall</span><span class="p">.</span><span class="nx">SIGTERM</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">sig</span> <span class="o">:=</span> <span class="o">&lt;-</span><span class="nx">quit</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">log</span><span class="p">.</span><span class="nf">Printf</span><span class="p">(</span><span class="s">&#34;收到信号: %v，开始优雅退出...&#34;</span><span class="p">,</span> <span class="nx">sig</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="c1">// 第一步：立即从负载均衡摘除（健康检查返回 503）
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="c1">// 实际项目中可以替换为主动调用负载均衡 API 注销
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="nf">shutdownHealthCheck</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="c1">// 第二步：给负载均衡一点时间感知摘除
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="nx">time</span><span class="p">.</span><span class="nf">Sleep</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="nx">time</span><span class="p">.</span><span class="nx">Second</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="c1">// 第三步：停止接收新连接，等待已有请求完成
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="nx">ctx</span><span class="p">,</span> <span class="nx">cancel</span> <span class="o">:=</span> <span class="nx">context</span><span class="p">.</span><span class="nf">WithTimeout</span><span class="p">(</span><span class="nx">context</span><span class="p">.</span><span class="nf">Background</span><span class="p">(),</span> <span class="mi">15</span><span class="o">*</span><span class="nx">time</span><span class="p">.</span><span class="nx">Second</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">	<span class="k">defer</span> <span class="nf">cancel</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="k">if</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">srv</span><span class="p">.</span><span class="nf">Shutdown</span><span class="p">(</span><span class="nx">ctx</span><span class="p">);</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">log</span><span class="p">.</span><span class="nf">Printf</span><span class="p">(</span><span class="s">&#34;优雅退出超时，强制关闭: %v&#34;</span><span class="p">,</span> <span class="nx">err</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="c1">// 第四步：等待后台 goroutine 完成
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="nx">wg</span><span class="p">.</span><span class="nf">Wait</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="nx">log</span><span class="p">.</span><span class="nf">Println</span><span class="p">(</span><span class="s">&#34;服务已安全退出&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kd">var</span> <span class="nx">healthOK</span> <span class="p">=</span> <span class="kc">true</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kd">func</span> <span class="nf">shutdownHealthCheck</span><span class="p">()</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">healthOK</span> <span class="p">=</span> <span class="kc">false</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">log</span><span class="p">.</span><span class="nf">Println</span><span class="p">(</span><span class="s">&#34;健康检查已切换为不可用状态&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><blockquote>
+<p>注意 <code>/health</code> 端点在实际代码中应该返回 <code>healthOk</code> 的值，这里为了简洁省略了判断逻辑。</p>
+</blockquote>
+<h2 id="每一步都在解决一个真实问题">每一步都在解决一个真实问题</h2>
+<h3 id="第一步信号捕获">第一步：信号捕获</h3>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="nx">signal</span><span class="p">.</span><span class="nf">Notify</span><span class="p">(</span><span class="nx">quit</span><span class="p">,</span> <span class="nx">syscall</span><span class="p">.</span><span class="nx">SIGINT</span><span class="p">,</span> <span class="nx">syscall</span><span class="p">.</span><span class="nx">SIGTERM</span><span class="p">)</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>关键点：<strong>不要捕获所有信号</strong>。只处理 <code>SIGINT</code>（Ctrl+C）和 <code>SIGTERM</code>（容器/k8s 发送的标准退出信号）。<code>SIGHUP</code> 在某些场景下用于重载配置而非退出，混在一起会出问题。</p>
+<h3 id="第二步健康检查降级">第二步：健康检查降级</h3>
+<p>这是最容易被忽略的一步。收到退出信号后，<strong>第一时间把健康检查端点返回 503</strong>。这样负载均衡器在下一轮探测时就会把你的实例从轮询池中摘除，新的请求不会再进来。</p>
+<p>如果你跳过这步直接 <code>Shutdown()</code>，在 Shutdown 等待期间仍然可能有新请求涌入，导致退出时间变长甚至超时。</p>
+<h3 id="第三步等待摘除传播">第三步：等待摘除传播</h3>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="nx">time</span><span class="p">.</span><span class="nf">Sleep</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="nx">time</span><span class="p">.</span><span class="nx">Second</span><span class="p">)</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>负载均衡器的健康检查有间隔周期（通常 3~5 秒）。你把健康检查切成 503 后，负载均衡器可能还需要一两个周期才能感知到。这个 sleep 就是给它一个反应窗口。具体时间取决于你的负载均衡配置。</p>
+<h3 id="第四步shutdown--超时兜底">第四步：Shutdown + 超时兜底</h3>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="nx">ctx</span><span class="p">,</span> <span class="nx">cancel</span> <span class="o">:=</span> <span class="nx">context</span><span class="p">.</span><span class="nf">WithTimeout</span><span class="p">(</span><span class="nx">context</span><span class="p">.</span><span class="nf">Background</span><span class="p">(),</span> <span class="mi">15</span><span class="o">*</span><span class="nx">time</span><span class="p">.</span><span class="nx">Second</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="nx">srv</span><span class="p">.</span><span class="nf">Shutdown</span><span class="p">(</span><span class="nx">ctx</span><span class="p">)</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p><code>Shutdown</code> 会停止接受新连接，并等待所有活跃请求完成。但如果某个请求卡住了怎么办？<code>context.WithTimeout</code> 就是兜底——超过 15 秒还没完成，就强制返回错误，进程退出。</p>
+<p><strong>这个超时时间应该大于你最慢请求的处理时间</strong>。如果你的 API 最慢 30 秒，这里设 15 秒就会杀掉正在处理的请求。</p>
+<h2 id="生产环境踩坑清单">生产环境踩坑清单</h2>
+<h3 id="坑-1忘了处理后台-goroutine">坑 1：忘了处理后台 goroutine</h3>
+<p><code>http.Server.Shutdown()</code> 只管 HTTP 连接，不管你启动的后台 goroutine。如果你有后台消费队列的 worker、定时任务、数据库连接池，它们不会自动退出。</p>
+<p><strong>解决方案</strong>：用 <code>WaitGroup</code> 跟踪所有后台任务，在 <code>Shutdown</code> 完成后 <code>wg.Wait()</code>。</p>
+<h3 id="坑-2k8s-的-terminationgraceperiodseconds-太短">坑 2：k8s 的 <code>terminationGracePeriodSeconds</code> 太短</h3>
+<p>k8s 发送 SIGTERM 后，默认等待 30 秒就会发 SIGKILL 强杀。如果你在代码里设了 15 秒 Shutdown 超时 + 2 秒摘除等待 + 后台任务清理时间，很容易超过 30 秒。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-yaml" data-lang="yaml"><span class="line"><span class="cl"><span class="c"># k8s deployment 需要调大这个值</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="nt">spec</span><span class="p">:</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="nt">template</span><span class="p">:</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nt">spec</span><span class="p">:</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">      </span><span class="nt">terminationGracePeriodSeconds</span><span class="p">:</span><span class="w"> </span><span class="m">45</span><span class="w">
+</span></span></span></code></pre></td></tr></table>
+</div>
+</div><h3 id="坑-3数据库连接没关">坑 3：数据库连接没关</h3>
+<p><code>Shutdown</code> 完成后别忘了关闭数据库连接池和其他资源：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="k">if</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">srv</span><span class="p">.</span><span class="nf">Shutdown</span><span class="p">(</span><span class="nx">ctx</span><span class="p">);</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="nx">log</span><span class="p">.</span><span class="nf">Printf</span><span class="p">(</span><span class="s">&#34;关闭异常: %v&#34;</span><span class="p">,</span> <span class="nx">err</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">// 关闭数据库连接
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="k">if</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">db</span><span class="p">.</span><span class="nf">Close</span><span class="p">();</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">log</span><span class="p">.</span><span class="nf">Printf</span><span class="p">(</span><span class="s">&#34;关闭数据库连接失败: %v&#34;</span><span class="p">,</span> <span class="nx">err</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">// 关闭 Redis 连接
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="nx">_</span> <span class="p">=</span> <span class="nx">redisClient</span><span class="p">.</span><span class="nf">Close</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">// 等待后台任务
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="nx">wg</span><span class="p">.</span><span class="nf">Wait</span><span class="p">()</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h3 id="坑-4用了-httplistenandserve-而不是-httpserver">坑 4：用了 <code>http.ListenAndServe</code> 而不是 <code>http.Server</code></h3>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span><span class="lnt">7
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="c1">// ❌ 这样无法优雅退出
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="nx">http</span><span class="p">.</span><span class="nf">ListenAndServe</span><span class="p">(</span><span class="s">&#34;:8080&#34;</span><span class="p">,</span> <span class="nx">mux</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">// ✅ 必须用 http.Server 结构体
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="nx">srv</span> <span class="o">:=</span> <span class="o">&amp;</span><span class="nx">http</span><span class="p">.</span><span class="nx">Server</span><span class="p">{</span><span class="nx">Addr</span><span class="p">:</span> <span class="s">&#34;:8080&#34;</span><span class="p">,</span> <span class="nx">Handler</span><span class="p">:</span> <span class="nx">mux</span><span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="nx">srv</span><span class="p">.</span><span class="nf">ListenAndServe</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl"><span class="nx">srv</span><span class="p">.</span><span class="nf">Shutdown</span><span class="p">(</span><span class="nx">ctx</span><span class="p">)</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p><code>http.ListenAndServe</code> 内部创建了一个无法从外部控制的 Server 实例，你拿不到引用就没法调 <code>Shutdown</code>。</p>
+<h2 id="用脚本验证你的退出流程">用脚本验证你的退出流程</h2>
+<p>写个简单的验证脚本，部署前先测一遍：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl"><span class="cp">#!/bin/bash
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span><span class="c1"># 启动服务</span>
+</span></span><span class="line"><span class="cl">go run main.go <span class="p">&amp;</span>
+</span></span><span class="line"><span class="cl"><span class="nv">PID</span><span class="o">=</span><span class="nv">$!</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">sleep <span class="m">1</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 发起一个耗时请求（后台运行）</span>
+</span></span><span class="line"><span class="cl">curl -s http://localhost:8080/work <span class="p">&amp;</span>
+</span></span><span class="line"><span class="cl"><span class="nv">CURL_PID</span><span class="o">=</span><span class="nv">$!</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 等待 1 秒让请求进入处理</span>
+</span></span><span class="line"><span class="cl">sleep <span class="m">1</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 发送 SIGTERM</span>
+</span></span><span class="line"><span class="cl"><span class="nb">kill</span> -TERM <span class="nv">$PID</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 等待 curl 完成</span>
+</span></span><span class="line"><span class="cl"><span class="nb">wait</span> <span class="nv">$CURL_PID</span>
+</span></span><span class="line"><span class="cl"><span class="nv">EXIT_CODE</span><span class="o">=</span><span class="nv">$?</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">if</span> <span class="o">[</span> <span class="nv">$EXIT_CODE</span> -eq <span class="m">0</span> <span class="o">]</span><span class="p">;</span> <span class="k">then</span>
+</span></span><span class="line"><span class="cl">    <span class="nb">echo</span> <span class="s2">&#34;✅ 优雅退出验证通过：耗时请求正常完成&#34;</span>
+</span></span><span class="line"><span class="cl"><span class="k">else</span>
+</span></span><span class="line"><span class="cl">    <span class="nb">echo</span> <span class="s2">&#34;❌ 优雅退出验证失败：请求被中断 (exit=</span><span class="nv">$EXIT_CODE</span><span class="s2">)&#34;</span>
+</span></span><span class="line"><span class="cl"><span class="k">fi</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>如果看到 ✅，说明你的 Shutdown 逻辑是对的。如果看到 ❌，说明请求在完成之前就被杀了，需要排查。</p>
+<h2 id="总结">总结</h2>
+<p>优雅退出不是一行 <code>srv.Shutdown()</code> 就能搞定的事。完整流程是：</p>
+<ol>
+<li><strong>捕获信号</strong> → 只处理 SIGINT 和 SIGTERM</li>
+<li><strong>健康检查降级</strong> → 立即返回 503，让负载均衡摘除</li>
+<li><strong>等待摘除传播</strong> → 给负载均衡 2~5 秒反应时间</li>
+<li><strong>Shutdown 等待</strong> → 设合理的超时，等活跃请求完成</li>
+<li><strong>清理后台资源</strong> → WaitGroup 等待 goroutine，关闭数据库/Redis 连接</li>
+<li><strong>k8s 配置兜底</strong> → <code>terminationGracePeriodSeconds</code> 要大于上述所有时间之和</li>
+</ol>
+<p>把这套流程落地到你的每个服务里，部署时的连接中断问题就彻底解决了。</p>
+</div><div class="post-footer" id="post-footer">
+    <div class="post-info">
+        <div class="post-info-line">
+            <div class="post-info-mod">
+                <span>Updated on 2026-07-01&nbsp;<a class="git-hash" href="https://github.com/cikichen/hugo-sync/commit/cc27f39e0a8576ec57aa7e11c2703d6c4a41a575" target="_blank" title="commit by cikichen(cikichen@github.com) cc27f39e0a8576ec57aa7e11c2703d6c4a41a575: 发布文章: Go 服务优雅退出实战——从信号捕获到连接排空">
+                                    <i class="fas fa-hashtag fa-fw" aria-hidden="true"></i>cc27f39e</a></span>
+            </div><div class="post-info-license">
+                <span>https://creativecommons.org/licenses/by-nc-nd/4.0/</span>
+            </div></div>
+        <div class="post-info-line">
+            <div class="post-info-md"></div>
+            <div class="post-info-share">
+                <span><a href="javascript:void(0);" title="Share on Twitter" data-sharer="twitter" data-url="https://www.ithome.me/post/2026/07/01/go-graceful-shutdown-signal-handling/" data-title="Go 服务优雅退出实战：从信号捕获到连接排空，告别连接中断" data-via="ChenCiki" data-hashtags="Go,优雅退出,Graceful Shutdown,信号处理,HTTP Server,零停机部署"><i class="fab fa-twitter fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on Linkedin" data-sharer="linkedin" data-url="https://www.ithome.me/post/2026/07/01/go-graceful-shutdown-signal-handling/"><i class="fab fa-linkedin fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on 微博" data-sharer="weibo" data-url="https://www.ithome.me/post/2026/07/01/go-graceful-shutdown-signal-handling/" data-title="Go 服务优雅退出实战：从信号捕获到连接排空，告别连接中断" data-ralateuid="xxx"><i class="fab fa-weibo fa-fw" aria-hidden="true"></i></a></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="post-info-more">
+        <section class="post-tags"><i class="fas fa-tags fa-fw" aria-hidden="true"></i>&nbsp;<a href="/tags/go/">Go</a>,&nbsp;<a href="/tags/%E4%BC%98%E9%9B%85%E9%80%80%E5%87%BA/">优雅退出</a>,&nbsp;<a href="/tags/graceful-shutdown/">Graceful Shutdown</a>,&nbsp;<a href="/tags/%E4%BF%A1%E5%8F%B7%E5%A4%84%E7%90%86/">信号处理</a>,&nbsp;<a href="/tags/http-server/">HTTP Server</a>,&nbsp;<a href="/tags/%E9%9B%B6%E5%81%9C%E6%9C%BA%E9%83%A8%E7%BD%B2/">零停机部署</a></section>
+        <section>
+            <span><a href="javascript:void(0);" onclick="window.history.back();">Back</a></span>&nbsp;|&nbsp;<span><a href="/">Home</a></span>
+        </section>
+    </div>
+
+    <div class="post-nav"><a href="/post/2026/06/30/%E6%9C%AB%E4%B8%96%E6%B1%82%E7%94%9F%E7%9B%AE%E5%BD%95/" class="prev" rel="prev" title="末世求生 目录"><i class="fas fa-angle-left fa-fw" aria-hidden="true"></i>末世求生 目录</a>
+            <a href="/post/2026/07/02/postgresql-jsonb-gin-index-optimization/" class="next" rel="next" title="PostgreSQL JSONB 高效查询实战：GIN 索引与性能优化">PostgreSQL JSONB 高效查询实战：GIN 索引与性能优化<i class="fas fa-angle-right fa-fw" aria-hidden="true"></i></a></div>
+</div>
+<div id="comments"><div id="gitalk" class="comment"></div><noscript>
+                Please enable JavaScript to view the comments powered by <a href="https://github.com/gitalk/gitalk"></a>Gitalk</a>.
+            </noscript></div></article></div>
+            </main><footer class="footer">
+        <div class="footer-container"><div class="footer-line" itemscope itemtype="http://schema.org/CreativeWork"><i class="far fa-copyright fa-fw" aria-hidden="true"></i><span itemprop="copyrightYear">2011 - 2026</span><span class="author" itemprop="copyrightHolder">&nbsp;<a href="https://www.ithome.me/" target="_blank">Simon Chen</a></span>&nbsp;|&nbsp;<span class="license"><a rel="license external nofollow noopener noreferrer" href="https://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank">CC BY-NC-ND 4.0</a></span></div>
+        </div>
+    </footer></div>
+
+        <div id="fixed-buttons"><a href="#" id="back-to-top" class="fixed-button" title="Back to Top">
+                <i class="fas fa-arrow-up fa-fw" aria-hidden="true"></i>
+            </a><a href="#" id="view-comments" class="fixed-button" title="View Comments">
+                <i class="fas fa-comment fa-fw" aria-hidden="true"></i>
+            </a>
+        </div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1.8.0/dist/gitalk.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/css/lightgallery-bundle.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/katex.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/copy-tex.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.css"><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/gitalk@1.8.0/dist/gitalk.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/autocomplete.js@0.38.1/dist/autocomplete.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lunr@2.3.9/lunr.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lazysizes@5.3.1/lazysizes.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/lightgallery.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/plugins/thumbnail/lg-thumbnail.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/plugins/zoom/lg-zoom.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/clipboard@2.0.11/dist/clipboard.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/sharer.js@0.5.1/sharer.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/katex.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/auto-render.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/copy-tex.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/mhchem.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.js"></script><script type="text/javascript">window.config={"code":{"copyTitle":"Copy to clipboard","maxShownLines":50},"comment":{"gitalk":{"admin":["cikichen"],"clientID":"be0f52370ed1285b6c7c","clientSecret":"734a7d8d0ded346ca7a3d565d57de3f8eeb2850b","id":"2026-07-01T00:00:00Z","owner":"cikichen","repo":"gitalk","title":"Go 服务优雅退出实战：从信号捕获到连接排空，告别连接中断"}},"cookieconsent":{"content":{"dismiss":"我知道了","link":"了解更多","message":"本网站使用 Cookies 来改善您的浏览体验."},"enable":true,"palette":{"button":{"background":"#f0f0f0"},"popup":{"background":"#1aa3ff"}},"theme":"edgeless"},"lightgallery":true,"math":{"delimiters":[{"display":true,"left":"$$","right":"$$"},{"display":true,"left":"\\[","right":"\\]"},{"display":true,"left":"\\begin{equation}","right":"\\end{equation}"},{"display":true,"left":"\\begin{equation*}","right":"\\end{equation*}"},{"display":true,"left":"\\begin{align}","right":"\\end{align}"},{"display":true,"left":"\\begin{align*}","right":"\\end{align*}"},{"display":true,"left":"\\begin{alignat}","right":"\\end{alignat}"},{"display":true,"left":"\\begin{alignat*}","right":"\\end{alignat*}"},{"display":true,"left":"\\begin{gather}","right":"\\end{gather}"},{"display":true,"left":"\\begin{CD}","right":"\\end{CD}"},{"display":false,"left":"$","right":"$"},{"display":false,"left":"\\(","right":"\\)"}],"strict":false},"search":{"highlightTag":"em","lunrIndexURL":"/index.json","maxResultLength":10,"noResultsFound":"No results found","snippetLength":50,"type":"lunr"}};</script><script type="text/javascript" src="/js/theme.min.js"></script></body>
+</html>
