@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="robots" content="noodp" />
+        <title>限流算法实战：三种经典算法的Go实现与选型指南 - 编程心语</title><meta name="Description" content="深入解析令牌桶、漏桶与滑动窗口三种限流算法的原理与Go实现，附选型指南与Redis分布式限流方案"><meta property="og:url" content="https://www.ithome.me/post/2026/07/11/rate-limiting-algorithms/">
+  <meta property="og:site_name" content="编程心语">
+  <meta property="og:title" content="限流算法实战：三种经典算法的Go实现与选型指南">
+  <meta property="og:description" content="深入解析令牌桶、漏桶与滑动窗口三种限流算法的原理与Go实现，附选型指南与Redis分布式限流方案">
+  <meta property="og:locale" content="zh_CN">
+  <meta property="og:type" content="article">
+    <meta property="article:section" content="posts">
+    <meta property="article:published_time" content="2026-07-11T08:00:00+08:00">
+    <meta property="article:modified_time" content="2026-07-11T08:32:50+08:00">
+    <meta property="article:tag" content="限流">
+    <meta property="article:tag" content="Go">
+    <meta property="article:tag" content="高并发">
+    <meta property="article:tag" content="算法">
+
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="限流算法实战：三种经典算法的Go实现与选型指南">
+  <meta name="twitter:description" content="深入解析令牌桶、漏桶与滑动窗口三种限流算法的原理与Go实现，附选型指南与Redis分布式限流方案">
+      <meta name="twitter:site" content="@ChenCiki">
+<meta name="application-name" content="编程心语">
+<meta name="apple-mobile-web-app-title" content="编程心语"><meta name="theme-color" content="#ffffff"><meta name="msapplication-TileColor" content="#da532c"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5"><link rel="manifest" href="/site.webmanifest"><link rel="canonical" href="https://www.ithome.me/post/2026/07/11/rate-limiting-algorithms/" /><link rel="prev" href="https://www.ithome.me/post/2026/07/10/strategy-pattern-refactoring-in-go/" /><link rel="next" href="https://www.ithome.me/post/2026/07/12/delay-queue-four-approaches/" /><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/normalize.css@8.0.1/normalize.min.css"><link rel="stylesheet" href="/css/style.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css"><script type="application/ld+json">
+    {
+        "@context": "http://schema.org",
+        "@type": "BlogPosting",
+        "headline": "限流算法实战：三种经典算法的Go实现与选型指南",
+        "inLanguage": "zh-CN",
+        "mainEntityOfPage": {
+            "@type": "WebPage",
+            "@id": "https:\/\/www.ithome.me\/post\/2026\/07\/11\/rate-limiting-algorithms\/"
+        },"image": ["https:\/\/www.ithome.me\/cover.png"],"genre": "posts","keywords": "限流, Go, 高并发, 算法","wordcount":  1883 ,
+        "url": "https:\/\/www.ithome.me\/post\/2026\/07\/11\/rate-limiting-algorithms\/","datePublished": "2026-07-11T08:00:00+08:00","dateModified": "2026-07-11T08:32:50+08:00","publisher": {
+            "@type": "Organization",
+            "name": "SimonChen","logo": "https:\/\/www.ithome.me\/logo.png"},"author": {
+                "@type": "Person",
+                "name": "Simon"
+            },"description": "深入解析令牌桶、漏桶与滑动窗口三种限流算法的原理与Go实现，附选型指南与Redis分布式限流方案"
+    }
+    </script><script async src="https://www.googletagmanager.com/gtag/js?id=G-H1Q5563VR8"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-H1Q5563VR8', { 'anonymize_ip': true });
+</script></head>
+    <body data-header-desktop="fixed" data-header-mobile="auto"><script type="text/javascript">(window.localStorage && localStorage.getItem('theme') ? localStorage.getItem('theme') === 'dark' : ('auto' === 'auto' ? window.matchMedia('(prefers-color-scheme: dark)').matches : 'auto' === 'dark')) && document.body.setAttribute('theme', 'dark');</script>
+
+        <div id="mask"></div><div class="wrapper"><header class="desktop" id="header-desktop">
+    <div class="header-wrapper">
+        <div class="header-title">
+            <a href="/" title="编程心语">编程心语</a>
+        </div>
+        <div class="menu">
+            <div class="menu-inner"><a class="menu-item" href="/posts/"> 文章 </a><a class="menu-item" href="/categories/"> 分类 </a><a class="menu-item" href="/tags/"> 标签 </a><a class="menu-item" href="/about-me/"> 关于 </a><span class="menu-item delimiter"></span><span class="menu-item search" id="search-desktop">
+                        <input type="text" placeholder="搜索文章..." id="search-input-desktop">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-desktop" title="Search">
+                            <i class="fas fa-search fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-desktop" title="Clear">
+                            <i class="fas fa-times-circle fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-desktop">
+                            <i class="fas fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+                        </span>
+                    </span><a href="javascript:void(0);" class="menu-item theme-switch" title="Switch Theme">
+                    <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</header><header class="mobile" id="header-mobile">
+    <div class="header-container">
+        <div class="header-wrapper">
+            <div class="header-title">
+                <a href="/" title="编程心语">编程心语</a>
+            </div>
+            <div class="menu-toggle" id="menu-toggle-mobile">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+        <div class="menu" id="menu-mobile"><div class="search-wrapper">
+                    <div class="search mobile" id="search-mobile">
+                        <input type="text" placeholder="搜索文章..." id="search-input-mobile">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-mobile" title="Search">
+                            <i class="fas fa-search fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-mobile" title="Clear">
+                            <i class="fas fa-times-circle fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-mobile">
+                            <i class="fas fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+                        </span>
+                    </div>
+                    <a href="javascript:void(0);" class="search-cancel" id="search-cancel-mobile">
+                        Cancel
+                    </a>
+                </div><a class="menu-item" href="/posts/" title="">文章</a><a class="menu-item" href="/categories/" title="">分类</a><a class="menu-item" href="/tags/" title="">标签</a><a class="menu-item" href="/about-me/" title="">关于</a><a href="javascript:void(0);" class="menu-item theme-switch" title="Switch Theme">
+                <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
+            </a></div>
+    </div>
+</header><div class="search-dropdown desktop">
+        <div id="search-dropdown-desktop"></div>
+    </div>
+    <div class="search-dropdown mobile">
+        <div id="search-dropdown-mobile"></div>
+    </div><main class="main">
+                <div class="container"><div class="toc" id="toc-auto">
+            <h2 class="toc-title">Contents</h2>
+            <div class="toc-content" id="toc-content-auto"></div>
+        </div><article class="page single"><h1 class="single-title animate__animated animate__flipInX">限流算法实战：三种经典算法的Go实现与选型指南</h1><div class="post-meta">
+            <div class="post-meta-line"><span class="post-author"><a href="https://www.ithome.me/" title="Author" target="_blank" rel="noopener noreferrer author" class="author"><i class="fas fa-user-circle fa-fw" aria-hidden="true"></i>Simon</a>
+</span>&nbsp;<span class="post-category">included in <a href="/categories/backend/"><i class="far fa-folder fa-fw" aria-hidden="true"></i>Backend</a></span></div>
+            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw" aria-hidden="true"></i>&nbsp;<time datetime="2026-07-11">2026-07-11</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden="true"></i>&nbsp;1883 words&nbsp;
+                <i class="far fa-clock fa-fw" aria-hidden="true"></i>&nbsp;4 minutes&nbsp;</div>
+        </div><div class="details toc" id="toc-static"  data-kept="true">
+                <div class="details-summary toc-title">
+                    <span>Contents</span>
+                    <span><i class="details-icon fas fa-angle-right" aria-hidden="true"></i></span>
+                </div>
+                <div class="details-content toc-content" id="toc-content-static"><nav id="TableOfContents">
+  <ul>
+    <li><a href="#为什么限流是后端开发的必修课">为什么限流是后端开发的必修课</a></li>
+    <li><a href="#令牌桶算法token-bucket">令牌桶算法（Token Bucket）</a></li>
+    <li><a href="#漏桶算法leaky-bucket">漏桶算法（Leaky Bucket）</a></li>
+    <li><a href="#滑动窗口算法sliding-window">滑动窗口算法（Sliding Window）</a></li>
+    <li><a href="#三种算法对比">三种算法对比</a></li>
+    <li><a href="#分布式限流redis--lua">分布式限流：Redis + Lua</a></li>
+    <li><a href="#实践建议">实践建议</a></li>
+    <li><a href="#总结">总结</a></li>
+  </ul>
+</nav></div>
+            </div><div class="content" id="content"><h2 id="为什么限流是后端开发的必修课">为什么限流是后端开发的必修课</h2>
+<p>在高并发系统中，限流是保护服务稳定性的第一道防线。无论是突发流量洪峰、恶意请求轰炸，还是下游服务变慢导致的雪崩，限流都能在危机时刻守住底线。</p>
+<p>限流算法不止一种，选错了方案，要么防护不够，要么误杀正常请求。本文将拆解三种经典限流算法的原理，给出完整的Go实现，并讨论各自的适用场景。</p>
+<h2 id="令牌桶算法token-bucket">令牌桶算法（Token Bucket）</h2>
+<p>令牌桶是目前应用最广泛的限流算法。核心思路很简单：以固定速率往桶里放令牌，请求来了先拿令牌，拿到了才能通过，拿不到就拒绝或排队。</p>
+<p>桶有一个容量上限，满了就不再放。这意味着令牌桶允许一定程度的突发流量——桶里攒了令牌，短时间大量请求能一次性消费掉。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span><span class="lnt">42
+</span><span class="lnt">43
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="kn">package</span> <span class="nx">ratelimit</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kn">import</span> <span class="p">(</span>
+</span></span><span class="line"><span class="cl">	<span class="s">&#34;sync&#34;</span>
+</span></span><span class="line"><span class="cl">	<span class="s">&#34;time&#34;</span>
+</span></span><span class="line"><span class="cl"><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kd">type</span> <span class="nx">TokenBucket</span> <span class="kd">struct</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">mu</span>         <span class="nx">sync</span><span class="p">.</span><span class="nx">Mutex</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">rate</span>       <span class="kt">float64</span>   <span class="c1">// 每秒生成令牌数
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="nx">burst</span>      <span class="kt">float64</span>   <span class="c1">// 桶容量
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="nx">tokens</span>     <span class="kt">float64</span>   <span class="c1">// 当前令牌数
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="nx">lastRefill</span> <span class="nx">time</span><span class="p">.</span><span class="nx">Time</span> <span class="c1">// 上次补充时间
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kd">func</span> <span class="nf">NewTokenBucket</span><span class="p">(</span><span class="nx">rate</span><span class="p">,</span> <span class="nx">burst</span> <span class="kt">float64</span><span class="p">)</span> <span class="o">*</span><span class="nx">TokenBucket</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="k">return</span> <span class="o">&amp;</span><span class="nx">TokenBucket</span><span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">rate</span><span class="p">:</span>       <span class="nx">rate</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">burst</span><span class="p">:</span>      <span class="nx">burst</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">tokens</span><span class="p">:</span>     <span class="nx">burst</span><span class="p">,</span> <span class="c1">// 初始满桶
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>		<span class="nx">lastRefill</span><span class="p">:</span> <span class="nx">time</span><span class="p">.</span><span class="nf">Now</span><span class="p">(),</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kd">func</span> <span class="p">(</span><span class="nx">tb</span> <span class="o">*</span><span class="nx">TokenBucket</span><span class="p">)</span> <span class="nf">Allow</span><span class="p">()</span> <span class="kt">bool</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">tb</span><span class="p">.</span><span class="nx">mu</span><span class="p">.</span><span class="nf">Lock</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">	<span class="k">defer</span> <span class="nx">tb</span><span class="p">.</span><span class="nx">mu</span><span class="p">.</span><span class="nf">Unlock</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="nx">now</span> <span class="o">:=</span> <span class="nx">time</span><span class="p">.</span><span class="nf">Now</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">elapsed</span> <span class="o">:=</span> <span class="nx">now</span><span class="p">.</span><span class="nf">Sub</span><span class="p">(</span><span class="nx">tb</span><span class="p">.</span><span class="nx">lastRefill</span><span class="p">).</span><span class="nf">Seconds</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">	<span class="c1">// 按时间比例补充令牌
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="nx">tb</span><span class="p">.</span><span class="nx">tokens</span> <span class="o">+=</span> <span class="nx">elapsed</span> <span class="o">*</span> <span class="nx">tb</span><span class="p">.</span><span class="nx">rate</span>
+</span></span><span class="line"><span class="cl">	<span class="k">if</span> <span class="nx">tb</span><span class="p">.</span><span class="nx">tokens</span> <span class="p">&gt;</span> <span class="nx">tb</span><span class="p">.</span><span class="nx">burst</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">tb</span><span class="p">.</span><span class="nx">tokens</span> <span class="p">=</span> <span class="nx">tb</span><span class="p">.</span><span class="nx">burst</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">tb</span><span class="p">.</span><span class="nx">lastRefill</span> <span class="p">=</span> <span class="nx">now</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="k">if</span> <span class="nx">tb</span><span class="p">.</span><span class="nx">tokens</span> <span class="o">&gt;=</span> <span class="mi">1</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">tb</span><span class="p">.</span><span class="nx">tokens</span><span class="o">--</span>
+</span></span><span class="line"><span class="cl">		<span class="k">return</span> <span class="kc">true</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl">	<span class="k">return</span> <span class="kc">false</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p><strong>适用场景</strong>：API网关、微服务入口限流。Go标准库 <code>golang.org/x/time/rate</code> 就是令牌桶实现，生产环境直接用即可，不必手写。</p>
+<h2 id="漏桶算法leaky-bucket">漏桶算法（Leaky Bucket）</h2>
+<p>漏桶算法把请求比作水，桶以固定速率漏水（处理请求）。水来得太快超出桶容量就溢出（丢弃）。与令牌桶不同，漏桶强制输出速率恒定，不允许突发。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="kd">type</span> <span class="nx">LeakyBucket</span> <span class="kd">struct</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">mu</span>       <span class="nx">sync</span><span class="p">.</span><span class="nx">Mutex</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">rate</span>     <span class="kt">float64</span>   <span class="c1">// 漏出速率（每秒处理请求数）
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="nx">capacity</span> <span class="kt">float64</span>   <span class="c1">// 桶容量
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="nx">water</span>    <span class="kt">float64</span>   <span class="c1">// 当前水量
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="nx">lastLeak</span> <span class="nx">time</span><span class="p">.</span><span class="nx">Time</span> <span class="c1">// 上次漏水时间
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kd">func</span> <span class="nf">NewLeakyBucket</span><span class="p">(</span><span class="nx">rate</span><span class="p">,</span> <span class="nx">capacity</span> <span class="kt">float64</span><span class="p">)</span> <span class="o">*</span><span class="nx">LeakyBucket</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="k">return</span> <span class="o">&amp;</span><span class="nx">LeakyBucket</span><span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">rate</span><span class="p">:</span>     <span class="nx">rate</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">capacity</span><span class="p">:</span> <span class="nx">capacity</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">water</span><span class="p">:</span>    <span class="mi">0</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">lastLeak</span><span class="p">:</span> <span class="nx">time</span><span class="p">.</span><span class="nf">Now</span><span class="p">(),</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kd">func</span> <span class="p">(</span><span class="nx">lb</span> <span class="o">*</span><span class="nx">LeakyBucket</span><span class="p">)</span> <span class="nf">Allow</span><span class="p">()</span> <span class="kt">bool</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">lb</span><span class="p">.</span><span class="nx">mu</span><span class="p">.</span><span class="nf">Lock</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">	<span class="k">defer</span> <span class="nx">lb</span><span class="p">.</span><span class="nx">mu</span><span class="p">.</span><span class="nf">Unlock</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="nx">now</span> <span class="o">:=</span> <span class="nx">time</span><span class="p">.</span><span class="nf">Now</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">elapsed</span> <span class="o">:=</span> <span class="nx">now</span><span class="p">.</span><span class="nf">Sub</span><span class="p">(</span><span class="nx">lb</span><span class="p">.</span><span class="nx">lastLeak</span><span class="p">).</span><span class="nf">Seconds</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">	<span class="c1">// 漏水
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="nx">lb</span><span class="p">.</span><span class="nx">water</span> <span class="o">-=</span> <span class="nx">elapsed</span> <span class="o">*</span> <span class="nx">lb</span><span class="p">.</span><span class="nx">rate</span>
+</span></span><span class="line"><span class="cl">	<span class="k">if</span> <span class="nx">lb</span><span class="p">.</span><span class="nx">water</span> <span class="p">&lt;</span> <span class="mi">0</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">lb</span><span class="p">.</span><span class="nx">water</span> <span class="p">=</span> <span class="mi">0</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">lb</span><span class="p">.</span><span class="nx">lastLeak</span> <span class="p">=</span> <span class="nx">now</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="k">if</span> <span class="nx">lb</span><span class="p">.</span><span class="nx">water</span> <span class="p">&lt;</span> <span class="nx">lb</span><span class="p">.</span><span class="nx">capacity</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">lb</span><span class="p">.</span><span class="nx">water</span><span class="o">++</span>
+</span></span><span class="line"><span class="cl">		<span class="k">return</span> <span class="kc">true</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl">	<span class="c1">// 水满溢出
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="k">return</span> <span class="kc">false</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p><strong>适用场景</strong>：需要严格均匀输出的场景，如消息队列消费速率控制、对外部API的调用频率控制。如果你不希望任何突发请求打垮下游，漏桶是更好的选择。</p>
+<h2 id="滑动窗口算法sliding-window">滑动窗口算法（Sliding Window）</h2>
+<p>滑动窗口将时间划分为小窗口，在每个窗口内计数。窗口随时间滑动，过期计数自动移除。相比固定窗口，滑动窗口避免了边界突刺问题（固定窗口在切换瞬间可能允许双倍流量）。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="kd">type</span> <span class="nx">SlidingWindow</span> <span class="kd">struct</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">mu</span>       <span class="nx">sync</span><span class="p">.</span><span class="nx">Mutex</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">rate</span>     <span class="kt">int</span>           <span class="c1">// 窗口内允许请求数
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="nx">window</span>   <span class="nx">time</span><span class="p">.</span><span class="nx">Duration</span> <span class="c1">// 窗口大小
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="nx">requests</span> <span class="p">[]</span><span class="nx">time</span><span class="p">.</span><span class="nx">Time</span>   <span class="c1">// 请求时间戳
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kd">func</span> <span class="nf">NewSlidingWindow</span><span class="p">(</span><span class="nx">rate</span> <span class="kt">int</span><span class="p">,</span> <span class="nx">window</span> <span class="nx">time</span><span class="p">.</span><span class="nx">Duration</span><span class="p">)</span> <span class="o">*</span><span class="nx">SlidingWindow</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="k">return</span> <span class="o">&amp;</span><span class="nx">SlidingWindow</span><span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">rate</span><span class="p">:</span>     <span class="nx">rate</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">window</span><span class="p">:</span>   <span class="nx">window</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">requests</span><span class="p">:</span> <span class="nb">make</span><span class="p">([]</span><span class="nx">time</span><span class="p">.</span><span class="nx">Time</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="nx">rate</span><span class="p">),</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kd">func</span> <span class="p">(</span><span class="nx">sw</span> <span class="o">*</span><span class="nx">SlidingWindow</span><span class="p">)</span> <span class="nf">Allow</span><span class="p">()</span> <span class="kt">bool</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">sw</span><span class="p">.</span><span class="nx">mu</span><span class="p">.</span><span class="nf">Lock</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">	<span class="k">defer</span> <span class="nx">sw</span><span class="p">.</span><span class="nx">mu</span><span class="p">.</span><span class="nf">Unlock</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="nx">now</span> <span class="o">:=</span> <span class="nx">time</span><span class="p">.</span><span class="nf">Now</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">border</span> <span class="o">:=</span> <span class="nx">now</span><span class="p">.</span><span class="nf">Add</span><span class="p">(</span><span class="o">-</span><span class="nx">sw</span><span class="p">.</span><span class="nx">window</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="c1">// 移除过期请求
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="nx">valid</span> <span class="o">:=</span> <span class="nx">sw</span><span class="p">.</span><span class="nx">requests</span><span class="p">[:</span><span class="mi">0</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl">	<span class="k">for</span> <span class="nx">_</span><span class="p">,</span> <span class="nx">t</span> <span class="o">:=</span> <span class="k">range</span> <span class="nx">sw</span><span class="p">.</span><span class="nx">requests</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="k">if</span> <span class="nx">t</span><span class="p">.</span><span class="nf">After</span><span class="p">(</span><span class="nx">border</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">			<span class="nx">valid</span> <span class="p">=</span> <span class="nb">append</span><span class="p">(</span><span class="nx">valid</span><span class="p">,</span> <span class="nx">t</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">		<span class="p">}</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">sw</span><span class="p">.</span><span class="nx">requests</span> <span class="p">=</span> <span class="nx">valid</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="nx">sw</span><span class="p">.</span><span class="nx">requests</span><span class="p">)</span> <span class="p">&lt;</span> <span class="nx">sw</span><span class="p">.</span><span class="nx">rate</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">sw</span><span class="p">.</span><span class="nx">requests</span> <span class="p">=</span> <span class="nb">append</span><span class="p">(</span><span class="nx">sw</span><span class="p">.</span><span class="nx">requests</span><span class="p">,</span> <span class="nx">now</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">		<span class="k">return</span> <span class="kc">true</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl">	<span class="k">return</span> <span class="kc">false</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p><strong>适用场景</strong>：需要精确控制时间段内请求数的场景，如&quot;每分钟100次&quot;的API调用限制。滑动窗口在精确度上最优，但内存开销随窗口内请求数线性增长。</p>
+<h2 id="三种算法对比">三种算法对比</h2>
+<table>
+<thead>
+<tr>
+<th>特性</th>
+<th>令牌桶</th>
+<th>漏桶</th>
+<th>滑动窗口</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>突发流量</td>
+<td>允许（受桶容量限制）</td>
+<td>不允许</td>
+<td>受限</td>
+</tr>
+<tr>
+<td>输出平滑度</td>
+<td>不平滑</td>
+<td>完全平滑</td>
+<td>不平滑</td>
+</tr>
+<tr>
+<td>精确度</td>
+<td>中等</td>
+<td>高</td>
+<td>最高</td>
+</tr>
+<tr>
+<td>内存开销</td>
+<td>O(1)</td>
+<td>O(1)</td>
+<td>O(n)</td>
+</tr>
+<tr>
+<td>实现复杂度</td>
+<td>低</td>
+<td>低</td>
+<td>中等</td>
+</tr>
+</tbody>
+</table>
+<p>选型建议：大多数场景用<strong>令牌桶</strong>就够了，它是事实上的标准。需要恒定输出速率选<strong>漏桶</strong>。需要精确控制窗口请求数选<strong>滑动窗口</strong>。</p>
+<h2 id="分布式限流redis--lua">分布式限流：Redis + Lua</h2>
+<p>单机限流只能保护单个实例。多实例部署下，需要分布式限流。Redis + Lua脚本是最常见的方案，保证原子性。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="c1">// Redis令牌桶Lua脚本
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kd">const</span> <span class="nx">tokenBucketScript</span> <span class="p">=</span> <span class="s">`
+</span></span></span><span class="line"><span class="cl"><span class="s">local key = KEYS[1]
+</span></span></span><span class="line"><span class="cl"><span class="s">local rate = tonumber(ARGV[1])
+</span></span></span><span class="line"><span class="cl"><span class="s">local burst = tonumber(ARGV[2])
+</span></span></span><span class="line"><span class="cl"><span class="s">local now = tonumber(ARGV[3])
+</span></span></span><span class="line"><span class="cl"><span class="s">
+</span></span></span><span class="line"><span class="cl"><span class="s">local data = redis.call(&#39;HMGET&#39;, key, &#39;tokens&#39;, &#39;last_refill&#39;)
+</span></span></span><span class="line"><span class="cl"><span class="s">local tokens = tonumber(data[1]) or burst
+</span></span></span><span class="line"><span class="cl"><span class="s">local lastRefill = tonumber(data[2]) or now
+</span></span></span><span class="line"><span class="cl"><span class="s">
+</span></span></span><span class="line"><span class="cl"><span class="s">local elapsed = math.max(0, now - lastRefill)
+</span></span></span><span class="line"><span class="cl"><span class="s">tokens = math.min(burst, tokens + elapsed * rate)
+</span></span></span><span class="line"><span class="cl"><span class="s">
+</span></span></span><span class="line"><span class="cl"><span class="s">if tokens &gt;= 1 then
+</span></span></span><span class="line"><span class="cl"><span class="s">    tokens = tokens - 1
+</span></span></span><span class="line"><span class="cl"><span class="s">    redis.call(&#39;HMSET&#39;, key, &#39;tokens&#39;, tokens, &#39;last_refill&#39;, now)
+</span></span></span><span class="line"><span class="cl"><span class="s">    redis.call(&#39;EXPIRE&#39;, key, 60)
+</span></span></span><span class="line"><span class="cl"><span class="s">    return 1
+</span></span></span><span class="line"><span class="cl"><span class="s">else
+</span></span></span><span class="line"><span class="cl"><span class="s">    redis.call(&#39;HMSET&#39;, key, &#39;tokens&#39;, tokens, &#39;last_refill&#39;, now)
+</span></span></span><span class="line"><span class="cl"><span class="s">    redis.call(&#39;EXPIRE&#39;, key, 60)
+</span></span></span><span class="line"><span class="cl"><span class="s">    return 0
+</span></span></span><span class="line"><span class="cl"><span class="s">end
+</span></span></span><span class="line"><span class="cl"><span class="s">`</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">// 使用示例
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kd">func</span> <span class="nf">AllowRedis</span><span class="p">(</span><span class="nx">rdb</span> <span class="o">*</span><span class="nx">redis</span><span class="p">.</span><span class="nx">Client</span><span class="p">,</span> <span class="nx">key</span> <span class="kt">string</span><span class="p">,</span> <span class="nx">rate</span><span class="p">,</span> <span class="nx">burst</span> <span class="kt">float64</span><span class="p">)</span> <span class="p">(</span><span class="kt">bool</span><span class="p">,</span> <span class="kt">error</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">result</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">rdb</span><span class="p">.</span><span class="nf">Eval</span><span class="p">(</span><span class="nx">context</span><span class="p">.</span><span class="nf">Background</span><span class="p">(),</span> <span class="nx">tokenBucketScript</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">		<span class="p">[]</span><span class="kt">string</span><span class="p">{</span><span class="nx">key</span><span class="p">},</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">rate</span><span class="p">,</span> <span class="nx">burst</span><span class="p">,</span> <span class="nb">float64</span><span class="p">(</span><span class="nx">time</span><span class="p">.</span><span class="nf">Now</span><span class="p">().</span><span class="nf">UnixNano</span><span class="p">())</span><span class="o">/</span><span class="mf">1e9</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">	<span class="p">).</span><span class="nf">Int</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">	<span class="k">if</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="k">return</span> <span class="kc">false</span><span class="p">,</span> <span class="nx">err</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl">	<span class="k">return</span> <span class="nx">result</span> <span class="o">==</span> <span class="mi">1</span><span class="p">,</span> <span class="kc">nil</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>Lua脚本在Redis中原子执行，多个服务实例共享同一个计数器，实现全局限流。注意设置合理的过期时间，避免冷数据长期占用内存。</p>
+<h2 id="实践建议">实践建议</h2>
+<ol>
+<li><strong>限流维度要选对</strong>：按用户ID限流、按IP限流、按接口限流，还是全局限流，取决于你的防护目标</li>
+<li><strong>拒绝策略要合理</strong>：直接返回429是最简单的，但更好的做法是排队等待或降级返回缓存数据</li>
+<li><strong>监控不可少</strong>：限流触发频率是系统健康度的重要指标，接入告警，在限流频繁触发时主动扩容</li>
+<li><strong>不要过度依赖限流</strong>：限流是兜底措施，根本解法是提升系统容量和优化架构</li>
+</ol>
+<h2 id="总结">总结</h2>
+<p>限流算法不是选&quot;最好的&quot;，而是选&quot;最合适的&quot;。令牌桶兼顾弹性与防护，是大多数场景的首选；漏桶适合需要严格速率控制的下游保护；滑动窗口则在精确度要求高的场景中占优。理解每种算法的特性，结合你的业务需求做出选型，才是工程师该做的事。</p>
+</div><div class="post-footer" id="post-footer">
+    <div class="post-info">
+        <div class="post-info-line">
+            <div class="post-info-mod">
+                <span>Updated on 2026-07-11&nbsp;<a class="git-hash" href="https://github.com/cikichen/hugo-sync/commit/6af60a86474dc3718620a903fa2ca94ddc635ab1" target="_blank" title="commit by cikichen(cikichen@github.com) 6af60a86474dc3718620a903fa2ca94ddc635ab1: Auto: 2026-07-11 - 限流算法实战：三种经典算法的Go实现与选型指南">
+                                    <i class="fas fa-hashtag fa-fw" aria-hidden="true"></i>6af60a86</a></span>
+            </div></div>
+        <div class="post-info-line">
+            <div class="post-info-md"></div>
+            <div class="post-info-share">
+                <span><a href="javascript:void(0);" title="Share on Twitter" data-sharer="twitter" data-url="https://www.ithome.me/post/2026/07/11/rate-limiting-algorithms/" data-title="限流算法实战：三种经典算法的Go实现与选型指南" data-via="ChenCiki" data-hashtags="限流,Go,高并发,算法"><i class="fab fa-twitter fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on Linkedin" data-sharer="linkedin" data-url="https://www.ithome.me/post/2026/07/11/rate-limiting-algorithms/"><i class="fab fa-linkedin fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on 微博" data-sharer="weibo" data-url="https://www.ithome.me/post/2026/07/11/rate-limiting-algorithms/" data-title="限流算法实战：三种经典算法的Go实现与选型指南" data-ralateuid="xxx"><i class="fab fa-weibo fa-fw" aria-hidden="true"></i></a></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="post-info-more">
+        <section class="post-tags"><i class="fas fa-tags fa-fw" aria-hidden="true"></i>&nbsp;<a href="/tags/%E9%99%90%E6%B5%81/">限流</a>,&nbsp;<a href="/tags/go/">Go</a>,&nbsp;<a href="/tags/%E9%AB%98%E5%B9%B6%E5%8F%91/">高并发</a>,&nbsp;<a href="/tags/%E7%AE%97%E6%B3%95/">算法</a></section>
+        <section>
+            <span><a href="javascript:void(0);" onclick="window.history.back();">Back</a></span>&nbsp;|&nbsp;<span><a href="/">Home</a></span>
+        </section>
+    </div>
+
+    <div class="post-nav"><a href="/post/2026/07/10/strategy-pattern-refactoring-in-go/" class="prev" rel="prev" title="策略模式重构实战：用Go消除代码中泛滥的if-else"><i class="fas fa-angle-left fa-fw" aria-hidden="true"></i>策略模式重构实战：用Go消除代码中泛滥的if-else</a>
+            <a href="/post/2026/07/12/delay-queue-four-approaches/" class="next" rel="next" title="延迟队列的四种实现方案：从数据库轮询到 Redis 时间轮">延迟队列的四种实现方案：从数据库轮询到 Redis 时间轮<i class="fas fa-angle-right fa-fw" aria-hidden="true"></i></a></div>
+</div>
+<div id="comments"><div id="gitalk" class="comment"></div><noscript>
+                Please enable JavaScript to view the comments powered by <a href="https://github.com/gitalk/gitalk"></a>Gitalk</a>.
+            </noscript></div></article></div>
+            </main><footer class="footer">
+        <div class="footer-container"><div class="footer-line" itemscope itemtype="http://schema.org/CreativeWork"><i class="far fa-copyright fa-fw" aria-hidden="true"></i><span itemprop="copyrightYear">2011 - 2026</span><span class="author" itemprop="copyrightHolder">&nbsp;<a href="https://www.ithome.me/" target="_blank">Simon Chen</a></span>&nbsp;|&nbsp;<span class="license"><a rel="license external nofollow noopener noreferrer" href="https://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank">CC BY-NC-ND 4.0</a></span></div>
+        </div>
+    </footer></div>
+
+        <div id="fixed-buttons"><a href="#" id="back-to-top" class="fixed-button" title="Back to Top">
+                <i class="fas fa-arrow-up fa-fw" aria-hidden="true"></i>
+            </a><a href="#" id="view-comments" class="fixed-button" title="View Comments">
+                <i class="fas fa-comment fa-fw" aria-hidden="true"></i>
+            </a>
+        </div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1.8.0/dist/gitalk.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/css/lightgallery-bundle.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/katex.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/copy-tex.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.css"><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/gitalk@1.8.0/dist/gitalk.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/autocomplete.js@0.38.1/dist/autocomplete.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lunr@2.3.9/lunr.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lazysizes@5.3.1/lazysizes.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/lightgallery.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/plugins/thumbnail/lg-thumbnail.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/plugins/zoom/lg-zoom.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/clipboard@2.0.11/dist/clipboard.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/sharer.js@0.5.1/sharer.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/katex.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/auto-render.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/copy-tex.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/mhchem.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.js"></script><script type="text/javascript">window.config={"code":{"copyTitle":"Copy to clipboard","maxShownLines":50},"comment":{"gitalk":{"admin":["cikichen"],"clientID":"be0f52370ed1285b6c7c","clientSecret":"734a7d8d0ded346ca7a3d565d57de3f8eeb2850b","id":"2026-07-11T00:00:00Z","owner":"cikichen","repo":"gitalk","title":"限流算法实战：三种经典算法的Go实现与选型指南"}},"cookieconsent":{"content":{"dismiss":"我知道了","link":"了解更多","message":"本网站使用 Cookies 来改善您的浏览体验."},"enable":true,"palette":{"button":{"background":"#f0f0f0"},"popup":{"background":"#1aa3ff"}},"theme":"edgeless"},"lightgallery":true,"math":{"delimiters":[{"display":true,"left":"$$","right":"$$"},{"display":true,"left":"\\[","right":"\\]"},{"display":true,"left":"\\begin{equation}","right":"\\end{equation}"},{"display":true,"left":"\\begin{equation*}","right":"\\end{equation*}"},{"display":true,"left":"\\begin{align}","right":"\\end{align}"},{"display":true,"left":"\\begin{align*}","right":"\\end{align*}"},{"display":true,"left":"\\begin{alignat}","right":"\\end{alignat}"},{"display":true,"left":"\\begin{alignat*}","right":"\\end{alignat*}"},{"display":true,"left":"\\begin{gather}","right":"\\end{gather}"},{"display":true,"left":"\\begin{CD}","right":"\\end{CD}"},{"display":false,"left":"$","right":"$"},{"display":false,"left":"\\(","right":"\\)"}],"strict":false},"search":{"highlightTag":"em","lunrIndexURL":"/index.json","maxResultLength":10,"noResultsFound":"No results found","snippetLength":50,"type":"lunr"}};</script><script type="text/javascript" src="/js/theme.min.js"></script></body>
+</html>

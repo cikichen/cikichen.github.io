@@ -1,0 +1,1392 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="robots" content="noodp" />
+        <title>工具调用机制：Function Calling实战 - 编程心语</title><meta name="Description" content="深入解析LLM Function Calling原理，从工具定义到调度执行，构建智能体的工具使用能力"><meta property="og:url" content="https://www.ithome.me/post/2026/07/05/ai%E6%99%BA%E8%83%BD%E4%BD%93%E5%BC%80%E5%8F%91-%E7%AC%AC5%E7%AB%A0-%E5%B7%A5%E5%85%B7%E8%B0%83%E7%94%A8%E6%9C%BA%E5%88%B6/">
+  <meta property="og:site_name" content="编程心语">
+  <meta property="og:title" content="工具调用机制：Function Calling实战">
+  <meta property="og:description" content="深入解析LLM Function Calling原理，从工具定义到调度执行，构建智能体的工具使用能力">
+  <meta property="og:locale" content="zh_CN">
+  <meta property="og:type" content="article">
+    <meta property="article:section" content="posts">
+    <meta property="article:published_time" content="2026-07-05T08:00:00+08:00">
+    <meta property="article:modified_time" content="2026-07-05T08:00:00+08:00">
+    <meta property="article:tag" content="AI Agent">
+    <meta property="article:tag" content="Function Calling">
+    <meta property="article:tag" content="工具调用">
+    <meta property="article:tag" content="OpenAI">
+    <meta property="article:tag" content="AI智能体开发实战">
+
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="工具调用机制：Function Calling实战">
+  <meta name="twitter:description" content="深入解析LLM Function Calling原理，从工具定义到调度执行，构建智能体的工具使用能力">
+      <meta name="twitter:site" content="@ChenCiki">
+<meta name="application-name" content="编程心语">
+<meta name="apple-mobile-web-app-title" content="编程心语"><meta name="theme-color" content="#ffffff"><meta name="msapplication-TileColor" content="#da532c"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5"><link rel="manifest" href="/site.webmanifest"><link rel="canonical" href="https://www.ithome.me/post/2026/07/05/ai%E6%99%BA%E8%83%BD%E4%BD%93%E5%BC%80%E5%8F%91-%E7%AC%AC5%E7%AB%A0-%E5%B7%A5%E5%85%B7%E8%B0%83%E7%94%A8%E6%9C%BA%E5%88%B6/" /><link rel="prev" href="https://www.ithome.me/post/2026/07/05/ai%E6%99%BA%E8%83%BD%E4%BD%93%E5%BC%80%E5%8F%91-%E7%AC%AC6%E7%AB%A0-%E6%8E%A8%E7%90%86%E6%A8%A1%E5%BC%8F/" /><link rel="next" href="https://www.ithome.me/post/2026/07/05/ai%E6%99%BA%E8%83%BD%E4%BD%93%E5%BC%80%E5%8F%91-%E7%AC%AC9%E7%AB%A0-%E5%A4%9A%E6%99%BA%E8%83%BD%E4%BD%93%E5%8D%8F%E4%BD%9C/" /><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/normalize.css@8.0.1/normalize.min.css"><link rel="stylesheet" href="/css/style.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css"><script type="application/ld+json">
+    {
+        "@context": "http://schema.org",
+        "@type": "BlogPosting",
+        "headline": "工具调用机制：Function Calling实战",
+        "inLanguage": "zh-CN",
+        "mainEntityOfPage": {
+            "@type": "WebPage",
+            "@id": "https:\/\/www.ithome.me\/post\/2026\/07\/05\/ai%E6%99%BA%E8%83%BD%E4%BD%93%E5%BC%80%E5%8F%91-%E7%AC%AC5%E7%AB%A0-%E5%B7%A5%E5%85%B7%E8%B0%83%E7%94%A8%E6%9C%BA%E5%88%B6\/"
+        },"image": ["https:\/\/www.ithome.me\/cover.png"],"genre": "posts","keywords": "AI Agent, Function Calling, 工具调用, OpenAI, AI智能体开发实战","wordcount":  12839 ,
+        "url": "https:\/\/www.ithome.me\/post\/2026\/07\/05\/ai%E6%99%BA%E8%83%BD%E4%BD%93%E5%BC%80%E5%8F%91-%E7%AC%AC5%E7%AB%A0-%E5%B7%A5%E5%85%B7%E8%B0%83%E7%94%A8%E6%9C%BA%E5%88%B6\/","datePublished": "2026-07-05T08:00:00+08:00","dateModified": "2026-07-05T08:00:00+08:00","publisher": {
+            "@type": "Organization",
+            "name": "SimonChen","logo": "https:\/\/www.ithome.me\/logo.png"},"author": {
+                "@type": "Person",
+                "name": "Simon"
+            },"description": "深入解析LLM Function Calling原理，从工具定义到调度执行，构建智能体的工具使用能力"
+    }
+    </script><script async src="https://www.googletagmanager.com/gtag/js?id=G-H1Q5563VR8"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-H1Q5563VR8', { 'anonymize_ip': true });
+</script></head>
+    <body data-header-desktop="fixed" data-header-mobile="auto"><script type="text/javascript">(window.localStorage && localStorage.getItem('theme') ? localStorage.getItem('theme') === 'dark' : ('auto' === 'auto' ? window.matchMedia('(prefers-color-scheme: dark)').matches : 'auto' === 'dark')) && document.body.setAttribute('theme', 'dark');</script>
+
+        <div id="mask"></div><div class="wrapper"><header class="desktop" id="header-desktop">
+    <div class="header-wrapper">
+        <div class="header-title">
+            <a href="/" title="编程心语">编程心语</a>
+        </div>
+        <div class="menu">
+            <div class="menu-inner"><a class="menu-item" href="/posts/"> 文章 </a><a class="menu-item" href="/categories/"> 分类 </a><a class="menu-item" href="/tags/"> 标签 </a><a class="menu-item" href="/about-me/"> 关于 </a><span class="menu-item delimiter"></span><span class="menu-item search" id="search-desktop">
+                        <input type="text" placeholder="搜索文章..." id="search-input-desktop">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-desktop" title="Search">
+                            <i class="fas fa-search fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-desktop" title="Clear">
+                            <i class="fas fa-times-circle fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-desktop">
+                            <i class="fas fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+                        </span>
+                    </span><a href="javascript:void(0);" class="menu-item theme-switch" title="Switch Theme">
+                    <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</header><header class="mobile" id="header-mobile">
+    <div class="header-container">
+        <div class="header-wrapper">
+            <div class="header-title">
+                <a href="/" title="编程心语">编程心语</a>
+            </div>
+            <div class="menu-toggle" id="menu-toggle-mobile">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+        <div class="menu" id="menu-mobile"><div class="search-wrapper">
+                    <div class="search mobile" id="search-mobile">
+                        <input type="text" placeholder="搜索文章..." id="search-input-mobile">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-mobile" title="Search">
+                            <i class="fas fa-search fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-mobile" title="Clear">
+                            <i class="fas fa-times-circle fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-mobile">
+                            <i class="fas fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+                        </span>
+                    </div>
+                    <a href="javascript:void(0);" class="search-cancel" id="search-cancel-mobile">
+                        Cancel
+                    </a>
+                </div><a class="menu-item" href="/posts/" title="">文章</a><a class="menu-item" href="/categories/" title="">分类</a><a class="menu-item" href="/tags/" title="">标签</a><a class="menu-item" href="/about-me/" title="">关于</a><a href="javascript:void(0);" class="menu-item theme-switch" title="Switch Theme">
+                <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
+            </a></div>
+    </div>
+</header><div class="search-dropdown desktop">
+        <div id="search-dropdown-desktop"></div>
+    </div>
+    <div class="search-dropdown mobile">
+        <div id="search-dropdown-mobile"></div>
+    </div><main class="main">
+                <div class="container"><div class="toc" id="toc-auto">
+            <h2 class="toc-title">Contents</h2>
+            <div class="toc-content" id="toc-content-auto"></div>
+        </div><article class="page single"><h1 class="single-title animate__animated animate__flipInX">工具调用机制：Function Calling实战</h1><div class="post-meta">
+            <div class="post-meta-line"><span class="post-author"><a href="https://www.ithome.me/" title="Author" target="_blank" rel="noopener noreferrer author" class="author"><i class="fas fa-user-circle fa-fw" aria-hidden="true"></i>Simon</a>
+</span>&nbsp;<span class="post-category">included in <a href="/categories/ai%E6%99%BA%E8%83%BD%E4%BD%93%E5%BC%80%E5%8F%91%E5%AE%9E%E6%88%98/"><i class="far fa-folder fa-fw" aria-hidden="true"></i>AI智能体开发实战</a></span></div>
+            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw" aria-hidden="true"></i>&nbsp;<time datetime="2026-07-05">2026-07-05</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden="true"></i>&nbsp;12839 words&nbsp;
+                <i class="far fa-clock fa-fw" aria-hidden="true"></i>&nbsp;26 minutes&nbsp;</div>
+        </div><div class="details toc" id="toc-static"  data-kept="true">
+                <div class="details-summary toc-title">
+                    <span>Contents</span>
+                    <span><i class="details-icon fas fa-angle-right" aria-hidden="true"></i></span>
+                </div>
+                <div class="details-content toc-content" id="toc-content-static"><nav id="TableOfContents">
+  <ul>
+    <li><a href="#1-引言为什么agent需要工具">1. 引言：为什么Agent需要工具</a></li>
+    <li><a href="#2-function-calling原理">2. Function Calling原理</a>
+      <ul>
+        <li><a href="#21-llm如何理解工具描述">2.1 LLM如何理解工具描述</a></li>
+        <li><a href="#22-工具调用的完整流程">2.2 工具调用的完整流程</a></li>
+        <li><a href="#23-工具描述schemajson-schema格式">2.3 工具描述schema（JSON Schema格式）</a></li>
+      </ul>
+    </li>
+    <li><a href="#3-openai-function-calling实战">3. OpenAI Function Calling实战</a>
+      <ul>
+        <li><a href="#31-环境准备">3.1 环境准备</a></li>
+        <li><a href="#32-定义工具函数">3.2 定义工具函数</a></li>
+        <li><a href="#33-注册工具到llm">3.3 注册工具到LLM</a></li>
+        <li><a href="#34-处理工具调用响应">3.4 处理工具调用响应</a></li>
+        <li><a href="#35-完整运行示例">3.5 完整运行示例</a></li>
+      </ul>
+    </li>
+    <li><a href="#4-多工具编排">4. 多工具编排</a>
+      <ul>
+        <li><a href="#41-一个agent管理多个工具">4.1 一个Agent管理多个工具</a></li>
+        <li><a href="#42-工具选择策略">4.2 工具选择策略</a></li>
+        <li><a href="#43-并行工具调用">4.3 并行工具调用</a></li>
+      </ul>
+    </li>
+    <li><a href="#5-自定义工具开发">5. 自定义工具开发</a>
+      <ul>
+        <li><a href="#51-搜索工具模拟serpapi">5.1 搜索工具（模拟SerpAPI）</a></li>
+        <li><a href="#52-文件操作工具">5.2 文件操作工具</a></li>
+        <li><a href="#53-数据库查询工具">5.3 数据库查询工具</a></li>
+        <li><a href="#54-工具类设计模式">5.4 工具类设计模式</a></li>
+      </ul>
+    </li>
+    <li><a href="#6-工具调用最佳实践">6. 工具调用最佳实践</a>
+      <ul>
+        <li><a href="#61-工具描述的写法技巧">6.1 工具描述的写法技巧</a></li>
+        <li><a href="#62-错误处理与重试">6.2 错误处理与重试</a></li>
+        <li><a href="#63-工具权限与安全">6.3 工具权限与安全</a></li>
+        <li><a href="#64-性能优化">6.4 性能优化</a></li>
+      </ul>
+    </li>
+    <li><a href="#7-不同模型的function-calling对比">7. 不同模型的Function Calling对比</a></li>
+    <li><a href="#8-小结">8. 小结</a></li>
+    <li><a href="#9-预告第6章推理模式">9. 预告第6章：推理模式</a></li>
+  </ul>
+</nav></div>
+            </div><div class="content" id="content"><h2 id="1-引言为什么agent需要工具">1. 引言：为什么Agent需要工具</h2>
+<p>想象你聘了一位&quot;过目不忘&quot;的私人助理——他读过人类有史以来几乎所有的书，知识渊博、口才了得。可是你让他&quot;查一下今天上海的天气&quot;，他却只能凭记忆猜一个数；你让他&quot;算一下 1234 × 5678&quot;，他大概率会算错。原因很简单：他没有手机、没有计算器、没有联网能力，再聪明的脑子也巧妇难为无米之炊。</p>
+<p>这正是LLM（大语言模型）的处境。在第4章里，我们给智能体装上了&quot;记忆&quot;，它能维持连贯的多轮对话。但如果你问它实时天气、让它做精确算术、或让它去查你的订单库，它多半会&quot;幻觉&quot;出一个看似合理却完全错误的答案——因为它的知识停留在训练数据截止的那一天，而且它本质上是文字接龙机器，并不擅长精确计算，更无法主动访问外部系统。</p>
+<p>要让LLM从&quot;会聊天的鹦鹉&quot;进化为&quot;能办事的助手&quot;，必须给它装上&quot;手和眼&quot;——也就是工具（Tools）。工具让智能体获得三种关键能力：</p>
+<ul>
+<li><strong>获取实时信息</strong>：调用搜索API、天气API、数据库查询，突破训练数据的时间边界；</li>
+<li><strong>执行精确操作</strong>：用计算器做算术、用解释器跑代码、用SQL查数据，避免数值幻觉；</li>
+<li><strong>改变外部世界</strong>：发邮件、建工单、控制智能家居，让Agent真正&quot;动&quot;起来。</li>
+</ul>
+<p>Function Calling（函数调用）是当前主流大模型厂商共同支持的一套标准机制：它让LLM能够<strong>结构化地</strong>选择工具、生成参数，再由外部代码执行后把结果回灌给LLM。本章我们从原理到实战，把这套机制彻底讲透。</p>
+<p>💡 <strong>小贴士</strong>：别被&quot;函数调用&quot;这四个字误导。LLM自己一行代码都不会跑，它只是&quot;决定&quot;调用什么、传什么参数，真正动手执行的永远是你的Python程序。这一点理解透了，后面所有内容都顺了。</p>
+<h2 id="2-function-calling原理">2. Function Calling原理</h2>
+<h3 id="21-llm如何理解工具描述">2.1 LLM如何理解工具描述</h3>
+<p>很多人误以为Function Calling是&quot;LLM自己调用了函数&quot;，其实完全不是。我们用一个生活比喻来解释：</p>
+<p>把整个系统想象成一家餐厅。<strong>用户</strong>是顾客，<strong>LLM</strong>是服务员，<strong>工具函数</strong>是后厨各位厨师，<strong>宿主代码</strong>（你写的Python）是传菜员兼调度员。服务员（LLM）自己不会炒菜，但他能听懂顾客要点什么，然后把需求写成一张结构化的&quot;点菜单&quot;（JSON），交给传菜员。传菜员拿着菜单去找对应的厨师（执行函数），厨师做好菜（返回结果）后，传菜员再把菜端回来交给服务员。服务员看一眼菜，决定是直接上给顾客，还是还要再追加几道菜。</p>
+<p>对应到技术层面，真正发生的事情是这六步：</p>
+<ol>
+<li>我们把若干工具的<strong>描述信息</strong>（名称、功能、参数schema）以结构化格式塞进prompt；</li>
+<li>LLM在生成回复时，根据用户意图判断&quot;需不需要用工具、用哪个工具、参数填什么&quot;；</li>
+<li>如果要用工具，LLM输出一个<strong>结构化的JSON调用请求</strong>，而不是自然语言；</li>
+<li>我们的宿主代码解析这个JSON，真正调用对应函数，拿到结果；</li>
+<li>把结果以<code>tool</code>消息的形式追加到对话历史，再次喂给LLM；</li>
+<li>LLM基于工具返回结果，生成最终的自然语言回复。</li>
+</ol>
+<p>所以Function Calling的本质是：<strong>LLM负责&quot;决策&quot;，宿主代码负责&quot;执行&quot;，两者通过JSON协议协作</strong>。LLM之所以能&quot;听懂&quot;工具描述，是因为它在训练阶段见过海量&quot;工具描述→正确调用&quot;的样本，学会了把自然语言意图映射到结构化参数——就像服务员经过培训，能把&quot;来碗不辣的辣子鸡&quot;翻译成&quot;宫保鸡丁，少放辣椒&quot;这张标准菜单。</p>
+<h3 id="22-工具调用的完整流程">2.2 工具调用的完整流程</h3>
+<p>一个标准的Function Calling闭环包含五步：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">定义工具函数 → 描述工具给LLM → LLM选择并生成调用 → 宿主执行工具 → 结果回灌LLM
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>图示如下：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-gdscript3" data-lang="gdscript3"><span class="line"><span class="cl"><span class="err">用户输入</span>
+</span></span><span class="line"><span class="cl">   <span class="err">│</span>
+</span></span><span class="line"><span class="cl">   <span class="err">▼</span>
+</span></span><span class="line"><span class="cl"><span class="p">[</span><span class="n">LLM</span><span class="p">]</span> <span class="err">──看到工具描述──</span><span class="o">&gt;</span> <span class="err">决定调用</span> <span class="n">get_weather</span><span class="p">(</span><span class="n">location</span><span class="o">=</span><span class="s2">&#34;上海&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">   <span class="err">│</span>
+</span></span><span class="line"><span class="cl">   <span class="err">▼</span>
+</span></span><span class="line"><span class="cl"><span class="err">宿主代码解析</span> <span class="n">tool_calls</span>
+</span></span><span class="line"><span class="cl">   <span class="err">│</span>
+</span></span><span class="line"><span class="cl">   <span class="err">▼</span>
+</span></span><span class="line"><span class="cl"><span class="err">执行</span> <span class="n">get_weather</span><span class="p">(</span><span class="s2">&#34;上海&#34;</span><span class="p">)</span> <span class="err">──</span><span class="o">&gt;</span> <span class="p">{</span><span class="s2">&#34;temp&#34;</span><span class="p">:</span> <span class="mi">32</span><span class="p">,</span> <span class="s2">&#34;condition&#34;</span><span class="p">:</span> <span class="s2">&#34;晴&#34;</span><span class="p">}</span>
+</span></span><span class="line"><span class="cl">   <span class="err">│</span>
+</span></span><span class="line"><span class="cl">   <span class="err">▼</span>
+</span></span><span class="line"><span class="cl"><span class="err">把结果作为</span> <span class="k">tool</span> <span class="err">消息追加到</span> <span class="n">messages</span>
+</span></span><span class="line"><span class="cl">   <span class="err">│</span>
+</span></span><span class="line"><span class="cl">   <span class="err">▼</span>
+</span></span><span class="line"><span class="cl"><span class="p">[</span><span class="n">LLM</span><span class="p">]</span> <span class="err">──基于结果──</span><span class="o">&gt;</span> <span class="s2">&#34;上海今天32度，晴天，注意防晒&#34;</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>注意这个循环可能要转<strong>好几圈</strong>：LLM可能先查天气，再查日程，最后综合回答。复杂的Agent甚至会串行调用十几个工具，每一步都基于上一步的结果做决策。</p>
+<p>💡 <strong>小贴士</strong>：整个闭环里，最容易被新手忽略的是第5步——必须把工具结果作为<code>role=&quot;tool&quot;</code>的消息<strong>追加回messages</strong>，再发起<strong>第二次</strong>LLM调用。少了这一步，LLM就永远&quot;等不到&quot;结果，对话也就断了。</p>
+<h3 id="23-工具描述schemajson-schema格式">2.3 工具描述schema（JSON Schema格式）</h3>
+<p>工具描述遵循一个叫 <strong>JSON Schema</strong> 的规范。听起来很高大上，其实你可以把它理解成一张<strong>填空表格</strong>——就像求职登记表上写着&quot;姓名（文字）、年龄（数字）、应聘岗位（在以下选项中选一个）&quot;。JSON Schema干的就是这件事：告诉LLM&quot;这个工具需要哪几个字段、每个字段是什么类型、哪些必填、有哪些可选值&quot;。</p>
+<p>OpenAI的<code>tools</code>参数里，每个工具是一个对象，长这样：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-json" data-lang="json"><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="nt">&#34;type&#34;</span><span class="p">:</span> <span class="s2">&#34;function&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">  <span class="nt">&#34;function&#34;</span><span class="p">:</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="nt">&#34;name&#34;</span><span class="p">:</span> <span class="s2">&#34;get_weather&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="nt">&#34;description&#34;</span><span class="p">:</span> <span class="s2">&#34;查询指定城市的实时天气。支持中国地级市及以上行政区。&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="nt">&#34;parameters&#34;</span><span class="p">:</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">      <span class="nt">&#34;type&#34;</span><span class="p">:</span> <span class="s2">&#34;object&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">      <span class="nt">&#34;properties&#34;</span><span class="p">:</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="nt">&#34;location&#34;</span><span class="p">:</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">          <span class="nt">&#34;type&#34;</span><span class="p">:</span> <span class="s2">&#34;string&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">          <span class="nt">&#34;description&#34;</span><span class="p">:</span> <span class="s2">&#34;城市名称，例如：上海、北京、深圳&#34;</span>
+</span></span><span class="line"><span class="cl">        <span class="p">},</span>
+</span></span><span class="line"><span class="cl">        <span class="nt">&#34;unit&#34;</span><span class="p">:</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">          <span class="nt">&#34;type&#34;</span><span class="p">:</span> <span class="s2">&#34;string&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">          <span class="nt">&#34;enum&#34;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&#34;celsius&#34;</span><span class="p">,</span> <span class="s2">&#34;fahrenheit&#34;</span><span class="p">],</span>
+</span></span><span class="line"><span class="cl">          <span class="nt">&#34;description&#34;</span><span class="p">:</span> <span class="s2">&#34;温度单位，默认摄氏度&#34;</span>
+</span></span><span class="line"><span class="cl">        <span class="p">}</span>
+</span></span><span class="line"><span class="cl">      <span class="p">},</span>
+</span></span><span class="line"><span class="cl">      <span class="nt">&#34;required&#34;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&#34;location&#34;</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">  <span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>我们逐层拆开看：</p>
+<ul>
+<li>最外层<code>type: &quot;function&quot;</code>表示这是一个函数型工具（OpenAI预留了未来支持其他类型的能力）；</li>
+<li><code>function.name</code>是工具名，要起得语义清晰，比如<code>get_weather</code>一看就知道是查天气；</li>
+<li><code>function.description</code>是<strong>最关键字段</strong>——这是LLM决定&quot;该不该用这个工具&quot;的<strong>唯一依据</strong>，必须写清&quot;做什么、何时用、边界在哪&quot;；</li>
+<li><code>parameters</code>里，<code>type: &quot;object&quot;</code>表示参数整体是个对象（键值对集合）；</li>
+<li><code>properties</code>列出每个参数的类型和说明，<code>location</code>是字符串、<code>unit</code>只能二选一（<code>enum</code>枚举）；</li>
+<li><code>required</code>声明哪些参数必填，这里<code>location</code>必填，<code>unit</code>可省（因为有默认值）。</li>
+</ul>
+<p>记住一条铁律：<strong>描述写得越清楚，LLM选错工具的概率越低</strong>。后面最佳实践部分会专门展开怎么写好描述。</p>
+<p>💡 <strong>小贴士</strong>：<code>description</code>不仅是写给LLM看的&quot;说明书&quot;，也相当于给未来的自己留的注释。一个好描述能让你三个月后回看代码时秒懂这个工具干嘛用的，一举两得。</p>
+<h2 id="3-openai-function-calling实战">3. OpenAI Function Calling实战</h2>
+<h3 id="31-环境准备">3.1 环境准备</h3>
+<p>动手之前先装两个依赖：<code>openai</code>是官方SDK，<code>python-dotenv</code>帮我们从<code>.env</code>文件读密钥，避免把密钥硬编码进代码（这是基本的安全卫生）。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">pip install openai python-dotenv
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>然后在项目根目录创建一个 <code>.env</code> 文件，写入你的 OpenAI 密钥。格式是「变量名=变量值」一行：变量名固定为 <code>OPENAI_API_KEY</code>，变量值是你从 OpenAI 平台获取的密钥（以 <code>sk-</code> 开头）。等号两边不要加空格，整行不要加引号。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl"><span class="c1"># .env 文件（项目根目录，每行一个变量，格式：变量名=变量值）</span>
+</span></span><span class="line"><span class="cl"><span class="c1"># 写入一行：OPENAI_API_KEY 等号 你的密钥</span>
+</span></span><span class="line"><span class="cl"><span class="c1">#   - 变量名固定为 OPENAI_API_KEY（SDK据此自动读取）</span>
+</span></span><span class="line"><span class="cl"><span class="c1">#   - 密钥从 https://platform.openai.com/api-keys 获取，以 sk- 开头</span>
+</span></span><span class="line"><span class="cl"><span class="c1">#   - 等号两边不要加空格，整行不加引号</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>💡 <strong>小贴士</strong>：<code>.env</code>文件<strong>千万别</strong>提交到Git仓库，记得把它加进<code>.gitignore</code>。一旦密钥泄露，别人就能用你的额度跑模型，账单可能瞬间爆表。</p>
+<p>本章示例统一使用<code>gpt-5</code>模型，它原生支持并行工具调用和结构化输出。</p>
+<h3 id="32-定义工具函数">3.2 定义工具函数</h3>
+<p>工具函数就是普通的Python函数——接收参数、返回字典。我们写两个最经典的：天气查询和计算器。真实场景里天气要接第三方API，这里用模拟数据演示机制，重点在于&quot;流程怎么走通&quot;，而不是API怎么调。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="c1"># tools_impl.py</span>
+</span></span><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">json</span>
+</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Any</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 模拟天气数据库（真实项目里这里会改成调用第三方天气API）</span>
+</span></span><span class="line"><span class="cl"><span class="n">WEATHER_DB</span> <span class="o">=</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="s2">&#34;上海&#34;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&#34;temp&#34;</span><span class="p">:</span> <span class="mi">32</span><span class="p">,</span> <span class="s2">&#34;condition&#34;</span><span class="p">:</span> <span class="s2">&#34;晴&#34;</span><span class="p">,</span> <span class="s2">&#34;humidity&#34;</span><span class="p">:</span> <span class="mi">65</span><span class="p">},</span>
+</span></span><span class="line"><span class="cl">    <span class="s2">&#34;北京&#34;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&#34;temp&#34;</span><span class="p">:</span> <span class="mi">28</span><span class="p">,</span> <span class="s2">&#34;condition&#34;</span><span class="p">:</span> <span class="s2">&#34;多云&#34;</span><span class="p">,</span> <span class="s2">&#34;humidity&#34;</span><span class="p">:</span> <span class="mi">50</span><span class="p">},</span>
+</span></span><span class="line"><span class="cl">    <span class="s2">&#34;深圳&#34;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&#34;temp&#34;</span><span class="p">:</span> <span class="mi">30</span><span class="p">,</span> <span class="s2">&#34;condition&#34;</span><span class="p">:</span> <span class="s2">&#34;雷阵雨&#34;</span><span class="p">,</span> <span class="s2">&#34;humidity&#34;</span><span class="p">:</span> <span class="mi">80</span><span class="p">},</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">get_weather</span><span class="p">(</span><span class="n">location</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">unit</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&#34;celsius&#34;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+</span></span><span class="line"><span class="cl">    <span class="s2">&#34;&#34;&#34;查询指定城市的实时天气&#34;&#34;&#34;</span>
+</span></span><span class="line"><span class="cl">    <span class="c1"># 去掉&#34;市&#34;字并去空格，让&#34;上海市&#34;和&#34;上海&#34;都能命中</span>
+</span></span><span class="line"><span class="cl">    <span class="n">city</span> <span class="o">=</span> <span class="n">location</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&#34;市&#34;</span><span class="p">,</span> <span class="s2">&#34;&#34;</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="n">city</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">WEATHER_DB</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="p">{</span><span class="s2">&#34;error&#34;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&#34;暂不支持查询 </span><span class="si">{</span><span class="n">location</span><span class="si">}</span><span class="s2"> 的天气&#34;</span><span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="n">data</span> <span class="o">=</span> <span class="n">WEATHER_DB</span><span class="p">[</span><span class="n">city</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">    <span class="c1"># 如果用户要华氏度，做个换算</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="n">unit</span> <span class="o">==</span> <span class="s2">&#34;fahrenheit&#34;</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="n">data</span><span class="p">[</span><span class="s2">&#34;temp&#34;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s2">&#34;temp&#34;</span><span class="p">]</span> <span class="o">*</span> <span class="mi">9</span> <span class="o">/</span> <span class="mi">5</span> <span class="o">+</span> <span class="mi">32</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="n">data</span><span class="p">[</span><span class="s2">&#34;unit&#34;</span><span class="p">]</span> <span class="o">=</span> <span class="n">unit</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">data</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">calculator</span><span class="p">(</span><span class="n">expression</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+</span></span><span class="line"><span class="cl">    <span class="s2">&#34;&#34;&#34;安全计算数学表达式&#34;&#34;&#34;</span>
+</span></span><span class="line"><span class="cl">    <span class="c1"># 白名单机制：只允许数字和基本运算符，防止代码注入</span>
+</span></span><span class="line"><span class="cl">    <span class="n">allowed</span> <span class="o">=</span> <span class="s2">&#34;0123456789+-*/().% &#34;</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="n">c</span> <span class="ow">in</span> <span class="n">allowed</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">expression</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="p">{</span><span class="s2">&#34;error&#34;</span><span class="p">:</span> <span class="s2">&#34;表达式包含非法字符&#34;</span><span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="k">try</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="c1"># 用受限的eval执行：禁用所有内置函数，防止逃逸</span>
+</span></span><span class="line"><span class="cl">        <span class="n">result</span> <span class="o">=</span> <span class="nb">eval</span><span class="p">(</span><span class="n">expression</span><span class="p">,</span> <span class="p">{</span><span class="s2">&#34;__builtins__&#34;</span><span class="p">:</span> <span class="p">{}},</span> <span class="p">{})</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="p">{</span><span class="s2">&#34;expression&#34;</span><span class="p">:</span> <span class="n">expression</span><span class="p">,</span> <span class="s2">&#34;result&#34;</span><span class="p">:</span> <span class="n">result</span><span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="p">{</span><span class="s2">&#34;error&#34;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&#34;计算失败: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&#34;</span><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>💡 <strong>小贴士</strong>：注意每个函数都返回<strong>字典</strong>而不是字符串。这是因为LLM处理结构化的JSON比处理自然语言更稳——它能把<code>{&quot;temp&quot;: 32}</code>里的<code>32</code>准确取出来，而不会被&quot;今天大约三十二度&quot;这种模糊措辞带偏。</p>
+<h3 id="33-注册工具到llm">3.3 注册工具到LLM</h3>
+<p>接下来把工具的schema描述和Python实现绑定到一起，方便统一调度。这步相当于给服务员发一份&quot;菜单+厨师对照表&quot;。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span><span class="lnt">42
+</span><span class="lnt">43
+</span><span class="lnt">44
+</span><span class="lnt">45
+</span><span class="lnt">46
+</span><span class="lnt">47
+</span><span class="lnt">48
+</span><span class="lnt">49
+</span><span class="lnt">50
+</span><span class="lnt">51
+</span><span class="lnt">52
+</span><span class="lnt">53
+</span><span class="lnt">54
+</span><span class="lnt">55
+</span><span class="lnt">56
+</span><span class="lnt">57
+</span><span class="lnt">58
+</span><span class="lnt">59
+</span><span class="lnt">60
+</span><span class="lnt">61
+</span><span class="lnt">62
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="c1"># agent.py</span>
+</span></span><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">os</span>
+</span></span><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">json</span>
+</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">dotenv</span> <span class="kn">import</span> <span class="n">load_dotenv</span>
+</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">openai</span> <span class="kn">import</span> <span class="n">OpenAI</span>
+</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">tools_impl</span> <span class="kn">import</span> <span class="n">get_weather</span><span class="p">,</span> <span class="n">calculator</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">load_dotenv</span><span class="p">()</span>  <span class="c1"># 从.env文件加载环境变量</span>
+</span></span><span class="line"><span class="cl"><span class="c1"># 从环境变量读取API密钥，绝不硬编码到代码里</span>
+</span></span><span class="line"><span class="cl"><span class="c1"># 用**把字典展开成关键字参数传给OpenAI（Python传参的等价写法）</span>
+</span></span><span class="line"><span class="cl"><span class="n">_opts</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&#34;api_key&#34;</span><span class="p">:</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">&#34;OPENAI_API_KEY&#34;</span><span class="p">)}</span>
+</span></span><span class="line"><span class="cl"><span class="n">client</span> <span class="o">=</span> <span class="n">OpenAI</span><span class="p">(</span><span class="o">**</span><span class="n">_opts</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">MODEL</span> <span class="o">=</span> <span class="s2">&#34;gpt-5&#34;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 工具schema定义：这就是给LLM看的&#34;菜单&#34;</span>
+</span></span><span class="line"><span class="cl"><span class="n">TOOLS_SCHEMA</span> <span class="o">=</span> <span class="p">[</span>
+</span></span><span class="line"><span class="cl">    <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="s2">&#34;type&#34;</span><span class="p">:</span> <span class="s2">&#34;function&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">        <span class="s2">&#34;function&#34;</span><span class="p">:</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">            <span class="s2">&#34;name&#34;</span><span class="p">:</span> <span class="s2">&#34;get_weather&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">            <span class="s2">&#34;description&#34;</span><span class="p">:</span> <span class="s2">&#34;查询指定城市的实时天气，包括温度、天气状况和湿度。当用户询问天气、温度、是否下雨、穿衣建议时调用。&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">            <span class="s2">&#34;parameters&#34;</span><span class="p">:</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">                <span class="s2">&#34;type&#34;</span><span class="p">:</span> <span class="s2">&#34;object&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                <span class="s2">&#34;properties&#34;</span><span class="p">:</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">                    <span class="s2">&#34;location&#34;</span><span class="p">:</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">                        <span class="s2">&#34;type&#34;</span><span class="p">:</span> <span class="s2">&#34;string&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                        <span class="s2">&#34;description&#34;</span><span class="p">:</span> <span class="s2">&#34;城市名称，如：上海、北京、深圳&#34;</span>
+</span></span><span class="line"><span class="cl">                    <span class="p">},</span>
+</span></span><span class="line"><span class="cl">                    <span class="s2">&#34;unit&#34;</span><span class="p">:</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">                        <span class="s2">&#34;type&#34;</span><span class="p">:</span> <span class="s2">&#34;string&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                        <span class="s2">&#34;enum&#34;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&#34;celsius&#34;</span><span class="p">,</span> <span class="s2">&#34;fahrenheit&#34;</span><span class="p">],</span>
+</span></span><span class="line"><span class="cl">                        <span class="s2">&#34;description&#34;</span><span class="p">:</span> <span class="s2">&#34;温度单位，默认摄氏度&#34;</span>
+</span></span><span class="line"><span class="cl">                    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">                <span class="p">},</span>
+</span></span><span class="line"><span class="cl">                <span class="s2">&#34;required&#34;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&#34;location&#34;</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl">            <span class="p">}</span>
+</span></span><span class="line"><span class="cl">        <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="p">},</span>
+</span></span><span class="line"><span class="cl">    <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="s2">&#34;type&#34;</span><span class="p">:</span> <span class="s2">&#34;function&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">        <span class="s2">&#34;function&#34;</span><span class="p">:</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">            <span class="s2">&#34;name&#34;</span><span class="p">:</span> <span class="s2">&#34;calculator&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">            <span class="s2">&#34;description&#34;</span><span class="p">:</span> <span class="s2">&#34;计算数学表达式。当用户需要做加减乘除、百分比、混合运算时调用。不支持代数或微积分。&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">            <span class="s2">&#34;parameters&#34;</span><span class="p">:</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">                <span class="s2">&#34;type&#34;</span><span class="p">:</span> <span class="s2">&#34;object&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                <span class="s2">&#34;properties&#34;</span><span class="p">:</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">                    <span class="s2">&#34;expression&#34;</span><span class="p">:</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">                        <span class="s2">&#34;type&#34;</span><span class="p">:</span> <span class="s2">&#34;string&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                        <span class="s2">&#34;description&#34;</span><span class="p">:</span> <span class="s2">&#34;数学表达式，如：1234 * 5678 或 (100+200)/3&#34;</span>
+</span></span><span class="line"><span class="cl">                    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">                <span class="p">},</span>
+</span></span><span class="line"><span class="cl">                <span class="s2">&#34;required&#34;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&#34;expression&#34;</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl">            <span class="p">}</span>
+</span></span><span class="line"><span class="cl">        <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">]</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 工具名 → 实现函数 的映射表：根据LLM点到的&#34;菜名&#34;找到对应的&#34;厨师&#34;</span>
+</span></span><span class="line"><span class="cl"><span class="n">TOOL_REGISTRY</span> <span class="o">=</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="s2">&#34;get_weather&#34;</span><span class="p">:</span> <span class="n">get_weather</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="s2">&#34;calculator&#34;</span><span class="p">:</span> <span class="n">calculator</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>💡 <strong>小贴士</strong>：上面用 <code>**</code> 把字典展开成关键字参数，是 Python 的标准用法。关键是密钥始终来自 <code>os.getenv(&quot;OPENAI_API_KEY&quot;)</code>，而不是写死在代码里——这样即使代码被分享或提交到 Git，密钥也不会泄露。如果你嫌麻烦，OpenAI SDK 其实会自动读取同名环境变量，直接写 <code>client = OpenAI()</code> 也能跑。</p>
+<h3 id="34-处理工具调用响应">3.4 处理工具调用响应</h3>
+<p>这一节是全章的核心。我们要写一个<strong>工具调用循环</strong>：调用LLM → 检查它要不要调工具 → 要就执行并把结果回灌 → 再调LLM，直到LLM不再请求工具、给出最终的自然语言回复为止。</p>
+<p>读代码前先理清思路：循环每一轮都先问LLM&quot;你要不要用工具&quot;，如果它说&quot;要&quot;并给出<code>tool_calls</code>，我们就逐个执行、把结果塞回<code>messages</code>、进入下一轮；如果它说&quot;不要&quot;（直接给了<code>content</code>），循环结束，把文本返回给用户。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span><span class="lnt">42
+</span><span class="lnt">43
+</span><span class="lnt">44
+</span><span class="lnt">45
+</span><span class="lnt">46
+</span><span class="lnt">47
+</span><span class="lnt">48
+</span><span class="lnt">49
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">run_agent</span><span class="p">(</span><span class="n">user_query</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">max_turns</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">5</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="c1"># 初始化对话历史：system设定人设，user放用户问题</span>
+</span></span><span class="line"><span class="cl">    <span class="n">messages</span> <span class="o">=</span> <span class="p">[</span>
+</span></span><span class="line"><span class="cl">        <span class="p">{</span><span class="s2">&#34;role&#34;</span><span class="p">:</span> <span class="s2">&#34;system&#34;</span><span class="p">,</span> <span class="s2">&#34;content&#34;</span><span class="p">:</span> <span class="s2">&#34;你是一个能查天气和做计算的助手。回答要简洁。&#34;</span><span class="p">},</span>
+</span></span><span class="line"><span class="cl">        <span class="p">{</span><span class="s2">&#34;role&#34;</span><span class="p">:</span> <span class="s2">&#34;user&#34;</span><span class="p">,</span> <span class="s2">&#34;content&#34;</span><span class="p">:</span> <span class="n">user_query</span><span class="p">},</span>
+</span></span><span class="line"><span class="cl">    <span class="p">]</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="c1"># 最多循环max_turns轮，防止意外死循环</span>
+</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">max_turns</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">        <span class="c1"># 把当前所有消息和工具清单一起发给LLM</span>
+</span></span><span class="line"><span class="cl">        <span class="n">response</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">chat</span><span class="o">.</span><span class="n">completions</span><span class="o">.</span><span class="n">create</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">            <span class="n">model</span><span class="o">=</span><span class="n">MODEL</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">            <span class="n">messages</span><span class="o">=</span><span class="n">messages</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">            <span class="n">tools</span><span class="o">=</span><span class="n">TOOLS_SCHEMA</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">        <span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="n">msg</span> <span class="o">=</span> <span class="n">response</span><span class="o">.</span><span class="n">choices</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">message</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">        <span class="c1"># 关键判断：如果LLM没有请求工具，说明它已经准备好直接回答用户</span>
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="ow">not</span> <span class="n">msg</span><span class="o">.</span><span class="n">tool_calls</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">            <span class="k">return</span> <span class="n">msg</span><span class="o">.</span><span class="n">content</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">        <span class="c1"># 把assistant这条消息（含tool_calls）原样加入历史</span>
+</span></span><span class="line"><span class="cl">        <span class="c1"># 注意：必须append原始msg对象，因为里面带着tool_calls引用</span>
+</span></span><span class="line"><span class="cl">        <span class="n">messages</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">        <span class="c1"># 依次执行LLM点名的每个工具调用</span>
+</span></span><span class="line"><span class="cl">        <span class="k">for</span> <span class="n">tool_call</span> <span class="ow">in</span> <span class="n">msg</span><span class="o">.</span><span class="n">tool_calls</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">            <span class="n">name</span> <span class="o">=</span> <span class="n">tool_call</span><span class="o">.</span><span class="n">function</span><span class="o">.</span><span class="n">name</span>                   <span class="c1"># 工具名</span>
+</span></span><span class="line"><span class="cl">            <span class="n">args</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">tool_call</span><span class="o">.</span><span class="n">function</span><span class="o">.</span><span class="n">arguments</span><span class="p">)</span>  <span class="c1"># 参数是JSON字符串，要解析</span>
+</span></span><span class="line"><span class="cl">            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&#34;[调用工具] </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">(</span><span class="si">{</span><span class="n">args</span><span class="si">}</span><span class="s2">)&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">            <span class="n">func</span> <span class="o">=</span> <span class="n">TOOL_REGISTRY</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>  <span class="c1"># 从注册表找到对应Python函数</span>
+</span></span><span class="line"><span class="cl">            <span class="k">if</span> <span class="n">func</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">                <span class="n">result</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&#34;error&#34;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&#34;未知工具: </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">&#34;</span><span class="p">}</span>
+</span></span><span class="line"><span class="cl">            <span class="k">else</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">                <span class="k">try</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">                    <span class="n">result</span> <span class="o">=</span> <span class="n">func</span><span class="p">(</span><span class="o">**</span><span class="n">args</span><span class="p">)</span>   <span class="c1"># 用**解包把字典变成关键字参数</span>
+</span></span><span class="line"><span class="cl">                <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">                    <span class="n">result</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&#34;error&#34;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">            <span class="c1"># 关键：把工具结果作为role=&#34;tool&#34;的消息回灌</span>
+</span></span><span class="line"><span class="cl">            <span class="c1"># tool_call_id必须和上面的tool_call.id对应，LLM靠它把结果归位</span>
+</span></span><span class="line"><span class="cl">            <span class="n">messages</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
+</span></span><span class="line"><span class="cl">                <span class="s2">&#34;role&#34;</span><span class="p">:</span> <span class="s2">&#34;tool&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                <span class="s2">&#34;tool_call_id&#34;</span><span class="p">:</span> <span class="n">tool_call</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                <span class="s2">&#34;content&#34;</span><span class="p">:</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">ensure_ascii</span><span class="o">=</span><span class="kc">False</span><span class="p">),</span>
+</span></span><span class="line"><span class="cl">            <span class="p">})</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="s2">&#34;达到最大轮数，处理中止。&#34;</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>💡 <strong>小贴士</strong>：<code>tool_call_id</code>是这条结果和原始调用的&quot;配套编号&quot;。一个响应里LLM可能并行调用3个工具，回灌时必须用ID告诉LLM&quot;这个结果对应哪个调用&quot;，否则它会对不上号。漏写<code>tool_call_id</code>是新手最常踩的坑之一。</p>
+<h3 id="35-完整运行示例">3.5 完整运行示例</h3>
+<p>把上面几段拼起来，跑一个综合问题——同时问两个城市天气、还要做一道乘法题，看看Agent怎么应对：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&#34;__main__&#34;</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="nb">print</span><span class="p">(</span><span class="n">run_agent</span><span class="p">(</span><span class="s2">&#34;上海和北京今天多少度？哪个更热？顺便算一下 1234 × 5678&#34;</span><span class="p">))</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>运行后你会看到类似输出：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">[调用工具] get_weather({&#39;location&#39;: &#39;上海&#39;})
+</span></span><span class="line"><span class="cl">[调用工具] get_weather({&#39;location&#39;: &#39;北京&#39;})
+</span></span><span class="line"><span class="cl">[调用工具] calculator({&#39;expression&#39;: &#39;1234 * 5678&#39;})
+</span></span><span class="line"><span class="cl">上海32°C，北京28°C，上海更热。1234 × 5678 = 7006652。
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>注意<code>gpt-5</code>会在<strong>一次响应里并行</strong>发出三个<code>tool_calls</code>，宿主代码把它们一次性执行完再统一回灌，效率远高于串行往返三次。这就是下一节要展开讲的并行调用。</p>
+<p>💡 <strong>小贴士</strong>：如果运行报错<code>AttributeError: 'NoneType' object has no attribute 'tool_calls'</code>，多半是API密钥没配好或网络不通，先回去检查<code>.env</code>和<code>load_dotenv()</code>是否生效。</p>
+<h2 id="4-多工具编排">4. 多工具编排</h2>
+<h3 id="41-一个agent管理多个工具">4.1 一个Agent管理多个工具</h3>
+<p>真实Agent往往挂载十几个工具：搜索、邮件、日历、数据库、文件、代码执行……此时核心挑战从&quot;怎么调&quot;变成了<strong>怎么选</strong>——LLM要在众多工具中挑对那一个。</p>
+<p>继续用餐厅的比喻：服务员现在要面对一个有50道菜的菜单，顾客说&quot;来点开胃的&quot;，他得在凉菜、汤品、沙拉里选对。菜单越长，选错的概率越高。同理，工具越多，LLM的&quot;选择注意力&quot;越分散。</p>
+<p>应对这个挑战，工程上有三种编排策略：</p>
+<ul>
+<li><strong>扁平注册</strong>：所有工具一股脑塞给LLM。实现最简单，但工具数超过20个时选择准确率会明显下降；</li>
+<li><strong>分层路由</strong>：先用一个&quot;路由LLM&quot;判断用户意图属于哪个领域（天气？邮件？数据库？），再只加载该领域的工具子集给执行LLM；</li>
+<li><strong>RAG工具检索</strong>：把所有工具描述做向量化索引，按用户query动态检索Top-K个最相关工具注入prompt。</li>
+</ul>
+<p>💡 <strong>小贴士</strong>：经验法则——工具数小于15用扁平注册就够了；15到30考虑分层路由；超过30个建议上RAG工具检索。别一上来就上复杂架构，工具少的时候扁平注册反而更稳更快。</p>
+<h3 id="42-工具选择策略">4.2 工具选择策略</h3>
+<p>无论用哪种编排，提升选择准确率都离不开这几条技巧：</p>
+<ol>
+<li><strong>描述里写清&quot;何时用&quot;和&quot;何时不用&quot;</strong>：例如<code>send_email</code>的描述加上&quot;仅当用户明确要求发送邮件时调用，不要主动发邮件&quot;——LLM很容易自作多情地主动发邮件，这句话能挡掉绝大多数误调用；</li>
+<li><strong>命名区分度高</strong>：<code>get_user_info</code>和<code>get_product_info</code>远比<code>get_info</code>和<code>query_info</code>容易区分，前者一看就懂，后者会让LLM犯选择困难症；</li>
+<li><strong>参数避免歧义</strong>：每个参数都给<code>example</code>，告诉LLM填什么格式；</li>
+<li><strong>避免功能重叠</strong>：如果两个工具都能完成同一件事，LLM会困惑。要么合并，要么在描述里明确分工，比如<code>search_internal_docs</code>只搜公司内部文档、<code>web_search</code>只搜公网；</li>
+<li><strong>提供默认值</strong>：可选参数给合理默认值，减少LLM的决策负担，也降低参数填错的概率。</li>
+</ol>
+<p>一个常见的反例是工具又多、描述又模糊，导致LLM频繁选错或反复调用同一个工具兜圈子。调试时建议把每轮的<code>tool_calls</code>都打印出来，观察LLM的&quot;选择路径&quot;，再针对性优化描述。</p>
+<h3 id="43-并行工具调用">4.3 并行工具调用</h3>
+<p><code>gpt-5</code>、Claude 3.5+都支持在单次响应里返回多个<code>tool_calls</code>。要榨干这个并行能力，宿主代码就该用线程池或异步并发来执行这些调用，而不是老老实实地一个接一个串行跑——否则并行发出的调用到了你这边又变成串行，白瞎了模型的能力。</p>
+<p>下面是把上一节<code>run_agent</code>改造为并行执行的版本：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">json</span>
+</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">concurrent.futures</span> <span class="kn">import</span> <span class="n">ThreadPoolExecutor</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">run_tool_call</span><span class="p">(</span><span class="n">tool_call</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">    <span class="s2">&#34;&#34;&#34;执行单个工具调用，返回对应的tool消息&#34;&#34;&#34;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">name</span> <span class="o">=</span> <span class="n">tool_call</span><span class="o">.</span><span class="n">function</span><span class="o">.</span><span class="n">name</span>
+</span></span><span class="line"><span class="cl">    <span class="n">args</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">tool_call</span><span class="o">.</span><span class="n">function</span><span class="o">.</span><span class="n">arguments</span><span class="p">)</span>  <span class="c1"># 解析参数JSON</span>
+</span></span><span class="line"><span class="cl">    <span class="n">func</span> <span class="o">=</span> <span class="n">TOOL_REGISTRY</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>                    <span class="c1"># 查注册表</span>
+</span></span><span class="line"><span class="cl">    <span class="k">try</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="n">result</span> <span class="o">=</span> <span class="n">func</span><span class="p">(</span><span class="o">**</span><span class="n">args</span><span class="p">)</span> <span class="k">if</span> <span class="n">func</span> <span class="k">else</span> <span class="p">{</span><span class="s2">&#34;error&#34;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&#34;未知工具: </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">&#34;</span><span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="n">result</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&#34;error&#34;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)}</span>
+</span></span><span class="line"><span class="cl">    <span class="c1"># 返回标准格式的tool消息，tool_call_id用来和原调用配对</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="s2">&#34;role&#34;</span><span class="p">:</span> <span class="s2">&#34;tool&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">        <span class="s2">&#34;tool_call_id&#34;</span><span class="p">:</span> <span class="n">tool_call</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">        <span class="s2">&#34;content&#34;</span><span class="p">:</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">ensure_ascii</span><span class="o">=</span><span class="kc">False</span><span class="p">),</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">run_agent_parallel</span><span class="p">(</span><span class="n">user_query</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">max_turns</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">5</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="n">messages</span> <span class="o">=</span> <span class="p">[</span>
+</span></span><span class="line"><span class="cl">        <span class="p">{</span><span class="s2">&#34;role&#34;</span><span class="p">:</span> <span class="s2">&#34;system&#34;</span><span class="p">,</span> <span class="s2">&#34;content&#34;</span><span class="p">:</span> <span class="s2">&#34;你是一个能查天气和做计算的助手。&#34;</span><span class="p">},</span>
+</span></span><span class="line"><span class="cl">        <span class="p">{</span><span class="s2">&#34;role&#34;</span><span class="p">:</span> <span class="s2">&#34;user&#34;</span><span class="p">,</span> <span class="s2">&#34;content&#34;</span><span class="p">:</span> <span class="n">user_query</span><span class="p">},</span>
+</span></span><span class="line"><span class="cl">    <span class="p">]</span>
+</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">max_turns</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">        <span class="n">response</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">chat</span><span class="o">.</span><span class="n">completions</span><span class="o">.</span><span class="n">create</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">            <span class="n">model</span><span class="o">=</span><span class="n">MODEL</span><span class="p">,</span> <span class="n">messages</span><span class="o">=</span><span class="n">messages</span><span class="p">,</span> <span class="n">tools</span><span class="o">=</span><span class="n">TOOLS_SCHEMA</span>
+</span></span><span class="line"><span class="cl">        <span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="n">msg</span> <span class="o">=</span> <span class="n">response</span><span class="o">.</span><span class="n">choices</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">message</span>
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="ow">not</span> <span class="n">msg</span><span class="o">.</span><span class="n">tool_calls</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">            <span class="k">return</span> <span class="n">msg</span><span class="o">.</span><span class="n">content</span>
+</span></span><span class="line"><span class="cl">        <span class="n">messages</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">        <span class="c1"># 关键改动：用线程池并行执行本轮所有工具调用</span>
+</span></span><span class="line"><span class="cl">        <span class="k">with</span> <span class="n">ThreadPoolExecutor</span><span class="p">()</span> <span class="k">as</span> <span class="n">pool</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">            <span class="n">tool_msgs</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">pool</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">run_tool_call</span><span class="p">,</span> <span class="n">msg</span><span class="o">.</span><span class="n">tool_calls</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl">        <span class="n">messages</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">tool_msgs</span><span class="p">)</span>  <span class="c1"># 一次性把所有结果回灌</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="s2">&#34;达到最大轮数，处理中止。&#34;</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>并行模式下，三个独立工具的总延迟约等于最慢那个工具的延迟，而不是三者之和。在调外部API（搜索、天气、数据库）时，这能带来3到5倍的吞吐提升。</p>
+<p>💡 <strong>小贴士</strong>：并行只对<strong>彼此独立</strong>的工具调用有效。如果第二个调用的参数依赖第一个的结果（比如先查订单ID、再用ID查物流），LLM会自动拆成两轮串行，你不用担心错乱——它自己知道分寸。</p>
+<h2 id="5-自定义工具开发">5. 自定义工具开发</h2>
+<p>真实项目里，你需要为业务系统定制专属工具。下面给出三类常用工具的实现，并抽象出一个<strong>工具类设计模式</strong>，让工具可插拔、可复用。</p>
+<h3 id="51-搜索工具模拟serpapi">5.1 搜索工具（模拟SerpAPI）</h3>
+<p>让Agent能&quot;上网查资料&quot;。这里用SerpAPI做演示，它封装了Google搜索：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">pip install google-search-results
+</span></span></code></pre></td></tr></table>
+</div>
+</div><div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="c1"># search_tool.py</span>
+</span></span><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">os</span>
+</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">serpapi</span> <span class="kn">import</span> <span class="n">GoogleSearch</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">web_search</span><span class="p">(</span><span class="n">query</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">num_results</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">5</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="s2">&#34;&#34;&#34;使用SerpAPI进行网络搜索，返回前N条结果摘要&#34;&#34;&#34;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">search</span> <span class="o">=</span> <span class="n">GoogleSearch</span><span class="p">({</span>
+</span></span><span class="line"><span class="cl">        <span class="s2">&#34;q&#34;</span><span class="p">:</span> <span class="n">query</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">        <span class="s2">&#34;num&#34;</span><span class="p">:</span> <span class="n">num_results</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">        <span class="s2">&#34;api_key&#34;</span><span class="p">:</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">&#34;SERPAPI_KEY&#34;</span><span class="p">)</span>   <span class="c1"># 密钥同样从环境变量读</span>
+</span></span><span class="line"><span class="cl">    <span class="p">})</span>
+</span></span><span class="line"><span class="cl">    <span class="n">data</span> <span class="o">=</span> <span class="n">search</span><span class="o">.</span><span class="n">get_dict</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">    <span class="n">results</span> <span class="o">=</span> <span class="p">[]</span>
+</span></span><span class="line"><span class="cl">    <span class="c1"># 只取organic_results（自然搜索结果），裁剪成精简结构再返回</span>
+</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&#34;organic_results&#34;</span><span class="p">,</span> <span class="p">[])[:</span><span class="n">num_results</span><span class="p">]:</span>
+</span></span><span class="line"><span class="cl">        <span class="n">results</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
+</span></span><span class="line"><span class="cl">            <span class="s2">&#34;title&#34;</span><span class="p">:</span> <span class="n">item</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&#34;title&#34;</span><span class="p">),</span>
+</span></span><span class="line"><span class="cl">            <span class="s2">&#34;snippet&#34;</span><span class="p">:</span> <span class="n">item</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&#34;snippet&#34;</span><span class="p">),</span>
+</span></span><span class="line"><span class="cl">            <span class="s2">&#34;link&#34;</span><span class="p">:</span> <span class="n">item</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&#34;link&#34;</span><span class="p">),</span>
+</span></span><span class="line"><span class="cl">        <span class="p">})</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="p">{</span><span class="s2">&#34;query&#34;</span><span class="p">:</span> <span class="n">query</span><span class="p">,</span> <span class="s2">&#34;results&#34;</span><span class="p">:</span> <span class="n">results</span><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>💡 <strong>小贴士</strong>：没有SerpAPI密钥时，可以写一个本地mock版本返回假数据，机制完全一样——先把流程跑通，再换真实API，这是开发Agent的通用节奏。</p>
+<h3 id="52-文件操作工具">5.2 文件操作工具</h3>
+<p>让Agent能读写本地文件，比如读一份配置、生成一份报告。文件工具最大的风险是<strong>路径穿越攻击</strong>——恶意输入可能让Agent读到你不想暴露的文件（比如<code>/etc/passwd</code>或<code>../../.env</code>）。所以必须做路径校验：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="c1"># file_tool.py</span>
+</span></span><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">os</span>
+</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 把所有文件操作锁死在这个workspace目录里</span>
+</span></span><span class="line"><span class="cl"><span class="n">WORK_DIR</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="s2">&#34;./workspace&#34;</span><span class="p">)</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">read_file</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="s2">&#34;&#34;&#34;读取指定路径的文本文件内容。路径相对于workspace目录。&#34;&#34;&#34;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">target</span> <span class="o">=</span> <span class="p">(</span><span class="n">WORK_DIR</span> <span class="o">/</span> <span class="n">path</span><span class="p">)</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">    <span class="c1"># 防御路径穿越：解析后的真实路径必须仍然在WORK_DIR之下</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="ow">not</span> <span class="nb">str</span><span class="p">(</span><span class="n">target</span><span class="p">)</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">WORK_DIR</span><span class="p">)):</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="p">{</span><span class="s2">&#34;error&#34;</span><span class="p">:</span> <span class="s2">&#34;禁止访问workspace之外的文件&#34;</span><span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="ow">not</span> <span class="n">target</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="p">{</span><span class="s2">&#34;error&#34;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&#34;文件不存在: </span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">&#34;</span><span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="p">{</span><span class="s2">&#34;path&#34;</span><span class="p">:</span> <span class="n">path</span><span class="p">,</span> <span class="s2">&#34;content&#34;</span><span class="p">:</span> <span class="n">target</span><span class="o">.</span><span class="n">read_text</span><span class="p">(</span><span class="n">encoding</span><span class="o">=</span><span class="s2">&#34;utf-8&#34;</span><span class="p">)}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">write_file</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">content</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="s2">&#34;&#34;&#34;向指定路径写入文本内容。&#34;&#34;&#34;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">target</span> <span class="o">=</span> <span class="p">(</span><span class="n">WORK_DIR</span> <span class="o">/</span> <span class="n">path</span><span class="p">)</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="ow">not</span> <span class="nb">str</span><span class="p">(</span><span class="n">target</span><span class="p">)</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">WORK_DIR</span><span class="p">)):</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="p">{</span><span class="s2">&#34;error&#34;</span><span class="p">:</span> <span class="s2">&#34;禁止写入workspace之外的文件&#34;</span><span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="c1"># 自动创建父目录，避免&#34;目录不存在&#34;报错</span>
+</span></span><span class="line"><span class="cl">    <span class="n">target</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="n">target</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="n">content</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&#34;utf-8&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="p">{</span><span class="s2">&#34;path&#34;</span><span class="p">:</span> <span class="n">path</span><span class="p">,</span> <span class="s2">&#34;bytes_written&#34;</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">content</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">&#34;utf-8&#34;</span><span class="p">))}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>💡 <strong>小贴士</strong>：<code>resolve()</code>会把<code>../</code>这种相对路径解析成绝对路径，所以校验必须放在<code>resolve()</code><strong>之后</strong>。放在之前校验等于没校验——攻击者用一个<code>..</code>就绕过了。</p>
+<h3 id="53-数据库查询工具">5.3 数据库查询工具</h3>
+<p>让Agent能查业务数据库。这类工具的安全核心是<strong>只允许SELECT</strong>，绝不能让LLM有机会执行<code>DROP TABLE</code>之类的破坏性语句：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="c1"># db_tool.py</span>
+</span></span><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">sqlite3</span>
+</span></span><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">re</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">DB_PATH</span> <span class="o">=</span> <span class="s2">&#34;./data/agent.db&#34;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">query_database</span><span class="p">(</span><span class="n">sql</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="s2">&#34;&#34;&#34;执行只读SQL查询，返回结果行。仅允许SELECT语句。&#34;&#34;&#34;</span>
+</span></span><span class="line"><span class="cl">    <span class="c1"># 用正则把非SELECT语句挡在门外（不区分大小写）</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="ow">not</span> <span class="n">re</span><span class="o">.</span><span class="k">match</span><span class="p">(</span><span class="sa">r</span><span class="s2">&#34;^\s*select\b&#34;</span><span class="p">,</span> <span class="n">sql</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">IGNORECASE</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="p">{</span><span class="s2">&#34;error&#34;</span><span class="p">:</span> <span class="s2">&#34;仅允许SELECT查询&#34;</span><span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="n">conn</span> <span class="o">=</span> <span class="n">sqlite3</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">DB_PATH</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="n">conn</span><span class="o">.</span><span class="n">row_factory</span> <span class="o">=</span> <span class="n">sqlite3</span><span class="o">.</span><span class="n">Row</span>  <span class="c1"># 让查询结果可以按列名取值</span>
+</span></span><span class="line"><span class="cl">    <span class="k">try</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="n">cur</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">sql</span><span class="p">)</span>            <span class="c1"># 执行一次，拿到游标</span>
+</span></span><span class="line"><span class="cl">        <span class="n">columns</span> <span class="o">=</span> <span class="p">[</span><span class="n">d</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">cur</span><span class="o">.</span><span class="n">description</span><span class="p">]</span>  <span class="c1"># 从游标取列名</span>
+</span></span><span class="line"><span class="cl">        <span class="n">rows</span> <span class="o">=</span> <span class="n">cur</span><span class="o">.</span><span class="n">fetchall</span><span class="p">()</span>              <span class="c1"># 再从同一游标取所有行</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="p">{</span><span class="s2">&#34;columns&#34;</span><span class="p">:</span> <span class="n">columns</span><span class="p">,</span> <span class="s2">&#34;rows&#34;</span><span class="p">:</span> <span class="p">[</span><span class="nb">list</span><span class="p">(</span><span class="n">r</span><span class="p">)</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">rows</span><span class="p">]}</span>
+</span></span><span class="line"><span class="cl">    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="p">{</span><span class="s2">&#34;error&#34;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)}</span>
+</span></span><span class="line"><span class="cl">    <span class="k">finally</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="n">conn</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>  <span class="c1"># 无论成功失败都关闭连接，防止连接泄漏</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>💡 <strong>小贴士</strong>：生产环境里光靠正则挡还不够稳，更安全的做法是用数据库账号权限做兜底——给Agent用的数据库账号只授SELECT权限，即使SQL校验被绕过也删不了数据。这就是&quot;纵深防御&quot;。</p>
+<h3 id="54-工具类设计模式">5.4 工具类设计模式</h3>
+<p>上面三个工具风格各异，难以统一管理。实际项目建议用一个<code>BaseTool</code>抽象类统一接口，让每个工具继承它、自动从函数签名生成schema，免去手写JSON的重复劳动：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span><span class="lnt">42
+</span><span class="lnt">43
+</span><span class="lnt">44
+</span><span class="lnt">45
+</span><span class="lnt">46
+</span><span class="lnt">47
+</span><span class="lnt">48
+</span><span class="lnt">49
+</span><span class="lnt">50
+</span><span class="lnt">51
+</span><span class="lnt">52
+</span><span class="lnt">53
+</span><span class="lnt">54
+</span><span class="lnt">55
+</span><span class="lnt">56
+</span><span class="lnt">57
+</span><span class="lnt">58
+</span><span class="lnt">59
+</span><span class="lnt">60
+</span><span class="lnt">61
+</span><span class="lnt">62
+</span><span class="lnt">63
+</span><span class="lnt">64
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="c1"># base_tool.py</span>
+</span></span><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">inspect</span>
+</span></span><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">json</span>
+</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Any</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">class</span> <span class="nc">BaseTool</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="s2">&#34;&#34;&#34;工具基类：子类实现run方法，自动从签名生成schema&#34;&#34;&#34;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&#34;&#34;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">description</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&#34;&#34;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+</span></span><span class="line"><span class="cl">        <span class="k">raise</span> <span class="ne">NotImplementedError</span>  <span class="c1"># 子类必须实现</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">def</span> <span class="nf">to_schema</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+</span></span><span class="line"><span class="cl">        <span class="s2">&#34;&#34;&#34;从run方法的参数签名自动生成OpenAI工具schema&#34;&#34;&#34;</span>
+</span></span><span class="line"><span class="cl">        <span class="n">sig</span> <span class="o">=</span> <span class="n">inspect</span><span class="o">.</span><span class="n">signature</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">run</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="n">properties</span> <span class="o">=</span> <span class="p">{}</span>
+</span></span><span class="line"><span class="cl">        <span class="n">required</span> <span class="o">=</span> <span class="p">[]</span>
+</span></span><span class="line"><span class="cl">        <span class="k">for</span> <span class="n">pname</span><span class="p">,</span> <span class="n">param</span> <span class="ow">in</span> <span class="n">sig</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+</span></span><span class="line"><span class="cl">            <span class="n">properties</span><span class="p">[</span><span class="n">pname</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&#34;type&#34;</span><span class="p">:</span> <span class="s2">&#34;string&#34;</span><span class="p">,</span> <span class="s2">&#34;description&#34;</span><span class="p">:</span> <span class="n">pname</span><span class="p">}</span>
+</span></span><span class="line"><span class="cl">            <span class="c1"># 没有默认值的参数标记为必填</span>
+</span></span><span class="line"><span class="cl">            <span class="k">if</span> <span class="n">param</span><span class="o">.</span><span class="n">default</span> <span class="ow">is</span> <span class="n">inspect</span><span class="o">.</span><span class="n">Parameter</span><span class="o">.</span><span class="n">empty</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">                <span class="n">required</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pname</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">            <span class="s2">&#34;type&#34;</span><span class="p">:</span> <span class="s2">&#34;function&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">            <span class="s2">&#34;function&#34;</span><span class="p">:</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">                <span class="s2">&#34;name&#34;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                <span class="s2">&#34;description&#34;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">description</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                <span class="s2">&#34;parameters&#34;</span><span class="p">:</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">                    <span class="s2">&#34;type&#34;</span><span class="p">:</span> <span class="s2">&#34;object&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                    <span class="s2">&#34;properties&#34;</span><span class="p">:</span> <span class="n">properties</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                    <span class="s2">&#34;required&#34;</span><span class="p">:</span> <span class="n">required</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                <span class="p">},</span>
+</span></span><span class="line"><span class="cl">            <span class="p">},</span>
+</span></span><span class="line"><span class="cl">        <span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">class</span> <span class="nc">WeatherTool</span><span class="p">(</span><span class="n">BaseTool</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">    <span class="n">name</span> <span class="o">=</span> <span class="s2">&#34;get_weather&#34;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">description</span> <span class="o">=</span> <span class="s2">&#34;查询指定城市实时天气&#34;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">location</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">unit</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&#34;celsius&#34;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+</span></span><span class="line"><span class="cl">        <span class="kn">from</span> <span class="nn">tools_impl</span> <span class="kn">import</span> <span class="n">get_weather</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="n">get_weather</span><span class="p">(</span><span class="n">location</span><span class="p">,</span> <span class="n">unit</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">class</span> <span class="nc">ToolRegistry</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="s2">&#34;&#34;&#34;统一管理多个工具：注册、生成schema列表、按名执行&#34;&#34;&#34;</span>
+</span></span><span class="line"><span class="cl">    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">        <span class="bp">self</span><span class="o">.</span><span class="n">_tools</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">BaseTool</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">def</span> <span class="nf">register</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tool</span><span class="p">:</span> <span class="n">BaseTool</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">        <span class="bp">self</span><span class="o">.</span><span class="n">_tools</span><span class="p">[</span><span class="n">tool</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">tool</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="bp">self</span>  <span class="c1"># 链式调用：registry.register(A).register(B)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">def</span> <span class="nf">schemas</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="p">[</span><span class="n">t</span><span class="o">.</span><span class="n">to_schema</span><span class="p">()</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tools</span><span class="o">.</span><span class="n">values</span><span class="p">()]</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">def</span> <span class="nf">execute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">args</span><span class="p">:</span> <span class="nb">dict</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">        <span class="n">tool</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tools</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="n">tool</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="o">**</span><span class="n">args</span><span class="p">)</span> <span class="k">if</span> <span class="n">tool</span> <span class="k">else</span> <span class="p">{</span><span class="s2">&#34;error&#34;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&#34;未知工具: </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">&#34;</span><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 使用示例</span>
+</span></span><span class="line"><span class="cl"><span class="n">registry</span> <span class="o">=</span> <span class="n">ToolRegistry</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl"><span class="n">registry</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="n">WeatherTool</span><span class="p">())</span>
+</span></span><span class="line"><span class="cl"><span class="c1"># registry.register(CalculatorTool()).register(SearchTool())...</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>这种模式让工具<strong>可插拔、可测试、可复用</strong>——加新工具只需写一个子类、<code>register</code>一下，不动主流程代码。这是构建中大型Agent项目的推荐架构。</p>
+<p>💡 <strong>小贴士</strong>：<code>to_schema</code>这里把所有参数都简化成了<code>type: &quot;string&quot;</code>，真实项目里可以用<code>typing</code>注解（<code>int</code>、<code>bool</code>、<code>List[str]</code>等）自动映射更精确的JSON类型，进一步减少LLM填错参数的概率。</p>
+<h2 id="6-工具调用最佳实践">6. 工具调用最佳实践</h2>
+<h3 id="61-工具描述的写法技巧">6.1 工具描述的写法技巧</h3>
+<p>描述是Function Calling成败的关键。一个好描述应包含三要素：<strong>做什么 + 何时用 + 边界</strong>。</p>
+<p>❌ 差的写法：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-json" data-lang="json"><span class="line"><span class="cl"><span class="p">{</span><span class="nt">&#34;description&#34;</span><span class="p">:</span> <span class="s2">&#34;查询天气&#34;</span><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>✅ 好的写法：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-json" data-lang="json"><span class="line"><span class="cl"><span class="p">{</span><span class="nt">&#34;description&#34;</span><span class="p">:</span> <span class="s2">&#34;查询指定城市的实时天气，返回温度、天气状况、湿度。当用户询问天气、温度、是否需要带伞、穿衣建议时调用。仅支持中国地级市及以上行政区，不支持乡镇。&#34;</span><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>差在哪？差的写法只说了&quot;做什么&quot;，LLM不知道什么时候该用它、它能不能处理用户的输入，于是要么该调不调、要么乱调一气。好的写法三要素齐全，LLM判断起来又快又准。</p>
+<p>技巧清单：</p>
+<ul>
+<li>用动词开头：<code>查询</code>、<code>发送</code>、<code>创建</code>、<code>搜索</code>；</li>
+<li>写明触发场景，帮LLM判断&quot;该不该用&quot;；</li>
+<li>写明边界和限制，避免误调用；</li>
+<li>给参数加<code>example</code>，让LLM知道填什么格式。</li>
+</ul>
+<h3 id="62-错误处理与重试">6.2 错误处理与重试</h3>
+<p>工具调用失败是常态——网络抖动、API限流、参数错误都可能发生。务必做两层防护：网络/系统级错误用重试扛过去，业务级错误直接把错误信息回灌给LLM让它自己调整：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">time</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">safe_execute</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="n">args</span><span class="p">,</span> <span class="n">retries</span><span class="o">=</span><span class="mi">3</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="n">attempt</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">retries</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">        <span class="k">try</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">            <span class="n">result</span> <span class="o">=</span> <span class="n">func</span><span class="p">(</span><span class="o">**</span><span class="n">args</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">            <span class="c1"># 业务级错误：不重试，直接返回给LLM让它自己处理</span>
+</span></span><span class="line"><span class="cl">            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="ow">and</span> <span class="s2">&#34;error&#34;</span> <span class="ow">in</span> <span class="n">result</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">                <span class="k">return</span> <span class="n">result</span>
+</span></span><span class="line"><span class="cl">            <span class="k">return</span> <span class="n">result</span>
+</span></span><span class="line"><span class="cl">        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">            <span class="c1"># 系统/网络级错误：重试，指数退避避免雪崩</span>
+</span></span><span class="line"><span class="cl">            <span class="k">if</span> <span class="n">attempt</span> <span class="o">==</span> <span class="n">retries</span> <span class="o">-</span> <span class="mi">1</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">                <span class="k">return</span> <span class="p">{</span><span class="s2">&#34;error&#34;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&#34;工具执行失败(</span><span class="si">{</span><span class="n">attempt</span><span class="o">+</span><span class="mi">1</span><span class="si">}</span><span class="s2">次): </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&#34;</span><span class="p">}</span>
+</span></span><span class="line"><span class="cl">            <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">2</span> <span class="o">**</span> <span class="n">attempt</span><span class="p">)</span>  <span class="c1"># 1秒、2秒、4秒...</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="p">{</span><span class="s2">&#34;error&#34;</span><span class="p">:</span> <span class="s2">&#34;未知错误&#34;</span><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>把错误信息以JSON形式回灌给LLM，它通常能自己读懂错误、调整参数重试或换一个工具——这比你在代码里写一堆<code>if</code>分支优雅得多。</p>
+<p>💡 <strong>小贴士</strong>：<code>2 ** attempt</code>是经典的&quot;指数退避&quot;——重试间隔依次是1、2、4、8秒，避免在被限流时还密集重试把对方打挂。生产环境还可以加随机抖动（jitter）进一步分散请求。</p>
+<h3 id="63-工具权限与安全">6.3 工具权限与安全</h3>
+<p>工具一旦能改变外部世界（发邮件、删文件、转账），安全就成了头等大事。核心原则就一句话：<strong>永远不要无条件信任LLM的输出</strong>。</p>
+<ul>
+<li><strong>最小权限</strong>：每个工具只暴露必需能力。文件工具锁死在workspace内，DB工具只允许SELECT；</li>
+<li><strong>路径校验</strong>：文件类工具必须做路径穿越检查（见5.2）；</li>
+<li><strong>SQL防注入</strong>：拒绝非SELECT语句，参数化查询；</li>
+<li><strong>代码执行沙箱</strong>：要跑用户代码时，用Docker容器或nsjail隔离，别直接在宿主机上<code>eval</code>；</li>
+<li><strong>人工确认（Human-in-the-loop）</strong>：高危操作（发邮件、付款）执行前先让人确认。</li>
+</ul>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span><span class="lnt">7
+</span><span class="lnt">8
+</span><span class="lnt">9
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="n">CONFIRM_REQUIRED</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&#34;send_email&#34;</span><span class="p">,</span> <span class="s2">&#34;delete_file&#34;</span><span class="p">,</span> <span class="s2">&#34;transfer_money&#34;</span><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">maybe_confirm</span><span class="p">(</span><span class="n">tool_name</span><span class="p">,</span> <span class="n">args</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">    <span class="s2">&#34;&#34;&#34;高危工具调用前先问一下人&#34;&#34;&#34;</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="n">tool_name</span> <span class="ow">in</span> <span class="n">CONFIRM_REQUIRED</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="c1"># 实际项目弹UI或发审批消息，这里用input演示</span>
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="nb">input</span><span class="p">(</span><span class="sa">f</span><span class="s2">&#34;确认执行 </span><span class="si">{</span><span class="n">tool_name</span><span class="si">}</span><span class="s2">(</span><span class="si">{</span><span class="n">args</span><span class="si">}</span><span class="s2">)? (y/n): &#34;</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">!=</span> <span class="s2">&#34;y&#34;</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">            <span class="k">return</span> <span class="p">{</span><span class="s2">&#34;error&#34;</span><span class="p">:</span> <span class="s2">&#34;用户取消执行&#34;</span><span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="kc">None</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>💡 <strong>小贴士</strong>：Human-in-the-loop是LLM时代最朴素也最有效的安全网。哪怕你的描述写得再好、权限控得再严，让真人在&quot;扣钱、发外发邮件、删数据&quot;前点一下确认，能挡掉99%的灾难性事故。</p>
+<h3 id="64-性能优化">6.4 性能优化</h3>
+<ul>
+<li><strong>并行执行</strong>：见第4节，单次响应多工具时务必并发；</li>
+<li><strong>结果裁剪</strong>：工具返回的数据可能很大（如搜索结果100条），先裁剪再回灌，省token也省LLM处理时间；</li>
+<li><strong>缓存</strong>：相同参数的工具调用结果缓存几分钟（天气、股价这类低频变化的数据）；</li>
+<li><strong>流式输出</strong>：最终回复用<code>stream=True</code>，让用户立即看到进度，体感更快；</li>
+<li><strong>工具数量控制</strong>：单次注入不超过15个工具，多了用分层路由或RAG检索。</li>
+</ul>
+<h2 id="7-不同模型的function-calling对比">7. 不同模型的Function Calling对比</h2>
+<p>主流模型都支持Function Calling，但实现细节和表现有差异。下表是当前几款主流模型的横向对比：</p>
+<table>
+<thead>
+<tr>
+<th>维度</th>
+<th>OpenAI gpt-5</th>
+<th>Claude 4.5</th>
+<th>Gemini 3.0</th>
+<th>开源(Llama 4/Qwen3)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>并行调用</td>
+<td>✅ 原生</td>
+<td>✅ 原生</td>
+<td>✅ 原生</td>
+<td>⚠️ 部分微调版支持</td>
+</tr>
+<tr>
+<td>工具选择准确率</td>
+<td>高</td>
+<td>高</td>
+<td>高</td>
+<td>中</td>
+</tr>
+<tr>
+<td>参数JSON稳定性</td>
+<td>极高</td>
+<td>极高</td>
+<td>高</td>
+<td>中（偶发格式错误）</td>
+</tr>
+<tr>
+<td>结构化输出约束</td>
+<td>✅ JSON Schema强制</td>
+<td>✅ tool_use强约束</td>
+<td>✅ 严格模式</td>
+<td>⚠️ 依赖prompt</td>
+</tr>
+<tr>
+<td>最大工具数</td>
+<td>128</td>
+<td>256</td>
+<td>128</td>
+<td>取决于上下文长度</td>
+</tr>
+<tr>
+<td>流式工具调用</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>⚠️</td>
+</tr>
+</tbody>
+</table>
+<p><strong>选型建议</strong>：</p>
+<ul>
+<li>生产环境追求稳定 → <strong>OpenAI gpt-5 / Claude 4.5</strong>，二者Function Calling最成熟；</li>
+<li>多模态工具调用（带图片） → <strong>Gemini 3.0</strong>；</li>
+<li>私有化部署、成本敏感 → <strong>Qwen3-72B</strong> 或 <strong>Llama 4 70B</strong>，配合专门的function calling微调版；</li>
+<li>极致长上下文工具管理 → <strong>Claude</strong>，支持工具数最多。</li>
+</ul>
+<p>开源模型最大的坑是<strong>参数JSON格式不稳定</strong>，偶尔会漏字段或加多余引号。建议加一层容错解析，并配合JSON Schema验证：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">json</span>
+</span></span><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">jsonschema</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">validate_tool_args</span><span class="p">(</span><span class="n">args_json</span><span class="p">,</span> <span class="n">schema</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">    <span class="s2">&#34;&#34;&#34;容错解析+校验：先看JSON能不能解析，再看符不符合schema&#34;&#34;&#34;</span>
+</span></span><span class="line"><span class="cl">    <span class="k">try</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="n">args</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">args_json</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="k">except</span> <span class="n">json</span><span class="o">.</span><span class="n">JSONDecodeError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="kc">None</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&#34;JSON解析失败: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&#34;</span>
+</span></span><span class="line"><span class="cl">    <span class="k">try</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="n">jsonschema</span><span class="o">.</span><span class="n">validate</span><span class="p">(</span><span class="n">args</span><span class="p">,</span> <span class="n">schema</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="k">except</span> <span class="n">jsonschema</span><span class="o">.</span><span class="n">ValidationError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="kc">None</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&#34;参数校验失败: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&#34;</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">args</span><span class="p">,</span> <span class="kc">None</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>💡 <strong>小贴士</strong>：用开源模型时，<code>validate_tool_args</code>这类校验几乎是必选项。校验失败时可以把错误信息回灌给LLM让它重新生成参数，往往重试一两次就能拿到合法JSON。</p>
+<h2 id="8-小结">8. 小结</h2>
+<p>本章我们完整走过了Function Calling的全链路：</p>
+<ul>
+<li><strong>原理</strong>：LLM负责决策、宿主负责执行，通过JSON协议协作，五步闭环：定义→描述→选择→执行→回灌；</li>
+<li><strong>实战</strong>：用OpenAI gpt-5实现了天气+计算器双工具Agent，演示了完整的工具调用循环；</li>
+<li><strong>编排</strong>：多工具管理、并行调用、用线程池榨取性能；</li>
+<li><strong>自定义工具</strong>：搜索、文件、数据库三类工具实现，以及统一的<code>BaseTool</code>设计模式；</li>
+<li><strong>最佳实践</strong>：描述三要素、错误重试、安全权限、性能优化；</li>
+<li><strong>模型对比</strong>：OpenAI/Claude最稳，Gemini擅长多模态，开源模型需加容错。</li>
+</ul>
+<p>记住核心心法：<strong>工具描述是LLM选工具的唯一依据，写得越清楚，Agent越可靠</strong>。Function Calling不是魔法，它本质是一套&quot;LLM决策+代码执行&quot;的工程协议。把协议走稳、把工具做扎实、把安全守好，你的Agent就有了真正&quot;动手办事&quot;的能力。</p>
+<p>还有一个常被忽略的点：<strong>工具调用是可观测的</strong>。与传统prompt工程不同，Function Calling每一步都有明确的JSON输入输出，你可以记录、回放、断点调试。建议在生产环境把每次调用的<code>tool_name</code>、<code>arguments</code>、<code>result</code>、耗时都打日志，这不仅能排查问题，还能用来做工具使用的数据分析，反哺优化描述和参数设计。</p>
+<h2 id="9-预告第6章推理模式">9. 预告第6章：推理模式</h2>
+<p>至此，我们的智能体已经具备记忆（第4章）和工具使用（本章）两大基础能力。但它仍然是&quot;被动响应&quot;的——用户问一句它动一步。下一章，我们要给它装上<strong>推理引擎</strong>，让它能自主规划、分解任务、反思纠错，从&quot;工具人&quot;进化为&quot;思考者&quot;。</p>
+<p>第6章将聚焦<strong>推理模式</strong>，内容包括：</p>
+<ul>
+<li>ReAct（Reasoning + Acting）范式：让LLM&quot;边想边做&quot;的经典框架</li>
+<li>Chain-of-Thought与Tree-of-Thought的工程实现</li>
+<li>Plan-and-Execute：先规划再执行的多步任务分解</li>
+<li>Reflection机制：让Agent自我反思、纠错、迭代</li>
+<li>完整实战：构建一个能自主完成复杂研究报告的推理Agent</li>
+</ul>
+<p>当工具遇上推理，智能体才真正开始&quot;活&quot;起来。我们第6章见。</p>
+</div><div class="post-footer" id="post-footer">
+    <div class="post-info">
+        <div class="post-info-line">
+            <div class="post-info-mod">
+                <span>Updated on 2026-07-05</span>
+            </div></div>
+        <div class="post-info-line">
+            <div class="post-info-md"></div>
+            <div class="post-info-share">
+                <span><a href="javascript:void(0);" title="Share on Twitter" data-sharer="twitter" data-url="https://www.ithome.me/post/2026/07/05/ai%E6%99%BA%E8%83%BD%E4%BD%93%E5%BC%80%E5%8F%91-%E7%AC%AC5%E7%AB%A0-%E5%B7%A5%E5%85%B7%E8%B0%83%E7%94%A8%E6%9C%BA%E5%88%B6/" data-title="工具调用机制：Function Calling实战" data-via="ChenCiki" data-hashtags="AI Agent,Function Calling,工具调用,OpenAI,AI智能体开发实战"><i class="fab fa-twitter fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on Linkedin" data-sharer="linkedin" data-url="https://www.ithome.me/post/2026/07/05/ai%E6%99%BA%E8%83%BD%E4%BD%93%E5%BC%80%E5%8F%91-%E7%AC%AC5%E7%AB%A0-%E5%B7%A5%E5%85%B7%E8%B0%83%E7%94%A8%E6%9C%BA%E5%88%B6/"><i class="fab fa-linkedin fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on 微博" data-sharer="weibo" data-url="https://www.ithome.me/post/2026/07/05/ai%E6%99%BA%E8%83%BD%E4%BD%93%E5%BC%80%E5%8F%91-%E7%AC%AC5%E7%AB%A0-%E5%B7%A5%E5%85%B7%E8%B0%83%E7%94%A8%E6%9C%BA%E5%88%B6/" data-title="工具调用机制：Function Calling实战" data-ralateuid="xxx"><i class="fab fa-weibo fa-fw" aria-hidden="true"></i></a></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="post-info-more">
+        <section class="post-tags"><i class="fas fa-tags fa-fw" aria-hidden="true"></i>&nbsp;<a href="/tags/ai-agent/">AI Agent</a>,&nbsp;<a href="/tags/function-calling/">Function Calling</a>,&nbsp;<a href="/tags/%E5%B7%A5%E5%85%B7%E8%B0%83%E7%94%A8/">工具调用</a>,&nbsp;<a href="/tags/openai/">OpenAI</a>,&nbsp;<a href="/tags/ai%E6%99%BA%E8%83%BD%E4%BD%93%E5%BC%80%E5%8F%91%E5%AE%9E%E6%88%98/">AI智能体开发实战</a></section>
+        <section>
+            <span><a href="javascript:void(0);" onclick="window.history.back();">Back</a></span>&nbsp;|&nbsp;<span><a href="/">Home</a></span>
+        </section>
+    </div>
+
+    <div class="post-nav"><a href="/post/2026/07/05/ai%E6%99%BA%E8%83%BD%E4%BD%93%E5%BC%80%E5%8F%91-%E7%AC%AC6%E7%AB%A0-%E6%8E%A8%E7%90%86%E6%A8%A1%E5%BC%8F/" class="prev" rel="prev" title="推理模式：ReAct与Plan-and-Execute"><i class="fas fa-angle-left fa-fw" aria-hidden="true"></i>推理模式：ReAct与Plan-and-Execute</a>
+            <a href="/post/2026/07/05/ai%E6%99%BA%E8%83%BD%E4%BD%93%E5%BC%80%E5%8F%91-%E7%AC%AC9%E7%AB%A0-%E5%A4%9A%E6%99%BA%E8%83%BD%E4%BD%93%E5%8D%8F%E4%BD%9C/" class="next" rel="next" title="多智能体协作：分工、编排与涌现">多智能体协作：分工、编排与涌现<i class="fas fa-angle-right fa-fw" aria-hidden="true"></i></a></div>
+</div>
+<div id="comments"><div id="gitalk" class="comment"></div><noscript>
+                Please enable JavaScript to view the comments powered by <a href="https://github.com/gitalk/gitalk"></a>Gitalk</a>.
+            </noscript></div></article></div>
+            </main><footer class="footer">
+        <div class="footer-container"><div class="footer-line" itemscope itemtype="http://schema.org/CreativeWork"><i class="far fa-copyright fa-fw" aria-hidden="true"></i><span itemprop="copyrightYear">2011 - 2026</span><span class="author" itemprop="copyrightHolder">&nbsp;<a href="https://www.ithome.me/" target="_blank">Simon Chen</a></span>&nbsp;|&nbsp;<span class="license"><a rel="license external nofollow noopener noreferrer" href="https://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank">CC BY-NC-ND 4.0</a></span></div>
+        </div>
+    </footer></div>
+
+        <div id="fixed-buttons"><a href="#" id="back-to-top" class="fixed-button" title="Back to Top">
+                <i class="fas fa-arrow-up fa-fw" aria-hidden="true"></i>
+            </a><a href="#" id="view-comments" class="fixed-button" title="View Comments">
+                <i class="fas fa-comment fa-fw" aria-hidden="true"></i>
+            </a>
+        </div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1.8.0/dist/gitalk.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/css/lightgallery-bundle.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/katex.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/copy-tex.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.css"><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/gitalk@1.8.0/dist/gitalk.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/autocomplete.js@0.38.1/dist/autocomplete.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lunr@2.3.9/lunr.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lazysizes@5.3.1/lazysizes.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/lightgallery.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/plugins/thumbnail/lg-thumbnail.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/plugins/zoom/lg-zoom.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/clipboard@2.0.11/dist/clipboard.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/sharer.js@0.5.1/sharer.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/katex.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/auto-render.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/copy-tex.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/mhchem.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.js"></script><script type="text/javascript">window.config={"code":{"copyTitle":"Copy to clipboard","maxShownLines":50},"comment":{"gitalk":{"admin":["cikichen"],"clientID":"be0f52370ed1285b6c7c","clientSecret":"734a7d8d0ded346ca7a3d565d57de3f8eeb2850b","id":"2026-07-05T00:00:00Z","owner":"cikichen","repo":"gitalk","title":"工具调用机制：Function Calling实战"}},"cookieconsent":{"content":{"dismiss":"我知道了","link":"了解更多","message":"本网站使用 Cookies 来改善您的浏览体验."},"enable":true,"palette":{"button":{"background":"#f0f0f0"},"popup":{"background":"#1aa3ff"}},"theme":"edgeless"},"lightgallery":true,"math":{"delimiters":[{"display":true,"left":"$$","right":"$$"},{"display":true,"left":"\\[","right":"\\]"},{"display":true,"left":"\\begin{equation}","right":"\\end{equation}"},{"display":true,"left":"\\begin{equation*}","right":"\\end{equation*}"},{"display":true,"left":"\\begin{align}","right":"\\end{align}"},{"display":true,"left":"\\begin{align*}","right":"\\end{align*}"},{"display":true,"left":"\\begin{alignat}","right":"\\end{alignat}"},{"display":true,"left":"\\begin{alignat*}","right":"\\end{alignat*}"},{"display":true,"left":"\\begin{gather}","right":"\\end{gather}"},{"display":true,"left":"\\begin{CD}","right":"\\end{CD}"},{"display":false,"left":"$","right":"$"},{"display":false,"left":"\\(","right":"\\)"}],"strict":false},"search":{"highlightTag":"em","lunrIndexURL":"/index.json","maxResultLength":10,"noResultsFound":"No results found","snippetLength":50,"type":"lunr"}};</script><script type="text/javascript" src="/js/theme.min.js"></script></body>
+</html>

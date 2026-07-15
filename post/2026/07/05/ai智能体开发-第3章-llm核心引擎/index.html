@@ -1,0 +1,1719 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="robots" content="noodp" />
+        <title>LLM核心引擎：大模型选型与集成 - 编程心语</title><meta name="Description" content="全面对比OpenAI GPT-5.x、Claude 4.x、开源模型在智能体开发中的表现，附API集成实战代码"><meta property="og:url" content="https://www.ithome.me/post/2026/07/05/ai%E6%99%BA%E8%83%BD%E4%BD%93%E5%BC%80%E5%8F%91-%E7%AC%AC3%E7%AB%A0-llm%E6%A0%B8%E5%BF%83%E5%BC%95%E6%93%8E/">
+  <meta property="og:site_name" content="编程心语">
+  <meta property="og:title" content="LLM核心引擎：大模型选型与集成">
+  <meta property="og:description" content="全面对比OpenAI GPT-5.x、Claude 4.x、开源模型在智能体开发中的表现，附API集成实战代码">
+  <meta property="og:locale" content="zh_CN">
+  <meta property="og:type" content="article">
+    <meta property="article:section" content="posts">
+    <meta property="article:published_time" content="2026-07-05T08:00:00+08:00">
+    <meta property="article:modified_time" content="2026-07-05T08:00:00+08:00">
+    <meta property="article:tag" content="AI Agent">
+    <meta property="article:tag" content="LLM">
+    <meta property="article:tag" content="OpenAI">
+    <meta property="article:tag" content="Claude">
+    <meta property="article:tag" content="模型选型">
+    <meta property="article:tag" content="AI智能体开发实战">
+
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="LLM核心引擎：大模型选型与集成">
+  <meta name="twitter:description" content="全面对比OpenAI GPT-5.x、Claude 4.x、开源模型在智能体开发中的表现，附API集成实战代码">
+      <meta name="twitter:site" content="@ChenCiki">
+<meta name="application-name" content="编程心语">
+<meta name="apple-mobile-web-app-title" content="编程心语"><meta name="theme-color" content="#ffffff"><meta name="msapplication-TileColor" content="#da532c"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5"><link rel="manifest" href="/site.webmanifest"><link rel="canonical" href="https://www.ithome.me/post/2026/07/05/ai%E6%99%BA%E8%83%BD%E4%BD%93%E5%BC%80%E5%8F%91-%E7%AC%AC3%E7%AB%A0-llm%E6%A0%B8%E5%BF%83%E5%BC%95%E6%93%8E/" /><link rel="prev" href="https://www.ithome.me/post/2026/07/05/ai%E6%99%BA%E8%83%BD%E4%BD%93%E5%BC%80%E5%8F%91-%E7%AC%AC10%E7%AB%A0-mcp%E5%8D%8F%E8%AE%AE/" /><link rel="next" href="https://www.ithome.me/post/2026/07/05/ai%E6%99%BA%E8%83%BD%E4%BD%93%E5%BC%80%E5%8F%91%E5%AE%9E%E6%88%98-%E5%AE%8C%E6%95%B4%E7%9B%AE%E5%BD%95/" /><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/normalize.css@8.0.1/normalize.min.css"><link rel="stylesheet" href="/css/style.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css"><script type="application/ld+json">
+    {
+        "@context": "http://schema.org",
+        "@type": "BlogPosting",
+        "headline": "LLM核心引擎：大模型选型与集成",
+        "inLanguage": "zh-CN",
+        "mainEntityOfPage": {
+            "@type": "WebPage",
+            "@id": "https:\/\/www.ithome.me\/post\/2026\/07\/05\/ai%E6%99%BA%E8%83%BD%E4%BD%93%E5%BC%80%E5%8F%91-%E7%AC%AC3%E7%AB%A0-llm%E6%A0%B8%E5%BF%83%E5%BC%95%E6%93%8E\/"
+        },"image": ["https:\/\/www.ithome.me\/cover.png"],"genre": "posts","keywords": "AI Agent, LLM, OpenAI, Claude, 模型选型, AI智能体开发实战","wordcount":  13830 ,
+        "url": "https:\/\/www.ithome.me\/post\/2026\/07\/05\/ai%E6%99%BA%E8%83%BD%E4%BD%93%E5%BC%80%E5%8F%91-%E7%AC%AC3%E7%AB%A0-llm%E6%A0%B8%E5%BF%83%E5%BC%95%E6%93%8E\/","datePublished": "2026-07-05T08:00:00+08:00","dateModified": "2026-07-05T08:00:00+08:00","publisher": {
+            "@type": "Organization",
+            "name": "SimonChen","logo": "https:\/\/www.ithome.me\/logo.png"},"author": {
+                "@type": "Person",
+                "name": "Simon"
+            },"description": "全面对比OpenAI GPT-5.x、Claude 4.x、开源模型在智能体开发中的表现，附API集成实战代码"
+    }
+    </script><script async src="https://www.googletagmanager.com/gtag/js?id=G-H1Q5563VR8"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-H1Q5563VR8', { 'anonymize_ip': true });
+</script></head>
+    <body data-header-desktop="fixed" data-header-mobile="auto"><script type="text/javascript">(window.localStorage && localStorage.getItem('theme') ? localStorage.getItem('theme') === 'dark' : ('auto' === 'auto' ? window.matchMedia('(prefers-color-scheme: dark)').matches : 'auto' === 'dark')) && document.body.setAttribute('theme', 'dark');</script>
+
+        <div id="mask"></div><div class="wrapper"><header class="desktop" id="header-desktop">
+    <div class="header-wrapper">
+        <div class="header-title">
+            <a href="/" title="编程心语">编程心语</a>
+        </div>
+        <div class="menu">
+            <div class="menu-inner"><a class="menu-item" href="/posts/"> 文章 </a><a class="menu-item" href="/categories/"> 分类 </a><a class="menu-item" href="/tags/"> 标签 </a><a class="menu-item" href="/about-me/"> 关于 </a><span class="menu-item delimiter"></span><span class="menu-item search" id="search-desktop">
+                        <input type="text" placeholder="搜索文章..." id="search-input-desktop">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-desktop" title="Search">
+                            <i class="fas fa-search fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-desktop" title="Clear">
+                            <i class="fas fa-times-circle fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-desktop">
+                            <i class="fas fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+                        </span>
+                    </span><a href="javascript:void(0);" class="menu-item theme-switch" title="Switch Theme">
+                    <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</header><header class="mobile" id="header-mobile">
+    <div class="header-container">
+        <div class="header-wrapper">
+            <div class="header-title">
+                <a href="/" title="编程心语">编程心语</a>
+            </div>
+            <div class="menu-toggle" id="menu-toggle-mobile">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+        <div class="menu" id="menu-mobile"><div class="search-wrapper">
+                    <div class="search mobile" id="search-mobile">
+                        <input type="text" placeholder="搜索文章..." id="search-input-mobile">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-mobile" title="Search">
+                            <i class="fas fa-search fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-mobile" title="Clear">
+                            <i class="fas fa-times-circle fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-mobile">
+                            <i class="fas fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+                        </span>
+                    </div>
+                    <a href="javascript:void(0);" class="search-cancel" id="search-cancel-mobile">
+                        Cancel
+                    </a>
+                </div><a class="menu-item" href="/posts/" title="">文章</a><a class="menu-item" href="/categories/" title="">分类</a><a class="menu-item" href="/tags/" title="">标签</a><a class="menu-item" href="/about-me/" title="">关于</a><a href="javascript:void(0);" class="menu-item theme-switch" title="Switch Theme">
+                <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
+            </a></div>
+    </div>
+</header><div class="search-dropdown desktop">
+        <div id="search-dropdown-desktop"></div>
+    </div>
+    <div class="search-dropdown mobile">
+        <div id="search-dropdown-mobile"></div>
+    </div><main class="main">
+                <div class="container"><div class="toc" id="toc-auto">
+            <h2 class="toc-title">Contents</h2>
+            <div class="toc-content" id="toc-content-auto"></div>
+        </div><article class="page single"><h1 class="single-title animate__animated animate__flipInX">LLM核心引擎：大模型选型与集成</h1><div class="post-meta">
+            <div class="post-meta-line"><span class="post-author"><a href="https://www.ithome.me/" title="Author" target="_blank" rel="noopener noreferrer author" class="author"><i class="fas fa-user-circle fa-fw" aria-hidden="true"></i>Simon</a>
+</span>&nbsp;<span class="post-category">included in <a href="/categories/ai%E6%99%BA%E8%83%BD%E4%BD%93%E5%BC%80%E5%8F%91%E5%AE%9E%E6%88%98/"><i class="far fa-folder fa-fw" aria-hidden="true"></i>AI智能体开发实战</a></span></div>
+            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw" aria-hidden="true"></i>&nbsp;<time datetime="2026-07-05">2026-07-05</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden="true"></i>&nbsp;13830 words&nbsp;
+                <i class="far fa-clock fa-fw" aria-hidden="true"></i>&nbsp;28 minutes&nbsp;</div>
+        </div><div class="details toc" id="toc-static"  data-kept="true">
+                <div class="details-summary toc-title">
+                    <span>Contents</span>
+                    <span><i class="details-icon fas fa-angle-right" aria-hidden="true"></i></span>
+                </div>
+                <div class="details-content toc-content" id="toc-content-static"><nav id="TableOfContents">
+  <ul>
+    <li><a href="#31-引言llm是智能体的大脑">3.1 引言：LLM是智能体的大脑</a></li>
+    <li><a href="#32-商业api模型对比2026年最新">3.2 商业API模型对比（2026年最新）</a>
+      <ul>
+        <li><a href="#321-openai-gpt-5x-系列">3.2.1 OpenAI GPT-5.x 系列</a></li>
+        <li><a href="#322-anthropic-claude-4x-系列">3.2.2 Anthropic Claude 4.x 系列</a></li>
+        <li><a href="#323-google-gemini-25-系列">3.2.3 Google Gemini 2.5 系列</a></li>
+        <li><a href="#324-综合能力对比">3.2.4 综合能力对比</a></li>
+      </ul>
+    </li>
+    <li><a href="#33-开源模型生态">3.3 开源模型生态</a>
+      <ul>
+        <li><a href="#331-主流开源模型一览">3.3.1 主流开源模型一览</a></li>
+        <li><a href="#332-本地部署方案">3.3.2 本地部署方案</a>
+          <ul>
+            <li><a href="#路线一ollama开发原型阶段">路线一：Ollama（开发/原型阶段）</a></li>
+            <li><a href="#路线二vllm生产环境">路线二：vLLM（生产环境）</a></li>
+          </ul>
+        </li>
+      </ul>
+    </li>
+    <li><a href="#34-模型选型维度框架">3.4 模型选型维度框架</a>
+      <ul>
+        <li><a href="#维度一能力">维度一：能力</a></li>
+        <li><a href="#维度二成本">维度二：成本</a></li>
+        <li><a href="#维度三延迟">维度三：延迟</a></li>
+        <li><a href="#维度四上下文长度">维度四：上下文长度</a></li>
+        <li><a href="#维度五函数调用支持">维度五：函数调用支持</a></li>
+      </ul>
+    </li>
+    <li><a href="#35-api集成实战">3.5 API集成实战</a>
+      <ul>
+        <li><a href="#351-环境准备">3.5.1 环境准备</a></li>
+        <li><a href="#352-openai-sdk-调用示例">3.5.2 OpenAI SDK 调用示例</a></li>
+        <li><a href="#353-anthropic-sdk-调用示例">3.5.3 Anthropic SDK 调用示例</a></li>
+        <li><a href="#354-统一接口封装">3.5.4 统一接口封装</a></li>
+      </ul>
+    </li>
+    <li><a href="#36-模型路由与降级策略">3.6 模型路由与降级策略</a>
+      <ul>
+        <li><a href="#360-为什么需要多模型路由">3.6.0 为什么需要多模型路由？</a></li>
+        <li><a href="#361-路由策略设计">3.6.1 路由策略设计</a></li>
+        <li><a href="#362-降级链设计">3.6.2 降级链设计</a></li>
+        <li><a href="#363-智能路由器实现">3.6.3 智能路由器实现</a></li>
+      </ul>
+    </li>
+    <li><a href="#37-小结">3.7 小结</a></li>
+    <li><a href="#38-下章预告提示工程进阶">3.8 下章预告：提示工程进阶</a></li>
+  </ul>
+</nav></div>
+            </div><div class="content" id="content"><h2 id="31-引言llm是智能体的大脑">3.1 引言：LLM是智能体的大脑</h2>
+<p>在上一篇中，我们搭建了智能体的整体架构骨架——感知、记忆、规划、行动四大模块协同运转。但骨架本身不会思考，真正让智能体&quot;活&quot;起来的，是驱动这一切的核心引擎：<strong>大语言模型（LLM）</strong>。</p>
+<p>如果把智能体比作一个人，那么：</p>
+<ul>
+<li><strong>感知系统</strong>是眼睛和耳朵</li>
+<li><strong>记忆系统</strong>是海马体</li>
+<li><strong>工具调用</strong>是双手</li>
+<li><strong>LLM</strong>则是大脑皮层——负责理解、推理、决策和生成</li>
+</ul>
+<p>一个智能体的能力上限，几乎完全取决于它背后LLM的能力。选错模型，就像让一辆F1赛车装上了家用轿车的引擎——架构再优雅，也跑不出速度。反之，选对模型，很多看似复杂的任务可以迎刃而解。</p>
+<p>具体来说，LLM在智能体中承担四项核心职责：<strong>理解</strong>（读懂用户的自然语言意图）、<strong>推理</strong>（把模糊需求拆解成可执行步骤）、<strong>决策</strong>（判断该调用哪个工具、传什么参数）、<strong>生成</strong>（把结果组织成人类可读的回复）。这四项能力直接决定了智能体的智商天花板。如果LLM推理弱，它可能把&quot;帮我订明天去北京的机票&quot;理解成&quot;查一下北京的天气&quot;；如果LLM函数调用不稳，它可能给订票工具传错日期格式。所以——选对LLM，等于给你的智能体装对了大脑。</p>
+<blockquote>
+<p>💡 <strong>小贴士：什么是LLM？</strong>
+LLM（Large Language Model，大语言模型）是一种用海量文本训练出来的AI模型。你可以把它理解成一个&quot;读过整个互联网的超级大脑&quot;。它不是真的懂人类语言，而是通过统计规律学会了&quot;给定上文，下一个词最可能是什么&quot;。GPT系列、Claude系列、Qwen系列都属于LLM。</p>
+</blockquote>
+<p>本章将带你完成两件事：<strong>第一</strong>，建立一套科学的模型选型框架，让你在面对眼花缭乱的模型列表时不再迷茫；<strong>第二</strong>，动手实现多模型API集成与智能路由，为后续章节的智能体开发打下地基。</p>
+<blockquote>
+<p>💡 本章代码均可独立运行，建议边读边在本地敲一遍。所有示例使用Python 3.10+。</p>
+</blockquote>
+<hr>
+<h2 id="32-商业api模型对比2026年最新">3.2 商业API模型对比（2026年最新）</h2>
+<p>商业API模型是大多数智能体项目的首选——无需自建GPU集群，按量付费，开箱即用。2026年，三大厂商的旗舰模型已进入&quot;五美元时代&quot;：每百万输入token的成本约5美元，相比2024年下降了80%以上。</p>
+<blockquote>
+<p>💡 <strong>小贴士：什么是token？</strong>
+Token是模型处理文本的最小单位。对英文，大约1个token ≈ 0.75个单词（4个字符）；对中文，1个汉字大约消耗1-2个token。模型按处理的token数量计费——你输入的叫&quot;输入token&quot;（prompt tokens），模型输出的叫&quot;输出token&quot;（completion tokens）。举个例子：让模型总结一篇3000字的文章，输入约6000 token，输出约1000 token。</p>
+</blockquote>
+<h3 id="321-openai-gpt-5x-系列">3.2.1 OpenAI GPT-5.x 系列</h3>
+<p>OpenAI在2025年底发布了GPT-5架构，2026年中又推出了迭代版本GPT-5.5。当前产品线覆盖从旗舰到轻量的完整光谱：</p>
+<p>选模型就像买车——有人要跑赛道（旗舰GPT-5.5），有人要日常通勤（GPT-5.4），有人要省钱跑量（mini/nano）。你不需要每辆车都买最贵的，关键是匹配用途。下面的表格就是各款&quot;车型&quot;的参数表，先看价格和&quot;排量&quot;（能力），再决定买哪辆。</p>
+<table>
+<thead>
+<tr>
+<th>模型</th>
+<th>输入价格（$/M tokens）</th>
+<th>输出价格（$/M tokens）</th>
+<th>上下文窗口</th>
+<th>多模态</th>
+<th>函数调用</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>GPT-5.5（旗舰）</td>
+<td>$5.00</td>
+<td>$30.00</td>
+<td>400K</td>
+<td>✅ 文本+图像+音频</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>GPT-5.4</td>
+<td>$2.50</td>
+<td>$15.00</td>
+<td>400K</td>
+<td>✅ 文本+图像</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>GPT-5.4-mini</td>
+<td>$0.75</td>
+<td>$4.50</td>
+<td>256K</td>
+<td>✅ 文本+图像</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>GPT-5.4-nano</td>
+<td>$0.15</td>
+<td>$0.90</td>
+<td>128K</td>
+<td>❌ 仅文本</td>
+<td>✅</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>💡 <strong>小贴士：什么是&quot;上下文窗口&quot;？</strong>
+上下文窗口（Context Window）是模型一次能&quot;看到&quot;的最大文本量，单位是token。比如400K上下文，意味着模型一次能处理约40万token（相当于一本中等厚度的书）。窗口越大，能塞进去的对话历史、参考文档就越多；但代价是价格更高、速度更慢。不要盲目追求最大窗口，够用就行。</p>
+</blockquote>
+<p>GPT-5.5在推理基准测试MMLU-Pro上达到89.2分，是目前公开API中综合能力最强的模型之一。GPT-5.4-mini则是性价比之王——能力达到旗舰的85%，价格仅为1/7。</p>
+<h3 id="322-anthropic-claude-4x-系列">3.2.2 Anthropic Claude 4.x 系列</h3>
+<p>Anthropic的Claude 4系列以&quot;安全+长文&quot;著称，在代码生成和超长文档理解方面有独特优势：</p>
+<p>同样用买车来打比方：Claude Opus 4就像豪华越野车——贵，但在崎岖山路（复杂代码、长文档）上特别稳；Sonnet 4是中端轿车，性价比均衡；Haiku 4是经济型小车，便宜够用。</p>
+<table>
+<thead>
+<tr>
+<th>模型</th>
+<th>输入价格（$/M tokens）</th>
+<th>输出价格（$/M tokens）</th>
+<th>上下文窗口</th>
+<th>多模态</th>
+<th>函数调用</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Claude Opus 4</td>
+<td>$15.00</td>
+<td>$75.00</td>
+<td>500K</td>
+<td>✅ 文本+图像</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>Claude Sonnet 4</td>
+<td>$3.00</td>
+<td>$15.00</td>
+<td>500K</td>
+<td>✅ 文本+图像</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>Claude Haiku 4</td>
+<td>$0.80</td>
+<td>$4.00</td>
+<td>256K</td>
+<td>✅ 文本+图像</td>
+<td>✅</td>
+</tr>
+</tbody>
+</table>
+<p>Claude Opus 4是当前上下文窗口最长的旗舰模型（500K tokens），适合处理整本书级别的长文档。Claude Haiku 4定位与GPT-5.4-mini直接竞争，价格接近但上下文更长。</p>
+<blockquote>
+<p>⚠️ Claude系列的价格偏高，但在复杂代码重构、严格格式输出等场景下，Claude的&quot;一次成功率&quot;往往更高，综合成本反而更低。<strong>不要只看单价，要看单位任务的完成成本。</strong> 举个例子：一个任务用便宜模型可能要重试3次才成功，而Claude一次就过——算总账，Claude反而更省钱。</p>
+</blockquote>
+<h3 id="323-google-gemini-25-系列">3.2.3 Google Gemini 2.5 系列</h3>
+<p>Google的Gemini 2.5系列在2026年终于补齐了函数调用和Agent能力的短板，成为有力的第三方选择：</p>
+<table>
+<thead>
+<tr>
+<th>模型</th>
+<th>输入价格（$/M tokens）</th>
+<th>输出价格（$/M tokens）</th>
+<th>上下文窗口</th>
+<th>多模态</th>
+<th>函数调用</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Gemini 2.5 Pro</td>
+<td>$1.25</td>
+<td>$10.00</td>
+<td>2M</td>
+<td>✅ 文本+图像+音频+视频</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>Gemini 2.5 Flash</td>
+<td>$0.15</td>
+<td>$0.60</td>
+<td>1M</td>
+<td>✅ 文本+图像+音频</td>
+<td>✅</td>
+</tr>
+</tbody>
+</table>
+<p>Gemini 2.5 Pro的2M tokens上下文窗口是当前所有商业模型中最长的，适合需要同时处理海量参考文档的智能体——2M token相当于约200万字符，能一次性塞进十几本书或一整个代码仓库。Flash版本价格极低，适合高并发场景。</p>
+<h3 id="324-综合能力对比">3.2.4 综合能力对比</h3>
+<p>把三家旗舰放到一张雷达图上对比会更直观（以下为综合评测分数，满分10）：</p>
+<table>
+<thead>
+<tr>
+<th>维度</th>
+<th>GPT-5.5</th>
+<th>Claude Opus 4</th>
+<th>Gemini 2.5 Pro</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>推理能力</td>
+<td>9.5</td>
+<td>9.2</td>
+<td>8.8</td>
+</tr>
+<tr>
+<td>代码生成</td>
+<td>9.3</td>
+<td>9.6</td>
+<td>8.5</td>
+</tr>
+<tr>
+<td>多模态理解</td>
+<td>9.0</td>
+<td>8.0</td>
+<td>9.5</td>
+</tr>
+<tr>
+<td>函数调用稳定性</td>
+<td>9.4</td>
+<td>8.8</td>
+<td>8.7</td>
+</tr>
+<tr>
+<td>长文档处理</td>
+<td>8.5</td>
+<td>9.5</td>
+<td>9.8</td>
+</tr>
+<tr>
+<td>性价比</td>
+<td>8.0</td>
+<td>6.5</td>
+<td>8.8</td>
+</tr>
+<tr>
+<td>中文能力</td>
+<td>9.0</td>
+<td>8.5</td>
+<td>8.8</td>
+</tr>
+</tbody>
+</table>
+<p><strong>选型建议速查：</strong></p>
+<ul>
+<li><strong>通用智能体</strong> → GPT-5.4（平衡能力与成本）</li>
+<li><strong>代码智能体</strong> → Claude Sonnet 4（代码质量最佳）</li>
+<li><strong>超长文档分析</strong> → Gemini 2.5 Pro（2M上下文无敌手）</li>
+<li><strong>高并发低成本</strong> → GPT-5.4-nano 或 Gemini 2.5 Flash</li>
+<li><strong>中文场景</strong> → GPT-5.5 或国产开源模型（见下节）</li>
+</ul>
+<blockquote>
+<p>💡 <strong>小贴士：为什么没有&quot;万能模型&quot;？</strong>
+模型能力是多方权衡的结果。推理强通常意味着参数大、价格高；上下文长通常意味着注意力分散、速度变慢。所以现实中，最聪明的做法不是&quot;一个模型打天下&quot;，而是根据任务<strong>多模型混用</strong>——这正是后文&quot;智能路由&quot;要解决的问题。</p>
+</blockquote>
+<hr>
+<h2 id="33-开源模型生态">3.3 开源模型生态</h2>
+<p>商业API虽好，但有三个硬伤：<strong>数据隐私</strong>、<strong>长期成本</strong>、<strong>供应商锁定</strong>。当你的智能体需要处理企业内部数据，或者调用量达到每月数亿token时，开源模型就成为了必选项。</p>
+<blockquote>
+<p>💡 <strong>小贴士：开源 vs 商业API怎么选？</strong>
+简单的判断标准：如果你的智能体调用量每月低于5000万token，或者要处理敏感数据（医疗、金融、内部代码），优先考虑开源模型本地部署；否则商业API更省心。开源模型的好处是数据不出企业，长期成本可控；坏处是要自己管GPU、运维、模型更新。</p>
+</blockquote>
+<h3 id="331-主流开源模型一览">3.3.1 主流开源模型一览</h3>
+<p>2026年，开源模型已能覆盖商业模型80%以上的能力，以下三大家族最为活跃：</p>
+<table>
+<thead>
+<tr>
+<th>模型家族</th>
+<th>旗舰型号</th>
+<th>参数规模</th>
+<th>推理能力</th>
+<th>中文能力</th>
+<th>许可证</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Meta Llama 3</td>
+<td>Llama 3.1-405B</td>
+<td>405B</td>
+<td>⭐⭐⭐⭐⭐</td>
+<td>⭐⭐⭐</td>
+<td>Llama Community License</td>
+</tr>
+<tr>
+<td>阿里 Qwen</td>
+<td>Qwen3-235B</td>
+<td>235B</td>
+<td>⭐⭐⭐⭐⭐</td>
+<td>⭐⭐⭐⭐⭐</td>
+<td>Apache 2.0</td>
+</tr>
+<tr>
+<td>DeepSeek</td>
+<td>DeepSeek-V3</td>
+<td>671B (MoE, 37B激活)</td>
+<td>⭐⭐⭐⭐⭐</td>
+<td>⭐⭐⭐⭐</td>
+<td>MIT</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>💡 <strong>小贴士：什么是&quot;参数规模&quot;和MoE？</strong>
+参数（Parameters）是模型内部的&quot;可调旋钮&quot;，数量越多通常能力越强，但也更耗资源。比如235B就是2350亿个参数。MoE（Mixture of Experts，混合专家）是一种特殊架构：模型总参数很大，但每次推理只激活其中一小部分&quot;专家&quot;——DeepSeek-V3有671B总参数，但每次只激活37B，所以又强又省钱。</p>
+</blockquote>
+<p><strong>Meta Llama 3系列</strong>是全球生态最完善的开源模型，社区适配的工具链最丰富。但其中文能力相对偏弱，在纯中文场景下不如国产模型。</p>
+<p><strong>阿里Qwen3系列</strong>是目前中文能力最强的开源模型，Qwen3-235B在C-Eval中文评测中得分87.3，超越所有商业模型。Apache 2.0许可证意味着商用完全无限制，企业可以放心用。</p>
+<p><strong>DeepSeek-V3</strong>采用MoE（混合专家）架构，以671B总参数、37B激活参数实现了接近旗舰的效果，但推理成本极低。在数学和代码任务上表现尤为突出，被誉为&quot;开源界的性价比之王&quot;。</p>
+<blockquote>
+<p>💡 <strong>小贴士：开源模型怎么挑？</strong>
+记住三个匹配原则：①看你的语言——做中文产品优先Qwen3，做英文/全球产品优先Llama 3；②看你的硬件——单卡选7B-14B，四卡可选70B，DeepSeek-V3这种671B级别得上云；③看你的合规要求——Apache 2.0和MIT最宽松，商用零顾虑；Llama Community License对超大规模商用有限制条款，法务要过一遍。</p>
+</blockquote>
+<h3 id="332-本地部署方案">3.3.2 本地部署方案</h3>
+<p>开源模型的部署主要有两条路线：</p>
+<h4 id="路线一ollama开发原型阶段">路线一：Ollama（开发/原型阶段）</h4>
+<p>Ollama是一键式本地模型管理工具，适合开发阶段快速验证。它把复杂的模型下载、量化、加载流程都封装好了，你只需要一条命令就能跑起来：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span><span class="lnt">7
+</span><span class="lnt">8
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl"><span class="c1"># 安装 Ollama（macOS/Linux）</span>
+</span></span><span class="line"><span class="cl">curl -fsSL https://ollama.com/install.sh <span class="p">|</span> sh
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 拉取并运行 Qwen3 模型（8B 版本适合本地开发）</span>
+</span></span><span class="line"><span class="cl">ollama run qwen3:8b
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 拉取 Llama 3.1</span>
+</span></span><span class="line"><span class="cl">ollama run llama3.1:8b
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>Ollama自带兼容OpenAI API格式的HTTP服务，端口默认11434，你的智能体代码几乎不用改：</p>
+<p>这段代码做了什么：用Python的<code>requests</code>库向本地Ollama服务发一个聊天请求，模拟OpenAI的API格式，然后打印模型回复。你可以把它当作&quot;本地版的OpenAI&quot;来用。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="c1"># ollama_call.py —— 通过 Ollama 调用本地开源模型</span>
+</span></span><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">requests</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># Ollama 兼容 OpenAI API 格式，所以请求结构跟调用 OpenAI 一模一样</span>
+</span></span><span class="line"><span class="cl"><span class="n">response</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">post</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">    <span class="s2">&#34;http://localhost:11434/v1/chat/completions&#34;</span><span class="p">,</span>  <span class="c1"># Ollama 默认服务地址</span>
+</span></span><span class="line"><span class="cl">    <span class="n">json</span><span class="o">=</span><span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="s2">&#34;model&#34;</span><span class="p">:</span> <span class="s2">&#34;qwen3:8b&#34;</span><span class="p">,</span>  <span class="c1"># 指定要调用的本地模型</span>
+</span></span><span class="line"><span class="cl">        <span class="s2">&#34;messages&#34;</span><span class="p">:</span> <span class="p">[{</span><span class="s2">&#34;role&#34;</span><span class="p">:</span> <span class="s2">&#34;user&#34;</span><span class="p">,</span> <span class="s2">&#34;content&#34;</span><span class="p">:</span> <span class="s2">&#34;你好，请介绍一下你自己&#34;</span><span class="p">}],</span>
+</span></span><span class="line"><span class="cl">    <span class="p">},</span>
+</span></span><span class="line"><span class="cl"><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="c1"># 从响应 JSON 中取出模型回复文本</span>
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">json</span><span class="p">()[</span><span class="s2">&#34;choices&#34;</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="s2">&#34;message&#34;</span><span class="p">][</span><span class="s2">&#34;content&#34;</span><span class="p">])</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h4 id="路线二vllm生产环境">路线二：vLLM（生产环境）</h4>
+<p>vLLM是高性能推理引擎，支持PagedAttention和连续批处理，吞吐量是原生Transformers的10-20倍，适合生产部署：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span><span class="lnt">7
+</span><span class="lnt">8
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl"><span class="c1"># 安装 vLLM</span>
+</span></span><span class="line"><span class="cl">pip install vllm
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 启动 Qwen3 服务，兼容 OpenAI API 格式</span>
+</span></span><span class="line"><span class="cl">python -m vllm.entrypoints.openai.api_server <span class="se">\
+</span></span></span><span class="line"><span class="cl"><span class="se"></span>    --model Qwen/Qwen3-235B-A22B <span class="se">\
+</span></span></span><span class="line"><span class="cl"><span class="se"></span>    --tensor-parallel-size <span class="m">4</span> <span class="se">\
+</span></span></span><span class="line"><span class="cl"><span class="se"></span>    --port <span class="m">8000</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>vLLM同样暴露OpenAI兼容API，因此你的智能体代码可以在商业API和自建vLLM之间无缝切换——这是统一API格式带来的巨大好处，后文我们会利用这一点。</p>
+<blockquote>
+<p>🎯 <strong>实践经验</strong>：7B-14B参数的模型在单张A100/H100上即可流畅运行，适合中小团队。70B以上模型需要4-8张GPU做张量并行，建议使用云端GPU服务（如阿里云PAI、AWS Bedrock）按需启动。</p>
+</blockquote>
+<hr>
+<h2 id="34-模型选型维度框架">3.4 模型选型维度框架</h2>
+<p>面对数十个模型，如何系统化决策？我总结为<strong>五个维度打分法</strong>：</p>
+<h3 id="维度一能力">维度一：能力</h3>
+<p>这是最直观的维度，但也是最容易被&quot;跑分&quot;误导的。不要只看MMLU这类学术基准，要关注与你任务直接相关的能力：</p>
+<ul>
+<li><strong>推理能力</strong>：多步推理、数学证明、逻辑链条</li>
+<li><strong>编码能力</strong>：代码生成、Bug修复、重构</li>
+<li><strong>多模态能力</strong>：图像理解、文档OCR、语音识别</li>
+</ul>
+<p>建议用你自己的真实任务做A/B测试，取20个典型case，看各模型的&quot;一次通过率&quot;。跑分高不代表你的任务上表现好，实测才是硬道理。</p>
+<blockquote>
+<p>💡 <strong>小贴士：怎么做A/B测试？</strong>
+准备20个你业务里的真实问题（覆盖简单/中等/困难各1/3），让每个候选模型各跑一遍，人工打分（0-5分）。统计三个指标：平均分、一次通过率（不需要重试就算对的占比）、单次成本。综合这三个指标排序，选出赢家。别迷信跑分榜——你的任务才是唯一的标准答案。</p>
+</blockquote>
+<h3 id="维度二成本">维度二：成本</h3>
+<p>成本计算公式：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">单次任务成本 = 输入tokens × 输入单价 + 输出tokens × 输出单价
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>注意输出价格通常是输入的3-6倍。一个常见误区是只看输入价格——如果你的智能体生成大量文本（如写报告），输出价格才是大头。</p>
+<p><strong>成本阶梯策略</strong>（推荐）：</p>
+<table>
+<thead>
+<tr>
+<th>任务类型</th>
+<th>推荐模型</th>
+<th>单次成本估算</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>简单问答/分类</td>
+<td>GPT-5.4-nano</td>
+<td>~$0.0002</td>
+</tr>
+<tr>
+<td>日常对话/摘要</td>
+<td>GPT-5.4-mini</td>
+<td>~$0.001</td>
+</tr>
+<tr>
+<td>复杂推理/编码</td>
+<td>GPT-5.4</td>
+<td>~$0.005</td>
+</tr>
+<tr>
+<td>极限挑战任务</td>
+<td>GPT-5.5 / Claude Opus 4</td>
+<td>~$0.02</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>💡 <strong>小贴士：怎么估算单次成本？</strong>
+假设一个任务输入5000 token、输出1000 token，用GPT-5.4-mini（输入$0.75/M、输出$4.50/M）：
+成本 = 5000/1,000,000 × 0.75 + 1000/1,000,000 × 4.5 = 0.00375 + 0.0045 ≈ $0.008。每天调用1万次，约$80/天，月成本约$2400。看到这个数你就明白为什么需要智能路由了。</p>
+</blockquote>
+<h3 id="维度三延迟">维度三：延迟</h3>
+<p>对于交互式智能体，延迟直接决定用户体验。关注两个指标：</p>
+<ul>
+<li><strong>TTFT（Time To First Token）</strong>：首token延迟，影响&quot;响应感&quot;——用户点发送后多久看到第一个字</li>
+<li><strong>吞吐（Tokens/second）</strong>：生成速度，影响&quot;完整度等待&quot;——用户要等多久才看到完整回复</li>
+</ul>
+<blockquote>
+<p>💡 <strong>小贴士：为什么TTFT比吞吐更重要？</strong>
+用户对&quot;开始响应&quot;的耐心远低于&quot;完整响应&quot;。如果500ms内开始吐字，用户觉得&quot;很快&quot;；如果3秒才开始，即使后面吐字飞快，用户也觉得&quot;卡&quot;。这就是为什么流式输出（streaming）几乎成了智能体的标配——先让字一个一个蹦出来，体感速度就上去了。</p>
+</blockquote>
+<p>实测数据（2026年6月，美国东部区域）：</p>
+<table>
+<thead>
+<tr>
+<th>模型</th>
+<th>TTFT（ms）</th>
+<th>吞吐（tok/s）</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>GPT-5.4-mini</td>
+<td>280</td>
+<td>85</td>
+</tr>
+<tr>
+<td>GPT-5.5</td>
+<td>450</td>
+<td>55</td>
+</tr>
+<tr>
+<td>Claude Haiku 4</td>
+<td>320</td>
+<td>90</td>
+</tr>
+<tr>
+<td>Gemini 2.5 Flash</td>
+<td>200</td>
+<td>120</td>
+</tr>
+<tr>
+<td>本地 Qwen3-8B（A100）</td>
+<td>80</td>
+<td>150</td>
+</tr>
+</tbody>
+</table>
+<p>经验法则：<strong>对话场景TTFT应&lt;500ms，后台批处理可以忽略延迟</strong>。</p>
+<blockquote>
+<p>💡 <strong>小贴士：怎么降低延迟？</strong>
+三个手段：①用流式输出（streaming），让第一个字尽快蹦出来，体感延迟立刻减半；②简单任务用小模型，nano的TTFT只有旗舰的一半；③把不依赖模型结果的预渲染做了（比如先显示&quot;正在思考&hellip;&ldquo;动画），用感知管理弥补真实延迟。记住了：用户等的是&quot;开始响应&rdquo;，不是&quot;完整响应&quot;。</p>
+</blockquote>
+<h3 id="维度四上下文长度">维度四：上下文长度</h3>
+<p>上下文长度决定了智能体能&quot;记住&quot;多少信息。但这不是越大越好——长上下文会导致<strong>注意力衰减</strong>（模型对中间位置的信息敏感度下降，学术上叫&quot;Lost in the Middle&quot;问题）和成本上升。</p>
+<ul>
+<li><strong>短对话/简单工具调用</strong>：128K足够</li>
+<li><strong>RAG场景</strong>：128K-256K，把检索结果塞进去</li>
+<li><strong>整文档分析</strong>：500K+，考虑Gemini 2.5 Pro</li>
+</ul>
+<h3 id="维度五函数调用支持">维度五：函数调用支持</h3>
+<p>函数调用是智能体的命脉——智能体之所以能&quot;动手做事&quot;，靠的就是让LLM输出结构化的函数调用指令。评估时要看：</p>
+<blockquote>
+<p>💡 <strong>小贴士：什么是&quot;函数调用&quot;？</strong>
+普通对话中，模型只输出文本。但智能体需要&quot;动手&quot;——查数据库、发邮件、调API。函数调用（Function Calling）让模型按JSON格式输出&quot;我要调用哪个函数、参数是什么&quot;，你的代码再据此真正执行。这就把LLM从一个&quot;会聊天的鹦鹉&quot;变成了&quot;会干活的助手&quot;。</p>
+</blockquote>
+<ol>
+<li>是否原生支持function calling</li>
+<li>多函数并行调用能力</li>
+<li>参数格式准确率（JSON Schema合规率）</li>
+<li>幻觉函数率（调用不存在的函数）</li>
+</ol>
+<p>2026年主流模型都已原生支持，但准确率差异仍然显著：GPT-5.5在复杂多函数场景下准确率97%，而部分开源模型只有85%左右。</p>
+<blockquote>
+<p>💡 <strong>小贴士：函数调用准确率为什么重要？</strong>
+假设你的智能体要调用三个工具——查库存、算运费、生成订单。如果模型只正确调用了一个、漏了另外两个，或者参数格式不对（传了字符串但工具要数字），整个流程就断了。准确率从97%掉到85%，意味着失败率从3%涨到15%——在每天10万次调用的系统里，这是3000次 vs 15000次失败的差别，重试成本和用户投诉都是天壤之别。</p>
+</blockquote>
+<hr>
+<h2 id="35-api集成实战">3.5 API集成实战</h2>
+<p>理论讲完，开始写代码。我们将实现一个<strong>统一的多模型调用封装</strong>，支持OpenAI、Anthropic和本地Ollama三种后端无缝切换。</p>
+<h3 id="351-环境准备">3.5.1 环境准备</h3>
+<p>这段代码做了什么：安装三个Python包——<code>openai</code>是OpenAI官方SDK，<code>anthropic</code>是Anthropic官方SDK，<code>python-dotenv</code>用来从<code>.env</code>文件读取环境变量（避免把密钥硬编码进代码）。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl"><span class="c1"># 安装依赖</span>
+</span></span><span class="line"><span class="cl">pip install openai anthropic python-dotenv
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>创建 <code>.env</code> 文件管理密钥（<strong>千万不要把密钥写进代码再提交到Git</strong>，这是新手最常犯的安全错误）：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl"><span class="c1"># .env</span>
+</span></span><span class="line"><span class="cl"><span class="nv">OPENAI_API_KEY</span><span class="o">=</span>sk-你的密钥
+</span></span><span class="line"><span class="cl"><span class="nv">ANTHROPIC_API_KEY</span><span class="o">=</span>sk-ant-你的密钥
+</span></span><span class="line"><span class="cl"><span class="nv">OLLAMA_BASE_URL</span><span class="o">=</span>http://localhost:11434
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h3 id="352-openai-sdk-调用示例">3.5.2 OpenAI SDK 调用示例</h3>
+<p>这段代码做了什么：用OpenAI官方SDK调用GPT-5.4-mini，发一个问题，打印回复。它演示了最基础的&quot;构造消息列表→调用API→取回复&quot;三步流程。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span><span class="lnt">42
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="c1"># openai_call.py —— OpenAI GPT-5.x 调用示例</span>
+</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">dotenv</span> <span class="kn">import</span> <span class="n">load_dotenv</span>
+</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">openai</span> <span class="kn">import</span> <span class="n">OpenAI</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">load_dotenv</span><span class="p">()</span>  <span class="c1"># 从 .env 文件加载环境变量</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 初始化客户端，会自动读取 OPENAI_API_KEY 环境变量</span>
+</span></span><span class="line"><span class="cl"><span class="n">client</span> <span class="o">=</span> <span class="n">OpenAI</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">chat_with_gpt</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">    <span class="n">messages</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">],</span>
+</span></span><span class="line"><span class="cl">    <span class="n">model</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&#34;gpt-5.4-mini&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="n">temperature</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.7</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="n">tools</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl"><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="s2">&#34;&#34;&#34;调用 OpenAI 模型进行对话
+</span></span></span><span class="line"><span class="cl"><span class="s2">    
+</span></span></span><span class="line"><span class="cl"><span class="s2">    参数:
+</span></span></span><span class="line"><span class="cl"><span class="s2">        messages: 消息列表，格式同 OpenAI API
+</span></span></span><span class="line"><span class="cl"><span class="s2">        model: 模型名称，如 gpt-5.5 / gpt-5.4 / gpt-5.4-mini
+</span></span></span><span class="line"><span class="cl"><span class="s2">        temperature: 采样温度（0最确定，1最随机）
+</span></span></span><span class="line"><span class="cl"><span class="s2">        tools: 函数调用工具定义
+</span></span></span><span class="line"><span class="cl"><span class="s2">    返回:
+</span></span></span><span class="line"><span class="cl"><span class="s2">        模型回复的文本内容
+</span></span></span><span class="line"><span class="cl"><span class="s2">    &#34;&#34;&#34;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">response</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">chat</span><span class="o">.</span><span class="n">completions</span><span class="o">.</span><span class="n">create</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">        <span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span>                 <span class="c1"># 指定模型</span>
+</span></span><span class="line"><span class="cl">        <span class="n">messages</span><span class="o">=</span><span class="n">messages</span><span class="p">,</span>           <span class="c1"># 对话历史</span>
+</span></span><span class="line"><span class="cl">        <span class="n">temperature</span><span class="o">=</span><span class="n">temperature</span><span class="p">,</span>     <span class="c1"># 控制随机性</span>
+</span></span><span class="line"><span class="cl">        <span class="n">tools</span><span class="o">=</span><span class="n">tools</span><span class="p">,</span>                 <span class="c1"># 可选：传入函数定义</span>
+</span></span><span class="line"><span class="cl">    <span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="c1"># response.choices[0].message.content 就是模型的文本回复</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">response</span><span class="o">.</span><span class="n">choices</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">message</span><span class="o">.</span><span class="n">content</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 测试调用</span>
+</span></span><span class="line"><span class="cl"><span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&#34;__main__&#34;</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="n">messages</span> <span class="o">=</span> <span class="p">[</span>
+</span></span><span class="line"><span class="cl">        <span class="p">{</span><span class="s2">&#34;role&#34;</span><span class="p">:</span> <span class="s2">&#34;system&#34;</span><span class="p">,</span> <span class="s2">&#34;content&#34;</span><span class="p">:</span> <span class="s2">&#34;你是一个专业的Python开发助手&#34;</span><span class="p">},</span>
+</span></span><span class="line"><span class="cl">        <span class="p">{</span><span class="s2">&#34;role&#34;</span><span class="p">:</span> <span class="s2">&#34;user&#34;</span><span class="p">,</span> <span class="s2">&#34;content&#34;</span><span class="p">:</span> <span class="s2">&#34;用一行代码实现列表去重并保持顺序&#34;</span><span class="p">},</span>
+</span></span><span class="line"><span class="cl">    <span class="p">]</span>
+</span></span><span class="line"><span class="cl">    <span class="n">reply</span> <span class="o">=</span> <span class="n">chat_with_gpt</span><span class="p">(</span><span class="n">messages</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="s2">&#34;gpt-5.4-mini&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&#34;GPT 回复: </span><span class="si">{</span><span class="n">reply</span><span class="si">}</span><span class="s2">&#34;</span><span class="p">)</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><blockquote>
+<p>💡 <strong>小贴士：消息列表的role是什么意思？</strong>
+OpenAI的对话由消息列表组成，每条消息有个<code>role</code>：<code>system</code>是系统提示词（给模型定人设），<code>user</code>是用户输入，<code>assistant</code>是模型之前的回复，<code>tool</code>是函数返回结果。多轮对话就是把这一串消息按时间顺序传给模型，它就能&quot;记住&quot;上下文。</p>
+</blockquote>
+<h3 id="353-anthropic-sdk-调用示例">3.5.3 Anthropic SDK 调用示例</h3>
+<p>Anthropic的API结构与OpenAI略有不同，system消息需要单独传参（不能塞进messages里）：</p>
+<p>这段代码做了什么：用Anthropic官方SDK调用Claude Sonnet 4。注意它和OpenAI的两个关键区别——<code>system</code>是顶层参数而非消息列表中的一条；返回结构是<code>response.content[0].text</code>而非<code>response.choices[0].message.content</code>。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="c1"># anthropic_call.py —— Claude 4.x 调用示例</span>
+</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">dotenv</span> <span class="kn">import</span> <span class="n">load_dotenv</span>
+</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">anthropic</span> <span class="kn">import</span> <span class="n">Anthropic</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">load_dotenv</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 自动读取 ANTHROPIC_API_KEY 环境变量</span>
+</span></span><span class="line"><span class="cl"><span class="n">client</span> <span class="o">=</span> <span class="n">Anthropic</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">chat_with_claude</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">    <span class="n">user_message</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="n">system_prompt</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&#34;你是一个专业的开发助手&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="n">model</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&#34;claude-sonnet-4-20250514&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="n">max_tokens</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">4096</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl"><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="s2">&#34;&#34;&#34;调用 Claude 模型进行对话
+</span></span></span><span class="line"><span class="cl"><span class="s2">    
+</span></span></span><span class="line"><span class="cl"><span class="s2">    参数:
+</span></span></span><span class="line"><span class="cl"><span class="s2">        user_message: 用户消息
+</span></span></span><span class="line"><span class="cl"><span class="s2">        system_prompt: 系统提示词（Claude 单独传参，不放 messages 里）
+</span></span></span><span class="line"><span class="cl"><span class="s2">        model: 模型名称
+</span></span></span><span class="line"><span class="cl"><span class="s2">        max_tokens: 最大输出长度（Claude 必填）
+</span></span></span><span class="line"><span class="cl"><span class="s2">    返回:
+</span></span></span><span class="line"><span class="cl"><span class="s2">        模型回复的文本内容
+</span></span></span><span class="line"><span class="cl"><span class="s2">    &#34;&#34;&#34;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">response</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">messages</span><span class="o">.</span><span class="n">create</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">        <span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">        <span class="n">max_tokens</span><span class="o">=</span><span class="n">max_tokens</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">        <span class="n">system</span><span class="o">=</span><span class="n">system_prompt</span><span class="p">,</span>  <span class="c1"># 注意：system 是顶层参数，不是 messages 里的一条</span>
+</span></span><span class="line"><span class="cl">        <span class="n">messages</span><span class="o">=</span><span class="p">[{</span><span class="s2">&#34;role&#34;</span><span class="p">:</span> <span class="s2">&#34;user&#34;</span><span class="p">,</span> <span class="s2">&#34;content&#34;</span><span class="p">:</span> <span class="n">user_message</span><span class="p">}],</span>
+</span></span><span class="line"><span class="cl">    <span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="c1"># Claude 的返回结构是 content 列表，取第一块文本</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">response</span><span class="o">.</span><span class="n">content</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">text</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 测试调用</span>
+</span></span><span class="line"><span class="cl"><span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&#34;__main__&#34;</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="n">reply</span> <span class="o">=</span> <span class="n">chat_with_claude</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">        <span class="n">user_message</span><span class="o">=</span><span class="s2">&#34;解释Python的GIL是什么，如何绕过它&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">        <span class="n">model</span><span class="o">=</span><span class="s2">&#34;claude-sonnet-4-20250514&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&#34;Claude 回复: </span><span class="si">{</span><span class="n">reply</span><span class="si">}</span><span class="s2">&#34;</span><span class="p">)</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><blockquote>
+<p>⚠️ <strong>坑点提醒</strong>：Claude的<code>max_tokens</code>是必填参数，不传会报错；而OpenAI是可选的。这种API差异正是后文要做&quot;统一封装&quot;的原因——让上层代码不用记每家的怪癖。</p>
+</blockquote>
+<h3 id="354-统一接口封装">3.5.4 统一接口封装</h3>
+<p>每家API的调用方式都不同：OpenAI把system塞进messages，Claude把system放顶层；返回结构一个叫<code>choices[0].message.content</code>，一个叫<code>content[0].text</code>；连token计费字段名都不一样（<code>prompt_tokens</code> vs <code>input_tokens</code>）。这在多模型切换时非常痛苦。</p>
+<p>我们来封装一个<strong>统一接口</strong>，让上层代码完全不用关心底层用的是哪个模型——只管传一个<code>model</code>字符串，剩下的交给封装层处理：</p>
+<p>这段代码做了什么：定义一个<code>UnifiedLLM</code>类，对外只暴露一个<code>chat()</code>方法。它内部根据模型名前缀（<code>gpt-</code>/<code>claude-</code>/其他）自动路由到对应SDK，并把三家的返回结构统一成<code>LLMResponse</code>对象（包含回复文本、token用量、估算成本）。此外还内置了一张定价表，每次调用都能算出花了多少钱。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">  1
+</span><span class="lnt">  2
+</span><span class="lnt">  3
+</span><span class="lnt">  4
+</span><span class="lnt">  5
+</span><span class="lnt">  6
+</span><span class="lnt">  7
+</span><span class="lnt">  8
+</span><span class="lnt">  9
+</span><span class="lnt"> 10
+</span><span class="lnt"> 11
+</span><span class="lnt"> 12
+</span><span class="lnt"> 13
+</span><span class="lnt"> 14
+</span><span class="lnt"> 15
+</span><span class="lnt"> 16
+</span><span class="lnt"> 17
+</span><span class="lnt"> 18
+</span><span class="lnt"> 19
+</span><span class="lnt"> 20
+</span><span class="lnt"> 21
+</span><span class="lnt"> 22
+</span><span class="lnt"> 23
+</span><span class="lnt"> 24
+</span><span class="lnt"> 25
+</span><span class="lnt"> 26
+</span><span class="lnt"> 27
+</span><span class="lnt"> 28
+</span><span class="lnt"> 29
+</span><span class="lnt"> 30
+</span><span class="lnt"> 31
+</span><span class="lnt"> 32
+</span><span class="lnt"> 33
+</span><span class="lnt"> 34
+</span><span class="lnt"> 35
+</span><span class="lnt"> 36
+</span><span class="lnt"> 37
+</span><span class="lnt"> 38
+</span><span class="lnt"> 39
+</span><span class="lnt"> 40
+</span><span class="lnt"> 41
+</span><span class="lnt"> 42
+</span><span class="lnt"> 43
+</span><span class="lnt"> 44
+</span><span class="lnt"> 45
+</span><span class="lnt"> 46
+</span><span class="lnt"> 47
+</span><span class="lnt"> 48
+</span><span class="lnt"> 49
+</span><span class="lnt"> 50
+</span><span class="lnt"> 51
+</span><span class="lnt"> 52
+</span><span class="lnt"> 53
+</span><span class="lnt"> 54
+</span><span class="lnt"> 55
+</span><span class="lnt"> 56
+</span><span class="lnt"> 57
+</span><span class="lnt"> 58
+</span><span class="lnt"> 59
+</span><span class="lnt"> 60
+</span><span class="lnt"> 61
+</span><span class="lnt"> 62
+</span><span class="lnt"> 63
+</span><span class="lnt"> 64
+</span><span class="lnt"> 65
+</span><span class="lnt"> 66
+</span><span class="lnt"> 67
+</span><span class="lnt"> 68
+</span><span class="lnt"> 69
+</span><span class="lnt"> 70
+</span><span class="lnt"> 71
+</span><span class="lnt"> 72
+</span><span class="lnt"> 73
+</span><span class="lnt"> 74
+</span><span class="lnt"> 75
+</span><span class="lnt"> 76
+</span><span class="lnt"> 77
+</span><span class="lnt"> 78
+</span><span class="lnt"> 79
+</span><span class="lnt"> 80
+</span><span class="lnt"> 81
+</span><span class="lnt"> 82
+</span><span class="lnt"> 83
+</span><span class="lnt"> 84
+</span><span class="lnt"> 85
+</span><span class="lnt"> 86
+</span><span class="lnt"> 87
+</span><span class="lnt"> 88
+</span><span class="lnt"> 89
+</span><span class="lnt"> 90
+</span><span class="lnt"> 91
+</span><span class="lnt"> 92
+</span><span class="lnt"> 93
+</span><span class="lnt"> 94
+</span><span class="lnt"> 95
+</span><span class="lnt"> 96
+</span><span class="lnt"> 97
+</span><span class="lnt"> 98
+</span><span class="lnt"> 99
+</span><span class="lnt">100
+</span><span class="lnt">101
+</span><span class="lnt">102
+</span><span class="lnt">103
+</span><span class="lnt">104
+</span><span class="lnt">105
+</span><span class="lnt">106
+</span><span class="lnt">107
+</span><span class="lnt">108
+</span><span class="lnt">109
+</span><span class="lnt">110
+</span><span class="lnt">111
+</span><span class="lnt">112
+</span><span class="lnt">113
+</span><span class="lnt">114
+</span><span class="lnt">115
+</span><span class="lnt">116
+</span><span class="lnt">117
+</span><span class="lnt">118
+</span><span class="lnt">119
+</span><span class="lnt">120
+</span><span class="lnt">121
+</span><span class="lnt">122
+</span><span class="lnt">123
+</span><span class="lnt">124
+</span><span class="lnt">125
+</span><span class="lnt">126
+</span><span class="lnt">127
+</span><span class="lnt">128
+</span><span class="lnt">129
+</span><span class="lnt">130
+</span><span class="lnt">131
+</span><span class="lnt">132
+</span><span class="lnt">133
+</span><span class="lnt">134
+</span><span class="lnt">135
+</span><span class="lnt">136
+</span><span class="lnt">137
+</span><span class="lnt">138
+</span><span class="lnt">139
+</span><span class="lnt">140
+</span><span class="lnt">141
+</span><span class="lnt">142
+</span><span class="lnt">143
+</span><span class="lnt">144
+</span><span class="lnt">145
+</span><span class="lnt">146
+</span><span class="lnt">147
+</span><span class="lnt">148
+</span><span class="lnt">149
+</span><span class="lnt">150
+</span><span class="lnt">151
+</span><span class="lnt">152
+</span><span class="lnt">153
+</span><span class="lnt">154
+</span><span class="lnt">155
+</span><span class="lnt">156
+</span><span class="lnt">157
+</span><span class="lnt">158
+</span><span class="lnt">159
+</span><span class="lnt">160
+</span><span class="lnt">161
+</span><span class="lnt">162
+</span><span class="lnt">163
+</span><span class="lnt">164
+</span><span class="lnt">165
+</span><span class="lnt">166
+</span><span class="lnt">167
+</span><span class="lnt">168
+</span><span class="lnt">169
+</span><span class="lnt">170
+</span><span class="lnt">171
+</span><span class="lnt">172
+</span><span class="lnt">173
+</span><span class="lnt">174
+</span><span class="lnt">175
+</span><span class="lnt">176
+</span><span class="lnt">177
+</span><span class="lnt">178
+</span><span class="lnt">179
+</span><span class="lnt">180
+</span><span class="lnt">181
+</span><span class="lnt">182
+</span><span class="lnt">183
+</span><span class="lnt">184
+</span><span class="lnt">185
+</span><span class="lnt">186
+</span><span class="lnt">187
+</span><span class="lnt">188
+</span><span class="lnt">189
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="c1"># llm_router.py —— 统一多模型调用封装</span>
+</span></span><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">os</span>
+</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">dataclasses</span> <span class="kn">import</span> <span class="n">dataclass</span>
+</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">dotenv</span> <span class="kn">import</span> <span class="n">load_dotenv</span>
+</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">openai</span> <span class="kn">import</span> <span class="n">OpenAI</span>
+</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">anthropic</span> <span class="kn">import</span> <span class="n">Anthropic</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">load_dotenv</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="nd">@dataclass</span>
+</span></span><span class="line"><span class="cl"><span class="k">class</span> <span class="nc">LLMResponse</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="s2">&#34;&#34;&#34;统一的模型响应结构&#34;&#34;&#34;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">content</span><span class="p">:</span> <span class="nb">str</span>          <span class="c1"># 回复文本</span>
+</span></span><span class="line"><span class="cl">    <span class="n">model</span><span class="p">:</span> <span class="nb">str</span>            <span class="c1"># 实际使用的模型</span>
+</span></span><span class="line"><span class="cl">    <span class="n">input_tokens</span><span class="p">:</span> <span class="nb">int</span>     <span class="c1"># 输入token数</span>
+</span></span><span class="line"><span class="cl">    <span class="n">output_tokens</span><span class="p">:</span> <span class="nb">int</span>    <span class="c1"># 输出token数</span>
+</span></span><span class="line"><span class="cl">    <span class="n">cost_usd</span><span class="p">:</span> <span class="nb">float</span>       <span class="c1"># 本次调用估算成本</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 各模型的定价表（$/M tokens）：(输入单价, 输出单价)</span>
+</span></span><span class="line"><span class="cl"><span class="n">PRICING</span> <span class="o">=</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="s2">&#34;gpt-5.5&#34;</span><span class="p">:</span>          <span class="p">(</span><span class="mf">5.00</span><span class="p">,</span> <span class="mf">30.00</span><span class="p">),</span>
+</span></span><span class="line"><span class="cl">    <span class="s2">&#34;gpt-5.4&#34;</span><span class="p">:</span>          <span class="p">(</span><span class="mf">2.50</span><span class="p">,</span> <span class="mf">15.00</span><span class="p">),</span>
+</span></span><span class="line"><span class="cl">    <span class="s2">&#34;gpt-5.4-mini&#34;</span><span class="p">:</span>     <span class="p">(</span><span class="mf">0.75</span><span class="p">,</span> <span class="mf">4.50</span><span class="p">),</span>
+</span></span><span class="line"><span class="cl">    <span class="s2">&#34;gpt-5.4-nano&#34;</span><span class="p">:</span>     <span class="p">(</span><span class="mf">0.15</span><span class="p">,</span> <span class="mf">0.90</span><span class="p">),</span>
+</span></span><span class="line"><span class="cl">    <span class="s2">&#34;claude-opus-4&#34;</span><span class="p">:</span>    <span class="p">(</span><span class="mf">15.00</span><span class="p">,</span> <span class="mf">75.00</span><span class="p">),</span>
+</span></span><span class="line"><span class="cl">    <span class="s2">&#34;claude-sonnet-4&#34;</span><span class="p">:</span>  <span class="p">(</span><span class="mf">3.00</span><span class="p">,</span> <span class="mf">15.00</span><span class="p">),</span>
+</span></span><span class="line"><span class="cl">    <span class="s2">&#34;claude-haiku-4&#34;</span><span class="p">:</span>   <span class="p">(</span><span class="mf">0.80</span><span class="p">,</span> <span class="mf">4.00</span><span class="p">),</span>
+</span></span><span class="line"><span class="cl">    <span class="s2">&#34;qwen3:8b&#34;</span><span class="p">:</span>         <span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span>   <span class="c1"># 本地部署，成本为0</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">_normalize_model_name</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="s2">&#34;&#34;&#34;规范模型名，便于查价。
+</span></span></span><span class="line"><span class="cl"><span class="s2">    
+</span></span></span><span class="line"><span class="cl"><span class="s2">    Anthropic 的模型名带日期后缀（如 claude-sonnet-4-20250514），
+</span></span></span><span class="line"><span class="cl"><span class="s2">    但 PRICING 表里只存了 claude-sonnet-4，所以查价前要去掉后缀。
+</span></span></span><span class="line"><span class="cl"><span class="s2">    &#34;&#34;&#34;</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="s2">&#34;-20&#34;</span> <span class="ow">in</span> <span class="n">model</span><span class="p">:</span>  <span class="c1"># 形如 -20250514 的日期后缀</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="n">model</span><span class="o">.</span><span class="n">rsplit</span><span class="p">(</span><span class="s2">&#34;-20&#34;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">model</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">class</span> <span class="nc">UnifiedLLM</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="s2">&#34;&#34;&#34;统一大模型调用接口，支持 OpenAI / Anthropic / Ollama&#34;&#34;&#34;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">        <span class="bp">self</span><span class="o">.</span><span class="n">openai_client</span> <span class="o">=</span> <span class="n">OpenAI</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">        <span class="bp">self</span><span class="o">.</span><span class="n">anthropic_client</span> <span class="o">=</span> <span class="n">Anthropic</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">        <span class="c1"># Ollama 复用 OpenAI SDK，只是把地址指向本地服务</span>
+</span></span><span class="line"><span class="cl">        <span class="bp">self</span><span class="o">.</span><span class="n">ollama_client</span> <span class="o">=</span> <span class="n">OpenAI</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">            <span class="n">base_url</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">&#34;OLLAMA_BASE_URL&#34;</span><span class="p">,</span> <span class="s2">&#34;http://localhost:11434&#34;</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&#34;/v1&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">            <span class="n">api_key</span><span class="o">=</span><span class="s2">&#34;ollama&#34;</span><span class="p">,</span>  <span class="c1"># Ollama 不校验密钥，随便填</span>
+</span></span><span class="line"><span class="cl">        <span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">def</span> <span class="nf">chat</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">        <span class="bp">self</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">        <span class="n">messages</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">],</span>
+</span></span><span class="line"><span class="cl">        <span class="n">model</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&#34;gpt-5.4-mini&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">        <span class="n">system</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">        <span class="n">temperature</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.7</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">        <span class="n">max_tokens</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">4096</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LLMResponse</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="s2">&#34;&#34;&#34;统一对话接口
+</span></span></span><span class="line"><span class="cl"><span class="s2">        
+</span></span></span><span class="line"><span class="cl"><span class="s2">        参数:
+</span></span></span><span class="line"><span class="cl"><span class="s2">            messages: 消息列表（不含system）
+</span></span></span><span class="line"><span class="cl"><span class="s2">            model: 模型名称，自动路由到对应SDK
+</span></span></span><span class="line"><span class="cl"><span class="s2">            system: 系统提示词（可选）
+</span></span></span><span class="line"><span class="cl"><span class="s2">            temperature: 采样温度
+</span></span></span><span class="line"><span class="cl"><span class="s2">            max_tokens: 最大输出token数
+</span></span></span><span class="line"><span class="cl"><span class="s2">        返回:
+</span></span></span><span class="line"><span class="cl"><span class="s2">            LLMResponse 对象
+</span></span></span><span class="line"><span class="cl"><span class="s2">        &#34;&#34;&#34;</span>
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="n">model</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&#34;gpt-&#34;</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_call_openai</span><span class="p">(</span><span class="n">messages</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">system</span><span class="p">,</span> <span class="n">temperature</span><span class="p">,</span> <span class="n">max_tokens</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="k">elif</span> <span class="n">model</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&#34;claude-&#34;</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_call_anthropic</span><span class="p">(</span><span class="n">messages</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">system</span><span class="p">,</span> <span class="n">temperature</span><span class="p">,</span> <span class="n">max_tokens</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="k">else</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">            <span class="c1"># 默认走 Ollama（本地开源模型）</span>
+</span></span><span class="line"><span class="cl">            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_call_ollama</span><span class="p">(</span><span class="n">messages</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">system</span><span class="p">,</span> <span class="n">temperature</span><span class="p">,</span> <span class="n">max_tokens</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">def</span> <span class="nf">_call_openai</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">messages</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">system</span><span class="p">,</span> <span class="n">temperature</span><span class="p">,</span> <span class="n">max_tokens</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LLMResponse</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="s2">&#34;&#34;&#34;调用 OpenAI 系列&#34;&#34;&#34;</span>
+</span></span><span class="line"><span class="cl">        <span class="n">full_messages</span> <span class="o">=</span> <span class="p">[]</span>
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="n">system</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">            <span class="n">full_messages</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s2">&#34;role&#34;</span><span class="p">:</span> <span class="s2">&#34;system&#34;</span><span class="p">,</span> <span class="s2">&#34;content&#34;</span><span class="p">:</span> <span class="n">system</span><span class="p">})</span>
+</span></span><span class="line"><span class="cl">        <span class="n">full_messages</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">messages</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">        <span class="n">resp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">openai_client</span><span class="o">.</span><span class="n">chat</span><span class="o">.</span><span class="n">completions</span><span class="o">.</span><span class="n">create</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">            <span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">            <span class="n">messages</span><span class="o">=</span><span class="n">full_messages</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">            <span class="n">temperature</span><span class="o">=</span><span class="n">temperature</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">            <span class="n">max_tokens</span><span class="o">=</span><span class="n">max_tokens</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">        <span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="n">usage</span> <span class="o">=</span> <span class="n">resp</span><span class="o">.</span><span class="n">usage</span>
+</span></span><span class="line"><span class="cl">        <span class="n">cost</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_calc_cost</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">usage</span><span class="o">.</span><span class="n">prompt_tokens</span><span class="p">,</span> <span class="n">usage</span><span class="o">.</span><span class="n">completion_tokens</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="n">LLMResponse</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">            <span class="n">content</span><span class="o">=</span><span class="n">resp</span><span class="o">.</span><span class="n">choices</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">message</span><span class="o">.</span><span class="n">content</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">            <span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">            <span class="n">input_tokens</span><span class="o">=</span><span class="n">usage</span><span class="o">.</span><span class="n">prompt_tokens</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">            <span class="n">output_tokens</span><span class="o">=</span><span class="n">usage</span><span class="o">.</span><span class="n">completion_tokens</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">            <span class="n">cost_usd</span><span class="o">=</span><span class="n">cost</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">        <span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">def</span> <span class="nf">_call_anthropic</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">messages</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">system</span><span class="p">,</span> <span class="n">temperature</span><span class="p">,</span> <span class="n">max_tokens</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LLMResponse</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="s2">&#34;&#34;&#34;调用 Claude 系列&#34;&#34;&#34;</span>
+</span></span><span class="line"><span class="cl">        <span class="n">resp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">anthropic_client</span><span class="o">.</span><span class="n">messages</span><span class="o">.</span><span class="n">create</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">            <span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">            <span class="n">max_tokens</span><span class="o">=</span><span class="n">max_tokens</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">            <span class="n">temperature</span><span class="o">=</span><span class="n">temperature</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">            <span class="n">system</span><span class="o">=</span><span class="n">system</span> <span class="ow">or</span> <span class="s2">&#34;&#34;</span><span class="p">,</span>  <span class="c1"># Claude 的 system 是顶层参数</span>
+</span></span><span class="line"><span class="cl">            <span class="n">messages</span><span class="o">=</span><span class="n">messages</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">        <span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="n">usage</span> <span class="o">=</span> <span class="n">resp</span><span class="o">.</span><span class="n">usage</span>
+</span></span><span class="line"><span class="cl">        <span class="c1"># 注意：Claude 的 token 字段叫 input_tokens/output_tokens</span>
+</span></span><span class="line"><span class="cl">        <span class="n">cost</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_calc_cost</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">usage</span><span class="o">.</span><span class="n">input_tokens</span><span class="p">,</span> <span class="n">usage</span><span class="o">.</span><span class="n">output_tokens</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="n">LLMResponse</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">            <span class="n">content</span><span class="o">=</span><span class="n">resp</span><span class="o">.</span><span class="n">content</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">text</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">            <span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">            <span class="n">input_tokens</span><span class="o">=</span><span class="n">usage</span><span class="o">.</span><span class="n">input_tokens</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">            <span class="n">output_tokens</span><span class="o">=</span><span class="n">usage</span><span class="o">.</span><span class="n">output_tokens</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">            <span class="n">cost_usd</span><span class="o">=</span><span class="n">cost</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">        <span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">def</span> <span class="nf">_call_ollama</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">messages</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">system</span><span class="p">,</span> <span class="n">temperature</span><span class="p">,</span> <span class="n">max_tokens</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LLMResponse</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="s2">&#34;&#34;&#34;调用本地 Ollama 服务（OpenAI兼容格式）&#34;&#34;&#34;</span>
+</span></span><span class="line"><span class="cl">        <span class="n">full_messages</span> <span class="o">=</span> <span class="p">[]</span>
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="n">system</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">            <span class="n">full_messages</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s2">&#34;role&#34;</span><span class="p">:</span> <span class="s2">&#34;system&#34;</span><span class="p">,</span> <span class="s2">&#34;content&#34;</span><span class="p">:</span> <span class="n">system</span><span class="p">})</span>
+</span></span><span class="line"><span class="cl">        <span class="n">full_messages</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">messages</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">        <span class="n">resp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ollama_client</span><span class="o">.</span><span class="n">chat</span><span class="o">.</span><span class="n">completions</span><span class="o">.</span><span class="n">create</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">            <span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">            <span class="n">messages</span><span class="o">=</span><span class="n">full_messages</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">            <span class="n">temperature</span><span class="o">=</span><span class="n">temperature</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">            <span class="n">max_tokens</span><span class="o">=</span><span class="n">max_tokens</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">        <span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="n">usage</span> <span class="o">=</span> <span class="n">resp</span><span class="o">.</span><span class="n">usage</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="n">LLMResponse</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">            <span class="n">content</span><span class="o">=</span><span class="n">resp</span><span class="o">.</span><span class="n">choices</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">message</span><span class="o">.</span><span class="n">content</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">            <span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">            <span class="n">input_tokens</span><span class="o">=</span><span class="n">usage</span><span class="o">.</span><span class="n">prompt_tokens</span> <span class="k">if</span> <span class="n">usage</span> <span class="k">else</span> <span class="mi">0</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">            <span class="n">output_tokens</span><span class="o">=</span><span class="n">usage</span><span class="o">.</span><span class="n">completion_tokens</span> <span class="k">if</span> <span class="n">usage</span> <span class="k">else</span> <span class="mi">0</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">            <span class="n">cost_usd</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>  <span class="c1"># 本地部署无API成本</span>
+</span></span><span class="line"><span class="cl">        <span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="nd">@staticmethod</span>
+</span></span><span class="line"><span class="cl">    <span class="k">def</span> <span class="nf">_calc_cost</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">input_tok</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">output_tok</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="s2">&#34;&#34;&#34;根据定价表计算调用成本（美元）&#34;&#34;&#34;</span>
+</span></span><span class="line"><span class="cl">        <span class="n">normalized</span> <span class="o">=</span> <span class="n">_normalize_model_name</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>  <span class="c1"># 去掉日期后缀再查价</span>
+</span></span><span class="line"><span class="cl">        <span class="n">pricing</span> <span class="o">=</span> <span class="n">PRICING</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">normalized</span><span class="p">,</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="p">(</span><span class="n">input_tok</span> <span class="o">/</span> <span class="mi">1_000_000</span> <span class="o">*</span> <span class="n">pricing</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">+</span> <span class="p">(</span><span class="n">output_tok</span> <span class="o">/</span> <span class="mi">1_000_000</span> <span class="o">*</span> <span class="n">pricing</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 使用示例</span>
+</span></span><span class="line"><span class="cl"><span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&#34;__main__&#34;</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="n">llm</span> <span class="o">=</span> <span class="n">UnifiedLLM</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="c1"># 用同一个接口调用不同模型——上层代码完全一样，只改 model 字符串</span>
+</span></span><span class="line"><span class="cl">    <span class="n">question</span> <span class="o">=</span> <span class="s2">&#34;用Python实现快速排序，并解释时间复杂度&#34;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="c1"># 调用 GPT</span>
+</span></span><span class="line"><span class="cl">    <span class="n">r1</span> <span class="o">=</span> <span class="n">llm</span><span class="o">.</span><span class="n">chat</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">        <span class="p">[{</span><span class="s2">&#34;role&#34;</span><span class="p">:</span> <span class="s2">&#34;user&#34;</span><span class="p">,</span> <span class="s2">&#34;content&#34;</span><span class="p">:</span> <span class="n">question</span><span class="p">}],</span>
+</span></span><span class="line"><span class="cl">        <span class="n">model</span><span class="o">=</span><span class="s2">&#34;gpt-5.4-mini&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">        <span class="n">system</span><span class="o">=</span><span class="s2">&#34;你是一个资深算法工程师&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&#34;[GPT-5.4-mini] 成本: $</span><span class="si">{</span><span class="n">r1</span><span class="o">.</span><span class="n">cost_usd</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&#34;回复: </span><span class="si">{</span><span class="n">r1</span><span class="o">.</span><span class="n">content</span><span class="p">[:</span><span class="mi">100</span><span class="p">]</span><span class="si">}</span><span class="s2">...</span><span class="se">\n</span><span class="s2">&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="c1"># 调用 Claude</span>
+</span></span><span class="line"><span class="cl">    <span class="n">r2</span> <span class="o">=</span> <span class="n">llm</span><span class="o">.</span><span class="n">chat</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">        <span class="p">[{</span><span class="s2">&#34;role&#34;</span><span class="p">:</span> <span class="s2">&#34;user&#34;</span><span class="p">,</span> <span class="s2">&#34;content&#34;</span><span class="p">:</span> <span class="n">question</span><span class="p">}],</span>
+</span></span><span class="line"><span class="cl">        <span class="n">model</span><span class="o">=</span><span class="s2">&#34;claude-sonnet-4-20250514&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">        <span class="n">system</span><span class="o">=</span><span class="s2">&#34;你是一个资深算法工程师&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&#34;[Claude Sonnet 4] 成本: $</span><span class="si">{</span><span class="n">r2</span><span class="o">.</span><span class="n">cost_usd</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&#34;回复: </span><span class="si">{</span><span class="n">r2</span><span class="o">.</span><span class="n">content</span><span class="p">[:</span><span class="mi">100</span><span class="p">]</span><span class="si">}</span><span class="s2">...</span><span class="se">\n</span><span class="s2">&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="c1"># 调用本地 Qwen</span>
+</span></span><span class="line"><span class="cl">    <span class="n">r3</span> <span class="o">=</span> <span class="n">llm</span><span class="o">.</span><span class="n">chat</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">        <span class="p">[{</span><span class="s2">&#34;role&#34;</span><span class="p">:</span> <span class="s2">&#34;user&#34;</span><span class="p">,</span> <span class="s2">&#34;content&#34;</span><span class="p">:</span> <span class="n">question</span><span class="p">}],</span>
+</span></span><span class="line"><span class="cl">        <span class="n">model</span><span class="o">=</span><span class="s2">&#34;qwen3:8b&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">        <span class="n">system</span><span class="o">=</span><span class="s2">&#34;你是一个资深算法工程师&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&#34;[Qwen3-8B 本地] 成本: $</span><span class="si">{</span><span class="n">r3</span><span class="o">.</span><span class="n">cost_usd</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&#34;回复: </span><span class="si">{</span><span class="n">r3</span><span class="o">.</span><span class="n">content</span><span class="p">[:</span><span class="mi">100</span><span class="p">]</span><span class="si">}</span><span class="s2">...&#34;</span><span class="p">)</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>这个封装的设计要点：</p>
+<ol>
+<li><strong>统一入口</strong> <code>chat()</code> 方法，上层代码只管传 <code>model</code> 字符串</li>
+<li><strong>自动路由</strong>：根据模型名前缀自动分发到对应SDK</li>
+<li><strong>成本透明</strong>：每次调用返回估算成本，便于成本监控</li>
+<li><strong>Ollama复用OpenAI SDK</strong>：本地模型零代码切换</li>
+<li><strong>模型名规范化</strong>：<code>_normalize_model_name</code>处理Claude的日期后缀，保证定价表能正确命中</li>
+</ol>
+<hr>
+<h2 id="36-模型路由与降级策略">3.6 模型路由与降级策略</h2>
+<h3 id="360-为什么需要多模型路由">3.6.0 为什么需要多模型路由？</h3>
+<p>先讲一个真实场景：你做了一个客服智能体，每天处理10万次对话。如果全部用GPT-5.5旗舰，每天光API费就要$2000+；但如果全部用GPT-5.4-nano，遇到&quot;帮我对比这两份合同的法律风险&quot;这种复杂问题，nano根本答不好，用户投诉率飙升。</p>
+<p><strong>单一模型要么贵死，要么菜死</strong>。出路是：让简单的&quot;你好/查订单状态&quot;走nano（几乎免费），让复杂的&quot;合同分析/代码生成&quot;走旗舰（贵但量少）。这就是<strong>智能路由</strong>——根据任务复杂度动态分配模型。</p>
+<p>这背后还有一个朴素的经济原理——<strong>二八定律</strong>：80%的请求是简单任务，20%是复杂任务。用小模型扛住80%的量，用大模型精耕20%的难活，整体成本能降60-80%，而质量几乎不损失。再加上<strong>降级链</strong>（一个模型挂了自动切备用），系统还顺带获得了高可用性。一箭双雕。</p>
+<h3 id="361-路由策略设计">3.6.1 路由策略设计</h3>
+<p>一个实用的三级路由策略：</p>
+<table>
+<thead>
+<tr>
+<th>层级</th>
+<th>触发条件</th>
+<th>模型</th>
+<th>用途</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>L1 轻量</td>
+<td>简单问答、意图分类、关键词提取</td>
+<td>GPT-5.4-nano</td>
+<td>80%流量</td>
+</tr>
+<tr>
+<td>L2 标准</td>
+<td>多轮对话、RAG问答、工具调用</td>
+<td>GPT-5.4-mini</td>
+<td>15%流量</td>
+</tr>
+<tr>
+<td>L3 旗舰</td>
+<td>复杂推理、代码生成、多步规划</td>
+<td>GPT-5.5 / Claude Sonnet 4</td>
+<td>5%流量</td>
+</tr>
+</tbody>
+</table>
+<p>如何判断任务复杂度？有两种方式：</p>
+<ul>
+<li><strong>规则路由</strong>：根据任务类型标签直接映射，简单高效。比如看到&quot;你好&quot;就判简单，看到&quot;架构设计&quot;就判复杂。</li>
+<li><strong>LLM路由</strong>：用一个nano级小模型先判断复杂度，再分发给对应模型。更灵活，但会多一次调用、增加延迟和成本。</li>
+</ul>
+<blockquote>
+<p>💡 <strong>小贴士：规则路由 vs LLM路由怎么选？</strong>
+早期先用规则路由——简单、可控、零额外成本。等流量上来、任务类型复杂化后，再上LLM路由。两者也可以混用：先用规则快速筛掉明显的简单/复杂任务，剩下的模糊地带交给小模型判断。</p>
+</blockquote>
+<h3 id="362-降级链设计">3.6.2 降级链设计</h3>
+<p>当API出现限流（rate limit）或超时时，需要自动降级到备选模型，保证服务可用性。降级链的设计原则是：<strong>每一级都比上一级更便宜、更稳定，但能力略弱</strong>，最末端兜底一个本地模型或默认回复，确保&quot;再差也有响应&quot;。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">GPT-5.5 → GPT-5.4 → GPT-5.4-mini → Qwen3（本地）→ 返回缓存/默认回复
+</span></span></code></pre></td></tr></table>
+</div>
+</div><blockquote>
+<p>💡 <strong>小贴士：为什么降级链末端要放本地模型？</strong>
+商业API可能整个区域宕机（2024年OpenAI就发生过全球级故障）。这时如果你的降级链全是商业模型，会一窝端全挂。末端放一个本地Ollama模型，即使断网也能兜底，保证服务&quot;降级但不中断&quot;。</p>
+</blockquote>
+<h3 id="363-智能路由器实现">3.6.3 智能路由器实现</h3>
+<p>这段代码做了什么：实现一个<code>SmartRouter</code>类，它的工作流是&quot;判断复杂度→选主模型→调用→失败则沿降级链依次重试→全失败返回兜底回复&quot;。它还内置了累计成本统计，方便你随时看&quot;今天烧了多少钱&quot;。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">  1
+</span><span class="lnt">  2
+</span><span class="lnt">  3
+</span><span class="lnt">  4
+</span><span class="lnt">  5
+</span><span class="lnt">  6
+</span><span class="lnt">  7
+</span><span class="lnt">  8
+</span><span class="lnt">  9
+</span><span class="lnt"> 10
+</span><span class="lnt"> 11
+</span><span class="lnt"> 12
+</span><span class="lnt"> 13
+</span><span class="lnt"> 14
+</span><span class="lnt"> 15
+</span><span class="lnt"> 16
+</span><span class="lnt"> 17
+</span><span class="lnt"> 18
+</span><span class="lnt"> 19
+</span><span class="lnt"> 20
+</span><span class="lnt"> 21
+</span><span class="lnt"> 22
+</span><span class="lnt"> 23
+</span><span class="lnt"> 24
+</span><span class="lnt"> 25
+</span><span class="lnt"> 26
+</span><span class="lnt"> 27
+</span><span class="lnt"> 28
+</span><span class="lnt"> 29
+</span><span class="lnt"> 30
+</span><span class="lnt"> 31
+</span><span class="lnt"> 32
+</span><span class="lnt"> 33
+</span><span class="lnt"> 34
+</span><span class="lnt"> 35
+</span><span class="lnt"> 36
+</span><span class="lnt"> 37
+</span><span class="lnt"> 38
+</span><span class="lnt"> 39
+</span><span class="lnt"> 40
+</span><span class="lnt"> 41
+</span><span class="lnt"> 42
+</span><span class="lnt"> 43
+</span><span class="lnt"> 44
+</span><span class="lnt"> 45
+</span><span class="lnt"> 46
+</span><span class="lnt"> 47
+</span><span class="lnt"> 48
+</span><span class="lnt"> 49
+</span><span class="lnt"> 50
+</span><span class="lnt"> 51
+</span><span class="lnt"> 52
+</span><span class="lnt"> 53
+</span><span class="lnt"> 54
+</span><span class="lnt"> 55
+</span><span class="lnt"> 56
+</span><span class="lnt"> 57
+</span><span class="lnt"> 58
+</span><span class="lnt"> 59
+</span><span class="lnt"> 60
+</span><span class="lnt"> 61
+</span><span class="lnt"> 62
+</span><span class="lnt"> 63
+</span><span class="lnt"> 64
+</span><span class="lnt"> 65
+</span><span class="lnt"> 66
+</span><span class="lnt"> 67
+</span><span class="lnt"> 68
+</span><span class="lnt"> 69
+</span><span class="lnt"> 70
+</span><span class="lnt"> 71
+</span><span class="lnt"> 72
+</span><span class="lnt"> 73
+</span><span class="lnt"> 74
+</span><span class="lnt"> 75
+</span><span class="lnt"> 76
+</span><span class="lnt"> 77
+</span><span class="lnt"> 78
+</span><span class="lnt"> 79
+</span><span class="lnt"> 80
+</span><span class="lnt"> 81
+</span><span class="lnt"> 82
+</span><span class="lnt"> 83
+</span><span class="lnt"> 84
+</span><span class="lnt"> 85
+</span><span class="lnt"> 86
+</span><span class="lnt"> 87
+</span><span class="lnt"> 88
+</span><span class="lnt"> 89
+</span><span class="lnt"> 90
+</span><span class="lnt"> 91
+</span><span class="lnt"> 92
+</span><span class="lnt"> 93
+</span><span class="lnt"> 94
+</span><span class="lnt"> 95
+</span><span class="lnt"> 96
+</span><span class="lnt"> 97
+</span><span class="lnt"> 98
+</span><span class="lnt"> 99
+</span><span class="lnt">100
+</span><span class="lnt">101
+</span><span class="lnt">102
+</span><span class="lnt">103
+</span><span class="lnt">104
+</span><span class="lnt">105
+</span><span class="lnt">106
+</span><span class="lnt">107
+</span><span class="lnt">108
+</span><span class="lnt">109
+</span><span class="lnt">110
+</span><span class="lnt">111
+</span><span class="lnt">112
+</span><span class="lnt">113
+</span><span class="lnt">114
+</span><span class="lnt">115
+</span><span class="lnt">116
+</span><span class="lnt">117
+</span><span class="lnt">118
+</span><span class="lnt">119
+</span><span class="lnt">120
+</span><span class="lnt">121
+</span><span class="lnt">122
+</span><span class="lnt">123
+</span><span class="lnt">124
+</span><span class="lnt">125
+</span><span class="lnt">126
+</span><span class="lnt">127
+</span><span class="lnt">128
+</span><span class="lnt">129
+</span><span class="lnt">130
+</span><span class="lnt">131
+</span><span class="lnt">132
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="c1"># smart_router.py —— 智能路由与降级</span>
+</span></span><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">time</span>
+</span></span><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">logging</span>
+</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">llm_router</span> <span class="kn">import</span> <span class="n">UnifiedLLM</span><span class="p">,</span> <span class="n">LLMResponse</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 任务复杂度到模型的映射</span>
+</span></span><span class="line"><span class="cl"><span class="n">COMPLEXITY_MODEL_MAP</span> <span class="o">=</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="s2">&#34;simple&#34;</span><span class="p">:</span>   <span class="s2">&#34;gpt-5.4-nano&#34;</span><span class="p">,</span>        <span class="c1"># 简单任务</span>
+</span></span><span class="line"><span class="cl">    <span class="s2">&#34;standard&#34;</span><span class="p">:</span> <span class="s2">&#34;gpt-5.4-mini&#34;</span><span class="p">,</span>        <span class="c1"># 标准任务</span>
+</span></span><span class="line"><span class="cl">    <span class="s2">&#34;complex&#34;</span><span class="p">:</span>  <span class="s2">&#34;gpt-5.4&#34;</span><span class="p">,</span>             <span class="c1"># 复杂任务</span>
+</span></span><span class="line"><span class="cl">    <span class="s2">&#34;extreme&#34;</span><span class="p">:</span>  <span class="s2">&#34;gpt-5.5&#34;</span><span class="p">,</span>             <span class="c1"># 极限任务</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 每个主模型的降级链：主模型挂了就依次试这些备选</span>
+</span></span><span class="line"><span class="cl"><span class="n">FALLBACK_CHAINS</span> <span class="o">=</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="s2">&#34;gpt-5.5&#34;</span><span class="p">:</span>          <span class="p">[</span><span class="s2">&#34;gpt-5.4&#34;</span><span class="p">,</span> <span class="s2">&#34;gpt-5.4-mini&#34;</span><span class="p">,</span> <span class="s2">&#34;qwen3:8b&#34;</span><span class="p">],</span>
+</span></span><span class="line"><span class="cl">    <span class="s2">&#34;gpt-5.4&#34;</span><span class="p">:</span>          <span class="p">[</span><span class="s2">&#34;gpt-5.4-mini&#34;</span><span class="p">,</span> <span class="s2">&#34;qwen3:8b&#34;</span><span class="p">],</span>
+</span></span><span class="line"><span class="cl">    <span class="s2">&#34;gpt-5.4-mini&#34;</span><span class="p">:</span>     <span class="p">[</span><span class="s2">&#34;gpt-5.4-nano&#34;</span><span class="p">,</span> <span class="s2">&#34;qwen3:8b&#34;</span><span class="p">],</span>
+</span></span><span class="line"><span class="cl">    <span class="s2">&#34;gpt-5.4-nano&#34;</span><span class="p">:</span>     <span class="p">[</span><span class="s2">&#34;qwen3:8b&#34;</span><span class="p">],</span>
+</span></span><span class="line"><span class="cl">    <span class="s2">&#34;claude-sonnet-4-20250514&#34;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&#34;gpt-5.4-mini&#34;</span><span class="p">,</span> <span class="s2">&#34;qwen3:8b&#34;</span><span class="p">],</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 关键词 → 复杂度等级的简单规则路由</span>
+</span></span><span class="line"><span class="cl"><span class="n">COMPLEXITY_KEYWORDS</span> <span class="o">=</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="s2">&#34;extreme&#34;</span><span class="p">:</span>  <span class="p">[</span><span class="s2">&#34;架构设计&#34;</span><span class="p">,</span> <span class="s2">&#34;系统设计&#34;</span><span class="p">,</span> <span class="s2">&#34;重构整个&#34;</span><span class="p">,</span> <span class="s2">&#34;安全审计&#34;</span><span class="p">,</span> <span class="s2">&#34;性能优化方案&#34;</span><span class="p">],</span>
+</span></span><span class="line"><span class="cl">    <span class="s2">&#34;complex&#34;</span><span class="p">:</span>  <span class="p">[</span><span class="s2">&#34;编写代码&#34;</span><span class="p">,</span> <span class="s2">&#34;调试&#34;</span><span class="p">,</span> <span class="s2">&#34;推理&#34;</span><span class="p">,</span> <span class="s2">&#34;分析报告&#34;</span><span class="p">,</span> <span class="s2">&#34;多步骤&#34;</span><span class="p">],</span>
+</span></span><span class="line"><span class="cl">    <span class="s2">&#34;standard&#34;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&#34;翻译&#34;</span><span class="p">,</span> <span class="s2">&#34;总结&#34;</span><span class="p">,</span> <span class="s2">&#34;摘要&#34;</span><span class="p">,</span> <span class="s2">&#34;问答&#34;</span><span class="p">,</span> <span class="s2">&#34;分类&#34;</span><span class="p">],</span>
+</span></span><span class="line"><span class="cl">    <span class="s2">&#34;simple&#34;</span><span class="p">:</span>   <span class="p">[</span><span class="s2">&#34;你好&#34;</span><span class="p">,</span> <span class="s2">&#34;谢谢&#34;</span><span class="p">,</span> <span class="s2">&#34;再见&#34;</span><span class="p">,</span> <span class="s2">&#34;是或否&#34;</span><span class="p">],</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">class</span> <span class="nc">SmartRouter</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="s2">&#34;&#34;&#34;智能模型路由器：自动选择模型 + 故障降级&#34;&#34;&#34;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">        <span class="bp">self</span><span class="o">.</span><span class="n">llm</span> <span class="o">=</span> <span class="n">UnifiedLLM</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">        <span class="bp">self</span><span class="o">.</span><span class="n">total_cost</span> <span class="o">=</span> <span class="mf">0.0</span>   <span class="c1"># 累计成本（美元）</span>
+</span></span><span class="line"><span class="cl">        <span class="bp">self</span><span class="o">.</span><span class="n">call_count</span> <span class="o">=</span> <span class="mi">0</span>     <span class="c1"># 累计调用次数</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">def</span> <span class="nf">classify_complexity</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">user_input</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="s2">&#34;&#34;&#34;根据关键词判断任务复杂度（规则路由）
+</span></span></span><span class="line"><span class="cl"><span class="s2">        
+</span></span></span><span class="line"><span class="cl"><span class="s2">        在生产中可以用一个小模型替代关键词匹配，
+</span></span></span><span class="line"><span class="cl"><span class="s2">        让模型自己判断复杂度，效果更好但会增加一次调用。
+</span></span></span><span class="line"><span class="cl"><span class="s2">        &#34;&#34;&#34;</span>
+</span></span><span class="line"><span class="cl">        <span class="k">for</span> <span class="n">level</span><span class="p">,</span> <span class="n">keywords</span> <span class="ow">in</span> <span class="n">COMPLEXITY_KEYWORDS</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+</span></span><span class="line"><span class="cl">            <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">kw</span> <span class="ow">in</span> <span class="n">user_input</span> <span class="k">for</span> <span class="n">kw</span> <span class="ow">in</span> <span class="n">keywords</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">                <span class="k">return</span> <span class="n">level</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="s2">&#34;standard&#34;</span>  <span class="c1"># 默认标准</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">def</span> <span class="nf">route</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">user_input</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">system</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&#34;&#34;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LLMResponse</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="s2">&#34;&#34;&#34;智能路由主入口
+</span></span></span><span class="line"><span class="cl"><span class="s2">        
+</span></span></span><span class="line"><span class="cl"><span class="s2">        流程：1.判断复杂度 → 2.选模型 → 3.调用 → 4.失败则降级
+</span></span></span><span class="line"><span class="cl"><span class="s2">        &#34;&#34;&#34;</span>
+</span></span><span class="line"><span class="cl">        <span class="c1"># 第一步：判断复杂度</span>
+</span></span><span class="line"><span class="cl">        <span class="n">complexity</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">classify_complexity</span><span class="p">(</span><span class="n">user_input</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="n">primary_model</span> <span class="o">=</span> <span class="n">COMPLEXITY_MODEL_MAP</span><span class="p">[</span><span class="n">complexity</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl">        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&#34;任务复杂度: </span><span class="si">{</span><span class="n">complexity</span><span class="si">}</span><span class="s2"> → 主模型: </span><span class="si">{</span><span class="n">primary_model</span><span class="si">}</span><span class="s2">&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">        <span class="c1"># 第二步：构建降级链（主模型 + 备选列表）</span>
+</span></span><span class="line"><span class="cl">        <span class="n">fallback_models</span> <span class="o">=</span> <span class="n">FALLBACK_CHAINS</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">primary_model</span><span class="p">,</span> <span class="p">[</span><span class="s2">&#34;qwen3:8b&#34;</span><span class="p">])</span>
+</span></span><span class="line"><span class="cl">        <span class="n">models_to_try</span> <span class="o">=</span> <span class="p">[</span><span class="n">primary_model</span><span class="p">]</span> <span class="o">+</span> <span class="n">fallback_models</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">        <span class="c1"># 第三步：依次尝试调用，成功即返回</span>
+</span></span><span class="line"><span class="cl">        <span class="n">messages</span> <span class="o">=</span> <span class="p">[{</span><span class="s2">&#34;role&#34;</span><span class="p">:</span> <span class="s2">&#34;user&#34;</span><span class="p">,</span> <span class="s2">&#34;content&#34;</span><span class="p">:</span> <span class="n">user_input</span><span class="p">}]</span>
+</span></span><span class="line"><span class="cl">        <span class="n">last_error</span> <span class="o">=</span> <span class="kc">None</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">        <span class="k">for</span> <span class="n">model</span> <span class="ow">in</span> <span class="n">models_to_try</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">            <span class="k">try</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">                <span class="n">resp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">llm</span><span class="o">.</span><span class="n">chat</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">                    <span class="n">messages</span><span class="o">=</span><span class="n">messages</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                    <span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                    <span class="n">system</span><span class="o">=</span><span class="n">system</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                <span class="p">)</span>
+</span></span><span class="line"><span class="cl">                <span class="bp">self</span><span class="o">.</span><span class="n">total_cost</span> <span class="o">+=</span> <span class="n">resp</span><span class="o">.</span><span class="n">cost_usd</span>
+</span></span><span class="line"><span class="cl">                <span class="bp">self</span><span class="o">.</span><span class="n">call_count</span> <span class="o">+=</span> <span class="mi">1</span>  <span class="c1"># 记录一次成功调用</span>
+</span></span><span class="line"><span class="cl">                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">                    <span class="sa">f</span><span class="s2">&#34;✅ 调用成功 [</span><span class="si">{</span><span class="n">model</span><span class="si">}</span><span class="s2">] &#34;</span>
+</span></span><span class="line"><span class="cl">                    <span class="sa">f</span><span class="s2">&#34;成本=$</span><span class="si">{</span><span class="n">resp</span><span class="o">.</span><span class="n">cost_usd</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2"> 累计=$</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">total_cost</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">&#34;</span>
+</span></span><span class="line"><span class="cl">                <span class="p">)</span>
+</span></span><span class="line"><span class="cl">                <span class="k">return</span> <span class="n">resp</span>
+</span></span><span class="line"><span class="cl">            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&#34;❌ [</span><span class="si">{</span><span class="n">model</span><span class="si">}</span><span class="s2">] 调用失败: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">，尝试降级...&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">                <span class="n">last_error</span> <span class="o">=</span> <span class="n">e</span>
+</span></span><span class="line"><span class="cl">                <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.5</span><span class="p">)</span>  <span class="c1"># 降级前短暂等待，给上游喘口气</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">        <span class="c1"># 所有模型都失败，返回兜底回复</span>
+</span></span><span class="line"><span class="cl">        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&#34;所有模型均不可用，最后错误: </span><span class="si">{</span><span class="n">last_error</span><span class="si">}</span><span class="s2">&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="n">LLMResponse</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">            <span class="n">content</span><span class="o">=</span><span class="s2">&#34;抱歉，服务暂时不可用，请稍后重试。&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">            <span class="n">model</span><span class="o">=</span><span class="s2">&#34;fallback&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">            <span class="n">input_tokens</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">            <span class="n">output_tokens</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">            <span class="n">cost_usd</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">        <span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">def</span> <span class="nf">get_cost_report</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="s2">&#34;&#34;&#34;获取成本报告&#34;&#34;&#34;</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">            <span class="s2">&#34;total_cost_usd&#34;</span><span class="p">:</span> <span class="nb">round</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">total_cost</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span>
+</span></span><span class="line"><span class="cl">            <span class="s2">&#34;avg_cost_per_call&#34;</span><span class="p">:</span> <span class="nb">round</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">                <span class="bp">self</span><span class="o">.</span><span class="n">total_cost</span> <span class="o">/</span> <span class="nb">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">call_count</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="mi">4</span>
+</span></span><span class="line"><span class="cl">            <span class="p">),</span>
+</span></span><span class="line"><span class="cl">        <span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 使用示例</span>
+</span></span><span class="line"><span class="cl"><span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&#34;__main__&#34;</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="n">router</span> <span class="o">=</span> <span class="n">SmartRouter</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="n">test_cases</span> <span class="o">=</span> <span class="p">[</span>
+</span></span><span class="line"><span class="cl">        <span class="s2">&#34;你好，今天天气怎么样？&#34;</span><span class="p">,</span>                    <span class="c1"># → simple → nano</span>
+</span></span><span class="line"><span class="cl">        <span class="s2">&#34;请帮我总结这篇文章的要点&#34;</span><span class="p">,</span>                  <span class="c1"># → standard → mini</span>
+</span></span><span class="line"><span class="cl">        <span class="s2">&#34;帮我编写一个Python并发爬虫，要求支持重试&#34;</span><span class="p">,</span>  <span class="c1"># → complex → 5.4</span>
+</span></span><span class="line"><span class="cl">        <span class="s2">&#34;请设计一个支持百万并发的微服务架构方案&#34;</span><span class="p">,</span>    <span class="c1"># → extreme → 5.5</span>
+</span></span><span class="line"><span class="cl">    <span class="p">]</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="n">query</span> <span class="ow">in</span> <span class="n">test_cases</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&#34;</span><span class="se">\n</span><span class="si">{</span><span class="s1">&#39;=&#39;</span><span class="o">*</span><span class="mi">60</span><span class="si">}</span><span class="s2">&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&#34;用户输入: </span><span class="si">{</span><span class="n">query</span><span class="si">}</span><span class="s2">&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="n">resp</span> <span class="o">=</span> <span class="n">router</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="n">system</span><span class="o">=</span><span class="s2">&#34;你是一个专业的技术助手&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&#34;使用模型: </span><span class="si">{</span><span class="n">resp</span><span class="o">.</span><span class="n">model</span><span class="si">}</span><span class="s2">&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&#34;本次成本: $</span><span class="si">{</span><span class="n">resp</span><span class="o">.</span><span class="n">cost_usd</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&#34;回复预览: </span><span class="si">{</span><span class="n">resp</span><span class="o">.</span><span class="n">content</span><span class="p">[:</span><span class="mi">80</span><span class="p">]</span><span class="si">}</span><span class="s2">...&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&#34;</span><span class="se">\n</span><span class="si">{</span><span class="s1">&#39;=&#39;</span><span class="o">*</span><span class="mi">60</span><span class="si">}</span><span class="s2">&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&#34;总成本: $</span><span class="si">{</span><span class="n">router</span><span class="o">.</span><span class="n">total_cost</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&#34;成本报告: </span><span class="si">{</span><span class="n">router</span><span class="o">.</span><span class="n">get_cost_report</span><span class="p">()</span><span class="si">}</span><span class="s2">&#34;</span><span class="p">)</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>运行这个路由器，你会看到不同复杂度的任务自动分配到不同级别的模型。简单问题用nano处理，成本几乎为零；复杂问题才动用旗舰模型。这就是<strong>成本优化</strong>的核心——好钢用在刀刃上。</p>
+<blockquote>
+<p>💡 <strong>进阶提示</strong>：在生产环境中，还可以加入以下增强：</p>
+<ul>
+<li><strong>缓存层</strong>：相同请求直接返回缓存结果（Redis），可节省30%+成本。比如&quot;今天天气怎么样&quot;这类高频问题，第一次算完存起来，后续命中缓存直接返回。</li>
+<li><strong>批量处理</strong>：非实时任务用Batch API（OpenAI/Anthropic均支持），价格减半。适合夜间跑的数据标注、报告生成。</li>
+<li><strong>Token预算</strong>：为每个用户/会话设置token预算上限，防止成本失控。比如免费用户每天限1000 token，超出则降级到nano。</li>
+<li><strong>A/B测试</strong>：同时用两个模型处理同一请求，对比效果后动态调整路由权重。让数据告诉你哪个模型在你的任务上更值。</li>
+</ul>
+</blockquote>
+<hr>
+<h2 id="37-小结">3.7 小结</h2>
+<p>本章我们从&quot;LLM是智能体的大脑&quot;这一核心认知出发，系统梳理了2026年大模型选型的完整知识体系：</p>
+<ol>
+<li>
+<p><strong>商业模型对比</strong>：GPT-5.x系列综合能力最强、生态最成熟；Claude 4.x系列在代码和长文档场景有独特优势；Gemini 2.5系列以超长上下文和低价取胜。没有&quot;最好&quot;的模型，只有&quot;最适合&quot;的模型。</p>
+</li>
+<li>
+<p><strong>开源模型生态</strong>：Qwen3系列中文最强、Llama 3生态最完善、DeepSeek-V3性价比最高。用Ollama做原型验证，用vLLM做生产部署。</p>
+</li>
+<li>
+<p><strong>五维选型框架</strong>：能力、成本、延迟、上下文、函数调用——五个维度交叉评分，拒绝&quot;跑分党&quot;和&quot;唯价格论&quot;。</p>
+</li>
+<li>
+<p><strong>统一接口封装</strong>：用<code>UnifiedLLM</code>类屏蔽各家API差异，上层代码只需指定模型名，实现多模型无缝切换。配套的<code>_normalize_model_name</code>解决了Claude模型名带日期后缀导致定价查不到的坑。</p>
+</li>
+<li>
+<p><strong>智能路由与降级</strong>：简单任务用小模型、复杂任务用大模型，配合降级链保证高可用。这一套机制能让你的智能体成本降低60-80%。记住二八定律——80%的流量用最便宜的模型扛住。</p>
+</li>
+</ol>
+<p>记住一个原则：<strong>模型选型不是一次性决策，而是持续优化过程</strong>。模型在迭代，价格在下降，你的路由策略也要跟着调整。建议每月做一次成本-质量回顾，动态更新你的路由表。</p>
+<hr>
+<h2 id="38-下章预告提示工程进阶">3.8 下章预告：提示工程进阶</h2>
+<p>选好了模型只是第一步。同一个模型，不同的提示词可以让输出质量天差地别。第4章我们将深入<strong>提示工程进阶</strong>：</p>
+<ul>
+<li>结构化提示词模板设计</li>
+<li>Few-Shot与Chain-of-Thought的工程化应用</li>
+<li>ReAct（Reasoning + Acting）模式详解</li>
+<li>多轮对话中的提示词管理策略</li>
+<li>提示词版本管理与A/B测试</li>
+</ul>
+<p>如果说模型是引擎，那提示词就是方向盘和油门。下一章，我们学会如何精准操控这辆智能体赛车。🚗💨</p>
+</div><div class="post-footer" id="post-footer">
+    <div class="post-info">
+        <div class="post-info-line">
+            <div class="post-info-mod">
+                <span>Updated on 2026-07-05</span>
+            </div></div>
+        <div class="post-info-line">
+            <div class="post-info-md"></div>
+            <div class="post-info-share">
+                <span><a href="javascript:void(0);" title="Share on Twitter" data-sharer="twitter" data-url="https://www.ithome.me/post/2026/07/05/ai%E6%99%BA%E8%83%BD%E4%BD%93%E5%BC%80%E5%8F%91-%E7%AC%AC3%E7%AB%A0-llm%E6%A0%B8%E5%BF%83%E5%BC%95%E6%93%8E/" data-title="LLM核心引擎：大模型选型与集成" data-via="ChenCiki" data-hashtags="AI Agent,LLM,OpenAI,Claude,模型选型,AI智能体开发实战"><i class="fab fa-twitter fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on Linkedin" data-sharer="linkedin" data-url="https://www.ithome.me/post/2026/07/05/ai%E6%99%BA%E8%83%BD%E4%BD%93%E5%BC%80%E5%8F%91-%E7%AC%AC3%E7%AB%A0-llm%E6%A0%B8%E5%BF%83%E5%BC%95%E6%93%8E/"><i class="fab fa-linkedin fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on 微博" data-sharer="weibo" data-url="https://www.ithome.me/post/2026/07/05/ai%E6%99%BA%E8%83%BD%E4%BD%93%E5%BC%80%E5%8F%91-%E7%AC%AC3%E7%AB%A0-llm%E6%A0%B8%E5%BF%83%E5%BC%95%E6%93%8E/" data-title="LLM核心引擎：大模型选型与集成" data-ralateuid="xxx"><i class="fab fa-weibo fa-fw" aria-hidden="true"></i></a></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="post-info-more">
+        <section class="post-tags"><i class="fas fa-tags fa-fw" aria-hidden="true"></i>&nbsp;<a href="/tags/ai-agent/">AI Agent</a>,&nbsp;<a href="/tags/llm/">LLM</a>,&nbsp;<a href="/tags/openai/">OpenAI</a>,&nbsp;<a href="/tags/claude/">Claude</a>,&nbsp;<a href="/tags/%E6%A8%A1%E5%9E%8B%E9%80%89%E5%9E%8B/">模型选型</a>,&nbsp;<a href="/tags/ai%E6%99%BA%E8%83%BD%E4%BD%93%E5%BC%80%E5%8F%91%E5%AE%9E%E6%88%98/">AI智能体开发实战</a></section>
+        <section>
+            <span><a href="javascript:void(0);" onclick="window.history.back();">Back</a></span>&nbsp;|&nbsp;<span><a href="/">Home</a></span>
+        </section>
+    </div>
+
+    <div class="post-nav"><a href="/post/2026/07/05/ai%E6%99%BA%E8%83%BD%E4%BD%93%E5%BC%80%E5%8F%91-%E7%AC%AC10%E7%AB%A0-mcp%E5%8D%8F%E8%AE%AE/" class="prev" rel="prev" title="MCP协议：智能体的标准化工具接口"><i class="fas fa-angle-left fa-fw" aria-hidden="true"></i>MCP协议：智能体的标准化工具接口</a>
+            <a href="/post/2026/07/05/ai%E6%99%BA%E8%83%BD%E4%BD%93%E5%BC%80%E5%8F%91%E5%AE%9E%E6%88%98-%E5%AE%8C%E6%95%B4%E7%9B%AE%E5%BD%95/" class="next" rel="next" title="AI智能体开发实战：完整目录">AI智能体开发实战：完整目录<i class="fas fa-angle-right fa-fw" aria-hidden="true"></i></a></div>
+</div>
+<div id="comments"><div id="gitalk" class="comment"></div><noscript>
+                Please enable JavaScript to view the comments powered by <a href="https://github.com/gitalk/gitalk"></a>Gitalk</a>.
+            </noscript></div></article></div>
+            </main><footer class="footer">
+        <div class="footer-container"><div class="footer-line" itemscope itemtype="http://schema.org/CreativeWork"><i class="far fa-copyright fa-fw" aria-hidden="true"></i><span itemprop="copyrightYear">2011 - 2026</span><span class="author" itemprop="copyrightHolder">&nbsp;<a href="https://www.ithome.me/" target="_blank">Simon Chen</a></span>&nbsp;|&nbsp;<span class="license"><a rel="license external nofollow noopener noreferrer" href="https://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank">CC BY-NC-ND 4.0</a></span></div>
+        </div>
+    </footer></div>
+
+        <div id="fixed-buttons"><a href="#" id="back-to-top" class="fixed-button" title="Back to Top">
+                <i class="fas fa-arrow-up fa-fw" aria-hidden="true"></i>
+            </a><a href="#" id="view-comments" class="fixed-button" title="View Comments">
+                <i class="fas fa-comment fa-fw" aria-hidden="true"></i>
+            </a>
+        </div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1.8.0/dist/gitalk.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/css/lightgallery-bundle.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/katex.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/copy-tex.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.css"><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/gitalk@1.8.0/dist/gitalk.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/autocomplete.js@0.38.1/dist/autocomplete.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lunr@2.3.9/lunr.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lazysizes@5.3.1/lazysizes.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/lightgallery.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/plugins/thumbnail/lg-thumbnail.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/plugins/zoom/lg-zoom.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/clipboard@2.0.11/dist/clipboard.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/sharer.js@0.5.1/sharer.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/katex.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/auto-render.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/copy-tex.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/mhchem.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.js"></script><script type="text/javascript">window.config={"code":{"copyTitle":"Copy to clipboard","maxShownLines":50},"comment":{"gitalk":{"admin":["cikichen"],"clientID":"be0f52370ed1285b6c7c","clientSecret":"734a7d8d0ded346ca7a3d565d57de3f8eeb2850b","id":"2026-07-05T00:00:00Z","owner":"cikichen","repo":"gitalk","title":"LLM核心引擎：大模型选型与集成"}},"cookieconsent":{"content":{"dismiss":"我知道了","link":"了解更多","message":"本网站使用 Cookies 来改善您的浏览体验."},"enable":true,"palette":{"button":{"background":"#f0f0f0"},"popup":{"background":"#1aa3ff"}},"theme":"edgeless"},"lightgallery":true,"math":{"delimiters":[{"display":true,"left":"$$","right":"$$"},{"display":true,"left":"\\[","right":"\\]"},{"display":true,"left":"\\begin{equation}","right":"\\end{equation}"},{"display":true,"left":"\\begin{equation*}","right":"\\end{equation*}"},{"display":true,"left":"\\begin{align}","right":"\\end{align}"},{"display":true,"left":"\\begin{align*}","right":"\\end{align*}"},{"display":true,"left":"\\begin{alignat}","right":"\\end{alignat}"},{"display":true,"left":"\\begin{alignat*}","right":"\\end{alignat*}"},{"display":true,"left":"\\begin{gather}","right":"\\end{gather}"},{"display":true,"left":"\\begin{CD}","right":"\\end{CD}"},{"display":false,"left":"$","right":"$"},{"display":false,"left":"\\(","right":"\\)"}],"strict":false},"search":{"highlightTag":"em","lunrIndexURL":"/index.json","maxResultLength":10,"noResultsFound":"No results found","snippetLength":50,"type":"lunr"}};</script><script type="text/javascript" src="/js/theme.min.js"></script></body>
+</html>

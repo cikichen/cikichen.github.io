@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="robots" content="noodp" />
+        <title>用CrewAI构建多智能体协作系统：让多个Agent协同完成复杂任务 - 编程心语</title><meta name="Description" content="实战教程：用CrewAI框架搭建多智能体团队，实现Agent之间的任务分工、协作和信息传递，完成单个Agent难以搞定的复杂任务"><meta property="og:url" content="https://www.ithome.me/post/2026/06/15/%E7%94%A8crewai%E6%9E%84%E5%BB%BA%E5%A4%9A%E6%99%BA%E8%83%BD%E4%BD%93%E5%8D%8F%E4%BD%9C%E7%B3%BB%E7%BB%9F%E8%AE%A9%E5%A4%9A%E4%B8%AAagent%E5%8D%8F%E5%90%8C%E5%AE%8C%E6%88%90%E5%A4%8D%E6%9D%82%E4%BB%BB%E5%8A%A1/">
+  <meta property="og:site_name" content="编程心语">
+  <meta property="og:title" content="用CrewAI构建多智能体协作系统：让多个Agent协同完成复杂任务">
+  <meta property="og:description" content="实战教程：用CrewAI框架搭建多智能体团队，实现Agent之间的任务分工、协作和信息传递，完成单个Agent难以搞定的复杂任务">
+  <meta property="og:locale" content="zh_CN">
+  <meta property="og:type" content="article">
+    <meta property="article:section" content="posts">
+    <meta property="article:published_time" content="2026-06-15T08:00:00+08:00">
+    <meta property="article:modified_time" content="2026-06-15T08:00:00+08:00">
+    <meta property="article:tag" content="AI Agent">
+    <meta property="article:tag" content="CrewAI">
+    <meta property="article:tag" content="多智能体">
+    <meta property="article:tag" content="LLM">
+    <meta property="article:tag" content="协作">
+
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="用CrewAI构建多智能体协作系统：让多个Agent协同完成复杂任务">
+  <meta name="twitter:description" content="实战教程：用CrewAI框架搭建多智能体团队，实现Agent之间的任务分工、协作和信息传递，完成单个Agent难以搞定的复杂任务">
+      <meta name="twitter:site" content="@ChenCiki">
+<meta name="application-name" content="编程心语">
+<meta name="apple-mobile-web-app-title" content="编程心语"><meta name="theme-color" content="#ffffff"><meta name="msapplication-TileColor" content="#da532c"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5"><link rel="manifest" href="/site.webmanifest"><link rel="canonical" href="https://www.ithome.me/post/2026/06/15/%E7%94%A8crewai%E6%9E%84%E5%BB%BA%E5%A4%9A%E6%99%BA%E8%83%BD%E4%BD%93%E5%8D%8F%E4%BD%9C%E7%B3%BB%E7%BB%9F%E8%AE%A9%E5%A4%9A%E4%B8%AAagent%E5%8D%8F%E5%90%8C%E5%AE%8C%E6%88%90%E5%A4%8D%E6%9D%82%E4%BB%BB%E5%8A%A1/" /><link rel="prev" href="https://www.ithome.me/post/2026/06/15/%E7%94%A8kotlin-jetpack-compose%E6%89%93%E9%80%A0%E6%87%82%E9%B8%9Fappandroid%E5%8E%9F%E7%94%9F%E8%A7%82%E9%B8%9F%E5%8A%A9%E6%89%8B%E5%AE%8C%E6%95%B4%E5%BC%80%E5%8F%91%E6%8C%87%E5%8D%97/" /><link rel="next" href="https://www.ithome.me/post/2026/06/15/%E6%89%93%E9%80%A0%E9%B8%9F%E7%B1%BB%E8%AF%86%E5%88%AB%E6%99%BA%E8%83%BD%E4%BD%93%E7%94%A8%E5%A4%9A%E6%A8%A1%E6%80%81ai%E8%AE%A9%E6%89%8B%E6%9C%BA%E5%8F%98%E6%88%90%E8%A7%82%E9%B8%9F%E5%8A%A9%E6%89%8B/" /><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/normalize.css@8.0.1/normalize.min.css"><link rel="stylesheet" href="/css/style.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css"><script type="application/ld+json">
+    {
+        "@context": "http://schema.org",
+        "@type": "BlogPosting",
+        "headline": "用CrewAI构建多智能体协作系统：让多个Agent协同完成复杂任务",
+        "inLanguage": "zh-CN",
+        "mainEntityOfPage": {
+            "@type": "WebPage",
+            "@id": "https:\/\/www.ithome.me\/post\/2026\/06\/15\/%E7%94%A8crewai%E6%9E%84%E5%BB%BA%E5%A4%9A%E6%99%BA%E8%83%BD%E4%BD%93%E5%8D%8F%E4%BD%9C%E7%B3%BB%E7%BB%9F%E8%AE%A9%E5%A4%9A%E4%B8%AAagent%E5%8D%8F%E5%90%8C%E5%AE%8C%E6%88%90%E5%A4%8D%E6%9D%82%E4%BB%BB%E5%8A%A1\/"
+        },"image": ["https:\/\/www.ithome.me\/cover.png"],"genre": "posts","keywords": "AI Agent, CrewAI, 多智能体, LLM, 协作","wordcount":  3441 ,
+        "url": "https:\/\/www.ithome.me\/post\/2026\/06\/15\/%E7%94%A8crewai%E6%9E%84%E5%BB%BA%E5%A4%9A%E6%99%BA%E8%83%BD%E4%BD%93%E5%8D%8F%E4%BD%9C%E7%B3%BB%E7%BB%9F%E8%AE%A9%E5%A4%9A%E4%B8%AAagent%E5%8D%8F%E5%90%8C%E5%AE%8C%E6%88%90%E5%A4%8D%E6%9D%82%E4%BB%BB%E5%8A%A1\/","datePublished": "2026-06-15T08:00:00+08:00","dateModified": "2026-06-15T08:00:00+08:00","publisher": {
+            "@type": "Organization",
+            "name": "SimonChen","logo": "https:\/\/www.ithome.me\/logo.png"},"author": {
+                "@type": "Person",
+                "name": "Simon Chen"
+            },"description": "实战教程：用CrewAI框架搭建多智能体团队，实现Agent之间的任务分工、协作和信息传递，完成单个Agent难以搞定的复杂任务"
+    }
+    </script><script async src="https://www.googletagmanager.com/gtag/js?id=G-H1Q5563VR8"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-H1Q5563VR8', { 'anonymize_ip': true });
+</script></head>
+    <body data-header-desktop="fixed" data-header-mobile="auto"><script type="text/javascript">(window.localStorage && localStorage.getItem('theme') ? localStorage.getItem('theme') === 'dark' : ('auto' === 'auto' ? window.matchMedia('(prefers-color-scheme: dark)').matches : 'auto' === 'dark')) && document.body.setAttribute('theme', 'dark');</script>
+
+        <div id="mask"></div><div class="wrapper"><header class="desktop" id="header-desktop">
+    <div class="header-wrapper">
+        <div class="header-title">
+            <a href="/" title="编程心语">编程心语</a>
+        </div>
+        <div class="menu">
+            <div class="menu-inner"><a class="menu-item" href="/posts/"> 文章 </a><a class="menu-item" href="/categories/"> 分类 </a><a class="menu-item" href="/tags/"> 标签 </a><a class="menu-item" href="/about-me/"> 关于 </a><span class="menu-item delimiter"></span><span class="menu-item search" id="search-desktop">
+                        <input type="text" placeholder="搜索文章..." id="search-input-desktop">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-desktop" title="Search">
+                            <i class="fas fa-search fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-desktop" title="Clear">
+                            <i class="fas fa-times-circle fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-desktop">
+                            <i class="fas fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+                        </span>
+                    </span><a href="javascript:void(0);" class="menu-item theme-switch" title="Switch Theme">
+                    <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</header><header class="mobile" id="header-mobile">
+    <div class="header-container">
+        <div class="header-wrapper">
+            <div class="header-title">
+                <a href="/" title="编程心语">编程心语</a>
+            </div>
+            <div class="menu-toggle" id="menu-toggle-mobile">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+        <div class="menu" id="menu-mobile"><div class="search-wrapper">
+                    <div class="search mobile" id="search-mobile">
+                        <input type="text" placeholder="搜索文章..." id="search-input-mobile">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-mobile" title="Search">
+                            <i class="fas fa-search fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-mobile" title="Clear">
+                            <i class="fas fa-times-circle fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-mobile">
+                            <i class="fas fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+                        </span>
+                    </div>
+                    <a href="javascript:void(0);" class="search-cancel" id="search-cancel-mobile">
+                        Cancel
+                    </a>
+                </div><a class="menu-item" href="/posts/" title="">文章</a><a class="menu-item" href="/categories/" title="">分类</a><a class="menu-item" href="/tags/" title="">标签</a><a class="menu-item" href="/about-me/" title="">关于</a><a href="javascript:void(0);" class="menu-item theme-switch" title="Switch Theme">
+                <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
+            </a></div>
+    </div>
+</header><div class="search-dropdown desktop">
+        <div id="search-dropdown-desktop"></div>
+    </div>
+    <div class="search-dropdown mobile">
+        <div id="search-dropdown-mobile"></div>
+    </div><main class="main">
+                <div class="container"><div class="toc" id="toc-auto">
+            <h2 class="toc-title">Contents</h2>
+            <div class="toc-content" id="toc-content-auto"></div>
+        </div><article class="page single"><h1 class="single-title animate__animated animate__flipInX">用CrewAI构建多智能体协作系统：让多个Agent协同完成复杂任务</h1><div class="post-meta">
+            <div class="post-meta-line"><span class="post-author"><a href="https://www.ithome.me/" title="Author" target="_blank" rel="noopener noreferrer author" class="author"><i class="fas fa-user-circle fa-fw" aria-hidden="true"></i>Simon Chen</a>
+</span></div>
+            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw" aria-hidden="true"></i>&nbsp;<time datetime="2026-06-15">2026-06-15</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden="true"></i>&nbsp;3441 words&nbsp;
+                <i class="far fa-clock fa-fw" aria-hidden="true"></i>&nbsp;7 minutes&nbsp;</div>
+        </div><div class="details toc" id="toc-static"  data-kept="true">
+                <div class="details-summary toc-title">
+                    <span>Contents</span>
+                    <span><i class="details-icon fas fa-angle-right" aria-hidden="true"></i></span>
+                </div>
+                <div class="details-content toc-content" id="toc-content-static"><nav id="TableOfContents">
+  <ul>
+    <li><a href="#为什么需要多智能体">为什么需要多智能体？</a></li>
+    <li><a href="#crewai像组建团队一样搭建agent">CrewAI：像组建团队一样搭建Agent</a></li>
+    <li><a href="#安装与配置">安装与配置</a></li>
+    <li><a href="#实战搭建一个技术文章写作团队">实战：搭建一个技术文章写作团队</a>
+      <ul>
+        <li><a href="#第一步定义agent角色">第一步：定义Agent（角色）</a></li>
+        <li><a href="#第二步定义task任务">第二步：定义Task（任务）</a></li>
+        <li><a href="#第三步组建crew并执行">第三步：组建Crew并执行</a></li>
+      </ul>
+    </li>
+    <li><a href="#执行流程">执行流程</a></li>
+    <li><a href="#进阶技巧">进阶技巧</a>
+      <ul>
+        <li><a href="#1-并行执行层级模式">1. 并行执行（层级模式）</a></li>
+        <li><a href="#2-自定义工具">2. 自定义工具</a></li>
+        <li><a href="#3-记忆共享">3. 记忆共享</a></li>
+        <li><a href="#4-输出为文件">4. 输出为文件</a></li>
+      </ul>
+    </li>
+    <li><a href="#成本与性能">成本与性能</a></li>
+    <li><a href="#踩坑记录">踩坑记录</a></li>
+    <li><a href="#总结">总结</a></li>
+  </ul>
+</nav></div>
+            </div><div class="content" id="content"><h2 id="为什么需要多智能体">为什么需要多智能体？</h2>
+<p>一个Agent能回答问题、调用工具，但面对复杂任务时力不从心：</p>
+<ul>
+<li><strong>写一篇深度技术文章</strong>：需要调研、写大纲、写正文、审校</li>
+<li><strong>做竞品分析</strong>：需要搜集数据、分析对比、生成报告</li>
+<li><strong>开发一个小项目</strong>：需要设计架构、写代码、测试</li>
+</ul>
+<p>这些任务拆分给<strong>多个专业Agent</strong>协作，效果远好于让一个Agent包揽一切。这就是多智能体系统（Multi-Agent System）的核心思想。</p>
+<h2 id="crewai像组建团队一样搭建agent">CrewAI：像组建团队一样搭建Agent</h2>
+<p>CrewAI的隐喻非常直觉——<strong>Agent就是员工，Task就是任务，Crew就是团队</strong>。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">┌─────────────────────────────────────────┐
+</span></span><span class="line"><span class="cl">│                 Crew                     │
+</span></span><span class="line"><span class="cl">│                                         │
+</span></span><span class="line"><span class="cl">│  ┌─────────┐  ┌─────────┐  ┌─────────┐│
+</span></span><span class="line"><span class="cl">│  │ 研究员   │  │ 写手    │  │ 编辑    ││
+</span></span><span class="line"><span class="cl">│  │ Agent   │  │ Agent   │  │ Agent   ││
+</span></span><span class="line"><span class="cl">│  └────┬────┘  └────┬────┘  └────┬────┘│
+</span></span><span class="line"><span class="cl">│       │            │            │       │
+</span></span><span class="line"><span class="cl">│  ┌────▼────┐  ┌────▼────┐  ┌───▼─────┐│
+</span></span><span class="line"><span class="cl">│  │调研任务  │  │写作任务  │  │审校任务  ││
+</span></span><span class="line"><span class="cl">│  └─────────┘  └─────────┘  └─────────┘│
+</span></span><span class="line"><span class="cl">└─────────────────────────────────────────┘
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h2 id="安装与配置">安装与配置</h2>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">pip install crewai crewai-tools
+</span></span></code></pre></td></tr></table>
+</div>
+</div><div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">os</span>
+</span></span><span class="line"><span class="cl"><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">&#34;OPENAI_API_KEY&#34;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&#34;your-api-key&#34;</span>
+</span></span><span class="line"><span class="cl"><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">&#34;OPENAI_API_BASE&#34;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&#34;http://localhost:18090/v1&#34;</span>  <span class="c1"># 自定义代理</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h2 id="实战搭建一个技术文章写作团队">实战：搭建一个技术文章写作团队</h2>
+<h3 id="第一步定义agent角色">第一步：定义Agent（角色）</h3>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span><span class="lnt">42
+</span><span class="lnt">43
+</span><span class="lnt">44
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">crewai</span> <span class="kn">import</span> <span class="n">Agent</span><span class="p">,</span> <span class="n">Task</span><span class="p">,</span> <span class="n">Crew</span><span class="p">,</span> <span class="n">Process</span>
+</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">crewai_tools</span> <span class="kn">import</span> <span class="n">SerperDevTool</span>  <span class="c1"># 搜索工具</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># Agent 1：技术调研员</span>
+</span></span><span class="line"><span class="cl"><span class="n">researcher</span> <span class="o">=</span> <span class="n">Agent</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">    <span class="n">role</span><span class="o">=</span><span class="s2">&#34;技术调研员&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="n">goal</span><span class="o">=</span><span class="s2">&#34;深入调研指定技术主题，收集最新的资料、案例和数据&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="n">backstory</span><span class="o">=</span><span class="s2">&#34;&#34;&#34;你是一位资深技术调研员，擅长从互联网搜集高质量技术资料。
+</span></span></span><span class="line"><span class="cl"><span class="s2">    你会关注最新的技术趋势、GitHub项目、论文和博客文章。
+</span></span></span><span class="line"><span class="cl"><span class="s2">    你擅长区分一手资料和二手资料，确保信息的准确性。&#34;&#34;&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="n">allow_delegation</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="n">tools</span><span class="o">=</span><span class="p">[</span><span class="n">SerperDevTool</span><span class="p">()],</span>  <span class="c1"># 搜索工具</span>
+</span></span><span class="line"><span class="cl">    <span class="n">llm</span><span class="o">=</span><span class="s2">&#34;gpt-5.4&#34;</span>  <span class="c1"># 可指定不同模型</span>
+</span></span><span class="line"><span class="cl"><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># Agent 2：技术写手</span>
+</span></span><span class="line"><span class="cl"><span class="n">writer</span> <span class="o">=</span> <span class="n">Agent</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">    <span class="n">role</span><span class="o">=</span><span class="s2">&#34;技术写手&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="n">goal</span><span class="o">=</span><span class="s2">&#34;基于调研资料，撰写清晰、有深度、有代码示例的技术文章&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="n">backstory</span><span class="o">=</span><span class="s2">&#34;&#34;&#34;你是一位经验丰富的技术博主，擅长将复杂的技术概念用通俗易懂的语言解释清楚。
+</span></span></span><span class="line"><span class="cl"><span class="s2">    你的文章特点：
+</span></span></span><span class="line"><span class="cl"><span class="s2">    1. 开头直入主题，不废话
+</span></span></span><span class="line"><span class="cl"><span class="s2">    2. 大量使用代码示例和图表
+</span></span></span><span class="line"><span class="cl"><span class="s2">    3. 包含实际踩坑经验和最佳实践
+</span></span></span><span class="line"><span class="cl"><span class="s2">    4. 结尾有总结和延伸阅读&#34;&#34;&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="n">allow_delegation</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="n">llm</span><span class="o">=</span><span class="s2">&#34;gpt-5.4&#34;</span>
+</span></span><span class="line"><span class="cl"><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># Agent 3：文章编辑</span>
+</span></span><span class="line"><span class="cl"><span class="n">editor</span> <span class="o">=</span> <span class="n">Agent</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">    <span class="n">role</span><span class="o">=</span><span class="s2">&#34;文章编辑&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="n">goal</span><span class="o">=</span><span class="s2">&#34;审核文章质量，检查技术准确性、逻辑连贯性和可读性&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="n">backstory</span><span class="o">=</span><span class="s2">&#34;&#34;&#34;你是一位严格的技术编辑，专注于：
+</span></span></span><span class="line"><span class="cl"><span class="s2">    1. 技术准确性——代码能否运行，概念是否正确
+</span></span></span><span class="line"><span class="cl"><span class="s2">    2. 逻辑连贯性——论证是否合理，过渡是否自然
+</span></span></span><span class="line"><span class="cl"><span class="s2">    3. 可读性——段落长度、标题层级、重点突出
+</span></span></span><span class="line"><span class="cl"><span class="s2">    4. SEO优化——标题吸引力、关键词密度、meta description&#34;&#34;&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="n">allow_delegation</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="n">llm</span><span class="o">=</span><span class="s2">&#34;gpt-5.4&#34;</span>
+</span></span><span class="line"><span class="cl"><span class="p">)</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h3 id="第二步定义task任务">第二步：定义Task（任务）</h3>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span><span class="lnt">42
+</span><span class="lnt">43
+</span><span class="lnt">44
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="c1"># 任务1：技术调研</span>
+</span></span><span class="line"><span class="cl"><span class="n">research_task</span> <span class="o">=</span> <span class="n">Task</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">    <span class="n">description</span><span class="o">=</span><span class="s2">&#34;&#34;&#34;深入调研&#34;AI Agent记忆系统&#34;这个主题：
+</span></span></span><span class="line"><span class="cl"><span class="s2">    1. 什么是Agent记忆系统？有哪些类型（短期/长期/工作记忆）？
+</span></span></span><span class="line"><span class="cl"><span class="s2">    2. 主流实现方案有哪些？（向量数据库、知识图谱、KV存储等）
+</span></span></span><span class="line"><span class="cl"><span class="s2">    3. 有哪些开源项目实现了Agent记忆？（如Mem0、Zep等）
+</span></span></span><span class="line"><span class="cl"><span class="s2">    4. 实际应用中的最佳实践和常见陷阱
+</span></span></span><span class="line"><span class="cl"><span class="s2">    
+</span></span></span><span class="line"><span class="cl"><span class="s2">    请输出结构化的调研报告，包含关键信息和参考链接。&#34;&#34;&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="n">expected_output</span><span class="o">=</span><span class="s2">&#34;一份结构化的调研报告，包含技术概述、方案对比、开源项目推荐和最佳实践&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="n">agent</span><span class="o">=</span><span class="n">researcher</span>
+</span></span><span class="line"><span class="cl"><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 任务2：技术写作</span>
+</span></span><span class="line"><span class="cl"><span class="n">writing_task</span> <span class="o">=</span> <span class="n">Task</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">    <span class="n">description</span><span class="o">=</span><span class="s2">&#34;&#34;&#34;基于调研报告，撰写一篇1500-3000字的技术博客文章：
+</span></span></span><span class="line"><span class="cl"><span class="s2">    
+</span></span></span><span class="line"><span class="cl"><span class="s2">    要求：
+</span></span></span><span class="line"><span class="cl"><span class="s2">    - 标题吸引人，包含关键词
+</span></span></span><span class="line"><span class="cl"><span class="s2">    - 开头用一个具体场景引入
+</span></span></span><span class="line"><span class="cl"><span class="s2">    - 包含完整的Python代码示例
+</span></span></span><span class="line"><span class="cl"><span class="s2">    - 对比不同方案的优劣
+</span></span></span><span class="line"><span class="cl"><span class="s2">    - 包含踩坑记录
+</span></span></span><span class="line"><span class="cl"><span class="s2">    - 用Markdown格式输出
+</span></span></span><span class="line"><span class="cl"><span class="s2">    
+</span></span></span><span class="line"><span class="cl"><span class="s2">    风格：实战导向，面向有一定Python基础的开发者&#34;&#34;&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="n">expected_output</span><span class="o">=</span><span class="s2">&#34;一篇完整的Markdown格式技术博客文章&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="n">agent</span><span class="o">=</span><span class="n">writer</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="n">context</span><span class="o">=</span><span class="p">[</span><span class="n">research_task</span><span class="p">]</span>  <span class="c1"># 依赖调研任务的结果</span>
+</span></span><span class="line"><span class="cl"><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 任务3：文章审校</span>
+</span></span><span class="line"><span class="cl"><span class="n">review_task</span> <span class="o">=</span> <span class="n">Task</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">    <span class="n">description</span><span class="o">=</span><span class="s2">&#34;&#34;&#34;审校技术文章，输出修改意见：
+</span></span></span><span class="line"><span class="cl"><span class="s2">    1. 技术准确性：代码能否运行？概念是否正确？
+</span></span></span><span class="line"><span class="cl"><span class="s2">    2. 逻辑连贯性：论证是否合理？
+</span></span></span><span class="line"><span class="cl"><span class="s2">    3. 可读性：段落过长？重点不突出？
+</span></span></span><span class="line"><span class="cl"><span class="s2">    4. 如果文章质量合格，直接输出&#34;审核通过&#34;并给出最终版本
+</span></span></span><span class="line"><span class="cl"><span class="s2">    
+</span></span></span><span class="line"><span class="cl"><span class="s2">    请直接给出修改后的最终版本。&#34;&#34;&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="n">expected_output</span><span class="o">=</span><span class="s2">&#34;修改意见列表，或修改后的最终文章&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="n">agent</span><span class="o">=</span><span class="n">editor</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="n">context</span><span class="o">=</span><span class="p">[</span><span class="n">writing_task</span><span class="p">,</span> <span class="n">research_task</span><span class="p">]</span>  <span class="c1"># 依赖写作和调研结果</span>
+</span></span><span class="line"><span class="cl"><span class="p">)</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h3 id="第三步组建crew并执行">第三步：组建Crew并执行</h3>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="c1"># 组建团队</span>
+</span></span><span class="line"><span class="cl"><span class="n">crew</span> <span class="o">=</span> <span class="n">Crew</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">    <span class="n">agents</span><span class="o">=</span><span class="p">[</span><span class="n">researcher</span><span class="p">,</span> <span class="n">writer</span><span class="p">,</span> <span class="n">editor</span><span class="p">],</span>
+</span></span><span class="line"><span class="cl">    <span class="n">tasks</span><span class="o">=</span><span class="p">[</span><span class="n">research_task</span><span class="p">,</span> <span class="n">writing_task</span><span class="p">,</span> <span class="n">review_task</span><span class="p">],</span>
+</span></span><span class="line"><span class="cl">    <span class="n">process</span><span class="o">=</span><span class="n">Process</span><span class="o">.</span><span class="n">sequential</span><span class="p">,</span>  <span class="c1"># 按顺序执行</span>
+</span></span><span class="line"><span class="cl">    <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span>
+</span></span><span class="line"><span class="cl"><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 开始工作</span>
+</span></span><span class="line"><span class="cl"><span class="n">result</span> <span class="o">=</span> <span class="n">crew</span><span class="o">.</span><span class="n">kickoff</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="s2">&#34;=&#34;</span> <span class="o">*</span> <span class="mi">50</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="s2">&#34;最终输出:&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h2 id="执行流程">执行流程</h2>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">[2026-06-15 10:00:00] Crew 启动
+</span></span><span class="line"><span class="cl">  ├─ 📋 研究任务分配给 → 技术调研员
+</span></span><span class="line"><span class="cl">  │   ├─ 🔍 搜索: &#34;AI Agent memory system 2026&#34;
+</span></span><span class="line"><span class="cl">  │   ├─ 🔍 搜索: &#34;Mem0 Zep agent memory comparison&#34;
+</span></span><span class="line"><span class="cl">  │   └─ ✅ 输出调研报告
+</span></span><span class="line"><span class="cl">  │
+</span></span><span class="line"><span class="cl">  ├─ 📋 写作任务分配给 → 技术写手
+</span></span><span class="line"><span class="cl">  │   ├─ 📖 阅读调研报告
+</span></span><span class="line"><span class="cl">  │   ├─ ✍️ 撰写文章初稿
+</span></span><span class="line"><span class="cl">  │   └─ ✅ 输出Markdown文章
+</span></span><span class="line"><span class="cl">  │
+</span></span><span class="line"><span class="cl">  └─ 📋 审校任务分配给 → 文章编辑
+</span></span><span class="line"><span class="cl">      ├─ 🔍 检查技术准确性
+</span></span><span class="line"><span class="cl">      ├─ ✏️ 修改并优化
+</span></span><span class="line"><span class="cl">      └─ ✅ 输出最终版本
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h2 id="进阶技巧">进阶技巧</h2>
+<h3 id="1-并行执行层级模式">1. 并行执行（层级模式）</h3>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">crewai</span> <span class="kn">import</span> <span class="n">Process</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 层级模式：Manager Agent自动分配任务</span>
+</span></span><span class="line"><span class="cl"><span class="n">crew</span> <span class="o">=</span> <span class="n">Crew</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">    <span class="n">agents</span><span class="o">=</span><span class="p">[</span><span class="n">researcher</span><span class="p">,</span> <span class="n">writer</span><span class="p">,</span> <span class="n">editor</span><span class="p">],</span>
+</span></span><span class="line"><span class="cl">    <span class="n">tasks</span><span class="o">=</span><span class="p">[</span><span class="n">research_task</span><span class="p">,</span> <span class="n">writing_task</span><span class="p">,</span> <span class="n">review_task</span><span class="p">],</span>
+</span></span><span class="line"><span class="cl">    <span class="n">process</span><span class="o">=</span><span class="n">Process</span><span class="o">.</span><span class="n">hierarchical</span><span class="p">,</span>  <span class="c1"># 层级管理</span>
+</span></span><span class="line"><span class="cl">    <span class="n">manager_llm</span><span class="o">=</span><span class="s2">&#34;gpt-5.4&#34;</span><span class="p">,</span>          <span class="c1"># Manager用的模型</span>
+</span></span><span class="line"><span class="cl">    <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span>
+</span></span><span class="line"><span class="cl"><span class="p">)</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h3 id="2-自定义工具">2. 自定义工具</h3>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">crewai.tools</span> <span class="kn">import</span> <span class="n">BaseTool</span>
+</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">pydantic</span> <span class="kn">import</span> <span class="n">BaseModel</span><span class="p">,</span> <span class="n">Field</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">class</span> <span class="nc">CodeRunnerInput</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">    <span class="n">code</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s2">&#34;要执行的Python代码&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">class</span> <span class="nc">CodeRunnerTool</span><span class="p">(</span><span class="n">BaseTool</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&#34;code_runner&#34;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">description</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&#34;执行Python代码并返回结果&#34;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">args_schema</span><span class="p">:</span> <span class="nb">type</span><span class="p">[</span><span class="n">BaseModel</span><span class="p">]</span> <span class="o">=</span> <span class="n">CodeRunnerInput</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">def</span> <span class="nf">_run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">code</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="s2">&#34;&#34;&#34;安全执行代码&#34;&#34;&#34;</span>
+</span></span><span class="line"><span class="cl">        <span class="kn">import</span> <span class="nn">subprocess</span>
+</span></span><span class="line"><span class="cl">        <span class="n">result</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">            <span class="p">[</span><span class="s2">&#34;python&#34;</span><span class="p">,</span> <span class="s2">&#34;-c&#34;</span><span class="p">,</span> <span class="n">code</span><span class="p">],</span>
+</span></span><span class="line"><span class="cl">            <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">30</span>
+</span></span><span class="line"><span class="cl">        <span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">returncode</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">            <span class="k">return</span> <span class="n">result</span><span class="o">.</span><span class="n">stdout</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="sa">f</span><span class="s2">&#34;执行错误: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">stderr</span><span class="si">}</span><span class="s2">&#34;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 注册到Agent</span>
+</span></span><span class="line"><span class="cl"><span class="n">writer_with_tools</span> <span class="o">=</span> <span class="n">Agent</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">    <span class="n">role</span><span class="o">=</span><span class="s2">&#34;技术写手&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="n">goal</span><span class="o">=</span><span class="s2">&#34;撰写可运行的代码示例&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="n">backstory</span><span class="o">=</span><span class="s2">&#34;...&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="n">tools</span><span class="o">=</span><span class="p">[</span><span class="n">CodeRunnerTool</span><span class="p">()]</span>  <span class="c1"># 可以验证代码</span>
+</span></span><span class="line"><span class="cl"><span class="p">)</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h3 id="3-记忆共享">3. 记忆共享</h3>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">crewai</span> <span class="kn">import</span> <span class="n">Crew</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># Crew级别共享记忆</span>
+</span></span><span class="line"><span class="cl"><span class="n">crew</span> <span class="o">=</span> <span class="n">Crew</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">    <span class="n">agents</span><span class="o">=</span><span class="p">[</span><span class="n">researcher</span><span class="p">,</span> <span class="n">writer</span><span class="p">,</span> <span class="n">editor</span><span class="p">],</span>
+</span></span><span class="line"><span class="cl">    <span class="n">tasks</span><span class="o">=</span><span class="p">[</span><span class="n">research_task</span><span class="p">,</span> <span class="n">writing_task</span><span class="p">,</span> <span class="n">review_task</span><span class="p">],</span>
+</span></span><span class="line"><span class="cl">    <span class="n">memory</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>  <span class="c1"># 启用共享记忆</span>
+</span></span><span class="line"><span class="cl">    <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span>
+</span></span><span class="line"><span class="cl"><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># Agent之间可以共享发现</span>
+</span></span><span class="line"><span class="cl"><span class="c1"># Researcher发现的资料会自动传递给Writer</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h3 id="4-输出为文件">4. 输出为文件</h3>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="c1"># 保存结果到文件</span>
+</span></span><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">datetime</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">result</span> <span class="o">=</span> <span class="n">crew</span><span class="o">.</span><span class="n">kickoff</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">output_path</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&#34;/opt/data/output/article_</span><span class="si">{</span><span class="n">datetime</span><span class="o">.</span><span class="n">date</span><span class="o">.</span><span class="n">today</span><span class="p">()</span><span class="si">}</span><span class="s2">.md&#34;</span>
+</span></span><span class="line"><span class="cl"><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">output_path</span><span class="p">,</span> <span class="s2">&#34;w&#34;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">result</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&#34;文章已保存到: </span><span class="si">{</span><span class="n">output_path</span><span class="si">}</span><span class="s2">&#34;</span><span class="p">)</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h2 id="成本与性能">成本与性能</h2>
+<table>
+<thead>
+<tr>
+<th>配置</th>
+<th>预估Token消耗</th>
+<th>执行时间</th>
+<th>质量</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>全用gpt-5.4</td>
+<td>~15000 tokens</td>
+<td>3-5分钟</td>
+<td>⭐⭐⭐⭐⭐</td>
+</tr>
+<tr>
+<td>混合(gpt-5.4+mini)</td>
+<td>~8000 tokens</td>
+<td>2-4分钟</td>
+<td>⭐⭐⭐⭐</td>
+</tr>
+<tr>
+<td>全用gpt-5.4-mini</td>
+<td>~5000 tokens</td>
+<td>1-3分钟</td>
+<td>⭐⭐⭐</td>
+</tr>
+</tbody>
+</table>
+<p><strong>建议</strong>：调研和审校用强模型（gpt-5.4），写作用中等模型（gpt-5.4-mini），平衡质量和成本。</p>
+<h2 id="踩坑记录">踩坑记录</h2>
+<p><strong>1. Agent互相委派死循环</strong></p>
+<p><code>allow_delegation=True</code>时，Agent可能把任务踢回给对方。小团队建议设为<code>False</code>，用<code>Process.sequential</code>控制执行顺序。</p>
+<p><strong>2. 上下文太长</strong></p>
+<p>3个Agent的输出累积后，context可能超过模型上下文窗口。解决：每个Task的<code>expected_output</code>尽量精简，或用更强的长上下文模型。</p>
+<p><strong>3. 调试困难</strong></p>
+<p>多Agent系统的调试比单Agent难得多。建议开启<code>verbose=True</code>，并在每个Agent的<code>backstory</code>中明确输出格式要求。</p>
+<h2 id="总结">总结</h2>
+<p>多智能体系统的核心价值是<strong>专业化分工</strong>。就像一个创业团队不会让CEO一个人干所有事，AI系统也不应该让一个Agent包揽一切。</p>
+<p>CrewAI的&quot;员工-任务-团队&quot;隐喻降低了理解门槛，但本质是三个核心概念：</p>
+<ul>
+<li><strong>Agent</strong>：角色定义（我是谁、擅长什么）</li>
+<li><strong>Task</strong>：任务描述（要做什么、输出什么格式）</li>
+<li><strong>Process</strong>：协作方式（顺序、层级、并行）</li>
+</ul>
+<p>掌握了这三点，你就能搭建出真正能干活的AI团队。</p>
+</div><div class="post-footer" id="post-footer">
+    <div class="post-info">
+        <div class="post-info-line">
+            <div class="post-info-mod">
+                <span>Updated on 2026-06-15</span>
+            </div></div>
+        <div class="post-info-line">
+            <div class="post-info-md"></div>
+            <div class="post-info-share">
+                <span><a href="javascript:void(0);" title="Share on Twitter" data-sharer="twitter" data-url="https://www.ithome.me/post/2026/06/15/%E7%94%A8crewai%E6%9E%84%E5%BB%BA%E5%A4%9A%E6%99%BA%E8%83%BD%E4%BD%93%E5%8D%8F%E4%BD%9C%E7%B3%BB%E7%BB%9F%E8%AE%A9%E5%A4%9A%E4%B8%AAagent%E5%8D%8F%E5%90%8C%E5%AE%8C%E6%88%90%E5%A4%8D%E6%9D%82%E4%BB%BB%E5%8A%A1/" data-title="用CrewAI构建多智能体协作系统：让多个Agent协同完成复杂任务" data-via="ChenCiki" data-hashtags="AI Agent,CrewAI,多智能体,LLM,协作"><i class="fab fa-twitter fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on Linkedin" data-sharer="linkedin" data-url="https://www.ithome.me/post/2026/06/15/%E7%94%A8crewai%E6%9E%84%E5%BB%BA%E5%A4%9A%E6%99%BA%E8%83%BD%E4%BD%93%E5%8D%8F%E4%BD%9C%E7%B3%BB%E7%BB%9F%E8%AE%A9%E5%A4%9A%E4%B8%AAagent%E5%8D%8F%E5%90%8C%E5%AE%8C%E6%88%90%E5%A4%8D%E6%9D%82%E4%BB%BB%E5%8A%A1/"><i class="fab fa-linkedin fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on 微博" data-sharer="weibo" data-url="https://www.ithome.me/post/2026/06/15/%E7%94%A8crewai%E6%9E%84%E5%BB%BA%E5%A4%9A%E6%99%BA%E8%83%BD%E4%BD%93%E5%8D%8F%E4%BD%9C%E7%B3%BB%E7%BB%9F%E8%AE%A9%E5%A4%9A%E4%B8%AAagent%E5%8D%8F%E5%90%8C%E5%AE%8C%E6%88%90%E5%A4%8D%E6%9D%82%E4%BB%BB%E5%8A%A1/" data-title="用CrewAI构建多智能体协作系统：让多个Agent协同完成复杂任务" data-ralateuid="xxx"><i class="fab fa-weibo fa-fw" aria-hidden="true"></i></a></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="post-info-more">
+        <section class="post-tags"><i class="fas fa-tags fa-fw" aria-hidden="true"></i>&nbsp;<a href="/tags/ai-agent/">AI Agent</a>,&nbsp;<a href="/tags/crewai/">CrewAI</a>,&nbsp;<a href="/tags/%E5%A4%9A%E6%99%BA%E8%83%BD%E4%BD%93/">多智能体</a>,&nbsp;<a href="/tags/llm/">LLM</a>,&nbsp;<a href="/tags/%E5%8D%8F%E4%BD%9C/">协作</a></section>
+        <section>
+            <span><a href="javascript:void(0);" onclick="window.history.back();">Back</a></span>&nbsp;|&nbsp;<span><a href="/">Home</a></span>
+        </section>
+    </div>
+
+    <div class="post-nav"><a href="/post/2026/06/15/%E7%94%A8kotlin-jetpack-compose%E6%89%93%E9%80%A0%E6%87%82%E9%B8%9Fappandroid%E5%8E%9F%E7%94%9F%E8%A7%82%E9%B8%9F%E5%8A%A9%E6%89%8B%E5%AE%8C%E6%95%B4%E5%BC%80%E5%8F%91%E6%8C%87%E5%8D%97/" class="prev" rel="prev" title="用Kotlin&#43;Jetpack Compose打造懂鸟App：Android原生观鸟助手完整开发指南"><i class="fas fa-angle-left fa-fw" aria-hidden="true"></i>用Kotlin&#43;Jetpack Compose打造懂鸟App：Android原生观鸟助手完整开发指南</a>
+            <a href="/post/2026/06/15/%E6%89%93%E9%80%A0%E9%B8%9F%E7%B1%BB%E8%AF%86%E5%88%AB%E6%99%BA%E8%83%BD%E4%BD%93%E7%94%A8%E5%A4%9A%E6%A8%A1%E6%80%81ai%E8%AE%A9%E6%89%8B%E6%9C%BA%E5%8F%98%E6%88%90%E8%A7%82%E9%B8%9F%E5%8A%A9%E6%89%8B/" class="next" rel="next" title="打造鸟类识别智能体：用多模态AI让手机变成观鸟助手">打造鸟类识别智能体：用多模态AI让手机变成观鸟助手<i class="fas fa-angle-right fa-fw" aria-hidden="true"></i></a></div>
+</div>
+<div id="comments"><div id="gitalk" class="comment"></div><noscript>
+                Please enable JavaScript to view the comments powered by <a href="https://github.com/gitalk/gitalk"></a>Gitalk</a>.
+            </noscript></div></article></div>
+            </main><footer class="footer">
+        <div class="footer-container"><div class="footer-line" itemscope itemtype="http://schema.org/CreativeWork"><i class="far fa-copyright fa-fw" aria-hidden="true"></i><span itemprop="copyrightYear">2011 - 2026</span><span class="author" itemprop="copyrightHolder">&nbsp;<a href="https://www.ithome.me/" target="_blank">Simon Chen</a></span>&nbsp;|&nbsp;<span class="license"><a rel="license external nofollow noopener noreferrer" href="https://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank">CC BY-NC-ND 4.0</a></span></div>
+        </div>
+    </footer></div>
+
+        <div id="fixed-buttons"><a href="#" id="back-to-top" class="fixed-button" title="Back to Top">
+                <i class="fas fa-arrow-up fa-fw" aria-hidden="true"></i>
+            </a><a href="#" id="view-comments" class="fixed-button" title="View Comments">
+                <i class="fas fa-comment fa-fw" aria-hidden="true"></i>
+            </a>
+        </div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1.8.0/dist/gitalk.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/css/lightgallery-bundle.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/katex.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/copy-tex.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.css"><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/gitalk@1.8.0/dist/gitalk.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/autocomplete.js@0.38.1/dist/autocomplete.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lunr@2.3.9/lunr.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lazysizes@5.3.1/lazysizes.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/lightgallery.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/plugins/thumbnail/lg-thumbnail.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/plugins/zoom/lg-zoom.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/clipboard@2.0.11/dist/clipboard.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/sharer.js@0.5.1/sharer.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/katex.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/auto-render.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/copy-tex.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/mhchem.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.js"></script><script type="text/javascript">window.config={"code":{"copyTitle":"Copy to clipboard","maxShownLines":50},"comment":{"gitalk":{"admin":["cikichen"],"clientID":"be0f52370ed1285b6c7c","clientSecret":"734a7d8d0ded346ca7a3d565d57de3f8eeb2850b","id":"2026-06-15T08:00:00+08:00","owner":"cikichen","repo":"gitalk","title":"用CrewAI构建多智能体协作系统：让多个Agent协同完成复杂任务"}},"cookieconsent":{"content":{"dismiss":"我知道了","link":"了解更多","message":"本网站使用 Cookies 来改善您的浏览体验."},"enable":true,"palette":{"button":{"background":"#f0f0f0"},"popup":{"background":"#1aa3ff"}},"theme":"edgeless"},"lightgallery":true,"math":{"delimiters":[{"display":true,"left":"$$","right":"$$"},{"display":true,"left":"\\[","right":"\\]"},{"display":true,"left":"\\begin{equation}","right":"\\end{equation}"},{"display":true,"left":"\\begin{equation*}","right":"\\end{equation*}"},{"display":true,"left":"\\begin{align}","right":"\\end{align}"},{"display":true,"left":"\\begin{align*}","right":"\\end{align*}"},{"display":true,"left":"\\begin{alignat}","right":"\\end{alignat}"},{"display":true,"left":"\\begin{alignat*}","right":"\\end{alignat*}"},{"display":true,"left":"\\begin{gather}","right":"\\end{gather}"},{"display":true,"left":"\\begin{CD}","right":"\\end{CD}"},{"display":false,"left":"$","right":"$"},{"display":false,"left":"\\(","right":"\\)"}],"strict":false},"search":{"highlightTag":"em","lunrIndexURL":"/index.json","maxResultLength":10,"noResultsFound":"No results found","snippetLength":50,"type":"lunr"}};</script><script type="text/javascript" src="/js/theme.min.js"></script></body>
+</html>

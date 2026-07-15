@@ -1,0 +1,1359 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="robots" content="noodp" />
+        <title>提示工程进阶：为智能体设计高效Prompt - 编程心语</title><meta name="Description" content="System Prompt设计、思维链、结构化输出等提示工程技术在智能体开发中的实战应用"><meta property="og:url" content="https://www.ithome.me/post/2026/07/05/ai%E6%99%BA%E8%83%BD%E4%BD%93%E5%BC%80%E5%8F%91-%E7%AC%AC4%E7%AB%A0-%E6%8F%90%E7%A4%BA%E5%B7%A5%E7%A8%8B%E8%BF%9B%E9%98%B6/">
+  <meta property="og:site_name" content="编程心语">
+  <meta property="og:title" content="提示工程进阶：为智能体设计高效Prompt">
+  <meta property="og:description" content="System Prompt设计、思维链、结构化输出等提示工程技术在智能体开发中的实战应用">
+  <meta property="og:locale" content="zh_CN">
+  <meta property="og:type" content="article">
+    <meta property="article:section" content="posts">
+    <meta property="article:published_time" content="2026-07-05T08:00:00+08:00">
+    <meta property="article:modified_time" content="2026-07-05T08:00:00+08:00">
+    <meta property="article:tag" content="AI Agent">
+    <meta property="article:tag" content="Prompt Engineering">
+    <meta property="article:tag" content="提示工程">
+    <meta property="article:tag" content="LLM">
+    <meta property="article:tag" content="AI智能体开发实战">
+
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="提示工程进阶：为智能体设计高效Prompt">
+  <meta name="twitter:description" content="System Prompt设计、思维链、结构化输出等提示工程技术在智能体开发中的实战应用">
+      <meta name="twitter:site" content="@ChenCiki">
+<meta name="application-name" content="编程心语">
+<meta name="apple-mobile-web-app-title" content="编程心语"><meta name="theme-color" content="#ffffff"><meta name="msapplication-TileColor" content="#da532c"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5"><link rel="manifest" href="/site.webmanifest"><link rel="canonical" href="https://www.ithome.me/post/2026/07/05/ai%E6%99%BA%E8%83%BD%E4%BD%93%E5%BC%80%E5%8F%91-%E7%AC%AC4%E7%AB%A0-%E6%8F%90%E7%A4%BA%E5%B7%A5%E7%A8%8B%E8%BF%9B%E9%98%B6/" /><link rel="prev" href="https://www.ithome.me/post/2026/07/05/ai%E6%99%BA%E8%83%BD%E4%BD%93%E5%BC%80%E5%8F%91-%E7%AC%AC1%E7%AB%A0-%E6%99%BA%E8%83%BD%E4%BD%93%E6%97%B6%E4%BB%A3/" /><link rel="next" href="https://www.ithome.me/post/2026/07/05/ai%E6%99%BA%E8%83%BD%E4%BD%93%E5%BC%80%E5%8F%91-%E7%AC%AC6%E7%AB%A0-%E6%8E%A8%E7%90%86%E6%A8%A1%E5%BC%8F/" /><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/normalize.css@8.0.1/normalize.min.css"><link rel="stylesheet" href="/css/style.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css"><script type="application/ld+json">
+    {
+        "@context": "http://schema.org",
+        "@type": "BlogPosting",
+        "headline": "提示工程进阶：为智能体设计高效Prompt",
+        "inLanguage": "zh-CN",
+        "mainEntityOfPage": {
+            "@type": "WebPage",
+            "@id": "https:\/\/www.ithome.me\/post\/2026\/07\/05\/ai%E6%99%BA%E8%83%BD%E4%BD%93%E5%BC%80%E5%8F%91-%E7%AC%AC4%E7%AB%A0-%E6%8F%90%E7%A4%BA%E5%B7%A5%E7%A8%8B%E8%BF%9B%E9%98%B6\/"
+        },"image": ["https:\/\/www.ithome.me\/cover.png"],"genre": "posts","keywords": "AI Agent, Prompt Engineering, 提示工程, LLM, AI智能体开发实战","wordcount":  12891 ,
+        "url": "https:\/\/www.ithome.me\/post\/2026\/07\/05\/ai%E6%99%BA%E8%83%BD%E4%BD%93%E5%BC%80%E5%8F%91-%E7%AC%AC4%E7%AB%A0-%E6%8F%90%E7%A4%BA%E5%B7%A5%E7%A8%8B%E8%BF%9B%E9%98%B6\/","datePublished": "2026-07-05T08:00:00+08:00","dateModified": "2026-07-05T08:00:00+08:00","publisher": {
+            "@type": "Organization",
+            "name": "SimonChen","logo": "https:\/\/www.ithome.me\/logo.png"},"author": {
+                "@type": "Person",
+                "name": "Simon"
+            },"description": "System Prompt设计、思维链、结构化输出等提示工程技术在智能体开发中的实战应用"
+    }
+    </script><script async src="https://www.googletagmanager.com/gtag/js?id=G-H1Q5563VR8"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-H1Q5563VR8', { 'anonymize_ip': true });
+</script></head>
+    <body data-header-desktop="fixed" data-header-mobile="auto"><script type="text/javascript">(window.localStorage && localStorage.getItem('theme') ? localStorage.getItem('theme') === 'dark' : ('auto' === 'auto' ? window.matchMedia('(prefers-color-scheme: dark)').matches : 'auto' === 'dark')) && document.body.setAttribute('theme', 'dark');</script>
+
+        <div id="mask"></div><div class="wrapper"><header class="desktop" id="header-desktop">
+    <div class="header-wrapper">
+        <div class="header-title">
+            <a href="/" title="编程心语">编程心语</a>
+        </div>
+        <div class="menu">
+            <div class="menu-inner"><a class="menu-item" href="/posts/"> 文章 </a><a class="menu-item" href="/categories/"> 分类 </a><a class="menu-item" href="/tags/"> 标签 </a><a class="menu-item" href="/about-me/"> 关于 </a><span class="menu-item delimiter"></span><span class="menu-item search" id="search-desktop">
+                        <input type="text" placeholder="搜索文章..." id="search-input-desktop">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-desktop" title="Search">
+                            <i class="fas fa-search fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-desktop" title="Clear">
+                            <i class="fas fa-times-circle fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-desktop">
+                            <i class="fas fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+                        </span>
+                    </span><a href="javascript:void(0);" class="menu-item theme-switch" title="Switch Theme">
+                    <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</header><header class="mobile" id="header-mobile">
+    <div class="header-container">
+        <div class="header-wrapper">
+            <div class="header-title">
+                <a href="/" title="编程心语">编程心语</a>
+            </div>
+            <div class="menu-toggle" id="menu-toggle-mobile">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+        <div class="menu" id="menu-mobile"><div class="search-wrapper">
+                    <div class="search mobile" id="search-mobile">
+                        <input type="text" placeholder="搜索文章..." id="search-input-mobile">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-mobile" title="Search">
+                            <i class="fas fa-search fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-mobile" title="Clear">
+                            <i class="fas fa-times-circle fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-mobile">
+                            <i class="fas fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+                        </span>
+                    </div>
+                    <a href="javascript:void(0);" class="search-cancel" id="search-cancel-mobile">
+                        Cancel
+                    </a>
+                </div><a class="menu-item" href="/posts/" title="">文章</a><a class="menu-item" href="/categories/" title="">分类</a><a class="menu-item" href="/tags/" title="">标签</a><a class="menu-item" href="/about-me/" title="">关于</a><a href="javascript:void(0);" class="menu-item theme-switch" title="Switch Theme">
+                <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
+            </a></div>
+    </div>
+</header><div class="search-dropdown desktop">
+        <div id="search-dropdown-desktop"></div>
+    </div>
+    <div class="search-dropdown mobile">
+        <div id="search-dropdown-mobile"></div>
+    </div><main class="main">
+                <div class="container"><div class="toc" id="toc-auto">
+            <h2 class="toc-title">Contents</h2>
+            <div class="toc-content" id="toc-content-auto"></div>
+        </div><article class="page single"><h1 class="single-title animate__animated animate__flipInX">提示工程进阶：为智能体设计高效Prompt</h1><div class="post-meta">
+            <div class="post-meta-line"><span class="post-author"><a href="https://www.ithome.me/" title="Author" target="_blank" rel="noopener noreferrer author" class="author"><i class="fas fa-user-circle fa-fw" aria-hidden="true"></i>Simon</a>
+</span>&nbsp;<span class="post-category">included in <a href="/categories/ai%E6%99%BA%E8%83%BD%E4%BD%93%E5%BC%80%E5%8F%91%E5%AE%9E%E6%88%98/"><i class="far fa-folder fa-fw" aria-hidden="true"></i>AI智能体开发实战</a></span></div>
+            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw" aria-hidden="true"></i>&nbsp;<time datetime="2026-07-05">2026-07-05</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden="true"></i>&nbsp;12891 words&nbsp;
+                <i class="far fa-clock fa-fw" aria-hidden="true"></i>&nbsp;26 minutes&nbsp;</div>
+        </div><div class="details toc" id="toc-static"  data-kept="true">
+                <div class="details-summary toc-title">
+                    <span>Contents</span>
+                    <span><i class="details-icon fas fa-angle-right" aria-hidden="true"></i></span>
+                </div>
+                <div class="details-content toc-content" id="toc-content-static"><nav id="TableOfContents">
+  <ul>
+    <li><a href="#41-引言prompt是智能体的灵魂指令">4.1 引言：Prompt是智能体的灵魂指令</a></li>
+    <li><a href="#42-system-prompt设计原则">4.2 System Prompt设计原则</a>
+      <ul>
+        <li><a href="#421-四要素拆解">4.2.1 四要素拆解</a></li>
+        <li><a href="#422-完整的system-prompt模板">4.2.2 完整的System Prompt模板</a></li>
+      </ul>
+    </li>
+    <li><a href="#43-few-shot-learning在agent中的应用">4.3 Few-shot Learning在Agent中的应用</a>
+      <ul>
+        <li><a href="#431-原理与适用场景">4.3.1 原理与适用场景</a></li>
+        <li><a href="#432-代码示例带few-shot的意图识别agent">4.3.2 代码示例：带Few-shot的意图识别Agent</a></li>
+      </ul>
+    </li>
+    <li><a href="#44-思维链chain-of-thought">4.4 思维链（Chain-of-Thought）</a>
+      <ul>
+        <li><a href="#441-cot原理与效果">4.4.1 CoT原理与效果</a></li>
+        <li><a href="#442-zero-shot-cot-vs-few-shot-cot">4.4.2 Zero-shot CoT vs Few-shot CoT</a></li>
+        <li><a href="#443-自一致性self-consistency">4.4.3 自一致性（Self-Consistency）</a></li>
+      </ul>
+    </li>
+    <li><a href="#45-结构化输出">4.5 结构化输出</a>
+      <ul>
+        <li><a href="#451-为什么agent需要结构化输出">4.5.1 为什么Agent需要结构化输出</a></li>
+        <li><a href="#452-openai的response_format参数">4.5.2 OpenAI的response_format参数</a></li>
+        <li><a href="#453-用pydantic定义输出schema">4.5.3 用Pydantic定义输出Schema</a></li>
+      </ul>
+    </li>
+    <li><a href="#46-react提示模板设计">4.6 ReAct提示模板设计</a>
+      <ul>
+        <li><a href="#461-thoughtactionobservation格式">4.6.1 Thought/Action/Observation格式</a></li>
+        <li><a href="#462-完整的react-prompt模板">4.6.2 完整的ReAct Prompt模板</a></li>
+      </ul>
+    </li>
+    <li><a href="#47-prompt版本管理与ab测试">4.7 Prompt版本管理与A/B测试</a>
+      <ul>
+        <li><a href="#471-为什么需要版本管理">4.7.1 为什么需要版本管理</a></li>
+        <li><a href="#472-版本管理最佳实践">4.7.2 版本管理最佳实践</a></li>
+        <li><a href="#473-简单的prompt评估框架">4.7.3 简单的Prompt评估框架</a></li>
+      </ul>
+    </li>
+    <li><a href="#48-小结">4.8 小结</a></li>
+    <li><a href="#49-预告第5章-工具调用机制">4.9 预告：第5章 工具调用机制</a></li>
+  </ul>
+</nav></div>
+            </div><div class="content" id="content"><h2 id="41-引言prompt是智能体的灵魂指令">4.1 引言：Prompt是智能体的灵魂指令</h2>
+<p>在前一章里，我们给智能体装上了&quot;大脑&quot;——LLM。但只装大脑还不够。设想一个场景：你新招了一位名校毕业生，智商很高，但你既没告诉他岗位是什么，也没给工作手册，更没说哪些事能做、哪些不能做。他第一天上班会怎样？大概率是手足无措，要么瞎猜乱做，要么啥也不干。</p>
+<p>智能体也是一样。LLM本身能力很强，但<strong>它不知道自己在这个系统里扮演什么角色、要遵守什么规矩、能调用什么工具</strong>。这一切，都需要通过Prompt（提示词）来告诉它。</p>
+<p>很多人对Prompt工程有误解，觉得就是&quot;把话说清楚&quot;。但当你真正动手做一个要稳定运行、自主决策、能调用工具的智能体时，你会立刻明白：<strong>Prompt是智能体行为的唯一控制面板</strong>。同一台GPT-5.4，配上一套粗陋的Prompt，它可能频频胡说八道、动不动拒绝任务、输出格式乱七八糟；换上一套精心打磨的Prompt，它就能稳定输出、推理准确、规规矩矩地调用工具。</p>
+<p>打个比方：LLM是一台高性能发动机，Prompt就是行车电脑（ECU）里的那套控制程序。发动机再猛，程序写得稀烂，车照样开不直、拐不准。</p>
+<blockquote>
+<p>💡 <strong>什么是Prompt？</strong> Prompt就是你写给LLM的&quot;指令文本&quot;。它可以是一句话（&ldquo;帮我翻译这段话&rdquo;），也可以是几千字的角色设定+规则+示例。在Agent场景里，Prompt通常很长、很结构化，因为它要承担&quot;指挥官&quot;的角色。</p>
+</blockquote>
+<p>本章会从最基础的System Prompt设计讲起，一路覆盖Few-shot Learning、思维链（CoT）、结构化输出、ReAct模板，最后落地到Prompt的版本管理与A/B测试。每一节都配以可直接运行的Python代码，建议你边读边在本地敲一遍——动手是学编程最快的方式。</p>
+<blockquote>
+<p>💡 本章代码基于OpenAI Python SDK v1.x，模型统一使用<code>gpt-5.4</code>。运行前请先安装依赖，并设置<code>OPENAI_API_KEY</code>环境变量。</p>
+</blockquote>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl"><span class="c1"># 本章依赖安装</span>
+</span></span><span class="line"><span class="cl">pip install openai pydantic pyyaml
+</span></span></code></pre></td></tr></table>
+</div>
+</div><hr>
+<h2 id="42-system-prompt设计原则">4.2 System Prompt设计原则</h2>
+<p>System Prompt是智能体的&quot;宪法&quot;——它定义了角色、约束、能力边界和输出规范。一个优秀的System Prompt通常包含四个部分：<strong>角色定义、任务约束、能力边界、输出格式</strong>。</p>
+<p>为什么要把这四件事一次性讲清楚？因为LLM是&quot;一次定调、全程跟随&quot;的：System Prompt在对话最开头出现，模型的整个回答风格、判断倾向都受它影响。开头没立好规矩，后面用户再怎么说&quot;别这样&quot;，效果都打折扣。这就像新员工入职第一天的&quot;岗前培训&quot;——第一印象定调了，后面很难纠正。</p>
+<h3 id="421-四要素拆解">4.2.1 四要素拆解</h3>
+<ul>
+<li><strong>角色定义</strong>：告诉模型&quot;你是谁&quot;。不是泛泛的&quot;你是一个助手&quot;，而是具体到&quot;你是一个面向中文用户的金融数据分析师&quot;。角色越具体，模型的回答越聚焦。</li>
+<li><strong>任务约束</strong>：明确&quot;做什么、不做什么&quot;。比如&quot;只分析A股市场，不给出投资建议&quot;。</li>
+<li><strong>能力边界</strong>：声明可用工具和知识范围，避免模型越权幻觉（比如明明没工具查实时股价，却编一个数字出来）。</li>
+<li><strong>输出格式</strong>：规定输出的结构、语言、长度，便于下游程序解析。</li>
+</ul>
+<h3 id="422-完整的system-prompt模板">4.2.2 完整的System Prompt模板</h3>
+<p>下面是一个面向&quot;客服智能体&quot;的完整System Prompt模板。它采用了Markdown标题分段的方式，便于维护和复用。我们先看模板本身，再看怎么把它接到API调用里。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span><span class="lnt">42
+</span><span class="lnt">43
+</span><span class="lnt">44
+</span><span class="lnt">45
+</span><span class="lnt">46
+</span><span class="lnt">47
+</span><span class="lnt">48
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="c1"># system_prompt_template.py</span>
+</span></span><span class="line"><span class="cl"><span class="c1"># 客服智能体的System Prompt模板</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">SYSTEM_PROMPT</span> <span class="o">=</span> <span class="s2">&#34;&#34;&#34;# 角色
+</span></span></span><span class="line"><span class="cl"><span class="s2">你是一名专业的电商客服智能体，名为&#34;小助&#34;。
+</span></span></span><span class="line"><span class="cl"><span class="s2">你服务于一家销售3C数码产品的电商平台，主要面向中文用户。
+</span></span></span><span class="line"><span class="cl"><span class="s2">
+</span></span></span><span class="line"><span class="cl"><span class="s2"># 任务
+</span></span></span><span class="line"><span class="cl"><span class="s2">你的职责是解答用户关于订单、物流、退换货、产品参数的问题。
+</span></span></span><span class="line"><span class="cl"><span class="s2">对于你能确定答案的问题，给出清晰、简洁的回复。
+</span></span></span><span class="line"><span class="cl"><span class="s2">对于你无法确定的问题，调用相应工具查询，不要编造答案。
+</span></span></span><span class="line"><span class="cl"><span class="s2">
+</span></span></span><span class="line"><span class="cl"><span class="s2"># 约束
+</span></span></span><span class="line"><span class="cl"><span class="s2">1. 只处理3C数码类目相关的问题，其他类目（服饰、食品等）请礼貌引导用户联系对应客服。
+</span></span></span><span class="line"><span class="cl"><span class="s2">2. 不主动推荐商品，不进行价格谈判，不承诺超出政策的补偿。
+</span></span></span><span class="line"><span class="cl"><span class="s2">3. 当用户情绪激动时，先共情再解决问题，语气保持温和、专业。
+</span></span></span><span class="line"><span class="cl"><span class="s2">4. 严禁讨论政治、宗教、种族等敏感话题，遇到此类问题请以&#34;我无法回答此类问题&#34;回应。
+</span></span></span><span class="line"><span class="cl"><span class="s2">
+</span></span></span><span class="line"><span class="cl"><span class="s2"># 能力边界
+</span></span></span><span class="line"><span class="cl"><span class="s2">你可以调用以下工具：
+</span></span></span><span class="line"><span class="cl"><span class="s2">- query_order(order_id)：查询订单状态
+</span></span></span><span class="line"><span class="cl"><span class="s2">- query_logistics(tracking_no)：查询物流轨迹
+</span></span></span><span class="line"><span class="cl"><span class="s2">- submit_refund(order_id, reason)：提交退款申请
+</span></span></span><span class="line"><span class="cl"><span class="s2">- search_product(keyword)：搜索产品参数
+</span></span></span><span class="line"><span class="cl"><span class="s2">
+</span></span></span><span class="line"><span class="cl"><span class="s2">如果你认为需要调用工具，请按照函数调用格式输出；否则直接用自然语言回复。
+</span></span></span><span class="line"><span class="cl"><span class="s2">
+</span></span></span><span class="line"><span class="cl"><span class="s2"># 输出格式
+</span></span></span><span class="line"><span class="cl"><span class="s2">- 回复用户时使用中文，语气亲切但专业。
+</span></span></span><span class="line"><span class="cl"><span class="s2">- 每条回复控制在200字以内，复杂问题可用分点列表。
+</span></span></span><span class="line"><span class="cl"><span class="s2">- 涉及金额、时间、单号等关键信息，请用**加粗**标注。
+</span></span></span><span class="line"><span class="cl"><span class="s2">&#34;&#34;&#34;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 使用示例</span>
+</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">openai</span> <span class="kn">import</span> <span class="n">OpenAI</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">client</span> <span class="o">=</span> <span class="n">OpenAI</span><span class="p">()</span>  <span class="c1"># 默认从环境变量读取OPENAI_API_KEY</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">response</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">chat</span><span class="o">.</span><span class="n">completions</span><span class="o">.</span><span class="n">create</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">    <span class="n">model</span><span class="o">=</span><span class="s2">&#34;gpt-5.4&#34;</span><span class="p">,</span>  <span class="c1"># 当前主力模型</span>
+</span></span><span class="line"><span class="cl">    <span class="n">messages</span><span class="o">=</span><span class="p">[</span>
+</span></span><span class="line"><span class="cl">        <span class="p">{</span><span class="s2">&#34;role&#34;</span><span class="p">:</span> <span class="s2">&#34;system&#34;</span><span class="p">,</span> <span class="s2">&#34;content&#34;</span><span class="p">:</span> <span class="n">SYSTEM_PROMPT</span><span class="p">},</span>  <span class="c1"># 把模板塞进system消息</span>
+</span></span><span class="line"><span class="cl">        <span class="p">{</span><span class="s2">&#34;role&#34;</span><span class="p">:</span> <span class="s2">&#34;user&#34;</span><span class="p">,</span> <span class="s2">&#34;content&#34;</span><span class="p">:</span> <span class="s2">&#34;我的订单20250704-001已经三天没动了，帮我看一下&#34;</span><span class="p">},</span>
+</span></span><span class="line"><span class="cl">    <span class="p">],</span>
+</span></span><span class="line"><span class="cl">    <span class="n">temperature</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span>  <span class="c1"># 客服场景需要稳定，温度调低</span>
+</span></span><span class="line"><span class="cl"><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">choices</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">message</span><span class="o">.</span><span class="n">content</span><span class="p">)</span>  <span class="c1"># 取出模型回复</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><blockquote>
+<p>💡 <strong>什么是temperature？</strong> 它是控制模型输出&quot;随机性&quot;的参数，范围0到2。0表示几乎每次都给最稳的答案，值越大越&quot;放飞&quot;。客服、分类这种要稳定的场景用0~0.3；写诗、起名字这种要创意的可以用0.7以上。</p>
+</blockquote>
+<p>注意几个细节：第一，System Prompt用Markdown的标题分段，模型对结构化文本的遵循度更高；第二，约束用编号列表而非自然语言段落，便于模型精确匹配；第三，<code>temperature=0.3</code>——客服场景需要稳定可控，不建议用高温度。</p>
+<blockquote>
+<p>⚠️ System Prompt不是越长越好。超过2000 token后，模型对尾部指令的遵循率会下降（人看长文也会走神）。如果Prompt确实很长，建议把最关键的约束放在开头和结尾（首尾效应），中间放次要信息。</p>
+</blockquote>
+<hr>
+<h2 id="43-few-shot-learning在agent中的应用">4.3 Few-shot Learning在Agent中的应用</h2>
+<h3 id="431-原理与适用场景">4.3.1 原理与适用场景</h3>
+<p>Few-shot Learning（少样本学习）是指在Prompt中给出少量示例，让模型&quot;照葫芦画瓢&quot;。</p>
+<p>生活里我们也有类似经验：你教新同事做表格，与其写一堆&quot;先这样再那样&quot;的文字说明，不如直接给他看三份做好的样表，他模仿着就学会了。Few-shot就是给模型看几份&quot;样表&quot;。</p>
+<p>它的底层原理是LLM在预训练阶段形成的<strong>模式补全能力</strong>：当看到几个输入-输出对时，模型会推断出潜在的映射规则并应用到新输入上。这也是为什么&quot;举例子&quot;比&quot;讲规则&quot;更管用——规则要抽象理解，例子可以直接照搬。</p>
+<p>Few-shot在以下场景特别有效：</p>
+<ul>
+<li><strong>格式控制</strong>：需要模型输出特定格式（如表格、JSON）时，示例比规则描述更管用。</li>
+<li><strong>风格模仿</strong>：让模型模仿某种写作风格、对话语气。</li>
+<li><strong>任务边界澄清</strong>：当任务定义模糊时，几个示例能快速对齐模型理解。</li>
+<li><strong>分类任务</strong>：情感分析、意图识别等小样本分类场景。</li>
+</ul>
+<p>但Few-shot也有代价：它会占用上下文窗口、增加token成本，且示例选得不好反而会引入偏差。一般3-5个示例就够了，不必堆砌。</p>
+<h3 id="432-代码示例带few-shot的意图识别agent">4.3.2 代码示例：带Few-shot的意图识别Agent</h3>
+<p>下面实现一个用户意图识别Agent，通过Few-shot示例让模型把用户的话归到正确的意图类别。这种&quot;意图识别&quot;是客服、助手类Agent的标配——只有先搞懂用户想干嘛，才能路由到正确的处理流程。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span><span class="lnt">42
+</span><span class="lnt">43
+</span><span class="lnt">44
+</span><span class="lnt">45
+</span><span class="lnt">46
+</span><span class="lnt">47
+</span><span class="lnt">48
+</span><span class="lnt">49
+</span><span class="lnt">50
+</span><span class="lnt">51
+</span><span class="lnt">52
+</span><span class="lnt">53
+</span><span class="lnt">54
+</span><span class="lnt">55
+</span><span class="lnt">56
+</span><span class="lnt">57
+</span><span class="lnt">58
+</span><span class="lnt">59
+</span><span class="lnt">60
+</span><span class="lnt">61
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="c1"># few_shot_intent.py</span>
+</span></span><span class="line"><span class="cl"><span class="c1"># 基于Few-shot的用户意图识别</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">openai</span> <span class="kn">import</span> <span class="n">OpenAI</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">client</span> <span class="o">=</span> <span class="n">OpenAI</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># Few-shot示例：输入-标签对</span>
+</span></span><span class="line"><span class="cl"><span class="n">FEW_SHOT_EXAMPLES</span> <span class="o">=</span> <span class="s2">&#34;&#34;&#34;
+</span></span></span><span class="line"><span class="cl"><span class="s2">用户输入：我想买一台适合打游戏的笔记本，预算8000
+</span></span></span><span class="line"><span class="cl"><span class="s2">意图：product_consult
+</span></span></span><span class="line"><span class="cl"><span class="s2">
+</span></span></span><span class="line"><span class="cl"><span class="s2">用户输入：订单20250704-001怎么还没发货
+</span></span></span><span class="line"><span class="cl"><span class="s2">意图：order_query
+</span></span></span><span class="line"><span class="cl"><span class="s2">
+</span></span></span><span class="line"><span class="cl"><span class="s2">用户输入：收到的耳机左耳没声音，要退货
+</span></span></span><span class="line"><span class="cl"><span class="s2">意图：refund_request
+</span></span></span><span class="line"><span class="cl"><span class="s2">
+</span></span></span><span class="line"><span class="cl"><span class="s2">用户输入：你们这个手机支持多少瓦快充
+</span></span></span><span class="line"><span class="cl"><span class="s2">意图：product_consult
+</span></span></span><span class="line"><span class="cl"><span class="s2">
+</span></span></span><span class="line"><span class="cl"><span class="s2">用户输入：物流显示已签收但我没收到
+</span></span></span><span class="line"><span class="cl"><span class="s2">意图：logistics_complaint
+</span></span></span><span class="line"><span class="cl"><span class="s2">&#34;&#34;&#34;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">detect_intent</span><span class="p">(</span><span class="n">user_input</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="s2">&#34;&#34;&#34;识别用户意图，返回意图标签&#34;&#34;&#34;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">system_prompt</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&#34;&#34;&#34;你是一个意图分类器。根据用户输入判断其意图，只输出意图标签，不要输出其他内容。
+</span></span></span><span class="line"><span class="cl"><span class="s2">
+</span></span></span><span class="line"><span class="cl"><span class="s2">可用意图标签：
+</span></span></span><span class="line"><span class="cl"><span class="s2">- product_consult：产品咨询
+</span></span></span><span class="line"><span class="cl"><span class="s2">- order_query：订单查询
+</span></span></span><span class="line"><span class="cl"><span class="s2">- refund_request：退款/退货
+</span></span></span><span class="line"><span class="cl"><span class="s2">- logistics_complaint：物流投诉
+</span></span></span><span class="line"><span class="cl"><span class="s2">- greeting：问候
+</span></span></span><span class="line"><span class="cl"><span class="s2">- other：其他
+</span></span></span><span class="line"><span class="cl"><span class="s2">
+</span></span></span><span class="line"><span class="cl"><span class="s2">以下是几个示例：
+</span></span></span><span class="line"><span class="cl"><span class="s2"></span><span class="si">{</span><span class="n">FEW_SHOT_EXAMPLES</span><span class="si">}</span><span class="s2">
+</span></span></span><span class="line"><span class="cl"><span class="s2">&#34;&#34;&#34;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">response</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">chat</span><span class="o">.</span><span class="n">completions</span><span class="o">.</span><span class="n">create</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">        <span class="n">model</span><span class="o">=</span><span class="s2">&#34;gpt-5.4&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">        <span class="n">messages</span><span class="o">=</span><span class="p">[</span>
+</span></span><span class="line"><span class="cl">            <span class="p">{</span><span class="s2">&#34;role&#34;</span><span class="p">:</span> <span class="s2">&#34;system&#34;</span><span class="p">,</span> <span class="s2">&#34;content&#34;</span><span class="p">:</span> <span class="n">system_prompt</span><span class="p">},</span>  <span class="c1"># 系统消息里塞Few-shot</span>
+</span></span><span class="line"><span class="cl">            <span class="p">{</span><span class="s2">&#34;role&#34;</span><span class="p">:</span> <span class="s2">&#34;user&#34;</span><span class="p">,</span> <span class="s2">&#34;content&#34;</span><span class="p">:</span> <span class="n">user_input</span><span class="p">},</span>       <span class="c1"># 这次要分类的真实输入</span>
+</span></span><span class="line"><span class="cl">        <span class="p">],</span>
+</span></span><span class="line"><span class="cl">        <span class="n">temperature</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>  <span class="c1"># 分类任务用0温度，保证每次结果一致</span>
+</span></span><span class="line"><span class="cl">    <span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">response</span><span class="o">.</span><span class="n">choices</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">message</span><span class="o">.</span><span class="n">content</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 测试</span>
+</span></span><span class="line"><span class="cl"><span class="n">test_inputs</span> <span class="o">=</span> <span class="p">[</span>
+</span></span><span class="line"><span class="cl">    <span class="s2">&#34;帮我查一下订单20250704-002发到哪了&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="s2">&#34;你好，在吗&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="s2">&#34;这个键盘的轴体是什么牌子&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="s2">&#34;我要投诉，快递员把包裹扔门口了&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl"><span class="p">]</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">for</span> <span class="n">text</span> <span class="ow">in</span> <span class="n">test_inputs</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="n">intent</span> <span class="o">=</span> <span class="n">detect_intent</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&#34;输入: </span><span class="si">{</span><span class="n">text</span><span class="si">}</span><span class="se">\n</span><span class="s2">意图: </span><span class="si">{</span><span class="n">intent</span><span class="si">}</span><span class="se">\n</span><span class="si">{</span><span class="s1">&#39;-&#39;</span><span class="o">*</span><span class="mi">40</span><span class="si">}</span><span class="s2">&#34;</span><span class="p">)</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>运行后你会看到模型准确地把&quot;帮我查一下订单&quot;归为<code>order_query</code>，把&quot;你好，在吗&quot;归为<code>greeting</code>——尽管示例里没有问候语样本，但Few-shot建立起了&quot;输入-标签&quot;的模式，模型能泛化到未见的类别。</p>
+<blockquote>
+<p>💡 选择Few-shot示例时，尽量覆盖不同类别和不同表达方式，避免示例集中在一两类导致模型产生偏置（bias）。比如5个示例全是product_consult，模型就会倾向于把什么都判成product_consult。</p>
+</blockquote>
+<hr>
+<h2 id="44-思维链chain-of-thought">4.4 思维链（Chain-of-Thought）</h2>
+<h3 id="441-cot原理与效果">4.4.1 CoT原理与效果</h3>
+<p>思维链（Chain-of-Thought, CoT）是Prompt工程中最具影响力的技术之一，由Google团队在2022年提出。核心思想是：<strong>让模型在给出答案前，先展示推理过程</strong>。</p>
+<p>为什么CoT有效？回想一下你做数学题的经历：心算容易错，打草稿就稳得多。LLM也是一样。如果直接问&quot;小明有3个苹果，吃了1个，又买了2个，他还剩几个&quot;，模型可能跳过推理直接给答案，偶尔会算错。但如果让模型先写出&quot;3-1=2，2+2=4&quot;的过程，每一步都成为后续预测的上下文，准确率会显著提升。</p>
+<p>更技术地讲，LLM的本质是&quot;预测下一个token&quot;。一旦模型把&quot;3-1=2&quot;这几个字写出来，这几个字就成了新的上下文，模型预测下一个token时就站在了&quot;3-1=2&quot;这个基础上，比凭空跳到最终答案要稳。</p>
+<p>在Agent场景下，CoT的价值更大：智能体需要规划、需要分解任务、需要在调用工具前判断&quot;该不该调用、调用哪个&quot;——这些都是多步推理，没有思维链几乎无法稳定完成。</p>
+<h3 id="442-zero-shot-cot-vs-few-shot-cot">4.4.2 Zero-shot CoT vs Few-shot CoT</h3>
+<p>CoT有两种典型用法：</p>
+<ul>
+<li><strong>Zero-shot CoT</strong>：不提供示例，只在Prompt中加一句话——&ldquo;让我们一步一步思考&rdquo;（Let&rsquo;s think step by step）。这看似简单，却能在数学、逻辑题上带来10-30个百分点的提升。</li>
+<li><strong>Few-shot CoT</strong>：在示例中不仅给出答案，还给出完整的推理过程，让模型模仿这种&quot;先思考后作答&quot;的模式。</li>
+</ul>
+<p>下面用一道经典的鸡兔同笼问题对比三种方式：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span><span class="lnt">42
+</span><span class="lnt">43
+</span><span class="lnt">44
+</span><span class="lnt">45
+</span><span class="lnt">46
+</span><span class="lnt">47
+</span><span class="lnt">48
+</span><span class="lnt">49
+</span><span class="lnt">50
+</span><span class="lnt">51
+</span><span class="lnt">52
+</span><span class="lnt">53
+</span><span class="lnt">54
+</span><span class="lnt">55
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="c1"># cot_comparison.py</span>
+</span></span><span class="line"><span class="cl"><span class="c1"># 对比Zero-shot CoT与Few-shot CoT</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">openai</span> <span class="kn">import</span> <span class="n">OpenAI</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">client</span> <span class="o">=</span> <span class="n">OpenAI</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">question</span> <span class="o">=</span> <span class="s2">&#34;一个农场有鸡和兔子共35只，脚共94只，问鸡兔各几只？&#34;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 1. 不使用CoT（基线）：直接问，让模型自己决定要不要打草稿</span>
+</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">ask_direct</span><span class="p">(</span><span class="n">q</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="n">response</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">chat</span><span class="o">.</span><span class="n">completions</span><span class="o">.</span><span class="n">create</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">        <span class="n">model</span><span class="o">=</span><span class="s2">&#34;gpt-5.4&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">        <span class="n">messages</span><span class="o">=</span><span class="p">[{</span><span class="s2">&#34;role&#34;</span><span class="p">:</span> <span class="s2">&#34;user&#34;</span><span class="p">,</span> <span class="s2">&#34;content&#34;</span><span class="p">:</span> <span class="n">q</span><span class="p">}],</span>
+</span></span><span class="line"><span class="cl">        <span class="n">temperature</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">response</span><span class="o">.</span><span class="n">choices</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">message</span><span class="o">.</span><span class="n">content</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 2. Zero-shot CoT：只加一句&#34;一步一步思考&#34;，不提供示例</span>
+</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">ask_zero_shot_cot</span><span class="p">(</span><span class="n">q</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="n">response</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">chat</span><span class="o">.</span><span class="n">completions</span><span class="o">.</span><span class="n">create</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">        <span class="n">model</span><span class="o">=</span><span class="s2">&#34;gpt-5.4&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">        <span class="n">messages</span><span class="o">=</span><span class="p">[{</span><span class="s2">&#34;role&#34;</span><span class="p">:</span> <span class="s2">&#34;user&#34;</span><span class="p">,</span> <span class="s2">&#34;content&#34;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&#34;</span><span class="si">{</span><span class="n">q</span><span class="si">}</span><span class="se">\n\n</span><span class="s2">请一步一步思考，最后给出答案。&#34;</span><span class="p">}],</span>
+</span></span><span class="line"><span class="cl">        <span class="n">temperature</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">response</span><span class="o">.</span><span class="n">choices</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">message</span><span class="o">.</span><span class="n">content</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 3. Few-shot CoT：提供一个带完整推理过程的示例</span>
+</span></span><span class="line"><span class="cl"><span class="n">FEW_SHOT_COT</span> <span class="o">=</span> <span class="s2">&#34;&#34;&#34;
+</span></span></span><span class="line"><span class="cl"><span class="s2">示例：
+</span></span></span><span class="line"><span class="cl"><span class="s2">问题：小明有5个苹果，送给小红2个，又从树上摘了3个，现在有几个？
+</span></span></span><span class="line"><span class="cl"><span class="s2">思考过程：
+</span></span></span><span class="line"><span class="cl"><span class="s2">1. 初始：5个
+</span></span></span><span class="line"><span class="cl"><span class="s2">2. 送出2个：5-2=3个
+</span></span></span><span class="line"><span class="cl"><span class="s2">3. 摘了3个：3+3=6个
+</span></span></span><span class="line"><span class="cl"><span class="s2">答案：6个
+</span></span></span><span class="line"><span class="cl"><span class="s2">&#34;&#34;&#34;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">ask_few_shot_cot</span><span class="p">(</span><span class="n">q</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="n">response</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">chat</span><span class="o">.</span><span class="n">completions</span><span class="o">.</span><span class="n">create</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">        <span class="n">model</span><span class="o">=</span><span class="s2">&#34;gpt-5.4&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">        <span class="n">messages</span><span class="o">=</span><span class="p">[</span>
+</span></span><span class="line"><span class="cl">            <span class="p">{</span><span class="s2">&#34;role&#34;</span><span class="p">:</span> <span class="s2">&#34;system&#34;</span><span class="p">,</span> <span class="s2">&#34;content&#34;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&#34;请按以下格式回答问题：</span><span class="se">\n</span><span class="si">{</span><span class="n">FEW_SHOT_COT</span><span class="si">}</span><span class="s2">&#34;</span><span class="p">},</span>
+</span></span><span class="line"><span class="cl">            <span class="p">{</span><span class="s2">&#34;role&#34;</span><span class="p">:</span> <span class="s2">&#34;user&#34;</span><span class="p">,</span> <span class="s2">&#34;content&#34;</span><span class="p">:</span> <span class="n">q</span><span class="p">},</span>
+</span></span><span class="line"><span class="cl">        <span class="p">],</span>
+</span></span><span class="line"><span class="cl">        <span class="n">temperature</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">response</span><span class="o">.</span><span class="n">choices</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">message</span><span class="o">.</span><span class="n">content</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="s2">&#34;=== 不使用CoT ===&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="n">ask_direct</span><span class="p">(</span><span class="n">question</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="s2">&#34;</span><span class="se">\n</span><span class="s2">=== Zero-shot CoT ===&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="n">ask_zero_shot_cot</span><span class="p">(</span><span class="n">question</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="s2">&#34;</span><span class="se">\n</span><span class="s2">=== Few-shot CoT ===&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="n">ask_few_shot_cot</span><span class="p">(</span><span class="n">question</span><span class="p">))</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>你可以运行对比三种方式的输出差异。对于鸡兔同笼这类需要列方程的问题，直接回答时模型可能直接抛答案甚至算错，而CoT会先列方程再求解，准确率明显更高。</p>
+<blockquote>
+<p>⚠️ CoT不是万能的。对于简单的事实问答（&ldquo;法国首都是哪&rdquo;），加CoT反而拖慢响应、增加token消耗，纯属浪费。CoT的收益在<strong>多步推理任务</strong>上最大。</p>
+</blockquote>
+<h3 id="443-自一致性self-consistency">4.4.3 自一致性（Self-Consistency）</h3>
+<p>CoT有一个隐患：同一条推理路径可能因为某个中间步骤错误而导致最终答案错误。比如模型某一步把3+3算成了7，后面就全错。</p>
+<p>**自一致性（Self-Consistency）**的思路是：让模型用高温度生成多条不同的推理路径，然后对最终答案做投票，取出现次数最多的作为结果。生活里这就像你拿不准一道题，问了5个同学，5个里有3个说答案是12，那大概率就是12。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="c1"># self_consistency.py</span>
+</span></span><span class="line"><span class="cl"><span class="c1"># 自一致性提升CoT的稳定性</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">Counter</span>
+</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">openai</span> <span class="kn">import</span> <span class="n">OpenAI</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">client</span> <span class="o">=</span> <span class="n">OpenAI</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">solve_with_self_consistency</span><span class="p">(</span><span class="n">question</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">n</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">5</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="s2">&#34;&#34;&#34;生成n条推理路径，投票选出最终答案&#34;&#34;&#34;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">prompt</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&#34;</span><span class="si">{</span><span class="n">question</span><span class="si">}</span><span class="se">\n\n</span><span class="s2">请一步一步思考，最后用&#39;答案是：X&#39;的格式给出答案。&#34;</span>
+</span></span><span class="line"><span class="cl">    
+</span></span><span class="line"><span class="cl">    <span class="n">answers</span> <span class="o">=</span> <span class="p">[]</span>
+</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">        <span class="n">response</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">chat</span><span class="o">.</span><span class="n">completions</span><span class="o">.</span><span class="n">create</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">            <span class="n">model</span><span class="o">=</span><span class="s2">&#34;gpt-5.4&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">            <span class="n">messages</span><span class="o">=</span><span class="p">[{</span><span class="s2">&#34;role&#34;</span><span class="p">:</span> <span class="s2">&#34;user&#34;</span><span class="p">,</span> <span class="s2">&#34;content&#34;</span><span class="p">:</span> <span class="n">prompt</span><span class="p">}],</span>
+</span></span><span class="line"><span class="cl">            <span class="n">temperature</span><span class="o">=</span><span class="mf">0.7</span><span class="p">,</span>  <span class="c1"># 高温度保证路径多样性</span>
+</span></span><span class="line"><span class="cl">            <span class="n">max_tokens</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">        <span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="n">text</span> <span class="o">=</span> <span class="n">response</span><span class="o">.</span><span class="n">choices</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">message</span><span class="o">.</span><span class="n">content</span>
+</span></span><span class="line"><span class="cl">        <span class="c1"># 简单提取答案：从&#34;答案是：&#34;后面取</span>
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="s2">&#34;答案是：&#34;</span> <span class="ow">in</span> <span class="n">text</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">            <span class="n">ans</span> <span class="o">=</span> <span class="n">text</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&#34;答案是：&#34;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&#34;</span><span class="se">\n</span><span class="s2">&#34;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl">            <span class="n">answers</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ans</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    
+</span></span><span class="line"><span class="cl">    <span class="c1"># 投票：统计每个答案出现次数，取最多的</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="ow">not</span> <span class="n">answers</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="s2">&#34;无法确定答案&#34;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">counter</span> <span class="o">=</span> <span class="n">Counter</span><span class="p">(</span><span class="n">answers</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="n">best</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">counter</span><span class="o">.</span><span class="n">most_common</span><span class="p">(</span><span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>  <span class="c1"># 取票数最高的答案</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="sa">f</span><span class="s2">&#34;答案：</span><span class="si">{</span><span class="n">best</span><span class="si">}</span><span class="s2">（</span><span class="si">{</span><span class="n">n</span><span class="si">}</span><span class="s2">次推理中</span><span class="si">{</span><span class="n">counter</span><span class="p">[</span><span class="n">best</span><span class="p">]</span><span class="si">}</span><span class="s2">次一致）&#34;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 测试</span>
+</span></span><span class="line"><span class="cl"><span class="n">question</span> <span class="o">=</span> <span class="s2">&#34;一个数列：2, 6, 12, 20, 30, ...，请问第10项是多少？&#34;</span>
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="n">solve_with_self_consistency</span><span class="p">(</span><span class="n">question</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="mi">5</span><span class="p">))</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>自一致性以n倍的推理成本换取更高的准确率，适合对正确性要求高、对延迟不敏感的场景（如离线数据分析）。在线对话场景建议用更小的n（如3），否则用户等不及。</p>
+<blockquote>
+<p>💡 <strong>temperature和Self-Consistency的关系</strong>：Self-Consistency必须配高temperature（0.7左右）才有意义。如果temperature=0，n次推理结果几乎一模一样，投票就没意义了。</p>
+</blockquote>
+<hr>
+<h2 id="45-结构化输出">4.5 结构化输出</h2>
+<h3 id="451-为什么agent需要结构化输出">4.5.1 为什么Agent需要结构化输出</h3>
+<p>智能体很少是&quot;终点&quot;——它的输出往往要被下游程序消费：解析成JSON塞进数据库、转成函数参数调用其他服务、渲染成UI卡片。如果模型输出的是自由文本，下游就得用正则、字符串匹配去抠数据，脆弱不堪——模型换个说法，正则就匹配不上。</p>
+<p>生活里类似：你在餐厅点菜，口头说&quot;我要个番茄炒蛋少放盐多放葱&quot;，厨师可能听岔；填一张标准点菜单就稳得多。结构化输出就是让模型&quot;填点菜单&quot;而不是&quot;自由发挥&quot;。</p>
+<p>结构化输出（Structured Outputs）让模型直接输出符合预定义schema的JSON，下游程序可以直接反序列化。这是Agent从&quot;聊天机器人&quot;走向&quot;工程系统&quot;的关键一步。</p>
+<h3 id="452-openai的response_format参数">4.5.2 OpenAI的response_format参数</h3>
+<p>OpenAI SDK提供了两种结构化输出方式：</p>
+<ul>
+<li><strong>JSON Mode</strong>：通过<code>response_format={&quot;type&quot;: &quot;json_object&quot;}</code>启用，要求模型输出合法JSON，但不约束schema（字段叫啥、类型是啥都不管）。</li>
+<li><strong>Structured Outputs</strong>：通过<code>response_format={&quot;type&quot;: &quot;json_schema&quot;, &quot;json_schema&quot;: {...}}</code>启用，模型输出必须严格匹配指定的JSON Schema。</li>
+</ul>
+<blockquote>
+<p>💡 <strong>JSON Schema是什么？</strong> 它是一种描述JSON数据结构的标准格式，类似于&quot;数据模板&quot;。比如&quot;必须有name字段是字符串，必须有price字段是数字&quot;。模型看到这个模板，就会按模板填数据。</p>
+</blockquote>
+<h3 id="453-用pydantic定义输出schema">4.5.3 用Pydantic定义输出Schema</h3>
+<p>手写JSON Schema冗长易错，Pydantic能让我们用Python类的方式定义schema，再转成JSON Schema喂给API。下面这个例子让Agent从一段用户描述里提取产品信息，输出成结构化对象。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span><span class="lnt">42
+</span><span class="lnt">43
+</span><span class="lnt">44
+</span><span class="lnt">45
+</span><span class="lnt">46
+</span><span class="lnt">47
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="c1"># structured_output.py</span>
+</span></span><span class="line"><span class="cl"><span class="c1"># 让Agent输出结构化数据</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">json</span>
+</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">openai</span> <span class="kn">import</span> <span class="n">OpenAI</span>
+</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">pydantic</span> <span class="kn">import</span> <span class="n">BaseModel</span><span class="p">,</span> <span class="n">Field</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">client</span> <span class="o">=</span> <span class="n">OpenAI</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 1. 用Pydantic定义输出结构：就像写一个数据类</span>
+</span></span><span class="line"><span class="cl"><span class="k">class</span> <span class="nc">ProductInfo</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s2">&#34;产品名称&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="n">brand</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s2">&#34;品牌&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="n">price</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s2">&#34;当前售价，单位元&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="n">specs</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s2">&#34;核心规格列表&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="n">recommendation</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s2">&#34;推荐理由，一句话&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 2. 调用API，启用Structured Outputs</span>
+</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">extract_product_info</span><span class="p">(</span><span class="n">user_desc</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ProductInfo</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="n">response</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">beta</span><span class="o">.</span><span class="n">chat</span><span class="o">.</span><span class="n">completions</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">        <span class="n">model</span><span class="o">=</span><span class="s2">&#34;gpt-5.4&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">        <span class="n">messages</span><span class="o">=</span><span class="p">[</span>
+</span></span><span class="line"><span class="cl">            <span class="p">{</span>
+</span></span><span class="line"><span class="cl">                <span class="s2">&#34;role&#34;</span><span class="p">:</span> <span class="s2">&#34;system&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                <span class="s2">&#34;content&#34;</span><span class="p">:</span> <span class="s2">&#34;你是产品信息提取助手。根据用户描述提取结构化产品信息。&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">            <span class="p">},</span>
+</span></span><span class="line"><span class="cl">            <span class="p">{</span><span class="s2">&#34;role&#34;</span><span class="p">:</span> <span class="s2">&#34;user&#34;</span><span class="p">,</span> <span class="s2">&#34;content&#34;</span><span class="p">:</span> <span class="n">user_desc</span><span class="p">},</span>
+</span></span><span class="line"><span class="cl">        <span class="p">],</span>
+</span></span><span class="line"><span class="cl">        <span class="n">response_format</span><span class="o">=</span><span class="n">ProductInfo</span><span class="p">,</span>  <span class="c1"># 直接传Pydantic类，SDK自动转JSON Schema</span>
+</span></span><span class="line"><span class="cl">        <span class="n">temperature</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="c1"># 直接解析成Pydantic对象，不用自己抠字符串</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">response</span><span class="o">.</span><span class="n">choices</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">message</span><span class="o">.</span><span class="n">parsed</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 测试</span>
+</span></span><span class="line"><span class="cl"><span class="n">desc</span> <span class="o">=</span> <span class="s2">&#34;我看到一款华为Mate 70 Pro，12GB+512GB版本，售价6999元，麒麟芯片，卫星通话，玄武架构很耐用，推荐买。&#34;</span>
+</span></span><span class="line"><span class="cl"><span class="n">product</span> <span class="o">=</span> <span class="n">extract_product_info</span><span class="p">(</span><span class="n">desc</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&#34;产品: </span><span class="si">{</span><span class="n">product</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&#34;品牌: </span><span class="si">{</span><span class="n">product</span><span class="o">.</span><span class="n">brand</span><span class="si">}</span><span class="s2">&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&#34;价格: </span><span class="si">{</span><span class="n">product</span><span class="o">.</span><span class="n">price</span><span class="si">}</span><span class="s2">元&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&#34;规格: </span><span class="si">{</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">product</span><span class="o">.</span><span class="n">specs</span><span class="p">)</span><span class="si">}</span><span class="s2">&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&#34;推荐理由: </span><span class="si">{</span><span class="n">product</span><span class="o">.</span><span class="n">recommendation</span><span class="si">}</span><span class="s2">&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 也可以直接转成JSON用于下游处理</span>
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="s2">&#34;</span><span class="se">\n</span><span class="s2">JSON输出：&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">product</span><span class="o">.</span><span class="n">model_dump</span><span class="p">(),</span> <span class="n">ensure_ascii</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">))</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p><code>client.beta.chat.completions.parse</code>是OpenAI SDK提供的便捷方法，它会把Pydantic类转成JSON Schema、附加到请求中，并把响应解析回Pydantic对象。如果模型输出不符合schema，SDK会抛出异常，便于你做错误处理。</p>
+<blockquote>
+<p>💡 Structured Outputs在GPT-5.4及以上模型上支持完整。配合Pydantic，可以让Agent的输出直接对接FastAPI、数据库ORM等下游系统，几乎零胶水代码。</p>
+</blockquote>
+<hr>
+<h2 id="46-react提示模板设计">4.6 ReAct提示模板设计</h2>
+<h3 id="461-thoughtactionobservation格式">4.6.1 Thought/Action/Observation格式</h3>
+<p>ReAct（Reasoning + Acting）是当前Agent最主流的提示范式，由Yao等人在2022年提出。名字是Reasoning和Acting的拼接——一边推理、一边行动。</p>
+<p>它的核心是让模型在每一步交替输出<strong>思考（Thought）、行动（Action）、观察（Observation）</strong>：</p>
+<ul>
+<li><strong>Thought</strong>：模型推理&quot;我现在该干什么&quot;</li>
+<li><strong>Action</strong>：模型选择并调用一个工具</li>
+<li><strong>Observation</strong>：工具返回的结果被拼回上下文</li>
+<li>循环直到模型输出<strong>Final Answer</strong></li>
+</ul>
+<p>生活里这就是&quot;边想边做&quot;的做事方式：你做一道菜，先想&quot;得先切菜&quot;（Thought），然后去切菜（Action），看看切得怎样（Observation），再想下一步&quot;该热油了&quot;……如此循环直到菜出锅（Final Answer）。</p>
+<p>这种范式让模型的行为可解释、可追踪——你能看到它每一步在想什么、调用了什么、得到了什么，而不是一个黑箱直接吐答案。一旦出问题，日志一看就知道是哪步推理跑偏了。</p>
+<h3 id="462-完整的react-prompt模板">4.6.2 完整的ReAct Prompt模板</h3>
+<p>下面是一个可以直接使用的ReAct模板，配合一个简单的计算器工具和城市人口查询工具，演示完整的Thought→Action→Observation循环。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">  1
+</span><span class="lnt">  2
+</span><span class="lnt">  3
+</span><span class="lnt">  4
+</span><span class="lnt">  5
+</span><span class="lnt">  6
+</span><span class="lnt">  7
+</span><span class="lnt">  8
+</span><span class="lnt">  9
+</span><span class="lnt"> 10
+</span><span class="lnt"> 11
+</span><span class="lnt"> 12
+</span><span class="lnt"> 13
+</span><span class="lnt"> 14
+</span><span class="lnt"> 15
+</span><span class="lnt"> 16
+</span><span class="lnt"> 17
+</span><span class="lnt"> 18
+</span><span class="lnt"> 19
+</span><span class="lnt"> 20
+</span><span class="lnt"> 21
+</span><span class="lnt"> 22
+</span><span class="lnt"> 23
+</span><span class="lnt"> 24
+</span><span class="lnt"> 25
+</span><span class="lnt"> 26
+</span><span class="lnt"> 27
+</span><span class="lnt"> 28
+</span><span class="lnt"> 29
+</span><span class="lnt"> 30
+</span><span class="lnt"> 31
+</span><span class="lnt"> 32
+</span><span class="lnt"> 33
+</span><span class="lnt"> 34
+</span><span class="lnt"> 35
+</span><span class="lnt"> 36
+</span><span class="lnt"> 37
+</span><span class="lnt"> 38
+</span><span class="lnt"> 39
+</span><span class="lnt"> 40
+</span><span class="lnt"> 41
+</span><span class="lnt"> 42
+</span><span class="lnt"> 43
+</span><span class="lnt"> 44
+</span><span class="lnt"> 45
+</span><span class="lnt"> 46
+</span><span class="lnt"> 47
+</span><span class="lnt"> 48
+</span><span class="lnt"> 49
+</span><span class="lnt"> 50
+</span><span class="lnt"> 51
+</span><span class="lnt"> 52
+</span><span class="lnt"> 53
+</span><span class="lnt"> 54
+</span><span class="lnt"> 55
+</span><span class="lnt"> 56
+</span><span class="lnt"> 57
+</span><span class="lnt"> 58
+</span><span class="lnt"> 59
+</span><span class="lnt"> 60
+</span><span class="lnt"> 61
+</span><span class="lnt"> 62
+</span><span class="lnt"> 63
+</span><span class="lnt"> 64
+</span><span class="lnt"> 65
+</span><span class="lnt"> 66
+</span><span class="lnt"> 67
+</span><span class="lnt"> 68
+</span><span class="lnt"> 69
+</span><span class="lnt"> 70
+</span><span class="lnt"> 71
+</span><span class="lnt"> 72
+</span><span class="lnt"> 73
+</span><span class="lnt"> 74
+</span><span class="lnt"> 75
+</span><span class="lnt"> 76
+</span><span class="lnt"> 77
+</span><span class="lnt"> 78
+</span><span class="lnt"> 79
+</span><span class="lnt"> 80
+</span><span class="lnt"> 81
+</span><span class="lnt"> 82
+</span><span class="lnt"> 83
+</span><span class="lnt"> 84
+</span><span class="lnt"> 85
+</span><span class="lnt"> 86
+</span><span class="lnt"> 87
+</span><span class="lnt"> 88
+</span><span class="lnt"> 89
+</span><span class="lnt"> 90
+</span><span class="lnt"> 91
+</span><span class="lnt"> 92
+</span><span class="lnt"> 93
+</span><span class="lnt"> 94
+</span><span class="lnt"> 95
+</span><span class="lnt"> 96
+</span><span class="lnt"> 97
+</span><span class="lnt"> 98
+</span><span class="lnt"> 99
+</span><span class="lnt">100
+</span><span class="lnt">101
+</span><span class="lnt">102
+</span><span class="lnt">103
+</span><span class="lnt">104
+</span><span class="lnt">105
+</span><span class="lnt">106
+</span><span class="lnt">107
+</span><span class="lnt">108
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="c1"># react_agent.py</span>
+</span></span><span class="line"><span class="cl"><span class="c1"># ReAct范式的最小实现</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">json</span>
+</span></span><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">re</span>
+</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">openai</span> <span class="kn">import</span> <span class="n">OpenAI</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">client</span> <span class="o">=</span> <span class="n">OpenAI</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 工具定义：每个工具就是一个普通Python函数</span>
+</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">calculator</span><span class="p">(</span><span class="n">expression</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="s2">&#34;&#34;&#34;安全计算数学表达式&#34;&#34;&#34;</span>
+</span></span><span class="line"><span class="cl">    <span class="k">try</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="c1"># 只允许数字和基本运算符，防注入</span>
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="ow">not</span> <span class="n">re</span><span class="o">.</span><span class="k">match</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;^[\d\s\+\-\*/\.\(\)]+$&#39;</span><span class="p">,</span> <span class="n">expression</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">            <span class="k">return</span> <span class="s2">&#34;错误：表达式包含非法字符&#34;</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="nb">eval</span><span class="p">(</span><span class="n">expression</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl">    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="sa">f</span><span class="s2">&#34;错误：</span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&#34;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">search_city_population</span><span class="p">(</span><span class="n">city</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="s2">&#34;&#34;&#34;模拟城市人口查询工具&#34;&#34;&#34;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">data</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&#34;北京&#34;</span><span class="p">:</span> <span class="s2">&#34;2189万&#34;</span><span class="p">,</span> <span class="s2">&#34;上海&#34;</span><span class="p">:</span> <span class="s2">&#34;2487万&#34;</span><span class="p">,</span> <span class="s2">&#34;广州&#34;</span><span class="p">:</span> <span class="s2">&#34;1868万&#34;</span><span class="p">,</span> <span class="s2">&#34;深圳&#34;</span><span class="p">:</span> <span class="s2">&#34;1756万&#34;</span><span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">city</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&#34;未找到</span><span class="si">{</span><span class="n">city</span><span class="si">}</span><span class="s2">的人口数据&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 工具注册表：名字 -&gt; (说明, 函数)</span>
+</span></span><span class="line"><span class="cl"><span class="n">AVAILABLE_TOOLS</span> <span class="o">=</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="s2">&#34;calculator&#34;</span><span class="p">:</span> <span class="p">(</span><span class="s2">&#34;计算数学表达式，参数：expression（字符串）&#34;</span><span class="p">,</span> <span class="n">calculator</span><span class="p">),</span>
+</span></span><span class="line"><span class="cl">    <span class="s2">&#34;search_city_population&#34;</span><span class="p">:</span> <span class="p">(</span><span class="s2">&#34;查询中国主要城市人口，参数：city（字符串）&#34;</span><span class="p">,</span> <span class="n">search_city_population</span><span class="p">),</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">REACT_PROMPT</span> <span class="o">=</span> <span class="s2">&#34;&#34;&#34;你是一个能使用工具的智能体。请按照以下格式一步步推理和行动：
+</span></span></span><span class="line"><span class="cl"><span class="s2">
+</span></span></span><span class="line"><span class="cl"><span class="s2">Question: 用户的问题
+</span></span></span><span class="line"><span class="cl"><span class="s2">Thought: 你思考下一步该做什么
+</span></span></span><span class="line"><span class="cl"><span class="s2">Action: 你要调用的工具名，必须是以下之一：</span><span class="si">{tool_names}</span><span class="s2">
+</span></span></span><span class="line"><span class="cl"><span class="s2">Action Input: 调用工具的参数，用JSON格式
+</span></span></span><span class="line"><span class="cl"><span class="s2">Observation: 工具返回的结果
+</span></span></span><span class="line"><span class="cl"><span class="s2">...（Thought/Action/Action Input/Observation可重复多次）
+</span></span></span><span class="line"><span class="cl"><span class="s2">Thought: 我现在知道答案了
+</span></span></span><span class="line"><span class="cl"><span class="s2">Final Answer: 最终给用户的回答
+</span></span></span><span class="line"><span class="cl"><span class="s2">
+</span></span></span><span class="line"><span class="cl"><span class="s2">可用工具说明：
+</span></span></span><span class="line"><span class="cl"><span class="s2"></span><span class="si">{tool_descriptions}</span><span class="s2">
+</span></span></span><span class="line"><span class="cl"><span class="s2">
+</span></span></span><span class="line"><span class="cl"><span class="s2">开始吧！
+</span></span></span><span class="line"><span class="cl"><span class="s2">&#34;&#34;&#34;</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">run_react_agent</span><span class="p">(</span><span class="n">question</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">max_steps</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">5</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="s2">&#34;&#34;&#34;运行ReAct循环&#34;&#34;&#34;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">tool_names</span> <span class="o">=</span> <span class="s2">&#34;, &#34;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">AVAILABLE_TOOLS</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+</span></span><span class="line"><span class="cl">    <span class="n">tool_descriptions</span> <span class="o">=</span> <span class="s2">&#34;</span><span class="se">\n</span><span class="s2">&#34;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">        <span class="sa">f</span><span class="s2">&#34;- </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">desc</span><span class="si">}</span><span class="s2">&#34;</span> <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="p">(</span><span class="n">desc</span><span class="p">,</span> <span class="n">_</span><span class="p">)</span> <span class="ow">in</span> <span class="n">AVAILABLE_TOOLS</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">    <span class="p">)</span>
+</span></span><span class="line"><span class="cl">    
+</span></span><span class="line"><span class="cl">    <span class="n">system_prompt</span> <span class="o">=</span> <span class="n">REACT_PROMPT</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">        <span class="n">tool_names</span><span class="o">=</span><span class="n">tool_names</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">        <span class="n">tool_descriptions</span><span class="o">=</span><span class="n">tool_descriptions</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="p">)</span>
+</span></span><span class="line"><span class="cl">    
+</span></span><span class="line"><span class="cl">    <span class="n">messages</span> <span class="o">=</span> <span class="p">[</span>
+</span></span><span class="line"><span class="cl">        <span class="p">{</span><span class="s2">&#34;role&#34;</span><span class="p">:</span> <span class="s2">&#34;system&#34;</span><span class="p">,</span> <span class="s2">&#34;content&#34;</span><span class="p">:</span> <span class="n">system_prompt</span><span class="p">},</span>
+</span></span><span class="line"><span class="cl">        <span class="p">{</span><span class="s2">&#34;role&#34;</span><span class="p">:</span> <span class="s2">&#34;user&#34;</span><span class="p">,</span> <span class="s2">&#34;content&#34;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&#34;Question: </span><span class="si">{</span><span class="n">question</span><span class="si">}</span><span class="s2">&#34;</span><span class="p">},</span>
+</span></span><span class="line"><span class="cl">    <span class="p">]</span>
+</span></span><span class="line"><span class="cl">    
+</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="n">step</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">max_steps</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">        <span class="n">response</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">chat</span><span class="o">.</span><span class="n">completions</span><span class="o">.</span><span class="n">create</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">            <span class="n">model</span><span class="o">=</span><span class="s2">&#34;gpt-5.4&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">            <span class="n">messages</span><span class="o">=</span><span class="n">messages</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">            <span class="n">temperature</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">            <span class="n">stop</span><span class="o">=</span><span class="p">[</span><span class="s2">&#34;Observation:&#34;</span><span class="p">],</span>  <span class="c1"># 在Observation处停下，等我们去执行工具</span>
+</span></span><span class="line"><span class="cl">        <span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="n">output</span> <span class="o">=</span> <span class="n">response</span><span class="o">.</span><span class="n">choices</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">message</span><span class="o">.</span><span class="n">content</span>
+</span></span><span class="line"><span class="cl">        <span class="n">messages</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s2">&#34;role&#34;</span><span class="p">:</span> <span class="s2">&#34;assistant&#34;</span><span class="p">,</span> <span class="s2">&#34;content&#34;</span><span class="p">:</span> <span class="n">output</span><span class="p">})</span>  <span class="c1"># 把模型输出记回上下文</span>
+</span></span><span class="line"><span class="cl">        
+</span></span><span class="line"><span class="cl">        <span class="c1"># 检查是否输出了Final Answer</span>
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="s2">&#34;Final Answer:&#34;</span> <span class="ow">in</span> <span class="n">output</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">            <span class="k">return</span> <span class="n">output</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&#34;Final Answer:&#34;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">        
+</span></span><span class="line"><span class="cl">        <span class="c1"># 解析Action和Action Input</span>
+</span></span><span class="line"><span class="cl">        <span class="n">action_match</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="sa">r</span><span class="s2">&#34;Action:\s*(.+?)\n&#34;</span><span class="p">,</span> <span class="n">output</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="n">input_match</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="sa">r</span><span class="s2">&#34;Action Input:\s*(.+?)(?:\n|$)&#34;</span><span class="p">,</span> <span class="n">output</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="ow">not</span> <span class="n">action_match</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">input_match</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">            <span class="k">return</span> <span class="s2">&#34;智能体无法继续推理&#34;</span>
+</span></span><span class="line"><span class="cl">        
+</span></span><span class="line"><span class="cl">        <span class="n">tool_name</span> <span class="o">=</span> <span class="n">action_match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">        <span class="k">try</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">            <span class="n">tool_args</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">input_match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span>  <span class="c1"># 解析JSON参数</span>
+</span></span><span class="line"><span class="cl">        <span class="k">except</span> <span class="n">json</span><span class="o">.</span><span class="n">JSONDecodeError</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">            <span class="n">tool_args</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&#34;expression&#34;</span><span class="p">:</span> <span class="n">input_match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()}</span>  <span class="c1"># 兜底：不是JSON就当字符串</span>
+</span></span><span class="line"><span class="cl">        
+</span></span><span class="line"><span class="cl">        <span class="c1"># 执行工具</span>
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="n">tool_name</span> <span class="ow">in</span> <span class="n">AVAILABLE_TOOLS</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">            <span class="n">_</span><span class="p">,</span> <span class="n">func</span> <span class="o">=</span> <span class="n">AVAILABLE_TOOLS</span><span class="p">[</span><span class="n">tool_name</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl">            <span class="n">observation</span> <span class="o">=</span> <span class="n">func</span><span class="p">(</span><span class="o">**</span><span class="n">tool_args</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">tool_args</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="k">else</span> <span class="n">func</span><span class="p">(</span><span class="n">tool_args</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="k">else</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">            <span class="n">observation</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&#34;错误：工具</span><span class="si">{</span><span class="n">tool_name</span><span class="si">}</span><span class="s2">不存在&#34;</span>
+</span></span><span class="line"><span class="cl">        
+</span></span><span class="line"><span class="cl">        <span class="c1"># 把Observation拼回上下文，让模型继续推理</span>
+</span></span><span class="line"><span class="cl">        <span class="n">messages</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s2">&#34;role&#34;</span><span class="p">:</span> <span class="s2">&#34;user&#34;</span><span class="p">,</span> <span class="s2">&#34;content&#34;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&#34;Observation: </span><span class="si">{</span><span class="n">observation</span><span class="si">}</span><span class="s2">&#34;</span><span class="p">})</span>
+</span></span><span class="line"><span class="cl">    
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="s2">&#34;已达最大步数，未能完成任务&#34;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 测试：北京和上海人口之和的平方根</span>
+</span></span><span class="line"><span class="cl"><span class="n">question</span> <span class="o">=</span> <span class="s2">&#34;北京和上海的人口数字之和的平方根是多少？（人口以万为单位，取数字部分）&#34;</span>
+</span></span><span class="line"><span class="cl"><span class="n">answer</span> <span class="o">=</span> <span class="n">run_react_agent</span><span class="p">(</span><span class="n">question</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="s2">&#34;最终答案：&#34;</span><span class="p">,</span> <span class="n">answer</span><span class="p">)</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>这段代码虽然简化，但完整呈现了ReAct的核心循环：模型输出<code>Thought</code>和<code>Action</code>——程序解析并执行工具——把<code>Observation</code>拼回上下文——模型继续推理。你会在终端看到模型一步步思考：&ldquo;先查北京人口→再查上海人口→相加→开平方→得出答案&rdquo;。</p>
+<blockquote>
+<p>⚠️ 生产环境的ReAct实现建议用LangChain或OpenAI的function calling机制，它们对工具调用、错误重试、并发执行有更完善的封装。这里手写是为了让你看清机制本质——会用框架之前，先理解框架在做什么。</p>
+</blockquote>
+<hr>
+<h2 id="47-prompt版本管理与ab测试">4.7 Prompt版本管理与A/B测试</h2>
+<h3 id="471-为什么需要版本管理">4.7.1 为什么需要版本管理</h3>
+<p>Prompt是代码，不是一次性文案。一个上线的Agent，其System Prompt会被反复修改：调约束、换示例、改格式。如果没有版本管理，你很快会面临这些问题：</p>
+<ul>
+<li>改了一处约束，新版本在某些case上变好了，但另一些case悄悄变差了，你却不知道。</li>
+<li>团队多人协作时，A改的Prompt覆盖了B的版本，回滚困难。</li>
+<li>线上出问题，说不清是哪个版本的Prompt引入的。</li>
+</ul>
+<p>生活里这就像写论文不存稿：改了一版又一版，最后想找回前天那段被删的话，再也找不回来了。所以，<strong>Prompt应当和代码一样纳入版本控制</strong>：用Git管理Prompt文件、用语义化版本号标注迭代、每次发版前做回归测试。</p>
+<h3 id="472-版本管理最佳实践">4.7.2 版本管理最佳实践</h3>
+<p>推荐的目录结构——按Agent分目录、按版本号分文件：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">prompts/
+</span></span><span class="line"><span class="cl">├── customer_service/
+</span></span><span class="line"><span class="cl">│   ├── v1.0.0.yaml      # 初版
+</span></span><span class="line"><span class="cl">│   ├── v1.1.0.yaml      # 增加退换货示例
+</span></span><span class="line"><span class="cl">│   ├── v1.2.0.yaml      # 调整语气约束
+</span></span><span class="line"><span class="cl">│   └── latest.yaml      # 指向当前线上版本
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>每个Prompt文件用YAML格式，便于标注元信息（版本、模型、温度、变更日志等）：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-yaml" data-lang="yaml"><span class="line"><span class="cl"><span class="c"># prompts/customer_service/v1.2.0.yaml</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="nt">version</span><span class="p">:</span><span class="w"> </span><span class="s2">&#34;1.2.0&#34;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="nt">model</span><span class="p">:</span><span class="w"> </span><span class="l">gpt-5.4</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="nt">temperature</span><span class="p">:</span><span class="w"> </span><span class="m">0.3</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="l">客服智能体，v1.2.0调整了语气约束，增加情绪安抚</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="nt">created_at</span><span class="p">:</span><span class="w"> </span><span class="ld">2026-07-05</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="nt">author</span><span class="p">:</span><span class="w"> </span><span class="l">Simon</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="nt">changelog</span><span class="p">:</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span>- <span class="l">增加用户情绪激动时的共情约束</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span>- <span class="l">关键信息加粗要求更明确</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="nt">system_prompt</span><span class="p">:</span><span class="w"> </span><span class="p">|</span><span class="sd">
+</span></span></span><span class="line"><span class="cl"><span class="sd">  你是一名专业的电商客服智能体，名为&#34;小助&#34;。
+</span></span></span><span class="line"><span class="cl"><span class="sd">  ...</span><span class="w">  
+</span></span></span></code></pre></td></tr></table>
+</div>
+</div><blockquote>
+<p>💡 <strong>语义化版本号怎么读？</strong> 格式是<code>主版本.次版本.修订号</code>（如1.2.0）。改约束/换示例这种可能影响行为的改动，升次版本；只改注释/格式不动逻辑的，升修订号；彻底重构走主版本。</p>
+</blockquote>
+<h3 id="473-简单的prompt评估框架">4.7.3 简单的Prompt评估框架</h3>
+<p>光有版本不够，还得能评估哪个版本更好。下面实现一个轻量的Prompt评估框架，用一组测试case对比不同版本的表现：每个case有&quot;输入&quot;和&quot;期望包含的关键词&quot;，跑完看通过率。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span><span class="lnt">42
+</span><span class="lnt">43
+</span><span class="lnt">44
+</span><span class="lnt">45
+</span><span class="lnt">46
+</span><span class="lnt">47
+</span><span class="lnt">48
+</span><span class="lnt">49
+</span><span class="lnt">50
+</span><span class="lnt">51
+</span><span class="lnt">52
+</span><span class="lnt">53
+</span><span class="lnt">54
+</span><span class="lnt">55
+</span><span class="lnt">56
+</span><span class="lnt">57
+</span><span class="lnt">58
+</span><span class="lnt">59
+</span><span class="lnt">60
+</span><span class="lnt">61
+</span><span class="lnt">62
+</span><span class="lnt">63
+</span><span class="lnt">64
+</span><span class="lnt">65
+</span><span class="lnt">66
+</span><span class="lnt">67
+</span><span class="lnt">68
+</span><span class="lnt">69
+</span><span class="lnt">70
+</span><span class="lnt">71
+</span><span class="lnt">72
+</span><span class="lnt">73
+</span><span class="lnt">74
+</span><span class="lnt">75
+</span><span class="lnt">76
+</span><span class="lnt">77
+</span><span class="lnt">78
+</span><span class="lnt">79
+</span><span class="lnt">80
+</span><span class="lnt">81
+</span><span class="lnt">82
+</span><span class="lnt">83
+</span><span class="lnt">84
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="c1"># prompt_evaluator.py</span>
+</span></span><span class="line"><span class="cl"><span class="c1"># Prompt版本评估框架</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">json</span>
+</span></span><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">yaml</span>
+</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
+</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">openai</span> <span class="kn">import</span> <span class="n">OpenAI</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">client</span> <span class="o">=</span> <span class="n">OpenAI</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">load_prompt</span><span class="p">(</span><span class="n">yaml_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="s2">&#34;&#34;&#34;从YAML文件加载Prompt配置&#34;&#34;&#34;</span>
+</span></span><span class="line"><span class="cl">    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">yaml_path</span><span class="p">,</span> <span class="s2">&#34;r&#34;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&#34;utf-8&#34;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="n">yaml</span><span class="o">.</span><span class="n">safe_load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">call_agent</span><span class="p">(</span><span class="n">prompt_config</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">user_input</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="s2">&#34;&#34;&#34;用指定Prompt配置调用模型&#34;&#34;&#34;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">response</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">chat</span><span class="o">.</span><span class="n">completions</span><span class="o">.</span><span class="n">create</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">        <span class="n">model</span><span class="o">=</span><span class="n">prompt_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&#34;model&#34;</span><span class="p">,</span> <span class="s2">&#34;gpt-5.4&#34;</span><span class="p">),</span>
+</span></span><span class="line"><span class="cl">        <span class="n">messages</span><span class="o">=</span><span class="p">[</span>
+</span></span><span class="line"><span class="cl">            <span class="p">{</span><span class="s2">&#34;role&#34;</span><span class="p">:</span> <span class="s2">&#34;system&#34;</span><span class="p">,</span> <span class="s2">&#34;content&#34;</span><span class="p">:</span> <span class="n">prompt_config</span><span class="p">[</span><span class="s2">&#34;system_prompt&#34;</span><span class="p">]},</span>
+</span></span><span class="line"><span class="cl">            <span class="p">{</span><span class="s2">&#34;role&#34;</span><span class="p">:</span> <span class="s2">&#34;user&#34;</span><span class="p">,</span> <span class="s2">&#34;content&#34;</span><span class="p">:</span> <span class="n">user_input</span><span class="p">},</span>
+</span></span><span class="line"><span class="cl">        <span class="p">],</span>
+</span></span><span class="line"><span class="cl">        <span class="n">temperature</span><span class="o">=</span><span class="n">prompt_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&#34;temperature&#34;</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">),</span>
+</span></span><span class="line"><span class="cl">    <span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">response</span><span class="o">.</span><span class="n">choices</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">message</span><span class="o">.</span><span class="n">content</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 测试用例：输入 + 期望包含的关键信息</span>
+</span></span><span class="line"><span class="cl"><span class="n">TEST_CASES</span> <span class="o">=</span> <span class="p">[</span>
+</span></span><span class="line"><span class="cl">    <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="s2">&#34;input&#34;</span><span class="p">:</span> <span class="s2">&#34;订单20250704-001还没发货，怎么办&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">        <span class="s2">&#34;must_contain&#34;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&#34;20250704-001&#34;</span><span class="p">,</span> <span class="s2">&#34;催促&#34;</span><span class="p">,</span> <span class="s2">&#34;发货&#34;</span><span class="p">],</span>  <span class="c1"># 答案应包含的关键词</span>
+</span></span><span class="line"><span class="cl">    <span class="p">},</span>
+</span></span><span class="line"><span class="cl">    <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="s2">&#34;input&#34;</span><span class="p">:</span> <span class="s2">&#34;收到的手机屏幕有划痕，要退货&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">        <span class="s2">&#34;must_contain&#34;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&#34;退货&#34;</span><span class="p">,</span> <span class="s2">&#34;申请&#34;</span><span class="p">],</span>
+</span></span><span class="line"><span class="cl">    <span class="p">},</span>
+</span></span><span class="line"><span class="cl">    <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="s2">&#34;input&#34;</span><span class="p">:</span> <span class="s2">&#34;你好&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">        <span class="s2">&#34;must_contain&#34;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&#34;你好&#34;</span><span class="p">,</span> <span class="s2">&#34;请问&#34;</span><span class="p">],</span>  <span class="c1"># 问候场景</span>
+</span></span><span class="line"><span class="cl">    <span class="p">},</span>
+</span></span><span class="line"><span class="cl"><span class="p">]</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">evaluate_prompt</span><span class="p">(</span><span class="n">yaml_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="s2">&#34;&#34;&#34;评估单个Prompt版本在测试集上的表现&#34;&#34;&#34;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">config</span> <span class="o">=</span> <span class="n">load_prompt</span><span class="p">(</span><span class="n">yaml_path</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="n">results</span> <span class="o">=</span> <span class="p">[]</span>
+</span></span><span class="line"><span class="cl">    <span class="n">pass_count</span> <span class="o">=</span> <span class="mi">0</span>
+</span></span><span class="line"><span class="cl">    
+</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="k">case</span> <span class="ow">in</span> <span class="n">TEST_CASES</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="n">output</span> <span class="o">=</span> <span class="n">call_agent</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="k">case</span><span class="p">[</span><span class="s2">&#34;input&#34;</span><span class="p">])</span>
+</span></span><span class="line"><span class="cl">        <span class="c1"># 检查是否包含所有期望关键词</span>
+</span></span><span class="line"><span class="cl">        <span class="n">hit</span> <span class="o">=</span> <span class="p">[</span><span class="n">kw</span> <span class="k">for</span> <span class="n">kw</span> <span class="ow">in</span> <span class="k">case</span><span class="p">[</span><span class="s2">&#34;must_contain&#34;</span><span class="p">]</span> <span class="k">if</span> <span class="n">kw</span> <span class="ow">in</span> <span class="n">output</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl">        <span class="n">passed</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">hit</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="k">case</span><span class="p">[</span><span class="s2">&#34;must_contain&#34;</span><span class="p">])</span>  <span class="c1"># 全部命中才算过</span>
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="n">passed</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">            <span class="n">pass_count</span> <span class="o">+=</span> <span class="mi">1</span>
+</span></span><span class="line"><span class="cl">        <span class="n">results</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
+</span></span><span class="line"><span class="cl">            <span class="s2">&#34;input&#34;</span><span class="p">:</span> <span class="k">case</span><span class="p">[</span><span class="s2">&#34;input&#34;</span><span class="p">],</span>
+</span></span><span class="line"><span class="cl">            <span class="s2">&#34;output&#34;</span><span class="p">:</span> <span class="n">output</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">            <span class="s2">&#34;must_contain&#34;</span><span class="p">:</span> <span class="k">case</span><span class="p">[</span><span class="s2">&#34;must_contain&#34;</span><span class="p">],</span>
+</span></span><span class="line"><span class="cl">            <span class="s2">&#34;hit&#34;</span><span class="p">:</span> <span class="n">hit</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">            <span class="s2">&#34;passed&#34;</span><span class="p">:</span> <span class="n">passed</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">        <span class="p">})</span>
+</span></span><span class="line"><span class="cl">    
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="s2">&#34;version&#34;</span><span class="p">:</span> <span class="n">config</span><span class="p">[</span><span class="s2">&#34;version&#34;</span><span class="p">],</span>
+</span></span><span class="line"><span class="cl">        <span class="s2">&#34;total&#34;</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">TEST_CASES</span><span class="p">),</span>
+</span></span><span class="line"><span class="cl">        <span class="s2">&#34;passed&#34;</span><span class="p">:</span> <span class="n">pass_count</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">        <span class="s2">&#34;pass_rate&#34;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&#34;</span><span class="si">{</span><span class="n">pass_count</span><span class="o">/</span><span class="nb">len</span><span class="p">(</span><span class="n">TEST_CASES</span><span class="p">)</span><span class="o">*</span><span class="mi">100</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2">%&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">        <span class="s2">&#34;details&#34;</span><span class="p">:</span> <span class="n">results</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&#34;__main__&#34;</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="c1"># 对比两个版本</span>
+</span></span><span class="line"><span class="cl">    <span class="n">versions</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&#34;prompts/customer_service/v1.1.0.yaml&#34;</span><span class="p">,</span> <span class="s2">&#34;prompts/customer_service/v1.2.0.yaml&#34;</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">versions</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="ow">not</span> <span class="n">Path</span><span class="p">(</span><span class="n">v</span><span class="p">)</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+</span></span><span class="line"><span class="cl">            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&#34;⚠️ 文件不存在：</span><span class="si">{</span><span class="n">v</span><span class="si">}</span><span class="s2">，请先按4.7.2节创建&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">            <span class="k">continue</span>
+</span></span><span class="line"><span class="cl">        <span class="n">report</span> <span class="o">=</span> <span class="n">evaluate_prompt</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&#34;</span><span class="se">\n</span><span class="s2">版本 </span><span class="si">{</span><span class="n">report</span><span class="p">[</span><span class="s1">&#39;version&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">：通过率 </span><span class="si">{</span><span class="n">report</span><span class="p">[</span><span class="s1">&#39;pass_rate&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">（</span><span class="si">{</span><span class="n">report</span><span class="p">[</span><span class="s1">&#39;passed&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">report</span><span class="p">[</span><span class="s1">&#39;total&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">）&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">report</span><span class="p">[</span><span class="s2">&#34;details&#34;</span><span class="p">]:</span>
+</span></span><span class="line"><span class="cl">            <span class="n">status</span> <span class="o">=</span> <span class="s2">&#34;✅&#34;</span> <span class="k">if</span> <span class="n">d</span><span class="p">[</span><span class="s2">&#34;passed&#34;</span><span class="p">]</span> <span class="k">else</span> <span class="s2">&#34;❌&#34;</span>
+</span></span><span class="line"><span class="cl">            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&#34;  </span><span class="si">{</span><span class="n">status</span><span class="si">}</span><span class="s2"> 输入：</span><span class="si">{</span><span class="n">d</span><span class="p">[</span><span class="s1">&#39;input&#39;</span><span class="p">][:</span><span class="mi">20</span><span class="p">]</span><span class="si">}</span><span class="s2">... 命中：</span><span class="si">{</span><span class="n">d</span><span class="p">[</span><span class="s1">&#39;hit&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&#34;</span><span class="p">)</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>这是一个最小可用的评估框架：用一组带期望关键词的测试case，跑两个Prompt版本，对比通过率。生产中你可以把&quot;关键词匹配&quot;升级成&quot;LLM-as-judge&quot;（用另一个模型给输出打分），评估维度也可以扩展到准确性、完整度、语气等。</p>
+<blockquote>
+<p>💡 <strong>什么是LLM-as-judge？</strong> 就是用另一个LLM来当&quot;裁判&quot;，给被测模型的输出打分。比如让GPT-5.4对客服回复的&quot;礼貌度&quot;打1-5分。比关键词匹配更灵活，但要小心裁判本身的偏见。</p>
+</blockquote>
+<blockquote>
+<p>💡 评估的核心不是工具多复杂，而是<strong>有一组稳定的测试case</strong>。建议每次Prompt改动后都跑一遍回归，确保没有&quot;按下葫芦浮起瓢&quot;——这边好了那边坏了。</p>
+</blockquote>
+<hr>
+<h2 id="48-小结">4.8 小结</h2>
+<p>本章我们系统学习了智能体开发中的提示工程技术，覆盖了从基础到进阶的完整链路：</p>
+<ul>
+<li><strong>System Prompt</strong>是智能体的宪法，包含角色、约束、能力、格式四要素，要用结构化方式书写。</li>
+<li><strong>Few-shot Learning</strong>通过示例对齐模型行为，适用于格式控制、风格模仿、小样本分类。</li>
+<li>**思维链（CoT）**让模型先推理后作答，是Agent多步决策的基础；<strong>自一致性</strong>通过多路径投票进一步提升稳定性。</li>
+<li><strong>结构化输出</strong>让Agent的输出可被程序直接消费，Pydantic + Structured Outputs是当前最佳实践。</li>
+<li><strong>ReAct模板</strong>用Thought/Action/Observation循环实现&quot;推理+行动&quot;，是当前Agent的主流范式。</li>
+<li><strong>Prompt版本管理与A/B测试</strong>让Prompt迭代从&quot;凭感觉改&quot;走向&quot;用数据说话&quot;。</li>
+</ul>
+<p>这些技术不是孤立的，而是层层组合的：一个生产级Agent的System Prompt里，往往同时包含角色定义、Few-shot示例、CoT触发语、输出格式约束；它的运行循环则基于ReAct，每一步的输出又被结构化解析。优秀的Prompt工程师不是会背口诀的人，而是能把这套技术<strong>按需组合、用数据验证</strong>的人。</p>
+<blockquote>
+<p>📌 下一章，我们将深入智能体的<strong>工具调用机制</strong>——如何让Agent真正&quot;动手&quot;操作外部世界，敬请期待。</p>
+</blockquote>
+<hr>
+<h2 id="49-预告第5章-工具调用机制">4.9 预告：第5章 工具调用机制</h2>
+<p>智能体之所以叫&quot;智能体&quot;而不只是&quot;聊天机器人&quot;，关键在于它能<strong>调用工具、执行动作</strong>。第5章我们将深入：</p>
+<ul>
+<li><strong>Function Calling的标准协议</strong>：OpenAI、Anthropic、Gemini的工具调用接口对比</li>
+<li><strong>工具注册与发现</strong>：如何让Agent动态感知可用工具</li>
+<li><strong>多工具编排</strong>：串行、并行、条件分支的调用策略</li>
+<li><strong>工具调用失败处理</strong>：超时、重试、降级机制</li>
+<li><strong>自定义工具开发</strong>：把任意Python函数包装成Agent可用的工具</li>
+</ul>
+<p>Prompt给了智能体灵魂，工具给它双手。下一章，我们给智能体装上双手。</p>
+</div><div class="post-footer" id="post-footer">
+    <div class="post-info">
+        <div class="post-info-line">
+            <div class="post-info-mod">
+                <span>Updated on 2026-07-05</span>
+            </div></div>
+        <div class="post-info-line">
+            <div class="post-info-md"></div>
+            <div class="post-info-share">
+                <span><a href="javascript:void(0);" title="Share on Twitter" data-sharer="twitter" data-url="https://www.ithome.me/post/2026/07/05/ai%E6%99%BA%E8%83%BD%E4%BD%93%E5%BC%80%E5%8F%91-%E7%AC%AC4%E7%AB%A0-%E6%8F%90%E7%A4%BA%E5%B7%A5%E7%A8%8B%E8%BF%9B%E9%98%B6/" data-title="提示工程进阶：为智能体设计高效Prompt" data-via="ChenCiki" data-hashtags="AI Agent,Prompt Engineering,提示工程,LLM,AI智能体开发实战"><i class="fab fa-twitter fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on Linkedin" data-sharer="linkedin" data-url="https://www.ithome.me/post/2026/07/05/ai%E6%99%BA%E8%83%BD%E4%BD%93%E5%BC%80%E5%8F%91-%E7%AC%AC4%E7%AB%A0-%E6%8F%90%E7%A4%BA%E5%B7%A5%E7%A8%8B%E8%BF%9B%E9%98%B6/"><i class="fab fa-linkedin fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on 微博" data-sharer="weibo" data-url="https://www.ithome.me/post/2026/07/05/ai%E6%99%BA%E8%83%BD%E4%BD%93%E5%BC%80%E5%8F%91-%E7%AC%AC4%E7%AB%A0-%E6%8F%90%E7%A4%BA%E5%B7%A5%E7%A8%8B%E8%BF%9B%E9%98%B6/" data-title="提示工程进阶：为智能体设计高效Prompt" data-ralateuid="xxx"><i class="fab fa-weibo fa-fw" aria-hidden="true"></i></a></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="post-info-more">
+        <section class="post-tags"><i class="fas fa-tags fa-fw" aria-hidden="true"></i>&nbsp;<a href="/tags/ai-agent/">AI Agent</a>,&nbsp;<a href="/tags/prompt-engineering/">Prompt Engineering</a>,&nbsp;<a href="/tags/%E6%8F%90%E7%A4%BA%E5%B7%A5%E7%A8%8B/">提示工程</a>,&nbsp;<a href="/tags/llm/">LLM</a>,&nbsp;<a href="/tags/ai%E6%99%BA%E8%83%BD%E4%BD%93%E5%BC%80%E5%8F%91%E5%AE%9E%E6%88%98/">AI智能体开发实战</a></section>
+        <section>
+            <span><a href="javascript:void(0);" onclick="window.history.back();">Back</a></span>&nbsp;|&nbsp;<span><a href="/">Home</a></span>
+        </section>
+    </div>
+
+    <div class="post-nav"><a href="/post/2026/07/05/ai%E6%99%BA%E8%83%BD%E4%BD%93%E5%BC%80%E5%8F%91-%E7%AC%AC1%E7%AB%A0-%E6%99%BA%E8%83%BD%E4%BD%93%E6%97%B6%E4%BB%A3/" class="prev" rel="prev" title="智能体时代：AI Agent的崛起与变革"><i class="fas fa-angle-left fa-fw" aria-hidden="true"></i>智能体时代：AI Agent的崛起与变革</a>
+            <a href="/post/2026/07/05/ai%E6%99%BA%E8%83%BD%E4%BD%93%E5%BC%80%E5%8F%91-%E7%AC%AC6%E7%AB%A0-%E6%8E%A8%E7%90%86%E6%A8%A1%E5%BC%8F/" class="next" rel="next" title="推理模式：ReAct与Plan-and-Execute">推理模式：ReAct与Plan-and-Execute<i class="fas fa-angle-right fa-fw" aria-hidden="true"></i></a></div>
+</div>
+<div id="comments"><div id="gitalk" class="comment"></div><noscript>
+                Please enable JavaScript to view the comments powered by <a href="https://github.com/gitalk/gitalk"></a>Gitalk</a>.
+            </noscript></div></article></div>
+            </main><footer class="footer">
+        <div class="footer-container"><div class="footer-line" itemscope itemtype="http://schema.org/CreativeWork"><i class="far fa-copyright fa-fw" aria-hidden="true"></i><span itemprop="copyrightYear">2011 - 2026</span><span class="author" itemprop="copyrightHolder">&nbsp;<a href="https://www.ithome.me/" target="_blank">Simon Chen</a></span>&nbsp;|&nbsp;<span class="license"><a rel="license external nofollow noopener noreferrer" href="https://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank">CC BY-NC-ND 4.0</a></span></div>
+        </div>
+    </footer></div>
+
+        <div id="fixed-buttons"><a href="#" id="back-to-top" class="fixed-button" title="Back to Top">
+                <i class="fas fa-arrow-up fa-fw" aria-hidden="true"></i>
+            </a><a href="#" id="view-comments" class="fixed-button" title="View Comments">
+                <i class="fas fa-comment fa-fw" aria-hidden="true"></i>
+            </a>
+        </div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1.8.0/dist/gitalk.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/css/lightgallery-bundle.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/katex.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/copy-tex.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.css"><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/gitalk@1.8.0/dist/gitalk.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/autocomplete.js@0.38.1/dist/autocomplete.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lunr@2.3.9/lunr.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lazysizes@5.3.1/lazysizes.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/lightgallery.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/plugins/thumbnail/lg-thumbnail.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/plugins/zoom/lg-zoom.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/clipboard@2.0.11/dist/clipboard.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/sharer.js@0.5.1/sharer.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/katex.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/auto-render.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/copy-tex.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/mhchem.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.js"></script><script type="text/javascript">window.config={"code":{"copyTitle":"Copy to clipboard","maxShownLines":50},"comment":{"gitalk":{"admin":["cikichen"],"clientID":"be0f52370ed1285b6c7c","clientSecret":"734a7d8d0ded346ca7a3d565d57de3f8eeb2850b","id":"2026-07-05T00:00:00Z","owner":"cikichen","repo":"gitalk","title":"提示工程进阶：为智能体设计高效Prompt"}},"cookieconsent":{"content":{"dismiss":"我知道了","link":"了解更多","message":"本网站使用 Cookies 来改善您的浏览体验."},"enable":true,"palette":{"button":{"background":"#f0f0f0"},"popup":{"background":"#1aa3ff"}},"theme":"edgeless"},"lightgallery":true,"math":{"delimiters":[{"display":true,"left":"$$","right":"$$"},{"display":true,"left":"\\[","right":"\\]"},{"display":true,"left":"\\begin{equation}","right":"\\end{equation}"},{"display":true,"left":"\\begin{equation*}","right":"\\end{equation*}"},{"display":true,"left":"\\begin{align}","right":"\\end{align}"},{"display":true,"left":"\\begin{align*}","right":"\\end{align*}"},{"display":true,"left":"\\begin{alignat}","right":"\\end{alignat}"},{"display":true,"left":"\\begin{alignat*}","right":"\\end{alignat*}"},{"display":true,"left":"\\begin{gather}","right":"\\end{gather}"},{"display":true,"left":"\\begin{CD}","right":"\\end{CD}"},{"display":false,"left":"$","right":"$"},{"display":false,"left":"\\(","right":"\\)"}],"strict":false},"search":{"highlightTag":"em","lunrIndexURL":"/index.json","maxResultLength":10,"noResultsFound":"No results found","snippetLength":50,"type":"lunr"}};</script><script type="text/javascript" src="/js/theme.min.js"></script></body>
+</html>

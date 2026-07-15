@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="robots" content="noodp" />
+        <title>代码复杂度度量实战：从圈复杂度到认知复杂度 - 编程心语</title><meta name="Description" content="深入理解代码复杂度度量方法，从经典圈复杂度到现代认知复杂度，用实际代码示例对比分析，帮助团队建立可量化的代码质量评估体系"><meta property="og:url" content="https://www.ithome.me/post/2026/07/06/code-complexity-metrics/">
+  <meta property="og:site_name" content="编程心语">
+  <meta property="og:title" content="代码复杂度度量实战：从圈复杂度到认知复杂度">
+  <meta property="og:description" content="深入理解代码复杂度度量方法，从经典圈复杂度到现代认知复杂度，用实际代码示例对比分析，帮助团队建立可量化的代码质量评估体系">
+  <meta property="og:locale" content="zh_CN">
+  <meta property="og:type" content="article">
+    <meta property="article:section" content="posts">
+    <meta property="article:published_time" content="2026-07-06T08:00:00+08:00">
+    <meta property="article:modified_time" content="2026-07-06T08:33:14+08:00">
+    <meta property="article:tag" content="代码质量">
+    <meta property="article:tag" content="复杂度">
+    <meta property="article:tag" content="重构">
+    <meta property="article:tag" content="圈复杂度">
+    <meta property="article:tag" content="认知复杂度">
+
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="代码复杂度度量实战：从圈复杂度到认知复杂度">
+  <meta name="twitter:description" content="深入理解代码复杂度度量方法，从经典圈复杂度到现代认知复杂度，用实际代码示例对比分析，帮助团队建立可量化的代码质量评估体系">
+      <meta name="twitter:site" content="@ChenCiki">
+<meta name="application-name" content="编程心语">
+<meta name="apple-mobile-web-app-title" content="编程心语"><meta name="theme-color" content="#ffffff"><meta name="msapplication-TileColor" content="#da532c"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5"><link rel="manifest" href="/site.webmanifest"><link rel="canonical" href="https://www.ithome.me/post/2026/07/06/code-complexity-metrics/" /><link rel="prev" href="https://www.ithome.me/post/2026/07/05/ai%E6%99%BA%E8%83%BD%E4%BD%93%E5%BC%80%E5%8F%91%E5%AE%9E%E6%88%98-%E5%AE%8C%E6%95%B4%E7%9B%AE%E5%BD%95/" /><link rel="next" href="https://www.ithome.me/post/2026/07/07/finite-state-machine-in-practice/" /><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/normalize.css@8.0.1/normalize.min.css"><link rel="stylesheet" href="/css/style.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css"><script type="application/ld+json">
+    {
+        "@context": "http://schema.org",
+        "@type": "BlogPosting",
+        "headline": "代码复杂度度量实战：从圈复杂度到认知复杂度",
+        "inLanguage": "zh-CN",
+        "mainEntityOfPage": {
+            "@type": "WebPage",
+            "@id": "https:\/\/www.ithome.me\/post\/2026\/07\/06\/code-complexity-metrics\/"
+        },"image": ["https:\/\/www.ithome.me\/cover.png"],"genre": "posts","keywords": "代码质量, 复杂度, 重构, 圈复杂度, 认知复杂度","wordcount":  2460 ,
+        "url": "https:\/\/www.ithome.me\/post\/2026\/07\/06\/code-complexity-metrics\/","datePublished": "2026-07-06T08:00:00+08:00","dateModified": "2026-07-06T08:33:14+08:00","publisher": {
+            "@type": "Organization",
+            "name": "SimonChen","logo": "https:\/\/www.ithome.me\/logo.png"},"author": {
+                "@type": "Person",
+                "name": "Simon"
+            },"description": "深入理解代码复杂度度量方法，从经典圈复杂度到现代认知复杂度，用实际代码示例对比分析，帮助团队建立可量化的代码质量评估体系"
+    }
+    </script><script async src="https://www.googletagmanager.com/gtag/js?id=G-H1Q5563VR8"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-H1Q5563VR8', { 'anonymize_ip': true });
+</script></head>
+    <body data-header-desktop="fixed" data-header-mobile="auto"><script type="text/javascript">(window.localStorage && localStorage.getItem('theme') ? localStorage.getItem('theme') === 'dark' : ('auto' === 'auto' ? window.matchMedia('(prefers-color-scheme: dark)').matches : 'auto' === 'dark')) && document.body.setAttribute('theme', 'dark');</script>
+
+        <div id="mask"></div><div class="wrapper"><header class="desktop" id="header-desktop">
+    <div class="header-wrapper">
+        <div class="header-title">
+            <a href="/" title="编程心语">编程心语</a>
+        </div>
+        <div class="menu">
+            <div class="menu-inner"><a class="menu-item" href="/posts/"> 文章 </a><a class="menu-item" href="/categories/"> 分类 </a><a class="menu-item" href="/tags/"> 标签 </a><a class="menu-item" href="/about-me/"> 关于 </a><span class="menu-item delimiter"></span><span class="menu-item search" id="search-desktop">
+                        <input type="text" placeholder="搜索文章..." id="search-input-desktop">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-desktop" title="Search">
+                            <i class="fas fa-search fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-desktop" title="Clear">
+                            <i class="fas fa-times-circle fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-desktop">
+                            <i class="fas fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+                        </span>
+                    </span><a href="javascript:void(0);" class="menu-item theme-switch" title="Switch Theme">
+                    <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</header><header class="mobile" id="header-mobile">
+    <div class="header-container">
+        <div class="header-wrapper">
+            <div class="header-title">
+                <a href="/" title="编程心语">编程心语</a>
+            </div>
+            <div class="menu-toggle" id="menu-toggle-mobile">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+        <div class="menu" id="menu-mobile"><div class="search-wrapper">
+                    <div class="search mobile" id="search-mobile">
+                        <input type="text" placeholder="搜索文章..." id="search-input-mobile">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-mobile" title="Search">
+                            <i class="fas fa-search fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-mobile" title="Clear">
+                            <i class="fas fa-times-circle fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-mobile">
+                            <i class="fas fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+                        </span>
+                    </div>
+                    <a href="javascript:void(0);" class="search-cancel" id="search-cancel-mobile">
+                        Cancel
+                    </a>
+                </div><a class="menu-item" href="/posts/" title="">文章</a><a class="menu-item" href="/categories/" title="">分类</a><a class="menu-item" href="/tags/" title="">标签</a><a class="menu-item" href="/about-me/" title="">关于</a><a href="javascript:void(0);" class="menu-item theme-switch" title="Switch Theme">
+                <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
+            </a></div>
+    </div>
+</header><div class="search-dropdown desktop">
+        <div id="search-dropdown-desktop"></div>
+    </div>
+    <div class="search-dropdown mobile">
+        <div id="search-dropdown-mobile"></div>
+    </div><main class="main">
+                <div class="container"><div class="toc" id="toc-auto">
+            <h2 class="toc-title">Contents</h2>
+            <div class="toc-content" id="toc-content-auto"></div>
+        </div><article class="page single"><h1 class="single-title animate__animated animate__flipInX">代码复杂度度量实战：从圈复杂度到认知复杂度</h1><div class="post-meta">
+            <div class="post-meta-line"><span class="post-author"><a href="https://www.ithome.me/" title="Author" target="_blank" rel="noopener noreferrer author" class="author"><i class="fas fa-user-circle fa-fw" aria-hidden="true"></i>Simon</a>
+</span>&nbsp;<span class="post-category">included in <a href="/categories/essay/"><i class="far fa-folder fa-fw" aria-hidden="true"></i>Essay</a></span></div>
+            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw" aria-hidden="true"></i>&nbsp;<time datetime="2026-07-06">2026-07-06</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden="true"></i>&nbsp;2460 words&nbsp;
+                <i class="far fa-clock fa-fw" aria-hidden="true"></i>&nbsp;5 minutes&nbsp;</div>
+        </div><div class="details toc" id="toc-static"  data-kept="true">
+                <div class="details-summary toc-title">
+                    <span>Contents</span>
+                    <span><i class="details-icon fas fa-angle-right" aria-hidden="true"></i></span>
+                </div>
+                <div class="details-content toc-content" id="toc-content-static"><nav id="TableOfContents">
+  <ul>
+    <li><a href="#为什么需要度量复杂度">为什么需要度量复杂度</a></li>
+    <li><a href="#圈复杂度经典但不够完美">圈复杂度：经典但不够完美</a></li>
+    <li><a href="#认知复杂度更贴近人类直觉">认知复杂度：更贴近人类直觉</a></li>
+    <li><a href="#实战用工具度量你的代码">实战：用工具度量你的代码</a>
+      <ul>
+        <li><a href="#python-项目radon">Python 项目：radon</a></li>
+        <li><a href="#javascripttypescript-项目eslint-plugin-sonarjs">JavaScript/TypeScript 项目：eslint-plugin-sonarjs</a></li>
+        <li><a href="#java-项目sonarqube">Java 项目：SonarQube</a></li>
+      </ul>
+    </li>
+    <li><a href="#如何设置合理阈值">如何设置合理阈值</a></li>
+    <li><a href="#降低复杂度的三个实用技巧">降低复杂度的三个实用技巧</a></li>
+    <li><a href="#小结">小结</a></li>
+  </ul>
+</nav></div>
+            </div><div class="content" id="content"><p>我们常说某段代码复杂，但复杂到底怎么衡量？靠感觉？还是靠指标？代码复杂度度量是工程实践中最实用的质量评估手段之一，它能让代码审查从主观判断走向客观数据。本文从两种主流度量方法入手，用实际代码对比分析，帮你建立可落地的复杂度评估体系。</p>
+<h2 id="为什么需要度量复杂度">为什么需要度量复杂度</h2>
+<p>先说一个真实场景。团队 Code Review 时，有人觉得一个函数太长应该拆分，有人觉得还能接受。争论半天没有结论，因为每个人对复杂的感知不同。如果有量化指标，讨论就有了共同基础。</p>
+<p>复杂度度量的核心价值有三个：</p>
+<ol>
+<li><strong>识别重构优先级</strong>：哪些模块最需要重构，看数据而不是靠猜</li>
+<li><strong>设置质量门槛</strong>：CI 流水线中自动拦截过高的复杂度</li>
+<li><strong>追踪改善趋势</strong>：重构前后对比指标，验证效果</li>
+</ol>
+<h2 id="圈复杂度经典但不够完美">圈复杂度：经典但不够完美</h2>
+<p>圈复杂度（Cyclomatic Complexity）由 Thomas McCabe 在 1976 年提出，是最经典的代码复杂度指标。它衡量的是程序控制流图中独立路径的数量。</p>
+<p><strong>计算规则</strong>：基础值为 1，每出现一个条件分支（if、for、while、case、&amp;&amp;、|| 等）加 1。</p>
+<p>看一个例子：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">get_discount</span><span class="p">(</span><span class="n">price</span><span class="p">,</span> <span class="n">user_type</span><span class="p">,</span> <span class="n">is_vip</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">    <span class="n">discount</span> <span class="o">=</span> <span class="mi">0</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="n">user_type</span> <span class="o">==</span> <span class="s2">&#34;premium&#34;</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="n">is_vip</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">            <span class="n">discount</span> <span class="o">=</span> <span class="mf">0.3</span>
+</span></span><span class="line"><span class="cl">        <span class="k">else</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">            <span class="n">discount</span> <span class="o">=</span> <span class="mf">0.15</span>
+</span></span><span class="line"><span class="cl">    <span class="k">elif</span> <span class="n">user_type</span> <span class="o">==</span> <span class="s2">&#34;standard&#34;</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="n">is_vip</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">            <span class="n">discount</span> <span class="o">=</span> <span class="mf">0.1</span>
+</span></span><span class="line"><span class="cl">        <span class="k">else</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">            <span class="n">discount</span> <span class="o">=</span> <span class="mf">0.05</span>
+</span></span><span class="line"><span class="cl">    <span class="k">else</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="n">discount</span> <span class="o">=</span> <span class="mi">0</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">price</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">discount</span><span class="p">)</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>这段代码的圈复杂度是 6（1 个基础值 + 5 个分支条件）。一般认为：</p>
+<table>
+<thead>
+<tr>
+<th>圈复杂度</th>
+<th>风险等级</th>
+<th>建议</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1-10</td>
+<td>低风险</td>
+<td>简单，易于测试</td>
+</tr>
+<tr>
+<td>11-20</td>
+<td>中风险</td>
+<td>可接受，适度关注</td>
+</tr>
+<tr>
+<td>21-50</td>
+<td>高风险</td>
+<td>需要重构</td>
+</tr>
+<tr>
+<td>50+</td>
+<td>极高风险</td>
+<td>必须重构</td>
+</tr>
+</tbody>
+</table>
+<p>圈复杂度的优点是计算简单、工具成熟，但它有一个明显缺陷：<strong>无法区分嵌套层级带来的认知负担</strong>。</p>
+<p>对比两段代码：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="c1"># 代码 A：平铺条件，圈复杂度 3</span>
+</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">check_a</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="n">x</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="nb">print</span><span class="p">(</span><span class="s2">&#34;正数&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="n">x</span> <span class="o">&gt;</span> <span class="mi">10</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="nb">print</span><span class="p">(</span><span class="s2">&#34;大数&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="n">x</span> <span class="o">&gt;</span> <span class="mi">100</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="nb">print</span><span class="p">(</span><span class="s2">&#34;超大数&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 代码 B：嵌套条件，圈复杂度同样是 3</span>
+</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">check_b</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="n">x</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="n">x</span> <span class="o">&gt;</span> <span class="mi">10</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">            <span class="k">if</span> <span class="n">x</span> <span class="o">&gt;</span> <span class="mi">100</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">                <span class="nb">print</span><span class="p">(</span><span class="s2">&#34;超大数&#34;</span><span class="p">)</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>两段代码圈复杂度完全相同，但代码 B 明显更难理解。这就是圈复杂度的盲区。</p>
+<h2 id="认知复杂度更贴近人类直觉">认知复杂度：更贴近人类直觉</h2>
+<p>认知复杂度（Cognitive Complexity）由 SonarSource（现 Sonar）在 2016 年提出，专门解决圈复杂度无法反映嵌套深度的问题。</p>
+<p><strong>核心规则</strong>：</p>
+<ol>
+<li>基础控制流（if、for、while、catch）每次 +1</li>
+<li><strong>嵌套层级每加深一层，额外 +1</strong>（这是关键区别）</li>
+<li>布尔运算符（&amp;&amp;、||）每次 +1，但不因嵌套额外加分</li>
+<li>递归调用 +1</li>
+<li>break/continue/goto 配合 label +1</li>
+</ol>
+<p>用前面的例子重新计算：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="c1"># 代码 A：平铺条件，认知复杂度 3</span>
+</span></span><span class="line"><span class="cl"><span class="c1"># 三个 if 各 +1，无嵌套额外加分</span>
+</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">check_a</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="n">x</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>          <span class="c1"># +1</span>
+</span></span><span class="line"><span class="cl">        <span class="nb">print</span><span class="p">(</span><span class="s2">&#34;正数&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="n">x</span> <span class="o">&gt;</span> <span class="mi">10</span><span class="p">:</span>         <span class="c1"># +1</span>
+</span></span><span class="line"><span class="cl">        <span class="nb">print</span><span class="p">(</span><span class="s2">&#34;大数&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="n">x</span> <span class="o">&gt;</span> <span class="mi">100</span><span class="p">:</span>        <span class="c1"># +1</span>
+</span></span><span class="line"><span class="cl">        <span class="nb">print</span><span class="p">(</span><span class="s2">&#34;超大数&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 代码 B：嵌套条件，认知复杂度 6</span>
+</span></span><span class="line"><span class="cl"><span class="c1"># 第一层 if +1，第二层 if +2（1+嵌套1），第三层 if +3（1+嵌套2）</span>
+</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">check_b</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="n">x</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>           <span class="c1"># +1</span>
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="n">x</span> <span class="o">&gt;</span> <span class="mi">10</span><span class="p">:</span>      <span class="c1"># +2 (嵌套1层)</span>
+</span></span><span class="line"><span class="cl">            <span class="k">if</span> <span class="n">x</span> <span class="o">&gt;</span> <span class="mi">100</span><span class="p">:</span> <span class="c1"># +3 (嵌套2层)</span>
+</span></span><span class="line"><span class="cl">                <span class="nb">print</span><span class="p">(</span><span class="s2">&#34;超大数&#34;</span><span class="p">)</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>认知复杂度 A=3，B=6，准确反映了 B 更难理解的事实。</p>
+<p>再看一个更实际的例子：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="n">String</span><span class="w"> </span><span class="nf">formatUser</span><span class="p">(</span><span class="n">User</span><span class="w"> </span><span class="n">user</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">user</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">null</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">                          </span><span class="c1">// +1</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">user</span><span class="p">.</span><span class="na">isActive</span><span class="p">())</span><span class="w"> </span><span class="p">{</span><span class="w">                   </span><span class="c1">// +2 (嵌套1)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">user</span><span class="p">.</span><span class="na">getRole</span><span class="p">()</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">null</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">        </span><span class="c1">// +3 (嵌套2)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">                </span><span class="k">return</span><span class="w"> </span><span class="n">user</span><span class="p">.</span><span class="na">getRole</span><span class="p">().</span><span class="na">getName</span><span class="p">();</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">                </span><span class="k">return</span><span class="w"> </span><span class="s">&#34;guest&#34;</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="s">&#34;inactive&#34;</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="s">&#34;unknown&#34;</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="c1">// 圈复杂度: 4</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="c1">// 认知复杂度: 6</span><span class="w">
+</span></span></span></code></pre></td></tr></table>
+</div>
+</div><p>认知复杂度更准确地反映了嵌套带来的理解负担。</p>
+<h2 id="实战用工具度量你的代码">实战：用工具度量你的代码</h2>
+<h3 id="python-项目radon">Python 项目：radon</h3>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl"><span class="c1"># 安装</span>
+</span></span><span class="line"><span class="cl">pip install radon
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 计算单个文件的圈复杂度</span>
+</span></span><span class="line"><span class="cl">radon cc -s user_service.py
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 计算认知复杂度</span>
+</span></span><span class="line"><span class="cl">radon mi -s user_service.py
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 批量扫描整个项目，输出 JSON</span>
+</span></span><span class="line"><span class="cl">radon cc -s -j -i venv/ .
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>输出示例：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">user_service.py
+</span></span><span class="line"><span class="cl">    F 46-58 format_user C 12
+</span></span><span class="line"><span class="cl">    F 60-75 validate_user C 18
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p><code>C 12</code> 表示该函数圈复杂度为 12（C 级别），<code>C 18</code> 表示 18（C 级别）。</p>
+<h3 id="javascripttypescript-项目eslint-plugin-sonarjs">JavaScript/TypeScript 项目：eslint-plugin-sonarjs</h3>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span><span class="lnt">7
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-json" data-lang="json"><span class="line"><span class="cl"><span class="c1">// .eslintrc.json
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="nt">&#34;plugins&#34;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&#34;sonarjs&#34;</span><span class="p">],</span>
+</span></span><span class="line"><span class="cl">  <span class="nt">&#34;rules&#34;</span><span class="p">:</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="nt">&#34;sonarjs/cognitive-complexity&#34;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&#34;error&#34;</span><span class="p">,</span> <span class="mi">15</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl">  <span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>配置后，ESLint 会在认知复杂度超过 15 时报错：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">error: Refactor this function to reduce its Cognitive Complexity from 18 to the 15 allowed
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h3 id="java-项目sonarqube">Java 项目：SonarQube</h3>
+<p>SonarQube 内置认知复杂度规则，在项目仪表盘直接展示：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-xml" data-lang="xml"><span class="line"><span class="cl"><span class="c">&lt;!-- sonar-project.properties --&gt;</span>
+</span></span><span class="line"><span class="cl">sonar.projectKey=my-project
+</span></span><span class="line"><span class="cl">sonar.sources=src
+</span></span><span class="line"><span class="cl">sonar.qualitygate.wait=true
+</span></span></code></pre></td></tr></table>
+</div>
+</div><div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">sonar-scanner
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h2 id="如何设置合理阈值">如何设置合理阈值</h2>
+<p>没有放之四海皆准的阈值，但有一个经过大量项目验证的参考范围：</p>
+<ul>
+<li><strong>圈复杂度</strong>：函数级别 10 为警告线，15 为红线</li>
+<li><strong>认知复杂度</strong>：函数级别 15 为警告线，25 为红线</li>
+</ul>
+<p>不同场景需要调整：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-yaml" data-lang="yaml"><span class="line"><span class="cl"><span class="c"># 在 CI 中配置复杂度门槛</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="nt">complexity_rules</span><span class="p">:</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="nt">cyclomatic</span><span class="p">:</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nt">warning</span><span class="p">:</span><span class="w"> </span><span class="m">10</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nt">error</span><span class="p">:</span><span class="w"> </span><span class="m">15</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="nt">cognitive</span><span class="p">:</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nt">warning</span><span class="p">:</span><span class="w"> </span><span class="m">15</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nt">error</span><span class="p">:</span><span class="w"> </span><span class="m">25</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="nt">exclude</span><span class="p">:</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span>- <span class="s2">&#34;**/test/**&#34;</span><span class="w">        </span><span class="c"># 测试代码放宽</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span>- <span class="s2">&#34;**/generated/**&#34;</span><span class="w">   </span><span class="c"># 生成代码豁免</span><span class="w">
+</span></span></span></code></pre></td></tr></table>
+</div>
+</div><p>关键原则：<strong>新代码严格管控，遗留代码逐步改善</strong>。不要一次性要求所有老代码达标，而是在每次修改时遵循童子军原则——改到哪，改善到哪。</p>
+<h2 id="降低复杂度的三个实用技巧">降低复杂度的三个实用技巧</h2>
+<p><strong>技巧一：用卫语句消除嵌套</strong></p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="c1"># 改造前：认知复杂度 6</span>
+</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">process_order</span><span class="p">(</span><span class="n">order</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="n">order</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="n">order</span><span class="o">.</span><span class="n">is_paid</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">            <span class="k">if</span> <span class="n">order</span><span class="o">.</span><span class="n">is_shipped</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">                <span class="k">return</span> <span class="s2">&#34;completed&#34;</span>
+</span></span><span class="line"><span class="cl">            <span class="k">else</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">                <span class="k">return</span> <span class="s2">&#34;shipping&#34;</span>
+</span></span><span class="line"><span class="cl">        <span class="k">else</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">            <span class="k">return</span> <span class="s2">&#34;pending&#34;</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="s2">&#34;invalid&#34;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 改造后：认知复杂度 3</span>
+</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">process_order</span><span class="p">(</span><span class="n">order</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="n">order</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="s2">&#34;invalid&#34;</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="ow">not</span> <span class="n">order</span><span class="o">.</span><span class="n">is_paid</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="s2">&#34;pending&#34;</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="n">order</span><span class="o">.</span><span class="n">is_shipped</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="s2">&#34;completed&#34;</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="s2">&#34;shipping&#34;</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p><strong>技巧二：用策略模式替代多重条件</strong></p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="c1"># 改造前：每加一种类型就加 elif</span>
+</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">calculate_fee</span><span class="p">(</span><span class="n">user_type</span><span class="p">,</span> <span class="n">base</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="n">user_type</span> <span class="o">==</span> <span class="s2">&#34;vip&#34;</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="n">base</span> <span class="o">*</span> <span class="mf">0.7</span>
+</span></span><span class="line"><span class="cl">    <span class="k">elif</span> <span class="n">user_type</span> <span class="o">==</span> <span class="s2">&#34;premium&#34;</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="n">base</span> <span class="o">*</span> <span class="mf">0.85</span>
+</span></span><span class="line"><span class="cl">    <span class="k">elif</span> <span class="n">user_type</span> <span class="o">==</span> <span class="s2">&#34;standard&#34;</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="n">base</span>
+</span></span><span class="line"><span class="cl">    <span class="k">else</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="n">base</span> <span class="o">*</span> <span class="mf">1.1</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 改造后：扩展不修改，复杂度恒为 1</span>
+</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">abc</span> <span class="kn">import</span> <span class="n">ABC</span><span class="p">,</span> <span class="n">abstractmethod</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">class</span> <span class="nc">FeeStrategy</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">    <span class="nd">@abstractmethod</span>
+</span></span><span class="line"><span class="cl">    <span class="k">def</span> <span class="nf">calculate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">base</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span> <span class="o">...</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">class</span> <span class="nc">VipFee</span><span class="p">(</span><span class="n">FeeStrategy</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">    <span class="k">def</span> <span class="nf">calculate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">base</span><span class="p">):</span> <span class="k">return</span> <span class="n">base</span> <span class="o">*</span> <span class="mf">0.7</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">class</span> <span class="nc">PremiumFee</span><span class="p">(</span><span class="n">FeeStrategy</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">    <span class="k">def</span> <span class="nf">calculate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">base</span><span class="p">):</span> <span class="k">return</span> <span class="n">base</span> <span class="o">*</span> <span class="mf">0.85</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">class</span> <span class="nc">StandardFee</span><span class="p">(</span><span class="n">FeeStrategy</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">    <span class="k">def</span> <span class="nf">calculate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">base</span><span class="p">):</span> <span class="k">return</span> <span class="n">base</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">strategies</span> <span class="o">=</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="s2">&#34;vip&#34;</span><span class="p">:</span> <span class="n">VipFee</span><span class="p">(),</span>
+</span></span><span class="line"><span class="cl">    <span class="s2">&#34;premium&#34;</span><span class="p">:</span> <span class="n">PremiumFee</span><span class="p">(),</span>
+</span></span><span class="line"><span class="cl">    <span class="s2">&#34;standard&#34;</span><span class="p">:</span> <span class="n">StandardFee</span><span class="p">(),</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">calculate_fee</span><span class="p">(</span><span class="n">user_type</span><span class="p">,</span> <span class="n">base</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">    <span class="n">strategy</span> <span class="o">=</span> <span class="n">strategies</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">user_type</span><span class="p">,</span> <span class="n">StandardFee</span><span class="p">())</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">strategy</span><span class="o">.</span><span class="n">calculate</span><span class="p">(</span><span class="n">base</span><span class="p">)</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p><strong>技巧三：拆分函数，单一职责</strong></p>
+<p>当一个函数认知复杂度超过 15，通常是承担了太多职责。按逻辑阶段拆分：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="c1"># 拆分前：一个函数处理验证+计算+格式化，复杂度 22</span>
+</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">handle_payment</span><span class="p">(</span><span class="n">order</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">    <span class="c1"># 验证逻辑 (复杂度 8)</span>
+</span></span><span class="line"><span class="cl">    <span class="c1"># 计算逻辑 (复杂度 7)</span>
+</span></span><span class="line"><span class="cl">    <span class="c1"># 格式化逻辑 (复杂度 7)</span>
+</span></span><span class="line"><span class="cl">    <span class="k">pass</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 拆分后：三个函数各司其职</span>
+</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">validate_order</span><span class="p">(</span><span class="n">order</span><span class="p">):</span>   <span class="c1"># 复杂度 8</span>
+</span></span><span class="line"><span class="cl">    <span class="o">...</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">calculate_amount</span><span class="p">(</span><span class="n">order</span><span class="p">):</span> <span class="c1"># 复杂度 7</span>
+</span></span><span class="line"><span class="cl">    <span class="o">...</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">format_receipt</span><span class="p">(</span><span class="n">order</span><span class="p">):</span>   <span class="c1"># 复杂度 7</span>
+</span></span><span class="line"><span class="cl">    <span class="o">...</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">handle_payment</span><span class="p">(</span><span class="n">order</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">    <span class="n">validate_order</span><span class="p">(</span><span class="n">order</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="n">amount</span> <span class="o">=</span> <span class="n">calculate_amount</span><span class="p">(</span><span class="n">order</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">format_receipt</span><span class="p">(</span><span class="n">order</span><span class="p">)</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h2 id="小结">小结</h2>
+<p>圈复杂度告诉你有多少条执行路径，认知复杂度告诉你读代码有多累。两者搭配使用效果最好：圈复杂度用于测试覆盖度规划，认知复杂度用于代码可维护性评估。</p>
+<p>度量不是目的，改善才是。把复杂度指标接入 CI 流水线，让它成为代码质量的第一道防线，比事后人肉审查高效得多。从今天开始，给你的项目跑一次复杂度扫描，看看哪个函数藏着一颗定时炸弹。</p>
+</div><div class="post-footer" id="post-footer">
+    <div class="post-info">
+        <div class="post-info-line">
+            <div class="post-info-mod">
+                <span>Updated on 2026-07-06&nbsp;<a class="git-hash" href="https://github.com/cikichen/hugo-sync/commit/ac6676ee8928448bcdbecf3562891debba62f0f6" target="_blank" title="commit by cikichen(cikichen@github.com) ac6676ee8928448bcdbecf3562891debba62f0f6: Auto: 2026-07-06 - 代码复杂度度量实战：从圈复杂度到认知复杂度">
+                                    <i class="fas fa-hashtag fa-fw" aria-hidden="true"></i>ac6676ee</a></span>
+            </div></div>
+        <div class="post-info-line">
+            <div class="post-info-md"></div>
+            <div class="post-info-share">
+                <span><a href="javascript:void(0);" title="Share on Twitter" data-sharer="twitter" data-url="https://www.ithome.me/post/2026/07/06/code-complexity-metrics/" data-title="代码复杂度度量实战：从圈复杂度到认知复杂度" data-via="ChenCiki" data-hashtags="代码质量,复杂度,重构,圈复杂度,认知复杂度"><i class="fab fa-twitter fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on Linkedin" data-sharer="linkedin" data-url="https://www.ithome.me/post/2026/07/06/code-complexity-metrics/"><i class="fab fa-linkedin fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on 微博" data-sharer="weibo" data-url="https://www.ithome.me/post/2026/07/06/code-complexity-metrics/" data-title="代码复杂度度量实战：从圈复杂度到认知复杂度" data-ralateuid="xxx"><i class="fab fa-weibo fa-fw" aria-hidden="true"></i></a></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="post-info-more">
+        <section class="post-tags"><i class="fas fa-tags fa-fw" aria-hidden="true"></i>&nbsp;<a href="/tags/%E4%BB%A3%E7%A0%81%E8%B4%A8%E9%87%8F/">代码质量</a>,&nbsp;<a href="/tags/%E5%A4%8D%E6%9D%82%E5%BA%A6/">复杂度</a>,&nbsp;<a href="/tags/%E9%87%8D%E6%9E%84/">重构</a>,&nbsp;<a href="/tags/%E5%9C%88%E5%A4%8D%E6%9D%82%E5%BA%A6/">圈复杂度</a>,&nbsp;<a href="/tags/%E8%AE%A4%E7%9F%A5%E5%A4%8D%E6%9D%82%E5%BA%A6/">认知复杂度</a></section>
+        <section>
+            <span><a href="javascript:void(0);" onclick="window.history.back();">Back</a></span>&nbsp;|&nbsp;<span><a href="/">Home</a></span>
+        </section>
+    </div>
+
+    <div class="post-nav"><a href="/post/2026/07/05/ai%E6%99%BA%E8%83%BD%E4%BD%93%E5%BC%80%E5%8F%91%E5%AE%9E%E6%88%98-%E5%AE%8C%E6%95%B4%E7%9B%AE%E5%BD%95/" class="prev" rel="prev" title="AI智能体开发实战：完整目录"><i class="fas fa-angle-left fa-fw" aria-hidden="true"></i>AI智能体开发实战：完整目录</a>
+            <a href="/post/2026/07/07/finite-state-machine-in-practice/" class="next" rel="next" title="有限状态机实战：用FSM模式管理复杂业务状态流转">有限状态机实战：用FSM模式管理复杂业务状态流转<i class="fas fa-angle-right fa-fw" aria-hidden="true"></i></a></div>
+</div>
+<div id="comments"><div id="gitalk" class="comment"></div><noscript>
+                Please enable JavaScript to view the comments powered by <a href="https://github.com/gitalk/gitalk"></a>Gitalk</a>.
+            </noscript></div></article></div>
+            </main><footer class="footer">
+        <div class="footer-container"><div class="footer-line" itemscope itemtype="http://schema.org/CreativeWork"><i class="far fa-copyright fa-fw" aria-hidden="true"></i><span itemprop="copyrightYear">2011 - 2026</span><span class="author" itemprop="copyrightHolder">&nbsp;<a href="https://www.ithome.me/" target="_blank">Simon Chen</a></span>&nbsp;|&nbsp;<span class="license"><a rel="license external nofollow noopener noreferrer" href="https://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank">CC BY-NC-ND 4.0</a></span></div>
+        </div>
+    </footer></div>
+
+        <div id="fixed-buttons"><a href="#" id="back-to-top" class="fixed-button" title="Back to Top">
+                <i class="fas fa-arrow-up fa-fw" aria-hidden="true"></i>
+            </a><a href="#" id="view-comments" class="fixed-button" title="View Comments">
+                <i class="fas fa-comment fa-fw" aria-hidden="true"></i>
+            </a>
+        </div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1.8.0/dist/gitalk.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/css/lightgallery-bundle.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/katex.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/copy-tex.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.css"><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/gitalk@1.8.0/dist/gitalk.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/autocomplete.js@0.38.1/dist/autocomplete.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lunr@2.3.9/lunr.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lazysizes@5.3.1/lazysizes.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/lightgallery.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/plugins/thumbnail/lg-thumbnail.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/plugins/zoom/lg-zoom.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/clipboard@2.0.11/dist/clipboard.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/sharer.js@0.5.1/sharer.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/katex.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/auto-render.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/copy-tex.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/mhchem.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.js"></script><script type="text/javascript">window.config={"code":{"copyTitle":"Copy to clipboard","maxShownLines":50},"comment":{"gitalk":{"admin":["cikichen"],"clientID":"be0f52370ed1285b6c7c","clientSecret":"734a7d8d0ded346ca7a3d565d57de3f8eeb2850b","id":"2026-07-06T00:00:00Z","owner":"cikichen","repo":"gitalk","title":"代码复杂度度量实战：从圈复杂度到认知复杂度"}},"cookieconsent":{"content":{"dismiss":"我知道了","link":"了解更多","message":"本网站使用 Cookies 来改善您的浏览体验."},"enable":true,"palette":{"button":{"background":"#f0f0f0"},"popup":{"background":"#1aa3ff"}},"theme":"edgeless"},"lightgallery":true,"math":{"delimiters":[{"display":true,"left":"$$","right":"$$"},{"display":true,"left":"\\[","right":"\\]"},{"display":true,"left":"\\begin{equation}","right":"\\end{equation}"},{"display":true,"left":"\\begin{equation*}","right":"\\end{equation*}"},{"display":true,"left":"\\begin{align}","right":"\\end{align}"},{"display":true,"left":"\\begin{align*}","right":"\\end{align*}"},{"display":true,"left":"\\begin{alignat}","right":"\\end{alignat}"},{"display":true,"left":"\\begin{alignat*}","right":"\\end{alignat*}"},{"display":true,"left":"\\begin{gather}","right":"\\end{gather}"},{"display":true,"left":"\\begin{CD}","right":"\\end{CD}"},{"display":false,"left":"$","right":"$"},{"display":false,"left":"\\(","right":"\\)"}],"strict":false},"search":{"highlightTag":"em","lunrIndexURL":"/index.json","maxResultLength":10,"noResultsFound":"No results found","snippetLength":50,"type":"lunr"}};</script><script type="text/javascript" src="/js/theme.min.js"></script></body>
+</html>

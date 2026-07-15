@@ -1,0 +1,1518 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="robots" content="noodp" />
+        <title>RAG增强检索：知识库驱动的智能体 - 编程心语</title><meta name="Description" content="从文档分块到向量检索到生成回答，构建完整的RAG知识库驱动的AI智能体系统"><meta property="og:url" content="https://www.ithome.me/post/2026/07/05/ai%E6%99%BA%E8%83%BD%E4%BD%93%E5%BC%80%E5%8F%91-%E7%AC%AC8%E7%AB%A0-rag%E5%A2%9E%E5%BC%BA%E6%A3%80%E7%B4%A2/">
+  <meta property="og:site_name" content="编程心语">
+  <meta property="og:title" content="RAG增强检索：知识库驱动的智能体">
+  <meta property="og:description" content="从文档分块到向量检索到生成回答，构建完整的RAG知识库驱动的AI智能体系统">
+  <meta property="og:locale" content="zh_CN">
+  <meta property="og:type" content="article">
+    <meta property="article:section" content="posts">
+    <meta property="article:published_time" content="2026-07-05T08:00:00+08:00">
+    <meta property="article:modified_time" content="2026-07-05T08:00:00+08:00">
+    <meta property="article:tag" content="AI Agent">
+    <meta property="article:tag" content="RAG">
+    <meta property="article:tag" content="向量数据库">
+    <meta property="article:tag" content="ChromaDB">
+    <meta property="article:tag" content="知识库">
+    <meta property="article:tag" content="AI智能体开发实战">
+
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="RAG增强检索：知识库驱动的智能体">
+  <meta name="twitter:description" content="从文档分块到向量检索到生成回答，构建完整的RAG知识库驱动的AI智能体系统">
+      <meta name="twitter:site" content="@ChenCiki">
+<meta name="application-name" content="编程心语">
+<meta name="apple-mobile-web-app-title" content="编程心语"><meta name="theme-color" content="#ffffff"><meta name="msapplication-TileColor" content="#da532c"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5"><link rel="manifest" href="/site.webmanifest"><link rel="canonical" href="https://www.ithome.me/post/2026/07/05/ai%E6%99%BA%E8%83%BD%E4%BD%93%E5%BC%80%E5%8F%91-%E7%AC%AC8%E7%AB%A0-rag%E5%A2%9E%E5%BC%BA%E6%A3%80%E7%B4%A2/" /><link rel="prev" href="https://www.ithome.me/post/2026/07/05/ssh-tunnel-port-forwarding/" /><link rel="next" href="https://www.ithome.me/post/2026/07/05/ai%E6%99%BA%E8%83%BD%E4%BD%93%E5%BC%80%E5%8F%91-%E7%AC%AC10%E7%AB%A0-mcp%E5%8D%8F%E8%AE%AE/" /><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/normalize.css@8.0.1/normalize.min.css"><link rel="stylesheet" href="/css/style.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css"><script type="application/ld+json">
+    {
+        "@context": "http://schema.org",
+        "@type": "BlogPosting",
+        "headline": "RAG增强检索：知识库驱动的智能体",
+        "inLanguage": "zh-CN",
+        "mainEntityOfPage": {
+            "@type": "WebPage",
+            "@id": "https:\/\/www.ithome.me\/post\/2026\/07\/05\/ai%E6%99%BA%E8%83%BD%E4%BD%93%E5%BC%80%E5%8F%91-%E7%AC%AC8%E7%AB%A0-rag%E5%A2%9E%E5%BC%BA%E6%A3%80%E7%B4%A2\/"
+        },"image": ["https:\/\/www.ithome.me\/cover.png"],"genre": "posts","keywords": "AI Agent, RAG, 向量数据库, ChromaDB, 知识库, AI智能体开发实战","wordcount":  11841 ,
+        "url": "https:\/\/www.ithome.me\/post\/2026\/07\/05\/ai%E6%99%BA%E8%83%BD%E4%BD%93%E5%BC%80%E5%8F%91-%E7%AC%AC8%E7%AB%A0-rag%E5%A2%9E%E5%BC%BA%E6%A3%80%E7%B4%A2\/","datePublished": "2026-07-05T08:00:00+08:00","dateModified": "2026-07-05T08:00:00+08:00","publisher": {
+            "@type": "Organization",
+            "name": "SimonChen","logo": "https:\/\/www.ithome.me\/logo.png"},"author": {
+                "@type": "Person",
+                "name": "Simon"
+            },"description": "从文档分块到向量检索到生成回答，构建完整的RAG知识库驱动的AI智能体系统"
+    }
+    </script><script async src="https://www.googletagmanager.com/gtag/js?id=G-H1Q5563VR8"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-H1Q5563VR8', { 'anonymize_ip': true });
+</script></head>
+    <body data-header-desktop="fixed" data-header-mobile="auto"><script type="text/javascript">(window.localStorage && localStorage.getItem('theme') ? localStorage.getItem('theme') === 'dark' : ('auto' === 'auto' ? window.matchMedia('(prefers-color-scheme: dark)').matches : 'auto' === 'dark')) && document.body.setAttribute('theme', 'dark');</script>
+
+        <div id="mask"></div><div class="wrapper"><header class="desktop" id="header-desktop">
+    <div class="header-wrapper">
+        <div class="header-title">
+            <a href="/" title="编程心语">编程心语</a>
+        </div>
+        <div class="menu">
+            <div class="menu-inner"><a class="menu-item" href="/posts/"> 文章 </a><a class="menu-item" href="/categories/"> 分类 </a><a class="menu-item" href="/tags/"> 标签 </a><a class="menu-item" href="/about-me/"> 关于 </a><span class="menu-item delimiter"></span><span class="menu-item search" id="search-desktop">
+                        <input type="text" placeholder="搜索文章..." id="search-input-desktop">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-desktop" title="Search">
+                            <i class="fas fa-search fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-desktop" title="Clear">
+                            <i class="fas fa-times-circle fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-desktop">
+                            <i class="fas fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+                        </span>
+                    </span><a href="javascript:void(0);" class="menu-item theme-switch" title="Switch Theme">
+                    <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</header><header class="mobile" id="header-mobile">
+    <div class="header-container">
+        <div class="header-wrapper">
+            <div class="header-title">
+                <a href="/" title="编程心语">编程心语</a>
+            </div>
+            <div class="menu-toggle" id="menu-toggle-mobile">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+        <div class="menu" id="menu-mobile"><div class="search-wrapper">
+                    <div class="search mobile" id="search-mobile">
+                        <input type="text" placeholder="搜索文章..." id="search-input-mobile">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-mobile" title="Search">
+                            <i class="fas fa-search fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-mobile" title="Clear">
+                            <i class="fas fa-times-circle fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-mobile">
+                            <i class="fas fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+                        </span>
+                    </div>
+                    <a href="javascript:void(0);" class="search-cancel" id="search-cancel-mobile">
+                        Cancel
+                    </a>
+                </div><a class="menu-item" href="/posts/" title="">文章</a><a class="menu-item" href="/categories/" title="">分类</a><a class="menu-item" href="/tags/" title="">标签</a><a class="menu-item" href="/about-me/" title="">关于</a><a href="javascript:void(0);" class="menu-item theme-switch" title="Switch Theme">
+                <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
+            </a></div>
+    </div>
+</header><div class="search-dropdown desktop">
+        <div id="search-dropdown-desktop"></div>
+    </div>
+    <div class="search-dropdown mobile">
+        <div id="search-dropdown-mobile"></div>
+    </div><main class="main">
+                <div class="container"><div class="toc" id="toc-auto">
+            <h2 class="toc-title">Contents</h2>
+            <div class="toc-content" id="toc-content-auto"></div>
+        </div><article class="page single"><h1 class="single-title animate__animated animate__flipInX">RAG增强检索：知识库驱动的智能体</h1><div class="post-meta">
+            <div class="post-meta-line"><span class="post-author"><a href="https://www.ithome.me/" title="Author" target="_blank" rel="noopener noreferrer author" class="author"><i class="fas fa-user-circle fa-fw" aria-hidden="true"></i>Simon</a>
+</span>&nbsp;<span class="post-category">included in <a href="/categories/ai%E6%99%BA%E8%83%BD%E4%BD%93%E5%BC%80%E5%8F%91%E5%AE%9E%E6%88%98/"><i class="far fa-folder fa-fw" aria-hidden="true"></i>AI智能体开发实战</a></span></div>
+            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw" aria-hidden="true"></i>&nbsp;<time datetime="2026-07-05">2026-07-05</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden="true"></i>&nbsp;11841 words&nbsp;
+                <i class="far fa-clock fa-fw" aria-hidden="true"></i>&nbsp;24 minutes&nbsp;</div>
+        </div><div class="details toc" id="toc-static"  data-kept="true">
+                <div class="details-summary toc-title">
+                    <span>Contents</span>
+                    <span><i class="details-icon fas fa-angle-right" aria-hidden="true"></i></span>
+                </div>
+                <div class="details-content toc-content" id="toc-content-static"><nav id="TableOfContents">
+  <ul>
+    <li><a href="#81-引言rag让agent拥有专属知识">8.1 引言：RAG让Agent拥有专属知识</a></li>
+    <li><a href="#82-rag架构概述">8.2 RAG架构概述</a>
+      <ul>
+        <li><a href="#821-标准rag流程">8.2.1 标准RAG流程</a></li>
+        <li><a href="#822-rag-vs-微调何时用哪个">8.2.2 RAG vs 微调：何时用哪个</a></li>
+      </ul>
+    </li>
+    <li><a href="#83-文档处理pipeline">8.3 文档处理Pipeline</a>
+      <ul>
+        <li><a href="#831-文档加载">8.3.1 文档加载</a></li>
+        <li><a href="#832-分块策略">8.3.2 分块策略</a></li>
+      </ul>
+    </li>
+    <li><a href="#84-向量存储与检索">8.4 向量存储与检索</a>
+      <ul>
+        <li><a href="#841-embedding生成">8.4.1 Embedding生成</a></li>
+        <li><a href="#842-chromadb实战">8.4.2 ChromaDB实战</a></li>
+      </ul>
+    </li>
+    <li><a href="#85-高级检索策略">8.5 高级检索策略</a>
+      <ul>
+        <li><a href="#851-多查询检索multi-query">8.5.1 多查询检索（Multi-Query）</a></li>
+        <li><a href="#852-重排序reranking">8.5.2 重排序（Reranking）</a></li>
+        <li><a href="#853-混合检索关键词语义">8.5.3 混合检索（关键词+语义）</a></li>
+      </ul>
+    </li>
+    <li><a href="#86-rag-agent集成">8.6 RAG-Agent集成</a>
+      <ul>
+        <li><a href="#861-把检索做成agent工具">8.6.1 把检索做成Agent工具</a></li>
+        <li><a href="#862-运行rag-agent">8.6.2 运行RAG Agent</a></li>
+      </ul>
+    </li>
+    <li><a href="#87-rag系统评估">8.7 RAG系统评估</a>
+      <ul>
+        <li><a href="#871-检索质量评估">8.7.1 检索质量评估</a></li>
+        <li><a href="#872-生成质量评估">8.7.2 生成质量评估</a></li>
+        <li><a href="#873-常见问题与优化方向">8.7.3 常见问题与优化方向</a></li>
+      </ul>
+    </li>
+    <li><a href="#88-小结">8.8 小结</a></li>
+    <li><a href="#89-预告第9章多智能体协作">8.9 预告第9章：多智能体协作</a></li>
+  </ul>
+</nav></div>
+            </div><div class="content" id="content"><h2 id="81-引言rag让agent拥有专属知识">8.1 引言：RAG让Agent拥有专属知识</h2>
+<p>在前面的章节中，我们构建的智能体已经能调用工具、执行多步推理、甚至自主规划任务。但它们仍有一个明显的短板——<strong>只知道训练数据里有的东西</strong>。</p>
+<p>设想这样一个场景：你让Agent回答公司内部的报销流程、产品API文档、客户合同条款。这些信息从未出现在模型训练语料中，无论你用的是GPT-5.4还是其他任何模型，它要么&quot;诚实&quot;地说&quot;我不知道&quot;，要么更糟——编造一个看似合理却完全错误的答案，这就是常说的<strong>幻觉（Hallucination）</strong>。</p>
+<blockquote>
+<p>💡 <strong>小贴士：什么是&quot;幻觉&quot;？</strong>
+幻觉指大模型生成看似可信但实际错误的内容。原因是模型基于概率&quot;续写&quot;文本，遇到知识盲区时倾向于&quot;猜&quot;一个答案，而不是承认不会。RAG通过把真实文档塞进上下文，能显著压低幻觉率。</p>
+</blockquote>
+<p>解决这个问题的传统方法是<strong>微调（Fine-tuning）</strong>：用领域数据继续训练模型。但微调成本高、周期长、更新慢，每次知识更新都要重新训练。</p>
+<p>RAG（Retrieval-Augmented Generation，检索增强生成）给出了另一条路：<strong>不把知识塞进模型参数，而是在生成时动态检索外部知识库，把相关文档作为上下文喂给模型</strong>。</p>
+<p>打个比方：RAG就像<strong>开卷考试</strong>。闭卷考试靠死记硬背（像纯LLM），记不住就瞎编；开卷考试允许翻书（像RAG），你不必背下整本书，但得知道在哪本书、哪一页、怎么找。模型扮演&quot;答题者&quot;，向量库扮演&quot;课本&quot;，检索就是&quot;翻书&quot;的动作。</p>
+<p>再举一个更贴近的例子：假设你新入职一家公司，同事问你&quot;年假怎么请&quot;。如果你脑子里没存这份信息，纯靠猜肯定出错；但桌上有一本《员工手册》，你翻开目录找到&quot;年假&quot;那一页，照着读就行。RAG做的就是这件事——给Agent配一本随时可翻的&quot;手册&quot;，而且这本手册可以随时更新，不用重新&quot;培训&quot;Agent。</p>
+<p>本章我们从零构建一个完整的RAG增强Agent，覆盖文档处理、向量存储、检索策略、Agent集成、系统评估全流程。学完本章，你将掌握让Agent拥有&quot;专属记忆&quot;的核心能力。</p>
+<h2 id="82-rag架构概述">8.2 RAG架构概述</h2>
+<h3 id="821-标准rag流程">8.2.1 标准RAG流程</h3>
+<p>一个标准RAG系统分两个阶段：</p>
+<p><strong>离线阶段（索引构建）——&ldquo;给课本做索引&rdquo;</strong>：</p>
+<ol>
+<li><strong>文档加载</strong>：从PDF、Markdown、网页等来源读取原始文本</li>
+<li><strong>分块（Chunking）</strong>：把长文档切成语义连贯的小片段</li>
+<li><strong>Embedding</strong>：用嵌入模型把每个文本块转成向量</li>
+<li><strong>存储</strong>：把向量和元数据写入向量数据库</li>
+</ol>
+<p><strong>在线阶段（检索生成）——&ldquo;翻书找答案再作答&rdquo;</strong>：
+5. <strong>检索</strong>：把用户问题转成向量，在库里找最相似的文本块
+6. <strong>生成</strong>：把检索到的文本块拼进提示词，让LLM基于上下文回答</p>
+<p>整个过程一句话概括：<strong>先查后答，答有所据</strong>。</p>
+<blockquote>
+<p>💡 <strong>小贴士：什么是Embedding（嵌入）？</strong>
+Embedding是把文本映射成一串数字（向量）的技术。可以理解为给每段文本发一张&quot;语义身份证&quot;——意思相近的文本，身份证号码也相近。这样&quot;找相似文本&quot;就变成了&quot;向量空间里找邻居&quot;，用数学距离衡量语义相似度。</p>
+</blockquote>
+<h3 id="822-rag-vs-微调何时用哪个">8.2.2 RAG vs 微调：何时用哪个</h3>
+<table>
+<thead>
+<tr>
+<th>维度</th>
+<th>RAG</th>
+<th>微调</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>知识更新</td>
+<td>实时，改库即可</td>
+<td>需重新训练</td>
+</tr>
+<tr>
+<td>成本</td>
+<td>低，只需向量数据库</td>
+<td>高，需要GPU和标注数据</td>
+</tr>
+<tr>
+<td>可溯源</td>
+<td>是，可返回原文出处</td>
+<td>否，知识融进参数</td>
+</tr>
+<tr>
+<td>适合场景</td>
+<td>事实性知识、文档问答</td>
+<td>改变模型风格、格式、行为</td>
+</tr>
+<tr>
+<td>幻觉控制</td>
+<td>较好，有上下文约束</td>
+<td>一般</td>
+</tr>
+</tbody>
+</table>
+<p>经验法则：<strong>知识用RAG，能力用微调</strong>。让Agent&quot;知道&quot;公司文档，用RAG；让Agent用特定语气说话、按特定格式输出，考虑微调。两者也可叠加——先微调出领域风格，再用RAG注入实时知识。</p>
+<p>举两个具体场景帮你判断：</p>
+<ul>
+<li><strong>场景A</strong>：客服Agent需要回答公司退货政策 → 用RAG，因为政策会变，且需要引用条款出处</li>
+<li><strong>场景B</strong>：Agent需要用文言文风格回答 → 用微调，因为这是&quot;能力&quot;而非&quot;知识&quot;，不依赖外部文档</li>
+</ul>
+<h2 id="83-文档处理pipeline">8.3 文档处理Pipeline</h2>
+<p>文档处理是RAG的&quot;地基&quot;。垃圾进，垃圾出——分块质量差，检索再聪明也救不回来。</p>
+<h3 id="831-文档加载">8.3.1 文档加载</h3>
+<p>不同格式需要不同加载器。我们用<code>pypdf</code>处理PDF，用内置方法读Markdown和纯文本，用<code>requests</code>+正则抓网页。先装依赖：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">pip install pypdf chromadb openai
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>下面这个加载器根据来源后缀自动选择读取方式，对外只暴露一个<code>load_document</code>入口，调用方不用关心格式细节：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="c1"># document_loader.py —— 多格式文档加载器</span>
+</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
+</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">pypdf</span> <span class="kn">import</span> <span class="n">PdfReader</span>
+</span></span><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">re</span>
+</span></span><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">requests</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">load_pdf</span><span class="p">(</span><span class="n">file_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="s2">&#34;&#34;&#34;加载PDF文件，提取全部文本&#34;&#34;&#34;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">reader</span> <span class="o">=</span> <span class="n">PdfReader</span><span class="p">(</span><span class="n">file_path</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="n">text</span> <span class="o">=</span> <span class="s2">&#34;&#34;</span>
+</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="n">page</span> <span class="ow">in</span> <span class="n">reader</span><span class="o">.</span><span class="n">pages</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="c1"># 逐页提取文本，用换行分隔</span>
+</span></span><span class="line"><span class="cl">        <span class="n">text</span> <span class="o">+=</span> <span class="n">page</span><span class="o">.</span><span class="n">extract_text</span><span class="p">()</span> <span class="o">+</span> <span class="s2">&#34;</span><span class="se">\n</span><span class="s2">&#34;</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">text</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">load_markdown</span><span class="p">(</span><span class="n">file_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="s2">&#34;&#34;&#34;加载Markdown文件，保留原始文本&#34;&#34;&#34;</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">Path</span><span class="p">(</span><span class="n">file_path</span><span class="p">)</span><span class="o">.</span><span class="n">read_text</span><span class="p">(</span><span class="n">encoding</span><span class="o">=</span><span class="s2">&#34;utf-8&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">load_webpage</span><span class="p">(</span><span class="n">url</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="s2">&#34;&#34;&#34;抓取网页，去除HTML标签提取纯文本&#34;&#34;&#34;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">resp</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="n">resp</span><span class="o">.</span><span class="n">raise_for_status</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">    <span class="n">html</span> <span class="o">=</span> <span class="n">resp</span><span class="o">.</span><span class="n">text</span>
+</span></span><span class="line"><span class="cl">    <span class="c1"># 先去掉script/style整段，避免JS代码混入正文</span>
+</span></span><span class="line"><span class="cl">    <span class="n">html</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s2">&#34;&lt;(script|style)[^&gt;]*&gt;.*?&lt;/\1&gt;&#34;</span><span class="p">,</span> <span class="s2">&#34;&#34;</span><span class="p">,</span> <span class="n">html</span><span class="p">,</span> <span class="n">flags</span><span class="o">=</span><span class="n">re</span><span class="o">.</span><span class="n">DOTALL</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="c1"># 再去掉其他HTML标签</span>
+</span></span><span class="line"><span class="cl">    <span class="n">text</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s2">&#34;&lt;[^&gt;]+&gt;&#34;</span><span class="p">,</span> <span class="s2">&#34; &#34;</span><span class="p">,</span> <span class="n">html</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="c1"># 压缩多余空白</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s2">&#34;\s+&#34;</span><span class="p">,</span> <span class="s2">&#34; &#34;</span><span class="p">,</span> <span class="n">text</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">load_document</span><span class="p">(</span><span class="n">source</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="s2">&#34;&#34;&#34;根据来源自动选择加载器&#34;&#34;&#34;</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="n">source</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&#34;http&#34;</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="n">load_webpage</span><span class="p">(</span><span class="n">source</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="k">elif</span> <span class="n">source</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&#34;.pdf&#34;</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="n">load_pdf</span><span class="p">(</span><span class="n">source</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="k">elif</span> <span class="n">source</span><span class="o">.</span><span class="n">endswith</span><span class="p">((</span><span class="s2">&#34;.md&#34;</span><span class="p">,</span> <span class="s2">&#34;.markdown&#34;</span><span class="p">,</span> <span class="s2">&#34;.txt&#34;</span><span class="p">)):</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="n">load_markdown</span><span class="p">(</span><span class="n">source</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="k">else</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&#34;不支持的文件格式: </span><span class="si">{</span><span class="n">source</span><span class="si">}</span><span class="s2">&#34;</span><span class="p">)</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h3 id="832-分块策略">8.3.2 分块策略</h3>
+<p>文档加载后是几万字的长文本，必须切成分块。分块太大则检索不精准、上下文冗长；分块太小则语义断裂、信息碎片化。常见三种策略：</p>
+<ul>
+<li><strong>固定长度分块</strong>：按字符数切分，简单但可能截断句子</li>
+<li><strong>语义分块</strong>：按段落/句子边界切分，保留语义完整</li>
+<li><strong>递归分块</strong>：先按大分隔符切，超长再递归切小，兼顾语义和长度</li>
+</ul>
+<blockquote>
+<p>💡 <strong>小贴士：什么是Chunk（分块）？</strong>
+Chunk就是把长文档切成的一小段一小段文本。为什么要切？一是Embedding模型有输入长度限制，整篇文档塞不下；二是检索时整篇文档粒度太粗，定位不到具体段落。切得好，检索才能&quot;精确制导&quot;而不是&quot;狂轰滥炸&quot;。</p>
+</blockquote>
+<p>下面实现一个实用的递归分块器，这也是LangChain默认采用的思路。它优先按段落切，段落太长再按换行切，再不行按句号切，层层降级，尽量在语义边界处断开：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span><span class="lnt">42
+</span><span class="lnt">43
+</span><span class="lnt">44
+</span><span class="lnt">45
+</span><span class="lnt">46
+</span><span class="lnt">47
+</span><span class="lnt">48
+</span><span class="lnt">49
+</span><span class="lnt">50
+</span><span class="lnt">51
+</span><span class="lnt">52
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="c1"># text_splitter.py —— 递归字符分块器</span>
+</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">class</span> <span class="nc">RecursiveTextSplitter</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="s2">&#34;&#34;&#34;递归字符文本分块器：按分隔符层级递归切分&#34;&#34;&#34;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">        <span class="bp">self</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">        <span class="n">chunk_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">500</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">        <span class="n">chunk_overlap</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">50</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">        <span class="n">separators</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="p">):</span>
+</span></span><span class="line"><span class="cl">        <span class="bp">self</span><span class="o">.</span><span class="n">chunk_size</span> <span class="o">=</span> <span class="n">chunk_size</span>
+</span></span><span class="line"><span class="cl">        <span class="bp">self</span><span class="o">.</span><span class="n">chunk_overlap</span> <span class="o">=</span> <span class="n">chunk_overlap</span>
+</span></span><span class="line"><span class="cl">        <span class="c1"># 分隔符按优先级从高到低：段落 &gt; 换行 &gt; 句号 &gt; 空格</span>
+</span></span><span class="line"><span class="cl">        <span class="bp">self</span><span class="o">.</span><span class="n">separators</span> <span class="o">=</span> <span class="n">separators</span> <span class="ow">or</span> <span class="p">[</span><span class="s2">&#34;</span><span class="se">\n\n</span><span class="s2">&#34;</span><span class="p">,</span> <span class="s2">&#34;</span><span class="se">\n</span><span class="s2">&#34;</span><span class="p">,</span> <span class="s2">&#34;。&#34;</span><span class="p">,</span> <span class="s2">&#34;.&#34;</span><span class="p">,</span> <span class="s2">&#34; &#34;</span><span class="p">,</span> <span class="s2">&#34;&#34;</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">def</span> <span class="nf">split_text</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+</span></span><span class="line"><span class="cl">        <span class="s2">&#34;&#34;&#34;将长文本切分为多个分块&#34;&#34;&#34;</span>
+</span></span><span class="line"><span class="cl">        <span class="c1"># 找出文本中存在的最高优先级分隔符</span>
+</span></span><span class="line"><span class="cl">        <span class="n">separator</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">separators</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl">        <span class="k">for</span> <span class="n">sep</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">separators</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">            <span class="k">if</span> <span class="n">sep</span> <span class="o">==</span> <span class="s2">&#34;&#34;</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">                <span class="k">continue</span>
+</span></span><span class="line"><span class="cl">            <span class="k">if</span> <span class="n">sep</span> <span class="ow">in</span> <span class="n">text</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">                <span class="n">separator</span> <span class="o">=</span> <span class="n">sep</span>
+</span></span><span class="line"><span class="cl">                <span class="k">break</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">        <span class="c1"># 按选定的分隔符切分</span>
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="n">separator</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">            <span class="n">splits</span> <span class="o">=</span> <span class="n">text</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">separator</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="k">else</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">            <span class="n">splits</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>  <span class="c1"># 实在没分隔符就按字符切</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">        <span class="c1"># 拼接成不超过chunk_size的分块，带overlap</span>
+</span></span><span class="line"><span class="cl">        <span class="n">chunks</span> <span class="o">=</span> <span class="p">[]</span>
+</span></span><span class="line"><span class="cl">        <span class="n">current</span> <span class="o">=</span> <span class="s2">&#34;&#34;</span>
+</span></span><span class="line"><span class="cl">        <span class="k">for</span> <span class="n">piece</span> <span class="ow">in</span> <span class="n">splits</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">            <span class="n">candidate</span> <span class="o">=</span> <span class="n">current</span> <span class="o">+</span> <span class="n">separator</span> <span class="o">+</span> <span class="n">piece</span> <span class="k">if</span> <span class="n">current</span> <span class="k">else</span> <span class="n">piece</span>
+</span></span><span class="line"><span class="cl">            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">candidate</span><span class="p">)</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">chunk_size</span> <span class="ow">and</span> <span class="n">current</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">                <span class="c1"># 当前块已满，保存并开启新块</span>
+</span></span><span class="line"><span class="cl">                <span class="n">chunks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">current</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span>
+</span></span><span class="line"><span class="cl">                <span class="c1"># 重叠部分：保留尾部chunk_overlap字符，避免关键信息被切断</span>
+</span></span><span class="line"><span class="cl">                <span class="n">overlap_text</span> <span class="o">=</span> <span class="n">current</span><span class="p">[</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">chunk_overlap</span><span class="p">:]</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">chunk_overlap</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="s2">&#34;&#34;</span>
+</span></span><span class="line"><span class="cl">                <span class="n">current</span> <span class="o">=</span> <span class="n">overlap_text</span> <span class="o">+</span> <span class="n">separator</span> <span class="o">+</span> <span class="n">piece</span>
+</span></span><span class="line"><span class="cl">            <span class="k">else</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">                <span class="n">current</span> <span class="o">=</span> <span class="n">candidate</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="n">current</span><span class="o">.</span><span class="n">strip</span><span class="p">():</span>
+</span></span><span class="line"><span class="cl">            <span class="n">chunks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">current</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="n">chunks</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>使用方式：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="n">splitter</span> <span class="o">=</span> <span class="n">RecursiveTextSplitter</span><span class="p">(</span><span class="n">chunk_size</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span> <span class="n">chunk_overlap</span><span class="o">=</span><span class="mi">50</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">text</span> <span class="o">=</span> <span class="n">load_document</span><span class="p">(</span><span class="s2">&#34;company_handbook.pdf&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">chunks</span> <span class="o">=</span> <span class="n">splitter</span><span class="o">.</span><span class="n">split_text</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&#34;文档切分为 </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">chunks</span><span class="p">)</span><span class="si">}</span><span class="s2"> 个分块&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&#34;第一个分块示例: </span><span class="si">{</span><span class="n">chunks</span><span class="p">[</span><span class="mi">0</span><span class="p">][:</span><span class="mi">100</span><span class="p">]</span><span class="si">}</span><span class="s2">...&#34;</span><span class="p">)</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p><strong>分块大小的经验值</strong>：中文文档建议300-600字一块，英文建议500-1000字符。overlap取chunk_size的10%-20%，避免关键信息恰好被切断在两块之间。</p>
+<blockquote>
+<p>💡 <strong>小贴士：overlap（重叠）为什么重要？</strong>
+想象一句关键的话刚好被切在两块之间——前半句在块A末尾，后半句在块B开头。如果用户检索命中了块A但没命中块B，就只拿到半句话，回答必然残缺。overlap让相邻块共享一小段文本，相当于&quot;桥接&quot;，确保跨块的信息至少在一块里是完整的。</p>
+</blockquote>
+<p>分块没有&quot;最优答案&quot;，需要根据文档类型和问题粒度反复试验。技术文档适合按章节切，FAQ适合按问答对切，长文资讯适合按段落切。这也是为什么评估环节（8.7节）如此重要——没有度量就没有优化方向。</p>
+<h2 id="84-向量存储与检索">8.4 向量存储与检索</h2>
+<h3 id="841-embedding生成">8.4.1 Embedding生成</h3>
+<p>Embedding把文本映射成高维向量，语义相近的文本在向量空间中距离也近。我们用OpenAI的<code>text-embedding-3-small</code>，它性价比高、1536维、对中英文都支持良好。</p>
+<blockquote>
+<p>💡 <strong>小贴士：Embedding模型怎么选？</strong>
+主流选择有三类：OpenAI的<code>text-embedding-3-small</code>（1536维，便宜稳定）、<code>text-embedding-3-large</code>（3072维，更准但更贵）、开源的<code>bge-m3</code>和<code>e5-large</code>（可本地部署，免费但需GPU）。对中文场景，<code>bge-m3</code>和<code>text-embedding-3-small</code>表现都不错。初期建议先用便宜的small版跑通流程，后续按评估指标决定是否升级。</p>
+</blockquote>
+<p>下面封装两个函数：单条生成和批量生成。批量接口能减少API调用次数，灌库时务必用批量版以节省时间和费用：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="c1"># embedding.py —— Embedding生成封装</span>
+</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">openai</span> <span class="kn">import</span> <span class="n">OpenAI</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># OpenAI SDK会自动读取环境变量里的密钥，无需手动传入</span>
+</span></span><span class="line"><span class="cl"><span class="n">client</span> <span class="o">=</span> <span class="n">OpenAI</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl"><span class="n">EMBEDDING_MODEL</span> <span class="o">=</span> <span class="s2">&#34;text-embedding-3-small&#34;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">get_embedding</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="s2">&#34;&#34;&#34;生成单条文本的Embedding向量&#34;&#34;&#34;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">text</span> <span class="o">=</span> <span class="n">text</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&#34;</span><span class="se">\n</span><span class="s2">&#34;</span><span class="p">,</span> <span class="s2">&#34; &#34;</span><span class="p">)</span>  <span class="c1"># API建议去掉换行，避免影响向量质量</span>
+</span></span><span class="line"><span class="cl">    <span class="n">resp</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">embeddings</span><span class="o">.</span><span class="n">create</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">        <span class="n">model</span><span class="o">=</span><span class="n">EMBEDDING_MODEL</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">        <span class="nb">input</span><span class="o">=</span><span class="n">text</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">resp</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">embedding</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">get_embeddings_batch</span><span class="p">(</span><span class="n">texts</span><span class="p">:</span> <span class="nb">list</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="s2">&#34;&#34;&#34;批量生成Embedding，效率更高&#34;&#34;&#34;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">cleaned</span> <span class="o">=</span> <span class="p">[</span><span class="n">t</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&#34;</span><span class="se">\n</span><span class="s2">&#34;</span><span class="p">,</span> <span class="s2">&#34; &#34;</span><span class="p">)</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">texts</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl">    <span class="n">resp</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">embeddings</span><span class="o">.</span><span class="n">create</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">        <span class="n">model</span><span class="o">=</span><span class="n">EMBEDDING_MODEL</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">        <span class="nb">input</span><span class="o">=</span><span class="n">cleaned</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="c1"># 按index排序确保返回顺序与输入一致</span>
+</span></span><span class="line"><span class="cl">    <span class="n">sorted_data</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">resp</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="p">[</span><span class="n">d</span><span class="o">.</span><span class="n">embedding</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">sorted_data</span><span class="p">]</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><blockquote>
+<p>💡 <strong>小贴士：什么是向量检索？</strong>
+传统数据库靠&quot;精确匹配&quot;找数据（如<code>WHERE id=123</code>）；向量数据库靠&quot;相似度&quot;找数据——给定一个查询向量，找出库中距离最近的几条。距离计算常用<strong>余弦相似度</strong>：两个向量方向越一致，相似度越高，跟向量长度无关。可以类比成&quot;看两句话方向是否一致&quot;，而非&quot;逐字对比&quot;。</p>
+</blockquote>
+<h3 id="842-chromadb实战">8.4.2 ChromaDB实战</h3>
+<p>ChromaDB是一个轻量级开源向量数据库，无需单独部署服务，数据落盘到本地目录，非常适合开发和中小型应用。</p>
+<p>下面的<code>VectorStore</code>类封装了&quot;写入&quot;和&quot;检索&quot;两个核心操作。写入时先调Embedding把文本转向量，再连同原文和元数据一起存入；检索时把查询转向量，让ChromaDB找近邻：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span><span class="lnt">42
+</span><span class="lnt">43
+</span><span class="lnt">44
+</span><span class="lnt">45
+</span><span class="lnt">46
+</span><span class="lnt">47
+</span><span class="lnt">48
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="c1"># vector_store.py —— 基于ChromaDB的向量存储与检索</span>
+</span></span><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">chromadb</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">class</span> <span class="nc">VectorStore</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="s2">&#34;&#34;&#34;向量数据库封装：存储与检索&#34;&#34;&#34;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">persist_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&#34;./chroma_db&#34;</span><span class="p">,</span> <span class="n">collection_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&#34;knowledge&#34;</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">        <span class="c1"># 创建持久化客户端，数据写入本地目录</span>
+</span></span><span class="line"><span class="cl">        <span class="bp">self</span><span class="o">.</span><span class="n">client</span> <span class="o">=</span> <span class="n">chromadb</span><span class="o">.</span><span class="n">PersistentClient</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="n">persist_path</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="c1"># 获取或创建集合（类似数据库中的表）</span>
+</span></span><span class="line"><span class="cl">        <span class="bp">self</span><span class="o">.</span><span class="n">collection</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">get_or_create_collection</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">            <span class="n">name</span><span class="o">=</span><span class="n">collection_name</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">            <span class="n">metadata</span><span class="o">=</span><span class="p">{</span><span class="s2">&#34;hnsw:space&#34;</span><span class="p">:</span> <span class="s2">&#34;cosine&#34;</span><span class="p">},</span>  <span class="c1"># 使用余弦相似度</span>
+</span></span><span class="line"><span class="cl">        <span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">def</span> <span class="nf">add_documents</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">chunks</span><span class="p">:</span> <span class="nb">list</span><span class="p">,</span> <span class="n">metadatas</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">100</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">        <span class="s2">&#34;&#34;&#34;将文本分块批量写入向量库&#34;&#34;&#34;</span>
+</span></span><span class="line"><span class="cl">        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">chunks</span><span class="p">),</span> <span class="n">batch_size</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">            <span class="n">batch</span> <span class="o">=</span> <span class="n">chunks</span><span class="p">[</span><span class="n">i</span><span class="p">:</span><span class="n">i</span> <span class="o">+</span> <span class="n">batch_size</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl">            <span class="c1"># 为每个分块生成唯一ID</span>
+</span></span><span class="line"><span class="cl">            <span class="n">ids</span> <span class="o">=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">&#34;doc_</span><span class="si">{</span><span class="n">i</span> <span class="o">+</span> <span class="n">j</span><span class="si">}</span><span class="s2">&#34;</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">batch</span><span class="p">))]</span>
+</span></span><span class="line"><span class="cl">            <span class="c1"># 生成向量（这里手动调用，便于演示流程全貌）</span>
+</span></span><span class="line"><span class="cl">            <span class="n">embeddings</span> <span class="o">=</span> <span class="n">get_embeddings_batch</span><span class="p">(</span><span class="n">batch</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">            <span class="n">meta</span> <span class="o">=</span> <span class="n">metadatas</span><span class="p">[</span><span class="n">i</span><span class="p">:</span><span class="n">i</span> <span class="o">+</span> <span class="n">batch_size</span><span class="p">]</span> <span class="k">if</span> <span class="n">metadatas</span> <span class="k">else</span> <span class="p">[{}]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">batch</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">            <span class="bp">self</span><span class="o">.</span><span class="n">collection</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">                <span class="n">embeddings</span><span class="o">=</span><span class="n">embeddings</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                <span class="n">documents</span><span class="o">=</span><span class="n">batch</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                <span class="n">metadatas</span><span class="o">=</span><span class="n">meta</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                <span class="n">ids</span><span class="o">=</span><span class="n">ids</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">            <span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&#34;已写入 </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">chunks</span><span class="p">)</span><span class="si">}</span><span class="s2"> 个分块到向量库&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">def</span> <span class="nf">search</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">query</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">top_k</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">5</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="s2">&#34;&#34;&#34;语义检索：返回与query最相似的top_k个分块&#34;&#34;&#34;</span>
+</span></span><span class="line"><span class="cl">        <span class="n">query_embedding</span> <span class="o">=</span> <span class="n">get_embedding</span><span class="p">(</span><span class="n">query</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="n">results</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">collection</span><span class="o">.</span><span class="n">query</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">            <span class="n">query_embeddings</span><span class="o">=</span><span class="p">[</span><span class="n">query_embedding</span><span class="p">],</span>
+</span></span><span class="line"><span class="cl">            <span class="n">n_results</span><span class="o">=</span><span class="n">top_k</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">            <span class="n">include</span><span class="o">=</span><span class="p">[</span><span class="s2">&#34;documents&#34;</span><span class="p">,</span> <span class="s2">&#34;metadatas&#34;</span><span class="p">,</span> <span class="s2">&#34;distances&#34;</span><span class="p">],</span>
+</span></span><span class="line"><span class="cl">        <span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="c1"># 整理结果为字典列表，方便上层使用</span>
+</span></span><span class="line"><span class="cl">        <span class="n">docs</span> <span class="o">=</span> <span class="n">results</span><span class="p">[</span><span class="s2">&#34;documents&#34;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl">        <span class="n">metas</span> <span class="o">=</span> <span class="n">results</span><span class="p">[</span><span class="s2">&#34;metadatas&#34;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl">        <span class="n">dists</span> <span class="o">=</span> <span class="n">results</span><span class="p">[</span><span class="s2">&#34;distances&#34;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="p">[</span>
+</span></span><span class="line"><span class="cl">            <span class="p">{</span><span class="s2">&#34;content&#34;</span><span class="p">:</span> <span class="n">d</span><span class="p">,</span> <span class="s2">&#34;metadata&#34;</span><span class="p">:</span> <span class="n">m</span><span class="p">,</span> <span class="s2">&#34;distance&#34;</span><span class="p">:</span> <span class="n">dist</span><span class="p">}</span>
+</span></span><span class="line"><span class="cl">            <span class="k">for</span> <span class="n">d</span><span class="p">,</span> <span class="n">m</span><span class="p">,</span> <span class="n">dist</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">docs</span><span class="p">,</span> <span class="n">metas</span><span class="p">,</span> <span class="n">dists</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="p">]</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>完整使用示例——构建知识库并做一次检索测试：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="c1"># 构建知识库</span>
+</span></span><span class="line"><span class="cl"><span class="n">store</span> <span class="o">=</span> <span class="n">VectorStore</span><span class="p">(</span><span class="n">persist_path</span><span class="o">=</span><span class="s2">&#34;./my_kb&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 加载并分块文档</span>
+</span></span><span class="line"><span class="cl"><span class="n">raw</span> <span class="o">=</span> <span class="n">load_document</span><span class="p">(</span><span class="s2">&#34;产品手册.pdf&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">chunks</span> <span class="o">=</span> <span class="n">RecursiveTextSplitter</span><span class="p">(</span><span class="n">chunk_size</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span> <span class="n">chunk_overlap</span><span class="o">=</span><span class="mi">50</span><span class="p">)</span><span class="o">.</span><span class="n">split_text</span><span class="p">(</span><span class="n">raw</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 为每个分块打上来源元数据，方便后续溯源</span>
+</span></span><span class="line"><span class="cl"><span class="n">metas</span> <span class="o">=</span> <span class="p">[{</span><span class="s2">&#34;source&#34;</span><span class="p">:</span> <span class="s2">&#34;产品手册.pdf&#34;</span><span class="p">,</span> <span class="s2">&#34;chunk_index&#34;</span><span class="p">:</span> <span class="n">i</span><span class="p">}</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">chunks</span><span class="p">))]</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 写入向量库</span>
+</span></span><span class="line"><span class="cl"><span class="n">store</span><span class="o">.</span><span class="n">add_documents</span><span class="p">(</span><span class="n">chunks</span><span class="p">,</span> <span class="n">metadatas</span><span class="o">=</span><span class="n">metas</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 检索测试</span>
+</span></span><span class="line"><span class="cl"><span class="n">results</span> <span class="o">=</span> <span class="n">store</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s2">&#34;如何申请退款？&#34;</span><span class="p">,</span> <span class="n">top_k</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">results</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&#34;[相似度: </span><span class="si">{</span><span class="mi">1</span> <span class="o">-</span> <span class="n">r</span><span class="p">[</span><span class="s1">&#39;distance&#39;</span><span class="p">]</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">] </span><span class="si">{</span><span class="n">r</span><span class="p">[</span><span class="s1">&#39;content&#39;</span><span class="p">][:</span><span class="mi">80</span><span class="p">]</span><span class="si">}</span><span class="s2">...&#34;</span><span class="p">)</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>相似度这里用<code>1 - distance</code>转换，因为ChromaDB返回的是余弦距离（越小越相似），转成相似度更直观。</p>
+<h2 id="85-高级检索策略">8.5 高级检索策略</h2>
+<p>基础语义检索能满足大部分需求，但复杂场景下往往不够精准。本节介绍三种进阶策略。</p>
+<h3 id="851-多查询检索multi-query">8.5.1 多查询检索（Multi-Query）</h3>
+<p>用户提问往往措辞单一，可能与文档表述方式不一致，导致漏检。比如用户问&quot;咋退款&quot;，文档写的是&quot;退货流程&quot;，措辞不同可能检索不到。多查询检索的思路是：<strong>让LLM把用户问题改写成多个不同角度的子问题，分别检索后合并去重</strong>，从而提高召回率。</p>
+<p>这就像你去图书馆找书，只问管理员一个问题可能找不到，但换个说法再问一次、再换一次，总有一次能命中。多查询检索把这个&quot;换说法&quot;的过程自动化了。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="c1"># multi_query.py —— 多查询检索</span>
+</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">openai</span> <span class="kn">import</span> <span class="n">OpenAI</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">client</span> <span class="o">=</span> <span class="n">OpenAI</span><span class="p">()</span>  <span class="c1"># 自动读取环境变量OPENAI_API_KEY</span>
+</span></span><span class="line"><span class="cl"><span class="n">LLM_MODEL</span> <span class="o">=</span> <span class="s2">&#34;gpt-5.4&#34;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">generate_multi_queries</span><span class="p">(</span><span class="n">question</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">n</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">3</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="s2">&#34;&#34;&#34;让LLM把原问题改写成n个不同表述的子问题&#34;&#34;&#34;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">prompt</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&#34;&#34;&#34;你是一个检索查询改写器。请把下面的问题改写成</span><span class="si">{</span><span class="n">n</span><span class="si">}</span><span class="s2">个语义相同但表述不同的版本，
+</span></span></span><span class="line"><span class="cl"><span class="s2">用于从向量库中检索相关文档。每行一个，不要编号。
+</span></span></span><span class="line"><span class="cl"><span class="s2">
+</span></span></span><span class="line"><span class="cl"><span class="s2">原问题：</span><span class="si">{</span><span class="n">question</span><span class="si">}</span><span class="s2">
+</span></span></span><span class="line"><span class="cl"><span class="s2">
+</span></span></span><span class="line"><span class="cl"><span class="s2">改写结果：&#34;&#34;&#34;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">resp</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">chat</span><span class="o">.</span><span class="n">completions</span><span class="o">.</span><span class="n">create</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">        <span class="n">model</span><span class="o">=</span><span class="n">LLM_MODEL</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">        <span class="n">messages</span><span class="o">=</span><span class="p">[{</span><span class="s2">&#34;role&#34;</span><span class="p">:</span> <span class="s2">&#34;user&#34;</span><span class="p">,</span> <span class="s2">&#34;content&#34;</span><span class="p">:</span> <span class="n">prompt</span><span class="p">}],</span>
+</span></span><span class="line"><span class="cl">        <span class="n">temperature</span><span class="o">=</span><span class="mf">0.7</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="n">queries</span> <span class="o">=</span> <span class="n">resp</span><span class="o">.</span><span class="n">choices</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">message</span><span class="o">.</span><span class="n">content</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&#34;</span><span class="se">\n</span><span class="s2">&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="c1"># 原问题也加入检索队列，保底</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="p">[</span><span class="n">question</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="n">q</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">q</span> <span class="ow">in</span> <span class="n">queries</span> <span class="k">if</span> <span class="n">q</span><span class="o">.</span><span class="n">strip</span><span class="p">()][:</span><span class="n">n</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">multi_query_search</span><span class="p">(</span><span class="n">store</span><span class="p">,</span> <span class="n">question</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">top_k</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">3</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="s2">&#34;&#34;&#34;多查询检索：合并各子问题的结果并去重&#34;&#34;&#34;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">queries</span> <span class="o">=</span> <span class="n">generate_multi_queries</span><span class="p">(</span><span class="n">question</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&#34;生成 </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">queries</span><span class="p">)</span><span class="si">}</span><span class="s2"> 个查询: </span><span class="si">{</span><span class="n">queries</span><span class="si">}</span><span class="s2">&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="n">all_results</span> <span class="o">=</span> <span class="p">[]</span>
+</span></span><span class="line"><span class="cl">    <span class="n">seen_contents</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>  <span class="c1"># 用于去重</span>
+</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="n">q</span> <span class="ow">in</span> <span class="n">queries</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">store</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">q</span><span class="p">,</span> <span class="n">top_k</span><span class="o">=</span><span class="n">top_k</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">            <span class="c1"># 用内容前50字符作为去重键</span>
+</span></span><span class="line"><span class="cl">            <span class="n">key</span> <span class="o">=</span> <span class="n">r</span><span class="p">[</span><span class="s2">&#34;content&#34;</span><span class="p">][:</span><span class="mi">50</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl">            <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">seen_contents</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">                <span class="n">seen_contents</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">                <span class="n">all_results</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">r</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="c1"># 按距离升序（距离越小越相似）</span>
+</span></span><span class="line"><span class="cl">    <span class="n">all_results</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="s2">&#34;distance&#34;</span><span class="p">])</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">all_results</span><span class="p">[:</span><span class="n">top_k</span> <span class="o">*</span> <span class="mi">2</span><span class="p">]</span>  <span class="c1"># 返回合并后的top结果</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h3 id="852-重排序reranking">8.5.2 重排序（Reranking）</h3>
+<p>向量检索速度快但精度有限，top_k较大时噪声多。重排序的思路是：<strong>先粗检索召回较多候选（如20条），再用更精细的模型对候选逐一打分排序，取最相关的几条</strong>。</p>
+<p>打个比方：向量检索像用渔网捞鱼——一网下去捞上来很多，但大小混杂；重排序像挑鱼——把网里的鱼倒出来，一条条挑出最肥美的。两步配合，既不会漏掉好鱼，也不会被小鱼虾浪费精力。</p>
+<blockquote>
+<p>💡 <strong>小贴士：什么是Cross-Encoder（交叉编码器）？</strong>
+普通Embedding是&quot;双塔&quot;结构——query和doc各自编码成向量再算相似度，快但粗。Cross-Encoder把query和doc拼在一起送入模型，直接输出相关性分数，更准但更慢。所以常用&quot;双塔粗召回 + 交叉精排&quot;的两段式策略，兼顾速度和精度。</p>
+</blockquote>
+<p>重排序模型常用Cross-Encoder，这里用<code>cross-encoder</code>库演示：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">pip install sentence-transformers
+</span></span></code></pre></td></tr></table>
+</div>
+</div><div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="c1"># reranker.py —— 交叉编码器重排序</span>
+</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">sentence_transformers</span> <span class="kn">import</span> <span class="n">CrossEncoder</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 加载预训练交叉编码器，支持中英文</span>
+</span></span><span class="line"><span class="cl"><span class="n">reranker</span> <span class="o">=</span> <span class="n">CrossEncoder</span><span class="p">(</span><span class="s2">&#34;cross-encoder/ms-marco-MiniLM-L-6-v2&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">rerank</span><span class="p">(</span><span class="n">query</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">candidates</span><span class="p">:</span> <span class="nb">list</span><span class="p">,</span> <span class="n">top_k</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">3</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="s2">&#34;&#34;&#34;对候选分块用交叉编码器重新打分排序&#34;&#34;&#34;</span>
+</span></span><span class="line"><span class="cl">    <span class="c1"># 构造(query, doc)对</span>
+</span></span><span class="line"><span class="cl">    <span class="n">pairs</span> <span class="o">=</span> <span class="p">[(</span><span class="n">query</span><span class="p">,</span> <span class="n">c</span><span class="p">[</span><span class="s2">&#34;content&#34;</span><span class="p">])</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">candidates</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl">    <span class="n">scores</span> <span class="o">=</span> <span class="n">reranker</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">pairs</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="c1"># 把分数附加到候选上</span>
+</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="n">c</span><span class="p">,</span> <span class="n">s</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">candidates</span><span class="p">,</span> <span class="n">scores</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">        <span class="n">c</span><span class="p">[</span><span class="s2">&#34;rerank_score&#34;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="c1"># 按重排序分数降序</span>
+</span></span><span class="line"><span class="cl">    <span class="n">candidates</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="s2">&#34;rerank_score&#34;</span><span class="p">],</span> <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">candidates</span><span class="p">[:</span><span class="n">top_k</span><span class="p">]</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h3 id="853-混合检索关键词语义">8.5.3 混合检索（关键词+语义）</h3>
+<p>语义检索擅长理解意图，但对专有名词、编号、代码等&quot;字面匹配&quot;场景不如关键词检索。比如搜&quot;ISO-9001&quot;这种编号，向量检索可能返回一堆&quot;质量管理体系&quot;的近似文本，而关键词检索能精准命中。混合检索两者结合：<strong>分别用BM25关键词检索和向量语义检索，再融合排名</strong>。</p>
+<blockquote>
+<p>💡 <strong>小贴士：什么是BM25？</strong>
+BM25是经典的关键词检索算法，基于词频和文档长度做打分。它比纯&quot;字面包含&quot;更聪明——出现次数多的词权重高，但会被文档长度稀释。Elasticsearch默认排序就是BM25的变种。</p>
+</blockquote>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span><span class="lnt">42
+</span><span class="lnt">43
+</span><span class="lnt">44
+</span><span class="lnt">45
+</span><span class="lnt">46
+</span><span class="lnt">47
+</span><span class="lnt">48
+</span><span class="lnt">49
+</span><span class="lnt">50
+</span><span class="lnt">51
+</span><span class="lnt">52
+</span><span class="lnt">53
+</span><span class="lnt">54
+</span><span class="lnt">55
+</span><span class="lnt">56
+</span><span class="lnt">57
+</span><span class="lnt">58
+</span><span class="lnt">59
+</span><span class="lnt">60
+</span><span class="lnt">61
+</span><span class="lnt">62
+</span><span class="lnt">63
+</span><span class="lnt">64
+</span><span class="lnt">65
+</span><span class="lnt">66
+</span><span class="lnt">67
+</span><span class="lnt">68
+</span><span class="lnt">69
+</span><span class="lnt">70
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="c1"># hybrid_search.py —— 混合检索</span>
+</span></span><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">math</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">class</span> <span class="nc">BM25Index</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="s2">&#34;&#34;&#34;简易BM25关键词索引（演示用，生产环境可用rank_bm25库）&#34;&#34;&#34;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">documents</span><span class="p">:</span> <span class="nb">list</span><span class="p">,</span> <span class="n">k1</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.5</span><span class="p">,</span> <span class="n">b</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.75</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">        <span class="bp">self</span><span class="o">.</span><span class="n">docs</span> <span class="o">=</span> <span class="n">documents</span>
+</span></span><span class="line"><span class="cl">        <span class="bp">self</span><span class="o">.</span><span class="n">k1</span> <span class="o">=</span> <span class="n">k1</span>
+</span></span><span class="line"><span class="cl">        <span class="bp">self</span><span class="o">.</span><span class="n">b</span> <span class="o">=</span> <span class="n">b</span>
+</span></span><span class="line"><span class="cl">        <span class="c1"># 分词（中文简单按字切，生产建议用jieba）</span>
+</span></span><span class="line"><span class="cl">        <span class="bp">self</span><span class="o">.</span><span class="n">tokenized</span> <span class="o">=</span> <span class="p">[</span><span class="nb">list</span><span class="p">(</span><span class="n">d</span><span class="p">)</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">documents</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl">        <span class="bp">self</span><span class="o">.</span><span class="n">doc_len</span> <span class="o">=</span> <span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">t</span><span class="p">)</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">tokenized</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl">        <span class="bp">self</span><span class="o">.</span><span class="n">avg_len</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">doc_len</span><span class="p">)</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">doc_len</span><span class="p">)</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">doc_len</span> <span class="k">else</span> <span class="mi">0</span>
+</span></span><span class="line"><span class="cl">        <span class="c1"># 统计词频</span>
+</span></span><span class="line"><span class="cl">        <span class="bp">self</span><span class="o">.</span><span class="n">df</span> <span class="o">=</span> <span class="p">{}</span>  <span class="c1"># 文档频率：某词出现在多少篇文档</span>
+</span></span><span class="line"><span class="cl">        <span class="bp">self</span><span class="o">.</span><span class="n">tf</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># 各文档的词频</span>
+</span></span><span class="line"><span class="cl">        <span class="k">for</span> <span class="n">tokens</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">tokenized</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">            <span class="n">freq</span> <span class="o">=</span> <span class="p">{}</span>
+</span></span><span class="line"><span class="cl">            <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">tokens</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">                <span class="n">freq</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="o">=</span> <span class="n">freq</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+</span></span><span class="line"><span class="cl">            <span class="bp">self</span><span class="o">.</span><span class="n">tf</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">freq</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">            <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">freq</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">                <span class="bp">self</span><span class="o">.</span><span class="n">df</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">df</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+</span></span><span class="line"><span class="cl">        <span class="bp">self</span><span class="o">.</span><span class="n">N</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">documents</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">def</span> <span class="nf">search</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">query</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">top_k</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">5</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="s2">&#34;&#34;&#34;返回[(index, score)]列表&#34;&#34;&#34;</span>
+</span></span><span class="line"><span class="cl">        <span class="n">q_tokens</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">query</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="n">scores</span> <span class="o">=</span> <span class="p">[]</span>
+</span></span><span class="line"><span class="cl">        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">            <span class="n">s</span> <span class="o">=</span> <span class="mf">0.0</span>
+</span></span><span class="line"><span class="cl">            <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">q_tokens</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">                <span class="k">if</span> <span class="n">t</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">df</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">                    <span class="k">continue</span>
+</span></span><span class="line"><span class="cl">                <span class="c1"># BM25公式：IDF * TF归一化</span>
+</span></span><span class="line"><span class="cl">                <span class="n">idf</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">log</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">df</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="o">+</span> <span class="mf">0.5</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">df</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="o">+</span> <span class="mf">0.5</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">                <span class="n">tf</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tf</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">                <span class="n">norm</span> <span class="o">=</span> <span class="n">tf</span> <span class="o">*</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">k1</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">tf</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">k1</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">b</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">b</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">doc_len</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">avg_len</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl">                <span class="n">s</span> <span class="o">+=</span> <span class="n">idf</span> <span class="o">*</span> <span class="n">norm</span>
+</span></span><span class="line"><span class="cl">            <span class="n">scores</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">i</span><span class="p">,</span> <span class="n">s</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl">        <span class="n">scores</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="n">scores</span><span class="p">[:</span><span class="n">top_k</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">hybrid_search</span><span class="p">(</span><span class="n">store</span><span class="p">,</span> <span class="n">bm25_index</span><span class="p">,</span> <span class="n">chunks</span><span class="p">,</span> <span class="n">query</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">top_k</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">5</span><span class="p">,</span> <span class="n">alpha</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.5</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="s2">&#34;&#34;&#34;混合检索：语义(alpha) + 关键词(1-alpha)&#34;&#34;&#34;</span>
+</span></span><span class="line"><span class="cl">    <span class="c1"># 语义检索</span>
+</span></span><span class="line"><span class="cl">    <span class="n">semantic_results</span> <span class="o">=</span> <span class="n">store</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="n">top_k</span><span class="o">=</span><span class="n">top_k</span> <span class="o">*</span> <span class="mi">2</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="c1"># 关键词检索</span>
+</span></span><span class="line"><span class="cl">    <span class="n">bm25_results</span> <span class="o">=</span> <span class="n">bm25_index</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="n">top_k</span><span class="o">=</span><span class="n">top_k</span> <span class="o">*</span> <span class="mi">2</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="c1"># 归一化分数并融合</span>
+</span></span><span class="line"><span class="cl">    <span class="n">score_map</span> <span class="o">=</span> <span class="p">{}</span>  <span class="c1"># key: chunk内容前50字符</span>
+</span></span><span class="line"><span class="cl">    <span class="c1"># 语义分数归一化（距离转相似度）</span>
+</span></span><span class="line"><span class="cl">    <span class="n">max_sim</span> <span class="o">=</span> <span class="nb">max</span><span class="p">([</span><span class="mi">1</span> <span class="o">-</span> <span class="n">r</span><span class="p">[</span><span class="s2">&#34;distance&#34;</span><span class="p">]</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">semantic_results</span><span class="p">])</span> <span class="ow">or</span> <span class="mi">1</span>
+</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">semantic_results</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="n">key</span> <span class="o">=</span> <span class="n">r</span><span class="p">[</span><span class="s2">&#34;content&#34;</span><span class="p">][:</span><span class="mi">50</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl">        <span class="n">score_map</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">score_map</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">+</span> <span class="n">alpha</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">r</span><span class="p">[</span><span class="s2">&#34;distance&#34;</span><span class="p">])</span> <span class="o">/</span> <span class="n">max_sim</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="c1"># BM25分数归一化</span>
+</span></span><span class="line"><span class="cl">    <span class="n">max_bm</span> <span class="o">=</span> <span class="nb">max</span><span class="p">([</span><span class="n">s</span> <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">bm25_results</span><span class="p">])</span> <span class="ow">or</span> <span class="mi">1</span>
+</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">bm25_results</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="n">key</span> <span class="o">=</span> <span class="n">chunks</span><span class="p">[</span><span class="n">idx</span><span class="p">][:</span><span class="mi">50</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl">        <span class="n">score_map</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">score_map</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">alpha</span><span class="p">)</span> <span class="o">*</span> <span class="n">s</span> <span class="o">/</span> <span class="n">max_bm</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="c1"># 取分数最高的top_k个，回填原文</span>
+</span></span><span class="line"><span class="cl">    <span class="n">ranked</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">score_map</span><span class="o">.</span><span class="n">items</span><span class="p">(),</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span><span class="p">)[:</span><span class="n">top_k</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl">    <span class="n">content_map</span> <span class="o">=</span> <span class="p">{</span><span class="n">c</span><span class="p">[:</span><span class="mi">50</span><span class="p">]:</span> <span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">chunks</span><span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="p">[{</span><span class="s2">&#34;content&#34;</span><span class="p">:</span> <span class="n">content_map</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">k</span><span class="p">),</span> <span class="s2">&#34;score&#34;</span><span class="p">:</span> <span class="n">s</span><span class="p">}</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">ranked</span><span class="p">]</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>混合检索的<code>alpha</code>参数控制语义和关键词的权重，一般0.5起步，根据实际效果调整。如果业务里专有名词多，把alpha调低（偏关键词）；如果提问多为口语化意图，把alpha调高（偏语义）。</p>
+<h2 id="86-rag-agent集成">8.6 RAG-Agent集成</h2>
+<p>前面我们搭建了检索能力，但检索本身是被动的——需要用户主动调用。真正的RAG Agent应该<strong>自主判断何时检索、检索什么、如何用结果</strong>。思路是：把检索封装成一个工具，交给Agent按需调用。</p>
+<p>举个例子：用户问&quot;今天天气怎么样&quot;——这是通用知识，Agent不需要检索公司知识库，直接回答即可；但如果问&quot;公司报销流程是什么&quot;——这是专属知识，Agent必须先检索再答。让Agent自己判断该不该查、查什么，才是真正的&quot;智能&quot;，否则每次都查一遍库既慢又浪费。</p>
+<blockquote>
+<p>💡 <strong>小贴士：为什么用工具模式而非&quot;每次都检索&quot;？</strong>
+有些RAG实现是&quot;无脑检索&quot;——不管用户问什么都先查一遍库。这有两个问题：一是慢，每次回答多一个检索环节；二是噪声，通用问题（如&quot;1+1等于几&quot;）检索到的文档反而干扰回答。工具模式让Agent像人一样判断&quot;这个问题需不需要翻书&quot;，更自然也更高效。</p>
+</blockquote>
+<h3 id="861-把检索做成agent工具">8.6.1 把检索做成Agent工具</h3>
+<p>下面这份代码是本章的&quot;集大成者&quot;：它定义了一个<code>search_knowledge_base</code>工具，并实现了一个Agent循环——LLM自主决定是否调用工具、调用几次，拿到结果后组织最终回答。注意Agent循环里工具调用的消息收发顺序，这是Function Calling的核心机制。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span><span class="lnt">42
+</span><span class="lnt">43
+</span><span class="lnt">44
+</span><span class="lnt">45
+</span><span class="lnt">46
+</span><span class="lnt">47
+</span><span class="lnt">48
+</span><span class="lnt">49
+</span><span class="lnt">50
+</span><span class="lnt">51
+</span><span class="lnt">52
+</span><span class="lnt">53
+</span><span class="lnt">54
+</span><span class="lnt">55
+</span><span class="lnt">56
+</span><span class="lnt">57
+</span><span class="lnt">58
+</span><span class="lnt">59
+</span><span class="lnt">60
+</span><span class="lnt">61
+</span><span class="lnt">62
+</span><span class="lnt">63
+</span><span class="lnt">64
+</span><span class="lnt">65
+</span><span class="lnt">66
+</span><span class="lnt">67
+</span><span class="lnt">68
+</span><span class="lnt">69
+</span><span class="lnt">70
+</span><span class="lnt">71
+</span><span class="lnt">72
+</span><span class="lnt">73
+</span><span class="lnt">74
+</span><span class="lnt">75
+</span><span class="lnt">76
+</span><span class="lnt">77
+</span><span class="lnt">78
+</span><span class="lnt">79
+</span><span class="lnt">80
+</span><span class="lnt">81
+</span><span class="lnt">82
+</span><span class="lnt">83
+</span><span class="lnt">84
+</span><span class="lnt">85
+</span><span class="lnt">86
+</span><span class="lnt">87
+</span><span class="lnt">88
+</span><span class="lnt">89
+</span><span class="lnt">90
+</span><span class="lnt">91
+</span><span class="lnt">92
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="c1"># rag_agent.py —— 完整的RAG增强Agent</span>
+</span></span><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">json</span>
+</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">openai</span> <span class="kn">import</span> <span class="n">OpenAI</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">client</span> <span class="o">=</span> <span class="n">OpenAI</span><span class="p">()</span>  <span class="c1"># 自动读取环境变量OPENAI_API_KEY</span>
+</span></span><span class="line"><span class="cl"><span class="n">LLM_MODEL</span> <span class="o">=</span> <span class="s2">&#34;gpt-5.4&#34;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 工具定义：让Agent可以调用知识库检索</span>
+</span></span><span class="line"><span class="cl"><span class="n">tools</span> <span class="o">=</span> <span class="p">[</span>
+</span></span><span class="line"><span class="cl">    <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="s2">&#34;type&#34;</span><span class="p">:</span> <span class="s2">&#34;function&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">        <span class="s2">&#34;function&#34;</span><span class="p">:</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">            <span class="s2">&#34;name&#34;</span><span class="p">:</span> <span class="s2">&#34;search_knowledge_base&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">            <span class="s2">&#34;description&#34;</span><span class="p">:</span> <span class="s2">&#34;从知识库中检索与用户问题相关的文档片段。当用户询问公司政策、产品文档、内部流程等专属知识时调用此工具。&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">            <span class="s2">&#34;parameters&#34;</span><span class="p">:</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">                <span class="s2">&#34;type&#34;</span><span class="p">:</span> <span class="s2">&#34;object&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                <span class="s2">&#34;properties&#34;</span><span class="p">:</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">                    <span class="s2">&#34;query&#34;</span><span class="p">:</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">                        <span class="s2">&#34;type&#34;</span><span class="p">:</span> <span class="s2">&#34;string&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                        <span class="s2">&#34;description&#34;</span><span class="p">:</span> <span class="s2">&#34;检索查询词，应聚焦于用户问题的核心关键词&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                    <span class="p">},</span>
+</span></span><span class="line"><span class="cl">                    <span class="s2">&#34;top_k&#34;</span><span class="p">:</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">                        <span class="s2">&#34;type&#34;</span><span class="p">:</span> <span class="s2">&#34;integer&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                        <span class="s2">&#34;description&#34;</span><span class="p">:</span> <span class="s2">&#34;返回的文档片段数量，默认5&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                        <span class="s2">&#34;default&#34;</span><span class="p">:</span> <span class="mi">5</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                    <span class="p">},</span>
+</span></span><span class="line"><span class="cl">                <span class="p">},</span>
+</span></span><span class="line"><span class="cl">                <span class="s2">&#34;required&#34;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&#34;query&#34;</span><span class="p">],</span>
+</span></span><span class="line"><span class="cl">            <span class="p">},</span>
+</span></span><span class="line"><span class="cl">        <span class="p">},</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">]</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">execute_tool</span><span class="p">(</span><span class="n">tool_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">args</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">store</span><span class="p">,</span> <span class="n">reranker</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="s2">&#34;&#34;&#34;执行工具调用，返回结果字符串&#34;&#34;&#34;</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="n">tool_name</span> <span class="o">==</span> <span class="s2">&#34;search_knowledge_base&#34;</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="n">query</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="s2">&#34;query&#34;</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl">        <span class="n">top_k</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&#34;top_k&#34;</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="c1"># 先粗检索，召回较多候选</span>
+</span></span><span class="line"><span class="cl">        <span class="n">candidates</span> <span class="o">=</span> <span class="n">store</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="n">top_k</span><span class="o">=</span><span class="n">top_k</span> <span class="o">*</span> <span class="mi">3</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="c1"># 再重排序精炼</span>
+</span></span><span class="line"><span class="cl">        <span class="n">top_results</span> <span class="o">=</span> <span class="n">rerank</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="n">candidates</span><span class="p">,</span> <span class="n">top_k</span><span class="o">=</span><span class="n">top_k</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="c1"># 拼成文本供Agent阅读</span>
+</span></span><span class="line"><span class="cl">        <span class="n">lines</span> <span class="o">=</span> <span class="p">[]</span>
+</span></span><span class="line"><span class="cl">        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">r</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">top_results</span><span class="p">,</span> <span class="mi">1</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">            <span class="n">source</span> <span class="o">=</span> <span class="n">r</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&#34;metadata&#34;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&#34;source&#34;</span><span class="p">,</span> <span class="s2">&#34;未知&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">            <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&#34;[</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">] (来源: </span><span class="si">{</span><span class="n">source</span><span class="si">}</span><span class="s2">)</span><span class="se">\n</span><span class="si">{</span><span class="n">r</span><span class="p">[</span><span class="s1">&#39;content&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="s2">&#34;</span><span class="se">\n\n</span><span class="s2">&#34;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span> <span class="k">if</span> <span class="n">lines</span> <span class="k">else</span> <span class="s2">&#34;未检索到相关文档。&#34;</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="s2">&#34;未知工具&#34;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">run_rag_agent</span><span class="p">(</span><span class="n">question</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">store</span><span class="p">,</span> <span class="n">reranker</span><span class="p">,</span> <span class="n">history</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="s2">&#34;&#34;&#34;运行RAG增强Agent：自主决定是否检索&#34;&#34;&#34;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">system_prompt</span> <span class="o">=</span> <span class="s2">&#34;&#34;&#34;你是一个知识库问答助手。你可以调用search_knowledge_base工具检索知识库。
+</span></span></span><span class="line"><span class="cl"><span class="s2">规则：
+</span></span></span><span class="line"><span class="cl"><span class="s2">1. 当问题涉及公司专属知识（政策、产品、流程、文档内容）时，必须先检索再回答。
+</span></span></span><span class="line"><span class="cl"><span class="s2">2. 回答必须基于检索到的文档内容，不要编造。
+</span></span></span><span class="line"><span class="cl"><span class="s2">3. 如果检索结果与问题无关，诚实告知用户知识库中没有相关信息。
+</span></span></span><span class="line"><span class="cl"><span class="s2">4. 回答时引用来源，格式如：(来源: xxx.pdf)&#34;&#34;&#34;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="n">messages</span> <span class="o">=</span> <span class="p">[{</span><span class="s2">&#34;role&#34;</span><span class="p">:</span> <span class="s2">&#34;system&#34;</span><span class="p">,</span> <span class="s2">&#34;content&#34;</span><span class="p">:</span> <span class="n">system_prompt</span><span class="p">}]</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="n">history</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="n">messages</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">history</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="n">messages</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s2">&#34;role&#34;</span><span class="p">:</span> <span class="s2">&#34;user&#34;</span><span class="p">,</span> <span class="s2">&#34;content&#34;</span><span class="p">:</span> <span class="n">question</span><span class="p">})</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="c1"># Agent循环：最多3轮工具调用</span>
+</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">        <span class="n">resp</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">chat</span><span class="o">.</span><span class="n">completions</span><span class="o">.</span><span class="n">create</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">            <span class="n">model</span><span class="o">=</span><span class="n">LLM_MODEL</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">            <span class="n">messages</span><span class="o">=</span><span class="n">messages</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">            <span class="n">tools</span><span class="o">=</span><span class="n">tools</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">            <span class="n">temperature</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">        <span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="n">msg</span> <span class="o">=</span> <span class="n">resp</span><span class="o">.</span><span class="n">choices</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">message</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">        <span class="c1"># 如果没有工具调用，说明Agent已准备好最终回答</span>
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="ow">not</span> <span class="n">msg</span><span class="o">.</span><span class="n">tool_calls</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">            <span class="k">return</span> <span class="n">msg</span><span class="o">.</span><span class="n">content</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">        <span class="c1"># 处理工具调用</span>
+</span></span><span class="line"><span class="cl">        <span class="n">messages</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>  <span class="c1"># 把assistant消息（含tool_calls）加入历史</span>
+</span></span><span class="line"><span class="cl">        <span class="k">for</span> <span class="n">tc</span> <span class="ow">in</span> <span class="n">msg</span><span class="o">.</span><span class="n">tool_calls</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">            <span class="n">args</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">tc</span><span class="o">.</span><span class="n">function</span><span class="o">.</span><span class="n">arguments</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&#34;🔧 Agent调用工具: </span><span class="si">{</span><span class="n">tc</span><span class="o">.</span><span class="n">function</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">(</span><span class="si">{</span><span class="n">args</span><span class="si">}</span><span class="s2">)&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">            <span class="n">result</span> <span class="o">=</span> <span class="n">execute_tool</span><span class="p">(</span><span class="n">tc</span><span class="o">.</span><span class="n">function</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">args</span><span class="p">,</span> <span class="n">store</span><span class="p">,</span> <span class="n">reranker</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">            <span class="c1"># 把工具结果喂回给Agent</span>
+</span></span><span class="line"><span class="cl">            <span class="n">messages</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
+</span></span><span class="line"><span class="cl">                <span class="s2">&#34;role&#34;</span><span class="p">:</span> <span class="s2">&#34;tool&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                <span class="s2">&#34;tool_call_id&#34;</span><span class="p">:</span> <span class="n">tc</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                <span class="s2">&#34;content&#34;</span><span class="p">:</span> <span class="n">result</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">            <span class="p">})</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="s2">&#34;Agent处理轮次超限，请简化问题后重试。&#34;</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><blockquote>
+<p>💡 <strong>小贴士：为什么Agent循环要限轮次？</strong>
+Agent可能陷入&quot;检索→不满意→再检索→还不满意&quot;的死循环。设上限（这里3轮）能兜底，避免烧token烧到天荒地老。生产环境还可加超时和成本上限双重保险。</p>
+</blockquote>
+<h3 id="862-运行rag-agent">8.6.2 运行RAG Agent</h3>
+<p>把前面所有模块串起来跑一次。首次运行会加载文档建库，之后直接复用已持久化的向量库：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&#34;__main__&#34;</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="c1"># 1. 初始化向量库并灌入文档</span>
+</span></span><span class="line"><span class="cl">    <span class="n">store</span> <span class="o">=</span> <span class="n">VectorStore</span><span class="p">(</span><span class="n">persist_path</span><span class="o">=</span><span class="s2">&#34;./company_kb&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">store</span><span class="o">.</span><span class="n">collection</span><span class="o">.</span><span class="n">get</span><span class="p">()[</span><span class="s2">&#34;ids&#34;</span><span class="p">])</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="c1"># 首次运行：加载文档</span>
+</span></span><span class="line"><span class="cl">        <span class="n">raw</span> <span class="o">=</span> <span class="n">load_document</span><span class="p">(</span><span class="s2">&#34;员工手册.pdf&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="n">chunks</span> <span class="o">=</span> <span class="n">RecursiveTextSplitter</span><span class="p">(</span><span class="mi">500</span><span class="p">,</span> <span class="mi">50</span><span class="p">)</span><span class="o">.</span><span class="n">split_text</span><span class="p">(</span><span class="n">raw</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="n">metas</span> <span class="o">=</span> <span class="p">[{</span><span class="s2">&#34;source&#34;</span><span class="p">:</span> <span class="s2">&#34;员工手册.pdf&#34;</span><span class="p">,</span> <span class="s2">&#34;chunk_index&#34;</span><span class="p">:</span> <span class="n">i</span><span class="p">}</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">chunks</span><span class="p">))]</span>
+</span></span><span class="line"><span class="cl">        <span class="n">store</span><span class="o">.</span><span class="n">add_documents</span><span class="p">(</span><span class="n">chunks</span><span class="p">,</span> <span class="n">metadatas</span><span class="o">=</span><span class="n">metas</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="c1"># 2. 初始化重排序器</span>
+</span></span><span class="line"><span class="cl">    <span class="n">reranker</span> <span class="o">=</span> <span class="n">CrossEncoder</span><span class="p">(</span><span class="s2">&#34;cross-encoder/ms-marco-MiniLM-L-6-v2&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="c1"># 3. 提问</span>
+</span></span><span class="line"><span class="cl">    <span class="n">answer</span> <span class="o">=</span> <span class="n">run_rag_agent</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">        <span class="n">question</span><span class="o">=</span><span class="s2">&#34;公司年假最多能休几天？需要提前多久申请？&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">        <span class="n">store</span><span class="o">=</span><span class="n">store</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">        <span class="n">reranker</span><span class="o">=</span><span class="n">reranker</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="nb">print</span><span class="p">(</span><span class="s2">&#34;🤖 回答:&#34;</span><span class="p">,</span> <span class="n">answer</span><span class="p">)</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>运行时你会看到Agent先调用<code>search_knowledge_base</code>检索，拿到文档片段后再组织回答，并标注来源。整个过程对用户透明——用户只管提问，Agent自主完成&quot;查+答&quot;。</p>
+<h2 id="87-rag系统评估">8.7 RAG系统评估</h2>
+<p>RAG系统不是搭完就万事大吉，必须量化评估才能持续优化。评估分两个维度：<strong>检索质量</strong>和<strong>生成质量</strong>。</p>
+<blockquote>
+<p>💡 <strong>小贴士：为什么要评估？</strong>
+很多团队搭完RAG就直接上线，结果用户反馈&quot;答非所问&quot;却不知从何改起。评估的价值在于&quot;定位病因&quot;：是检索没召回正确文档（检索问题），还是召回了但生成时没用上（生成问题）？两个问题对应的优化方向完全不同。有指标才能对症下药。</p>
+</blockquote>
+<h3 id="871-检索质量评估">8.7.1 检索质量评估</h3>
+<p>准备一批标注数据：每个问题对应一个&quot;正确文档&quot;集合，然后看检索结果命中多少。</p>
+<ul>
+<li><strong>召回率（Recall）</strong>：相关文档是否被检索到，<code>命中数 / 应命中数</code></li>
+<li><strong>准确率（Precision）</strong>：检索结果中有多少是相关的，<code>命中数 / 检索总数</code></li>
+<li><strong>MRR（Mean Reciprocal Rank）</strong>：第一个相关结果的平均排名倒数</li>
+</ul>
+<blockquote>
+<p>💡 <strong>小贴士：什么是MRR？</strong>
+MRR衡量&quot;第一个正确答案排第几&quot;。如果第一个相关结果排在第1位，得分1；排第3位，得分1/3。所有问题取平均就是MRR。MRR越高，说明用户越快能看到正确答案。</p>
+</blockquote>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="c1"># evaluation.py —— 检索质量评估</span>
+</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">evaluate_retrieval</span><span class="p">(</span><span class="n">store</span><span class="p">,</span> <span class="n">test_cases</span><span class="p">:</span> <span class="nb">list</span><span class="p">,</span> <span class="n">top_k</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">5</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">    <span class="s2">&#34;&#34;&#34;
+</span></span></span><span class="line"><span class="cl"><span class="s2">    test_cases: [{&#34;question&#34;: &#34;...&#34;, &#34;relevant_ids&#34;: [&#34;产品手册.pdf#3&#34;, &#34;产品手册.pdf#7&#34;]}, ...]
+</span></span></span><span class="line"><span class="cl"><span class="s2">    &#34;&#34;&#34;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">total_recall</span> <span class="o">=</span> <span class="mi">0</span>
+</span></span><span class="line"><span class="cl">    <span class="n">total_precision</span> <span class="o">=</span> <span class="mi">0</span>
+</span></span><span class="line"><span class="cl">    <span class="n">total_mrr</span> <span class="o">=</span> <span class="mi">0</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="k">case</span> <span class="ow">in</span> <span class="n">test_cases</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="n">results</span> <span class="o">=</span> <span class="n">store</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="k">case</span><span class="p">[</span><span class="s2">&#34;question&#34;</span><span class="p">],</span> <span class="n">top_k</span><span class="o">=</span><span class="n">top_k</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="c1"># 拼出检索到的文档标识：来源#chunk序号</span>
+</span></span><span class="line"><span class="cl">        <span class="n">retrieved_ids</span> <span class="o">=</span> <span class="p">[</span><span class="n">r</span><span class="p">[</span><span class="s2">&#34;metadata&#34;</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&#34;source&#34;</span><span class="p">,</span> <span class="s2">&#34;&#34;</span><span class="p">)</span> <span class="o">+</span> <span class="sa">f</span><span class="s2">&#34;#</span><span class="si">{</span><span class="n">r</span><span class="p">[</span><span class="s1">&#39;metadata&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;chunk_index&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span><span class="si">}</span><span class="s2">&#34;</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">results</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl">        <span class="n">relevant</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="k">case</span><span class="p">[</span><span class="s2">&#34;relevant_ids&#34;</span><span class="p">])</span>
+</span></span><span class="line"><span class="cl">        <span class="n">retrieved</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">retrieved_ids</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">        <span class="c1"># 召回率</span>
+</span></span><span class="line"><span class="cl">        <span class="n">hits</span> <span class="o">=</span> <span class="n">relevant</span> <span class="o">&amp;</span> <span class="n">retrieved</span>
+</span></span><span class="line"><span class="cl">        <span class="n">recall</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">hits</span><span class="p">)</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">relevant</span><span class="p">)</span> <span class="k">if</span> <span class="n">relevant</span> <span class="k">else</span> <span class="mi">0</span>
+</span></span><span class="line"><span class="cl">        <span class="n">total_recall</span> <span class="o">+=</span> <span class="n">recall</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">        <span class="c1"># 准确率</span>
+</span></span><span class="line"><span class="cl">        <span class="n">precision</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">hits</span><span class="p">)</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">retrieved</span><span class="p">)</span> <span class="k">if</span> <span class="n">retrieved</span> <span class="k">else</span> <span class="mi">0</span>
+</span></span><span class="line"><span class="cl">        <span class="n">total_precision</span> <span class="o">+=</span> <span class="n">precision</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">        <span class="c1"># MRR：第一个相关结果的排名倒数</span>
+</span></span><span class="line"><span class="cl">        <span class="n">mrr</span> <span class="o">=</span> <span class="mi">0</span>
+</span></span><span class="line"><span class="cl">        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">rid</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">retrieved_ids</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">            <span class="k">if</span> <span class="n">rid</span> <span class="ow">in</span> <span class="n">relevant</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">                <span class="n">mrr</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">                <span class="k">break</span>
+</span></span><span class="line"><span class="cl">        <span class="n">total_mrr</span> <span class="o">+=</span> <span class="n">mrr</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">test_cases</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="s2">&#34;recall&#34;</span><span class="p">:</span> <span class="n">total_recall</span> <span class="o">/</span> <span class="n">n</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">        <span class="s2">&#34;precision&#34;</span><span class="p">:</span> <span class="n">total_precision</span> <span class="o">/</span> <span class="n">n</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">        <span class="s2">&#34;mrr&#34;</span><span class="p">:</span> <span class="n">total_mrr</span> <span class="o">/</span> <span class="n">n</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h3 id="872-生成质量评估">8.7.2 生成质量评估</h3>
+<p>生成质量更难量化，常用<strong>LLM-as-Judge</strong>：让另一个LLM按维度打分。核心维度：</p>
+<ul>
+<li><strong>相关性（Relevance）</strong>：回答是否切题</li>
+<li><strong>准确性（Faithfulness）</strong>：回答是否忠于检索文档，没有幻觉</li>
+<li><strong>完整性（Completeness）</strong>：是否覆盖了问题所有要点</li>
+</ul>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">evaluate_generation</span><span class="p">(</span><span class="n">question</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">answer</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">context</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="s2">&#34;&#34;&#34;用LLM对生成回答打分（1-5分）&#34;&#34;&#34;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">judge_prompt</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&#34;&#34;&#34;请对以下RAG系统的回答打分（1-5分），评估三个维度：
+</span></span></span><span class="line"><span class="cl"><span class="s2">1. 相关性：回答是否切题
+</span></span></span><span class="line"><span class="cl"><span class="s2">2. 准确性：回答是否忠于参考文档，无编造
+</span></span></span><span class="line"><span class="cl"><span class="s2">3. 完整性：是否完整回答了问题
+</span></span></span><span class="line"><span class="cl"><span class="s2">
+</span></span></span><span class="line"><span class="cl"><span class="s2">问题：</span><span class="si">{</span><span class="n">question</span><span class="si">}</span><span class="s2">
+</span></span></span><span class="line"><span class="cl"><span class="s2">参考文档：</span><span class="si">{</span><span class="n">context</span><span class="si">}</span><span class="s2">
+</span></span></span><span class="line"><span class="cl"><span class="s2">回答：</span><span class="si">{</span><span class="n">answer</span><span class="si">}</span><span class="s2">
+</span></span></span><span class="line"><span class="cl"><span class="s2">
+</span></span></span><span class="line"><span class="cl"><span class="s2">请输出JSON格式：</span><span class="se">{{</span><span class="s2">&#34;relevance&#34;: x, &#34;faithfulness&#34;: x, &#34;completeness&#34;: x, &#34;reason&#34;: &#34;...&#34;</span><span class="se">}}</span><span class="s2">&#34;&#34;&#34;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="n">resp</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">chat</span><span class="o">.</span><span class="n">completions</span><span class="o">.</span><span class="n">create</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">        <span class="n">model</span><span class="o">=</span><span class="n">LLM_MODEL</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">        <span class="n">messages</span><span class="o">=</span><span class="p">[{</span><span class="s2">&#34;role&#34;</span><span class="p">:</span> <span class="s2">&#34;user&#34;</span><span class="p">,</span> <span class="s2">&#34;content&#34;</span><span class="p">:</span> <span class="n">judge_prompt</span><span class="p">}],</span>
+</span></span><span class="line"><span class="cl">        <span class="n">response_format</span><span class="o">=</span><span class="p">{</span><span class="s2">&#34;type&#34;</span><span class="p">:</span> <span class="s2">&#34;json_object&#34;</span><span class="p">},</span>
+</span></span><span class="line"><span class="cl">        <span class="n">temperature</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">resp</span><span class="o">.</span><span class="n">choices</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">message</span><span class="o">.</span><span class="n">content</span><span class="p">)</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>注意：<code>evaluate_generation</code>用到的<code>client</code>、<code>LLM_MODEL</code>、<code>json</code>需要从<code>rag_agent</code>模块导入，实际项目中建议把通用配置抽到一个<code>config.py</code>里统一管理，各模块引用即可。</p>
+<h3 id="873-常见问题与优化方向">8.7.3 常见问题与优化方向</h3>
+<table>
+<thead>
+<tr>
+<th>问题</th>
+<th>表现</th>
+<th>优化方向</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>检索不到</td>
+<td>召回率低</td>
+<td>增大top_k、改用多查询、调整分块大小</td>
+</tr>
+<tr>
+<td>检索到但不相关</td>
+<td>准确率低</td>
+<td>加重排序、缩小top_k、优化embedding模型</td>
+</tr>
+<tr>
+<td>回答有幻觉</td>
+<td>准确性低</td>
+<td>强化提示词约束、要求标注来源、降低temperature</td>
+</tr>
+<tr>
+<td>回答不完整</td>
+<td>完整性低</td>
+<td>增加上下文量、改用Map-Reduce处理多文档</td>
+</tr>
+<tr>
+<td>回答太啰嗦</td>
+<td>相关性低</td>
+<td>提示词约束简洁、加摘要步骤</td>
+</tr>
+</tbody>
+</table>
+<p>一个实用的优化闭环：<strong>构建评测集 → 跑baseline → 改一个变量 → 再跑 → 看指标变化</strong>。切忌同时改多个地方，否则无法归因。</p>
+<blockquote>
+<p>💡 <strong>小贴士：评测集怎么搭？</strong>
+找20-50个真实用户问题，人工标注每个问题的&quot;正确文档&quot;和&quot;标准答案&quot;。这份小数据集就是你的&quot;体检表&quot;。每次改了分块策略、embedding模型或检索参数后，都跑一遍评测集看指标升降。没有评测集的优化等于蒙眼调参——改了也不知道是变好还是变差。</p>
+</blockquote>
+<h2 id="88-小结">8.8 小结</h2>
+<p>本章我们从零构建了完整的RAG增强Agent，核心要点回顾：</p>
+<ol>
+<li><strong>RAG = 检索 + 生成</strong>，让Agent无需训练即可拥有专属知识，知识可实时更新、可溯源。就像开卷考试——不必背书，但要会翻书</li>
+<li><strong>文档处理是地基</strong>，分块质量直接决定检索上限，递归分块兼顾语义和长度</li>
+<li><strong>向量库是核心存储</strong>，ChromaDB轻量易用，配合<code>text-embedding-3-small</code>性价比高</li>
+<li><strong>高级检索提升精度</strong>，多查询扩召回、重排序提精度、混合检索补字面匹配</li>
+<li><strong>Agent自主检索</strong>，把检索做成工具，让Agent按需调用，而非每次都查</li>
+<li><strong>评估驱动优化</strong>，用召回率/准确率/MRR量化检索，用LLM-as-Judge量化生成</li>
+</ol>
+<p>到这里，我们的Agent已经具备了：自主推理（第6章）、工具调用（第7章）、知识检索（本章）。一个强大的单体Agent已经成型。但现实中的复杂任务，往往一个Agent搞不定——需要多个Agent分工协作。下一章我们进入多智能体协作的世界。</p>
+<h2 id="89-预告第9章多智能体协作">8.9 预告第9章：多智能体协作</h2>
+<p>当任务复杂到单个Agent的上下文装不下、单一角色难以兼顾时，我们需要多个Agent像团队一样协作：有的负责规划、有的负责执行、有的负责审查。第9章将探讨：</p>
+<ul>
+<li>多智能体架构模式（层级式/对等式/流水线式）</li>
+<li>Agent间通信协议与消息传递</li>
+<li>群体涌现行为与共识机制</li>
+<li>实战：搭建一个&quot;研发团队&quot;多Agent系统</li>
+</ul>
+<p>从单兵作战到团队协作，Agent的能力边界将再次拓展。</p>
+</div><div class="post-footer" id="post-footer">
+    <div class="post-info">
+        <div class="post-info-line">
+            <div class="post-info-mod">
+                <span>Updated on 2026-07-05</span>
+            </div></div>
+        <div class="post-info-line">
+            <div class="post-info-md"></div>
+            <div class="post-info-share">
+                <span><a href="javascript:void(0);" title="Share on Twitter" data-sharer="twitter" data-url="https://www.ithome.me/post/2026/07/05/ai%E6%99%BA%E8%83%BD%E4%BD%93%E5%BC%80%E5%8F%91-%E7%AC%AC8%E7%AB%A0-rag%E5%A2%9E%E5%BC%BA%E6%A3%80%E7%B4%A2/" data-title="RAG增强检索：知识库驱动的智能体" data-via="ChenCiki" data-hashtags="AI Agent,RAG,向量数据库,ChromaDB,知识库,AI智能体开发实战"><i class="fab fa-twitter fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on Linkedin" data-sharer="linkedin" data-url="https://www.ithome.me/post/2026/07/05/ai%E6%99%BA%E8%83%BD%E4%BD%93%E5%BC%80%E5%8F%91-%E7%AC%AC8%E7%AB%A0-rag%E5%A2%9E%E5%BC%BA%E6%A3%80%E7%B4%A2/"><i class="fab fa-linkedin fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on 微博" data-sharer="weibo" data-url="https://www.ithome.me/post/2026/07/05/ai%E6%99%BA%E8%83%BD%E4%BD%93%E5%BC%80%E5%8F%91-%E7%AC%AC8%E7%AB%A0-rag%E5%A2%9E%E5%BC%BA%E6%A3%80%E7%B4%A2/" data-title="RAG增强检索：知识库驱动的智能体" data-ralateuid="xxx"><i class="fab fa-weibo fa-fw" aria-hidden="true"></i></a></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="post-info-more">
+        <section class="post-tags"><i class="fas fa-tags fa-fw" aria-hidden="true"></i>&nbsp;<a href="/tags/ai-agent/">AI Agent</a>,&nbsp;<a href="/tags/rag/">RAG</a>,&nbsp;<a href="/tags/%E5%90%91%E9%87%8F%E6%95%B0%E6%8D%AE%E5%BA%93/">向量数据库</a>,&nbsp;<a href="/tags/chromadb/">ChromaDB</a>,&nbsp;<a href="/tags/%E7%9F%A5%E8%AF%86%E5%BA%93/">知识库</a>,&nbsp;<a href="/tags/ai%E6%99%BA%E8%83%BD%E4%BD%93%E5%BC%80%E5%8F%91%E5%AE%9E%E6%88%98/">AI智能体开发实战</a></section>
+        <section>
+            <span><a href="javascript:void(0);" onclick="window.history.back();">Back</a></span>&nbsp;|&nbsp;<span><a href="/">Home</a></span>
+        </section>
+    </div>
+
+    <div class="post-nav"><a href="/post/2026/07/05/ssh-tunnel-port-forwarding/" class="prev" rel="prev" title="SSH 隧道实战：端口转发、跳板机与反向代理的完整指南"><i class="fas fa-angle-left fa-fw" aria-hidden="true"></i>SSH 隧道实战：端口转发、跳板机与反向代理的完整指南</a>
+            <a href="/post/2026/07/05/ai%E6%99%BA%E8%83%BD%E4%BD%93%E5%BC%80%E5%8F%91-%E7%AC%AC10%E7%AB%A0-mcp%E5%8D%8F%E8%AE%AE/" class="next" rel="next" title="MCP协议：智能体的标准化工具接口">MCP协议：智能体的标准化工具接口<i class="fas fa-angle-right fa-fw" aria-hidden="true"></i></a></div>
+</div>
+<div id="comments"><div id="gitalk" class="comment"></div><noscript>
+                Please enable JavaScript to view the comments powered by <a href="https://github.com/gitalk/gitalk"></a>Gitalk</a>.
+            </noscript></div></article></div>
+            </main><footer class="footer">
+        <div class="footer-container"><div class="footer-line" itemscope itemtype="http://schema.org/CreativeWork"><i class="far fa-copyright fa-fw" aria-hidden="true"></i><span itemprop="copyrightYear">2011 - 2026</span><span class="author" itemprop="copyrightHolder">&nbsp;<a href="https://www.ithome.me/" target="_blank">Simon Chen</a></span>&nbsp;|&nbsp;<span class="license"><a rel="license external nofollow noopener noreferrer" href="https://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank">CC BY-NC-ND 4.0</a></span></div>
+        </div>
+    </footer></div>
+
+        <div id="fixed-buttons"><a href="#" id="back-to-top" class="fixed-button" title="Back to Top">
+                <i class="fas fa-arrow-up fa-fw" aria-hidden="true"></i>
+            </a><a href="#" id="view-comments" class="fixed-button" title="View Comments">
+                <i class="fas fa-comment fa-fw" aria-hidden="true"></i>
+            </a>
+        </div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1.8.0/dist/gitalk.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/css/lightgallery-bundle.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/katex.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/copy-tex.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.css"><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/gitalk@1.8.0/dist/gitalk.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/autocomplete.js@0.38.1/dist/autocomplete.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lunr@2.3.9/lunr.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lazysizes@5.3.1/lazysizes.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/lightgallery.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/plugins/thumbnail/lg-thumbnail.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/plugins/zoom/lg-zoom.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/clipboard@2.0.11/dist/clipboard.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/sharer.js@0.5.1/sharer.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/katex.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/auto-render.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/copy-tex.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/mhchem.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.js"></script><script type="text/javascript">window.config={"code":{"copyTitle":"Copy to clipboard","maxShownLines":50},"comment":{"gitalk":{"admin":["cikichen"],"clientID":"be0f52370ed1285b6c7c","clientSecret":"734a7d8d0ded346ca7a3d565d57de3f8eeb2850b","id":"2026-07-05T00:00:00Z","owner":"cikichen","repo":"gitalk","title":"RAG增强检索：知识库驱动的智能体"}},"cookieconsent":{"content":{"dismiss":"我知道了","link":"了解更多","message":"本网站使用 Cookies 来改善您的浏览体验."},"enable":true,"palette":{"button":{"background":"#f0f0f0"},"popup":{"background":"#1aa3ff"}},"theme":"edgeless"},"lightgallery":true,"math":{"delimiters":[{"display":true,"left":"$$","right":"$$"},{"display":true,"left":"\\[","right":"\\]"},{"display":true,"left":"\\begin{equation}","right":"\\end{equation}"},{"display":true,"left":"\\begin{equation*}","right":"\\end{equation*}"},{"display":true,"left":"\\begin{align}","right":"\\end{align}"},{"display":true,"left":"\\begin{align*}","right":"\\end{align*}"},{"display":true,"left":"\\begin{alignat}","right":"\\end{alignat}"},{"display":true,"left":"\\begin{alignat*}","right":"\\end{alignat*}"},{"display":true,"left":"\\begin{gather}","right":"\\end{gather}"},{"display":true,"left":"\\begin{CD}","right":"\\end{CD}"},{"display":false,"left":"$","right":"$"},{"display":false,"left":"\\(","right":"\\)"}],"strict":false},"search":{"highlightTag":"em","lunrIndexURL":"/index.json","maxResultLength":10,"noResultsFound":"No results found","snippetLength":50,"type":"lunr"}};</script><script type="text/javascript" src="/js/theme.min.js"></script></body>
+</html>

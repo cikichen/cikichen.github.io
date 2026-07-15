@@ -1,0 +1,943 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="robots" content="noodp" />
+        <title>多智能体协作：分工、编排与涌现 - 编程心语</title><meta name="Description" content="从CrewAI到AutoGen，探索多智能体协作系统的架构模式、通信机制与实战代码"><meta property="og:url" content="https://www.ithome.me/post/2026/07/05/ai%E6%99%BA%E8%83%BD%E4%BD%93%E5%BC%80%E5%8F%91-%E7%AC%AC9%E7%AB%A0-%E5%A4%9A%E6%99%BA%E8%83%BD%E4%BD%93%E5%8D%8F%E4%BD%9C/">
+  <meta property="og:site_name" content="编程心语">
+  <meta property="og:title" content="多智能体协作：分工、编排与涌现">
+  <meta property="og:description" content="从CrewAI到AutoGen，探索多智能体协作系统的架构模式、通信机制与实战代码">
+  <meta property="og:locale" content="zh_CN">
+  <meta property="og:type" content="article">
+    <meta property="article:section" content="posts">
+    <meta property="article:published_time" content="2026-07-05T08:00:00+08:00">
+    <meta property="article:modified_time" content="2026-07-05T08:00:00+08:00">
+    <meta property="article:tag" content="AI Agent">
+    <meta property="article:tag" content="多智能体">
+    <meta property="article:tag" content="CrewAI">
+    <meta property="article:tag" content="AutoGen">
+    <meta property="article:tag" content="协作系统">
+    <meta property="article:tag" content="AI智能体开发实战">
+
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="多智能体协作：分工、编排与涌现">
+  <meta name="twitter:description" content="从CrewAI到AutoGen，探索多智能体协作系统的架构模式、通信机制与实战代码">
+      <meta name="twitter:site" content="@ChenCiki">
+<meta name="application-name" content="编程心语">
+<meta name="apple-mobile-web-app-title" content="编程心语"><meta name="theme-color" content="#ffffff"><meta name="msapplication-TileColor" content="#da532c"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5"><link rel="manifest" href="/site.webmanifest"><link rel="canonical" href="https://www.ithome.me/post/2026/07/05/ai%E6%99%BA%E8%83%BD%E4%BD%93%E5%BC%80%E5%8F%91-%E7%AC%AC9%E7%AB%A0-%E5%A4%9A%E6%99%BA%E8%83%BD%E4%BD%93%E5%8D%8F%E4%BD%9C/" /><link rel="prev" href="https://www.ithome.me/post/2026/07/05/ai%E6%99%BA%E8%83%BD%E4%BD%93%E5%BC%80%E5%8F%91-%E7%AC%AC5%E7%AB%A0-%E5%B7%A5%E5%85%B7%E8%B0%83%E7%94%A8%E6%9C%BA%E5%88%B6/" /><link rel="next" href="https://www.ithome.me/post/2026/07/05/ssh-tunnel-port-forwarding/" /><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/normalize.css@8.0.1/normalize.min.css"><link rel="stylesheet" href="/css/style.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css"><script type="application/ld+json">
+    {
+        "@context": "http://schema.org",
+        "@type": "BlogPosting",
+        "headline": "多智能体协作：分工、编排与涌现",
+        "inLanguage": "zh-CN",
+        "mainEntityOfPage": {
+            "@type": "WebPage",
+            "@id": "https:\/\/www.ithome.me\/post\/2026\/07\/05\/ai%E6%99%BA%E8%83%BD%E4%BD%93%E5%BC%80%E5%8F%91-%E7%AC%AC9%E7%AB%A0-%E5%A4%9A%E6%99%BA%E8%83%BD%E4%BD%93%E5%8D%8F%E4%BD%9C\/"
+        },"image": ["https:\/\/www.ithome.me\/cover.png"],"genre": "posts","keywords": "AI Agent, 多智能体, CrewAI, AutoGen, 协作系统, AI智能体开发实战","wordcount":  12335 ,
+        "url": "https:\/\/www.ithome.me\/post\/2026\/07\/05\/ai%E6%99%BA%E8%83%BD%E4%BD%93%E5%BC%80%E5%8F%91-%E7%AC%AC9%E7%AB%A0-%E5%A4%9A%E6%99%BA%E8%83%BD%E4%BD%93%E5%8D%8F%E4%BD%9C\/","datePublished": "2026-07-05T08:00:00+08:00","dateModified": "2026-07-05T08:00:00+08:00","publisher": {
+            "@type": "Organization",
+            "name": "SimonChen","logo": "https:\/\/www.ithome.me\/logo.png"},"author": {
+                "@type": "Person",
+                "name": "Simon"
+            },"description": "从CrewAI到AutoGen，探索多智能体协作系统的架构模式、通信机制与实战代码"
+    }
+    </script><script async src="https://www.googletagmanager.com/gtag/js?id=G-H1Q5563VR8"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-H1Q5563VR8', { 'anonymize_ip': true });
+</script></head>
+    <body data-header-desktop="fixed" data-header-mobile="auto"><script type="text/javascript">(window.localStorage && localStorage.getItem('theme') ? localStorage.getItem('theme') === 'dark' : ('auto' === 'auto' ? window.matchMedia('(prefers-color-scheme: dark)').matches : 'auto' === 'dark')) && document.body.setAttribute('theme', 'dark');</script>
+
+        <div id="mask"></div><div class="wrapper"><header class="desktop" id="header-desktop">
+    <div class="header-wrapper">
+        <div class="header-title">
+            <a href="/" title="编程心语">编程心语</a>
+        </div>
+        <div class="menu">
+            <div class="menu-inner"><a class="menu-item" href="/posts/"> 文章 </a><a class="menu-item" href="/categories/"> 分类 </a><a class="menu-item" href="/tags/"> 标签 </a><a class="menu-item" href="/about-me/"> 关于 </a><span class="menu-item delimiter"></span><span class="menu-item search" id="search-desktop">
+                        <input type="text" placeholder="搜索文章..." id="search-input-desktop">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-desktop" title="Search">
+                            <i class="fas fa-search fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-desktop" title="Clear">
+                            <i class="fas fa-times-circle fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-desktop">
+                            <i class="fas fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+                        </span>
+                    </span><a href="javascript:void(0);" class="menu-item theme-switch" title="Switch Theme">
+                    <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</header><header class="mobile" id="header-mobile">
+    <div class="header-container">
+        <div class="header-wrapper">
+            <div class="header-title">
+                <a href="/" title="编程心语">编程心语</a>
+            </div>
+            <div class="menu-toggle" id="menu-toggle-mobile">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+        <div class="menu" id="menu-mobile"><div class="search-wrapper">
+                    <div class="search mobile" id="search-mobile">
+                        <input type="text" placeholder="搜索文章..." id="search-input-mobile">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-mobile" title="Search">
+                            <i class="fas fa-search fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-mobile" title="Clear">
+                            <i class="fas fa-times-circle fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-mobile">
+                            <i class="fas fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+                        </span>
+                    </div>
+                    <a href="javascript:void(0);" class="search-cancel" id="search-cancel-mobile">
+                        Cancel
+                    </a>
+                </div><a class="menu-item" href="/posts/" title="">文章</a><a class="menu-item" href="/categories/" title="">分类</a><a class="menu-item" href="/tags/" title="">标签</a><a class="menu-item" href="/about-me/" title="">关于</a><a href="javascript:void(0);" class="menu-item theme-switch" title="Switch Theme">
+                <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
+            </a></div>
+    </div>
+</header><div class="search-dropdown desktop">
+        <div id="search-dropdown-desktop"></div>
+    </div>
+    <div class="search-dropdown mobile">
+        <div id="search-dropdown-mobile"></div>
+    </div><main class="main">
+                <div class="container"><div class="toc" id="toc-auto">
+            <h2 class="toc-title">Contents</h2>
+            <div class="toc-content" id="toc-content-auto"></div>
+        </div><article class="page single"><h1 class="single-title animate__animated animate__flipInX">多智能体协作：分工、编排与涌现</h1><div class="post-meta">
+            <div class="post-meta-line"><span class="post-author"><a href="https://www.ithome.me/" title="Author" target="_blank" rel="noopener noreferrer author" class="author"><i class="fas fa-user-circle fa-fw" aria-hidden="true"></i>Simon</a>
+</span>&nbsp;<span class="post-category">included in <a href="/categories/ai%E6%99%BA%E8%83%BD%E4%BD%93%E5%BC%80%E5%8F%91%E5%AE%9E%E6%88%98/"><i class="far fa-folder fa-fw" aria-hidden="true"></i>AI智能体开发实战</a></span></div>
+            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw" aria-hidden="true"></i>&nbsp;<time datetime="2026-07-05">2026-07-05</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden="true"></i>&nbsp;12335 words&nbsp;
+                <i class="far fa-clock fa-fw" aria-hidden="true"></i>&nbsp;25 minutes&nbsp;</div>
+        </div><div class="details toc" id="toc-static"  data-kept="true">
+                <div class="details-summary toc-title">
+                    <span>Contents</span>
+                    <span><i class="details-icon fas fa-angle-right" aria-hidden="true"></i></span>
+                </div>
+                <div class="details-content toc-content" id="toc-content-static"><nav id="TableOfContents">
+  <ul>
+    <li><a href="#91-引言一个agent解决不了的问题">9.1 引言：一个Agent解决不了的问题</a></li>
+    <li><a href="#92-多智能体协作模式">9.2 多智能体协作模式</a>
+      <ul>
+        <li><a href="#921-串行流水线pipeline">9.2.1 串行流水线（Pipeline）</a></li>
+        <li><a href="#922-并行分工parallel">9.2.2 并行分工（Parallel）</a></li>
+        <li><a href="#923-层级委派hierarchical">9.2.3 层级委派（Hierarchical）</a></li>
+        <li><a href="#924-辩论式debate">9.2.4 辩论式（Debate）</a></li>
+        <li><a href="#四种模式对比">四种模式对比</a></li>
+      </ul>
+    </li>
+    <li><a href="#93-通信机制">9.3 通信机制</a>
+      <ul>
+        <li><a href="#931-消息传递message-passing">9.3.1 消息传递（Message Passing）</a></li>
+        <li><a href="#932-共享黑板blackboard">9.3.2 共享黑板（Blackboard）</a></li>
+        <li><a href="#933-发布订阅pubsub">9.3.3 发布订阅（Pub/Sub）</a></li>
+      </ul>
+    </li>
+    <li><a href="#94-crewai实战内容创作团队">9.4 CrewAI实战：内容创作团队</a>
+      <ul>
+        <li><a href="#941-安装与基础概念">9.4.1 安装与基础概念</a></li>
+        <li><a href="#942-完整示例内容创作团队">9.4.2 完整示例：内容创作团队</a></li>
+      </ul>
+    </li>
+    <li><a href="#95-autogen实战代码开发团队">9.5 AutoGen实战：代码开发团队</a>
+      <ul>
+        <li><a href="#951-安装与基础概念">9.5.1 安装与基础概念</a></li>
+        <li><a href="#952-完整示例代码开发团队">9.5.2 完整示例：代码开发团队</a></li>
+      </ul>
+    </li>
+    <li><a href="#96-多智能体系统的挑战">9.6 多智能体系统的挑战</a>
+      <ul>
+        <li><a href="#961-通信开销与token消耗">9.6.1 通信开销与Token消耗</a></li>
+        <li><a href="#962-一致性与冲突解决">9.6.2 一致性与冲突解决</a></li>
+        <li><a href="#963-可观测性与调试">9.6.3 可观测性与调试</a></li>
+        <li><a href="#964-成本控制">9.6.4 成本控制</a></li>
+      </ul>
+    </li>
+    <li><a href="#97-框架对比">9.7 框架对比</a></li>
+    <li><a href="#98-小结">9.8 小结</a></li>
+    <li><a href="#99-下一章预告mcp协议">9.9 下一章预告：MCP协议</a></li>
+  </ul>
+</nav></div>
+            </div><div class="content" id="content"><h2 id="91-引言一个agent解决不了的问题">9.1 引言：一个Agent解决不了的问题</h2>
+<p>在前面的章节中，我们构建了功能越来越强的单个智能体：它能规划、能记忆、能调用工具。但当你真正把它丢进一个复杂业务场景——比如&quot;从零撰写一篇深度行业报告&quot;——你会发现它很快就会力不从心。</p>
+<p>问题不在于模型不够聪明，而在于<strong>角色过载</strong>。一个Agent同时承担调研、写作、校对、排版、事实核查，就像让公司里唯一的那名员工既当销售、又写代码、还做财务报表——每件事他都懂一点，但每件事都做不精。即使能力够，上下文窗口也会被撑爆，注意力会被稀释，工具列表会膨胀到难以管理。</p>
+<blockquote>
+<p>💡 <strong>小贴士：什么是&quot;角色过载&quot;？</strong>
+想象一个人同时兼任记者、编辑、校对和美编。你让他先去采访、回来写稿、再自己校对、最后排版——不是做不到，而是每切换一次角色，他都要重新&quot;进入状态&quot;，精力被反复拉扯。Agent也一样：当你把太多职责塞进一个System Prompt，模型的注意力会被分散，输出质量随职责数量增加而下降。解决之道就是像公司一样<strong>分工</strong>。</p>
+</blockquote>
+<p>人类社会的解法是<strong>分工</strong>：把复杂任务拆给不同角色的专家，再通过流程把他们串起来。一家公司里有市场部、技术部、财务部，各部门各司其职，通过例会和流程协作完成单个部门搞不定的大项目。多智能体系统（Multi-Agent System, MAS）正是把这套思路搬到AI世界——让多个专精的Agent各司其职，通过通信协调，共同完成单个Agent难以胜任的任务。</p>
+<p>更有意思的是，当多个Agent协作时，往往会涌现出设计中没有显式规划的行为：一个研究员Agent无意中提到的角度，激发了作者Agent的灵感；两个Agent在辩论中互相反驳，最终结论比任何一方都更严谨。这种<strong>涌现（Emergence）</strong> 是多智能体系统最迷人、也最难预测的部分。</p>
+<blockquote>
+<p>💡 <strong>小贴士：什么是&quot;涌现&quot;？</strong>
+&ldquo;涌现&quot;指系统整体表现出任何单个组件都不具备的特性。好比一支篮球队，五个球员各自只有运球、传球、投篮的基本功，但组合在一起却能打出精妙的战术配合——这种配合不是任何一个球员单独能完成的，它&quot;涌现&quot;自团队的协作与互动。多智能体系统中的涌现同理：Agent间的对话与交锋，会产生超越任何一个Agent单独能力的洞察。</p>
+</blockquote>
+<p>本章我们将从架构模式讲起，落到CrewAI和AutoGen两个主流框架的实战代码，最后讨论工程落地中的真实挑战。读完本章，你将能用两个框架各搭一个可运行的多智能体系统，并知道在什么场景下选哪个。</p>
+<h2 id="92-多智能体协作模式">9.2 多智能体协作模式</h2>
+<p>多智能体怎么组织，本质上是一个<strong>编排（Orchestration）</strong> 问题——就像公司怎么排兵布阵，谁向谁汇报、谁和谁并行、谁给谁兜底，都属于编排的范畴。下面是四种最经典的协作模式。</p>
+<blockquote>
+<p>💡 <strong>小贴士：什么是&quot;编排（Orchestration）&quot;？</strong>
+编排源自交响乐——指挥不演奏任何乐器，但他决定谁在什么时候进入、什么时候停下、什么时候渐强。在多智能体语境下，编排就是&quot;决定谁先发言、谁后发言、谁听谁的、什么时候结束&quot;的那套规则。编排可以由代码硬编码（声明式），也可以交给一个&quot;Manager Agent&quot;动态决策。</p>
+</blockquote>
+<h3 id="921-串行流水线pipeline">9.2.1 串行流水线（Pipeline）</h3>
+<p>最直观的模式：Agent像工厂流水线一样依次处理任务，前一个的输出是后一个的输入。就好比报社的采编流程：记者采访→编辑改稿→校对终审，一步接一步。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">[研究员] → 资料 → [作者] → 初稿 → [编辑] → 终稿
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>优点是流程清晰、易于调试、每一步可独立优化。缺点是串行执行延迟高，任何一个环节卡住整条线都停摆——记者没交稿，后面所有人都得干等。适合任务边界清晰、有天然先后顺序的场景，如内容生产、数据处理管线。</p>
+<h3 id="922-并行分工parallel">9.2.2 并行分工（Parallel）</h3>
+<p>把一个任务拆成若干互不依赖的子任务，多个Agent同时处理，最后汇总。就像公司要写一份年度报告，市场、技术、财务三个部门同时分头写各自的部分，最后由总办合并成一份。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">        ┌─ [市场分析Agent] ─┐
+</span></span><span class="line"><span class="cl">任务 ───┼─ [技术分析Agent] ──┼─→ [汇总Agent] → 报告
+</span></span><span class="line"><span class="cl">        └─ [财务分析Agent] ─┘
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>优点是延迟低、吞吐高——三个人同时干，总时间取决于最慢的那个人而非三人之和。难点在于子任务之间确实要无强依赖，且汇总Agent需要有能力融合异构结果（市场给的是趋势描述，财务给的是数字表格，怎么捏到一起是个技术活）。适合调研、多维评估、批量处理等场景。</p>
+<h3 id="923-层级委派hierarchical">9.2.3 层级委派（Hierarchical）</h3>
+<p>模仿企业组织架构：一个&quot;Manager&quot;Agent负责拆解任务和分派，多个&quot;Worker&quot;Agent负责执行，结果逐层上报。就像部门经理接到一个大项目，拆成子任务分给组员，组员干完汇报，经理验收后整合。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">              [Manager Agent]
+</span></span><span class="line"><span class="cl">             /       |        \
+</span></span><span class="line"><span class="cl">     [研究员]    [作者]     [审校]
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>Manager承担规划与质量控制，Worker专注执行。优点是可扩展性强，能处理超大规模任务——实在忙不过来，Manager还能再拆一层子团队。缺点是Manager容易成为瓶颈和单点故障，层级过深时信息逐层失真，就像传话游戏传了五轮就面目全非。适合复杂项目管理、大型软件工程。</p>
+<h3 id="924-辩论式debate">9.2.4 辩论式（Debate）</h3>
+<p>多个Agent围绕同一问题给出不同立场，通过多轮交锋收敛出更优答案。就像公司开会做重大决策时，有人扮演&quot;乐观派&quot;力推上线，有人扮演&quot;魔鬼代言人&quot;挑刺找漏洞，最后由裁判综合拍板。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">[正方Agent] ⇄ [反方Agent] ⇄ [裁判Agent]
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>这是最接近&quot;涌现&quot;的模式：Agent间的反驳会暴露单方忽略的漏洞——正方说&quot;这个功能用户很喜欢&rdquo;，反方马上追问&quot;但成本是不是超预算了？&quot;。代价是Token消耗大、收敛不可控——辩论可能跑偏成吵架，十轮还没结论。适合高风险决策、科学推理、安全审查等需要&quot;对冲单点偏见&quot;的场景。</p>
+<h3 id="四种模式对比">四种模式对比</h3>
+<table>
+<thead>
+<tr>
+<th>模式</th>
+<th>拓扑结构</th>
+<th>延迟</th>
+<th>Token消耗</th>
+<th>典型场景</th>
+<th>难点</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>串行流水线</td>
+<td>链式</td>
+<td>高（串行累加）</td>
+<td>中</td>
+<td>内容生产、数据管线</td>
+<td>瓶颈传播</td>
+</tr>
+<tr>
+<td>并行分工</td>
+<td>扇出-扇入</td>
+<td>低（并行）</td>
+<td>中高</td>
+<td>多维调研、批量任务</td>
+<td>结果融合</td>
+</tr>
+<tr>
+<td>层级委派</td>
+<td>树形</td>
+<td>中</td>
+<td>高</td>
+<td>项目管理、软件工程</td>
+<td>Manager瓶颈</td>
+</tr>
+<tr>
+<td>辩论式</td>
+<td>网状</td>
+<td>高</td>
+<td>很高</td>
+<td>决策审查、科学推理</td>
+<td>收敛控制</td>
+</tr>
+</tbody>
+</table>
+<p>实际工程中很少用单一模式，往往是混合：外层层级委派，内部某条流水线用串行，关键决策点嵌入一轮辩论——就像一家大公司既有层级汇报，部门内又有流水线作业，重大决策还要开会辩论。</p>
+<h2 id="93-通信机制">9.3 通信机制</h2>
+<p>模式决定&quot;谁和谁说话&quot;，通信机制决定&quot;怎么说&quot;。就好比公司里同事之间沟通：可以发邮件（点对点）、可以往公告栏贴便签（共享黑板）、也可以在微信群里@全体成员（发布订阅）。</p>
+<h3 id="931-消息传递message-passing">9.3.1 消息传递（Message Passing）</h3>
+<p>Agent之间直接发送结构化消息，最常见的是JSON。就像同事之间互发邮件，每封邮件都有发件人、收件人、主题和正文：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span><span class="lnt">7
+</span><span class="lnt">8
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="c1"># Agent A → Agent B 的消息（类似一封内部邮件）</span>
+</span></span><span class="line"><span class="cl"><span class="n">message</span> <span class="o">=</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="s2">&#34;from&#34;</span><span class="p">:</span> <span class="s2">&#34;researcher&#34;</span><span class="p">,</span>          <span class="c1"># 发件人：研究员</span>
+</span></span><span class="line"><span class="cl">    <span class="s2">&#34;to&#34;</span><span class="p">:</span> <span class="s2">&#34;writer&#34;</span><span class="p">,</span>                <span class="c1"># 收件人：作者</span>
+</span></span><span class="line"><span class="cl">    <span class="s2">&#34;type&#34;</span><span class="p">:</span> <span class="s2">&#34;research_result&#34;</span><span class="p">,</span>     <span class="c1"># 邮件类型：调研结果</span>
+</span></span><span class="line"><span class="cl">    <span class="s2">&#34;content&#34;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&#34;facts&#34;</span><span class="p">:</span> <span class="p">[</span><span class="o">...</span><span class="p">],</span> <span class="s2">&#34;sources&#34;</span><span class="p">:</span> <span class="p">[</span><span class="o">...</span><span class="p">]},</span>  <span class="c1"># 正文附件</span>
+</span></span><span class="line"><span class="cl">    <span class="s2">&#34;turn&#34;</span><span class="p">:</span> <span class="mi">1</span>                      <span class="c1"># 第几轮对话</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>优点是语义清晰、可路由、易审计——每条消息都有明确的收发记录，出了问题能追溯到具体哪一封。CrewAI和AutoGen底层都基于消息传递。缺点是Agent数量多时点对点通信会组合爆炸（N个Agent两两通信是O(N²)条链路），需要引入路由层或消息总线来管理。</p>
+<h3 id="932-共享黑板blackboard">9.3.2 共享黑板（Blackboard）</h3>
+<p>所有Agent读写同一个共享数据结构——&ldquo;黑板&rdquo;。谁有新发现就写上去，谁需要就取走，无需知道对方是谁。就像办公室走廊里的那块大白板：研究员贴上调研笔记，作者路过看到了就拿来写稿，编辑写完评语也贴上去，三方互不见面却完成了协作。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span><span class="lnt">7
+</span><span class="lnt">8
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">┌─────────── Blackboard ───────────┐
+</span></span><span class="line"><span class="cl">│ topic: &#34;AI芯片市场&#34;               │
+</span></span><span class="line"><span class="cl">│ facts: [...]   ← 研究员写入       │
+</span></span><span class="line"><span class="cl">│ draft: &#34;...&#34;   ← 作者写入         │
+</span></span><span class="line"><span class="cl">│ review: {...}  ← 编辑写入         │
+</span></span><span class="line"><span class="cl">└───────────────────────────────────┘
+</span></span><span class="line"><span class="cl">   ↑↓          ↑↓          ↑↓
+</span></span><span class="line"><span class="cl">[研究员]    [作者]      [编辑]
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>黑板模式解耦了生产者和消费者——研究员不需要知道作者是谁，只要把笔记贴上白板就行。适合信息逐步累积、Agent角色动态加入的场景。挑战是并发写入的冲突与一致性（两个人同时改同一段怎么办），以及&quot;谁该看哪部分&quot;的权限控制。</p>
+<h3 id="933-发布订阅pubsub">9.3.3 发布订阅（Pub/Sub）</h3>
+<p>Agent订阅感兴趣的事件类型，发布者广播事件，中间件负责分发。就像公司邮件组：你订阅了&quot;产品上线通知&quot;组，只要有人往这个组发消息，所有订阅者都会收到，发布者不需要逐个@人。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">[研究员] --publish(&#34;fact_ready&#34;)--&gt; [Broker]
+</span></span><span class="line"><span class="cl">                                         |
+</span></span><span class="line"><span class="cl">                +-----------+------------+------------+
+</span></span><span class="line"><span class="cl">                |           |            |            |
+</span></span><span class="line"><span class="cl">            [作者]      [审校Agent]  [图表Agent]  [存档Agent]
+</span></span><span class="line"><span class="cl">            (subscribe fact_ready)
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>Pub/Sub天然支持动态扩缩容——新增一个订阅者（比如再加个&quot;翻译Agent&quot;）无需改动发布方，只要订阅事件就行。适合Agent数量多、角色经常变化的开放式系统。代价是引入消息中间件（Broker），调试链路变长——&ldquo;这条消息到底被谁消费了&quot;需要查日志才能确认。</p>
+<p>工程上三种机制常组合使用：黑板做共享状态，Pub/Sub做事件通知，点对点消息做定向请求——就像公司里既有公告栏（黑板）、又有邮件组（Pub/Sub）、还有一对一私聊（消息传递），各司其职。</p>
+<h2 id="94-crewai实战内容创作团队">9.4 CrewAI实战：内容创作团队</h2>
+<p>CrewAI是目前最流行的&quot;角色化&quot;多智能体框架，核心抽象是三个：<strong>Agent</strong>（角色）、<strong>Task</strong>（任务）、<strong>Crew</strong>（团队）。它把&quot;分工&quot;这件事做成了声明式API，几行代码就能搭起一个团队——就像写一份岗位说明书加任务清单，剩下的交给框架执行。</p>
+<blockquote>
+<p>💡 <strong>小贴士：什么是&quot;声明式API&rdquo;？</strong>
+声明式API的意思是&quot;你只管描述想要什么，框架负责怎么做&quot;。你告诉CrewAI&quot;有三个角色、三个任务、按顺序执行&quot;，至于怎么调度、怎么传上下文、怎么调LLM，都是框架的事。与之相对的是&quot;命令式API&quot;——你得自己写循环、自己管状态、自己控制流程。声明式上手快但灵活性低，命令式可控性强但代码量大。</p>
+</blockquote>
+<h3 id="941-安装与基础概念">9.4.1 安装与基础概念</h3>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">pip install crewai crewai-tools
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>CrewAI的三个核心概念，可以用公司来类比理解：</p>
+<ul>
+<li><strong>Agent</strong>：一个有角色（role）、目标（goal）、背景故事（backstory）和工具集的智能体——相当于公司里的一位员工，有职位、有KPI、有简历、有工具。</li>
+<li><strong>Task</strong>：一个有描述、期望输出、指派Agent的具体任务——相当于一份任务工单，写明了做什么、交付什么、派给谁。</li>
+<li><strong>Crew</strong>：把多个Agent和Task组装成一个团队，指定流程模式（process）和执行顺序——相当于组建一个项目组，定好协作流程。</li>
+</ul>
+<h3 id="942-完整示例内容创作团队">9.4.2 完整示例：内容创作团队</h3>
+<p>我们来搭一个&quot;研究员 + 作者 + 编辑&quot;三人团队，输入一个主题，输出一篇可发布的长文。这就像给一个微型编辑部下达选题：研究员负责跑腿采访，作者负责执笔，编辑负责把关。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">  1
+</span><span class="lnt">  2
+</span><span class="lnt">  3
+</span><span class="lnt">  4
+</span><span class="lnt">  5
+</span><span class="lnt">  6
+</span><span class="lnt">  7
+</span><span class="lnt">  8
+</span><span class="lnt">  9
+</span><span class="lnt"> 10
+</span><span class="lnt"> 11
+</span><span class="lnt"> 12
+</span><span class="lnt"> 13
+</span><span class="lnt"> 14
+</span><span class="lnt"> 15
+</span><span class="lnt"> 16
+</span><span class="lnt"> 17
+</span><span class="lnt"> 18
+</span><span class="lnt"> 19
+</span><span class="lnt"> 20
+</span><span class="lnt"> 21
+</span><span class="lnt"> 22
+</span><span class="lnt"> 23
+</span><span class="lnt"> 24
+</span><span class="lnt"> 25
+</span><span class="lnt"> 26
+</span><span class="lnt"> 27
+</span><span class="lnt"> 28
+</span><span class="lnt"> 29
+</span><span class="lnt"> 30
+</span><span class="lnt"> 31
+</span><span class="lnt"> 32
+</span><span class="lnt"> 33
+</span><span class="lnt"> 34
+</span><span class="lnt"> 35
+</span><span class="lnt"> 36
+</span><span class="lnt"> 37
+</span><span class="lnt"> 38
+</span><span class="lnt"> 39
+</span><span class="lnt"> 40
+</span><span class="lnt"> 41
+</span><span class="lnt"> 42
+</span><span class="lnt"> 43
+</span><span class="lnt"> 44
+</span><span class="lnt"> 45
+</span><span class="lnt"> 46
+</span><span class="lnt"> 47
+</span><span class="lnt"> 48
+</span><span class="lnt"> 49
+</span><span class="lnt"> 50
+</span><span class="lnt"> 51
+</span><span class="lnt"> 52
+</span><span class="lnt"> 53
+</span><span class="lnt"> 54
+</span><span class="lnt"> 55
+</span><span class="lnt"> 56
+</span><span class="lnt"> 57
+</span><span class="lnt"> 58
+</span><span class="lnt"> 59
+</span><span class="lnt"> 60
+</span><span class="lnt"> 61
+</span><span class="lnt"> 62
+</span><span class="lnt"> 63
+</span><span class="lnt"> 64
+</span><span class="lnt"> 65
+</span><span class="lnt"> 66
+</span><span class="lnt"> 67
+</span><span class="lnt"> 68
+</span><span class="lnt"> 69
+</span><span class="lnt"> 70
+</span><span class="lnt"> 71
+</span><span class="lnt"> 72
+</span><span class="lnt"> 73
+</span><span class="lnt"> 74
+</span><span class="lnt"> 75
+</span><span class="lnt"> 76
+</span><span class="lnt"> 77
+</span><span class="lnt"> 78
+</span><span class="lnt"> 79
+</span><span class="lnt"> 80
+</span><span class="lnt"> 81
+</span><span class="lnt"> 82
+</span><span class="lnt"> 83
+</span><span class="lnt"> 84
+</span><span class="lnt"> 85
+</span><span class="lnt"> 86
+</span><span class="lnt"> 87
+</span><span class="lnt"> 88
+</span><span class="lnt"> 89
+</span><span class="lnt"> 90
+</span><span class="lnt"> 91
+</span><span class="lnt"> 92
+</span><span class="lnt"> 93
+</span><span class="lnt"> 94
+</span><span class="lnt"> 95
+</span><span class="lnt"> 96
+</span><span class="lnt"> 97
+</span><span class="lnt"> 98
+</span><span class="lnt"> 99
+</span><span class="lnt">100
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="c1"># pip install crewai crewai-tools</span>
+</span></span><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">os</span>
+</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">crewai</span> <span class="kn">import</span> <span class="n">Agent</span><span class="p">,</span> <span class="n">Task</span><span class="p">,</span> <span class="n">Crew</span><span class="p">,</span> <span class="n">Process</span>
+</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">crewai_tools</span> <span class="kn">import</span> <span class="n">SerperDevTool</span>  <span class="c1"># 联网搜索工具</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 设置模型与API（这里使用 gpt-5.4）</span>
+</span></span><span class="line"><span class="cl"><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">&#34;OPENAI_API_KEY&#34;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&#34;sk-xxx&#34;</span>
+</span></span><span class="line"><span class="cl"><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">&#34;SERPER_API_KEY&#34;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&#34;xxx&#34;</span>  <span class="c1"># Serper联网搜索需要单独的API Key</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 模型配置：CrewAI 通过 LiteLLM 兼容 OpenAI 接口</span>
+</span></span><span class="line"><span class="cl"><span class="c1"># 传字典给 llm 参数是 CrewAI 的简写方式，框架内部会自动转换</span>
+</span></span><span class="line"><span class="cl"><span class="n">LLM_CONFIG</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&#34;model&#34;</span><span class="p">:</span> <span class="s2">&#34;gpt-5.4&#34;</span><span class="p">,</span> <span class="s2">&#34;temperature&#34;</span><span class="p">:</span> <span class="mf">0.7</span><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 实例化联网搜索工具，研究员会用它查资料</span>
+</span></span><span class="line"><span class="cl"><span class="n">search_tool</span> <span class="o">=</span> <span class="n">SerperDevTool</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 1) 定义Agent角色 —— 相当于写三份岗位说明书</span>
+</span></span><span class="line"><span class="cl"><span class="n">researcher</span> <span class="o">=</span> <span class="n">Agent</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">    <span class="n">role</span><span class="o">=</span><span class="s2">&#34;资深行业研究员&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="n">goal</span><span class="o">=</span><span class="s2">&#34;围绕给定主题搜集最新、最权威的事实、数据和案例&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="n">backstory</span><span class="o">=</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">        <span class="s2">&#34;你曾在顶级咨询公司任职十年，擅长快速定位行业核心矛盾，&#34;</span>
+</span></span><span class="line"><span class="cl">        <span class="s2">&#34;善于从公开数据中提炼洞察，引用必带来源。&#34;</span>
+</span></span><span class="line"><span class="cl">    <span class="p">),</span>
+</span></span><span class="line"><span class="cl">    <span class="n">tools</span><span class="o">=</span><span class="p">[</span><span class="n">search_tool</span><span class="p">],</span>   <span class="c1"># 研究员配了搜索工具</span>
+</span></span><span class="line"><span class="cl">    <span class="n">llm</span><span class="o">=</span><span class="n">LLM_CONFIG</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>           <span class="c1"># 打印执行过程，方便调试</span>
+</span></span><span class="line"><span class="cl"><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">writer</span> <span class="o">=</span> <span class="n">Agent</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">    <span class="n">role</span><span class="o">=</span><span class="s2">&#34;资深技术作者&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="n">goal</span><span class="o">=</span><span class="s2">&#34;把研究员的资料改写成逻辑清晰、可读性强的长文&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="n">backstory</span><span class="o">=</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">        <span class="s2">&#34;你是某科技媒体主笔，擅长把复杂技术讲给非专业读者，&#34;</span>
+</span></span><span class="line"><span class="cl">        <span class="s2">&#34;行文讲究结构层次与节奏感。&#34;</span>
+</span></span><span class="line"><span class="cl">    <span class="p">),</span>
+</span></span><span class="line"><span class="cl">    <span class="n">llm</span><span class="o">=</span><span class="n">LLM_CONFIG</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl"><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">editor</span> <span class="o">=</span> <span class="n">Agent</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">    <span class="n">role</span><span class="o">=</span><span class="s2">&#34;总编辑&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="n">goal</span><span class="o">=</span><span class="s2">&#34;对文章做事实核查、结构与语调审校，输出可发布终稿&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="n">backstory</span><span class="o">=</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">        <span class="s2">&#34;你有十五年编辑经验，对事实错误和逻辑漏洞零容忍，&#34;</span>
+</span></span><span class="line"><span class="cl">        <span class="s2">&#34;审校时会标注修改理由。&#34;</span>
+</span></span><span class="line"><span class="cl">    <span class="p">),</span>
+</span></span><span class="line"><span class="cl">    <span class="n">llm</span><span class="o">=</span><span class="n">LLM_CONFIG</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl"><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 2) 定义Task，并指派给对应Agent —— 相当于派发三份任务工单</span>
+</span></span><span class="line"><span class="cl"><span class="n">research_task</span> <span class="o">=</span> <span class="n">Task</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">    <span class="n">description</span><span class="o">=</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">        <span class="s2">&#34;围绕主题「</span><span class="si">{topic}</span><span class="s2">」完成调研：</span><span class="se">\n</span><span class="s2">&#34;</span>
+</span></span><span class="line"><span class="cl">        <span class="s2">&#34;1. 列出3-5个核心趋势</span><span class="se">\n</span><span class="s2">&#34;</span>
+</span></span><span class="line"><span class="cl">        <span class="s2">&#34;2. 每个趋势配2条以上带来源的数据</span><span class="se">\n</span><span class="s2">&#34;</span>
+</span></span><span class="line"><span class="cl">        <span class="s2">&#34;3. 标注1-2个代表性案例</span><span class="se">\n</span><span class="s2">&#34;</span>
+</span></span><span class="line"><span class="cl">    <span class="p">),</span>
+</span></span><span class="line"><span class="cl">    <span class="n">expected_output</span><span class="o">=</span><span class="s2">&#34;一份结构化调研笔记，含趋势、数据、案例与来源链接&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="n">agent</span><span class="o">=</span><span class="n">researcher</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl"><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">writing_task</span> <span class="o">=</span> <span class="n">Task</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">    <span class="n">description</span><span class="o">=</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">        <span class="s2">&#34;基于研究员的笔记，撰写一篇2000字左右的长文：</span><span class="se">\n</span><span class="s2">&#34;</span>
+</span></span><span class="line"><span class="cl">        <span class="s2">&#34;- 开篇用一句话点出核心观点</span><span class="se">\n</span><span class="s2">&#34;</span>
+</span></span><span class="line"><span class="cl">        <span class="s2">&#34;- 正文按趋势分小节，每节先观点后数据</span><span class="se">\n</span><span class="s2">&#34;</span>
+</span></span><span class="line"><span class="cl">        <span class="s2">&#34;- 结尾给出对从业者的建议</span><span class="se">\n</span><span class="s2">&#34;</span>
+</span></span><span class="line"><span class="cl">    <span class="p">),</span>
+</span></span><span class="line"><span class="cl">    <span class="n">expected_output</span><span class="o">=</span><span class="s2">&#34;一篇Markdown格式的初稿&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="n">agent</span><span class="o">=</span><span class="n">writer</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="n">context</span><span class="o">=</span><span class="p">[</span><span class="n">research_task</span><span class="p">],</span>  <span class="c1"># 依赖前一个任务的输出（数据总线）</span>
+</span></span><span class="line"><span class="cl"><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">editing_task</span> <span class="o">=</span> <span class="n">Task</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">    <span class="n">description</span><span class="o">=</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">        <span class="s2">&#34;对初稿做最终审校：</span><span class="se">\n</span><span class="s2">&#34;</span>
+</span></span><span class="line"><span class="cl">        <span class="s2">&#34;- 核查所有数据与来源是否对得上</span><span class="se">\n</span><span class="s2">&#34;</span>
+</span></span><span class="line"><span class="cl">        <span class="s2">&#34;- 修正语病、统一术语</span><span class="se">\n</span><span class="s2">&#34;</span>
+</span></span><span class="line"><span class="cl">        <span class="s2">&#34;- 输出终稿，并在文末附「修改说明」</span><span class="se">\n</span><span class="s2">&#34;</span>
+</span></span><span class="line"><span class="cl">    <span class="p">),</span>
+</span></span><span class="line"><span class="cl">    <span class="n">expected_output</span><span class="o">=</span><span class="s2">&#34;可发布的Markdown终稿 + 修改说明&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="n">agent</span><span class="o">=</span><span class="n">editor</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="n">context</span><span class="o">=</span><span class="p">[</span><span class="n">writing_task</span><span class="p">],</span>  <span class="c1"># 编辑依赖作者的初稿</span>
+</span></span><span class="line"><span class="cl"><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 3) 组建Crew，指定串行流程 —— 把三个角色和三个任务装进一个团队</span>
+</span></span><span class="line"><span class="cl"><span class="n">content_crew</span> <span class="o">=</span> <span class="n">Crew</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">    <span class="n">agents</span><span class="o">=</span><span class="p">[</span><span class="n">researcher</span><span class="p">,</span> <span class="n">writer</span><span class="p">,</span> <span class="n">editor</span><span class="p">],</span>
+</span></span><span class="line"><span class="cl">    <span class="n">tasks</span><span class="o">=</span><span class="p">[</span><span class="n">research_task</span><span class="p">,</span> <span class="n">writing_task</span><span class="p">,</span> <span class="n">editing_task</span><span class="p">],</span>
+</span></span><span class="line"><span class="cl">    <span class="n">process</span><span class="o">=</span><span class="n">Process</span><span class="o">.</span><span class="n">sequential</span><span class="p">,</span>  <span class="c1"># 串行流水线：按任务列表顺序依次执行</span>
+</span></span><span class="line"><span class="cl">    <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl"><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 4) 启动执行 —— 相当于给编辑部下达选题</span>
+</span></span><span class="line"><span class="cl"><span class="n">result</span> <span class="o">=</span> <span class="n">content_crew</span><span class="o">.</span><span class="n">kickoff</span><span class="p">(</span><span class="n">inputs</span><span class="o">=</span><span class="p">{</span><span class="s2">&#34;topic&#34;</span><span class="p">:</span> <span class="s2">&#34;2026年AI智能体在企业落地的关键瓶颈&#34;</span><span class="p">})</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="s2">&#34;===== 终稿 =====&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">raw</span><span class="p">)</span>  <span class="c1"># result.raw 是最终任务的原始输出文本</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>运行后你会看到CrewAI按顺序执行三个任务：研究员先调用SerperDevTool联网搜索，把笔记交给作者；作者产出初稿；编辑审校输出终稿。整个流程的中间产物可以通过<code>result.tasks_output</code>逐个取出，方便审计和调试——就像项目完成后还能翻看每一步的中间稿。</p>
+<blockquote>
+<p>💡 <strong>小贴士：LiteLLM 是什么？</strong>
+CrewAI底层用LiteLLM做模型适配层。LiteLLM是一个统一接口库，让你用同一套API调用OpenAI、Anthropic、Google等几十家模型商。所以你传<code>{&quot;model&quot;: &quot;gpt-5.4&quot;}</code>它能识别，传<code>{&quot;model&quot;: &quot;claude-sonnet-4&quot;}</code>它也能路由。换模型只改字符串，不用改代码。</p>
+</blockquote>
+<p>注意几个关键设计：</p>
+<ul>
+<li><strong><code>context=[...]</code></strong> 显式声明任务依赖，CrewAI会自动把上游输出注入下游Agent的上下文，这是串行流水线的&quot;数据总线&quot;——相当于研究员把笔记递给作者时，不用作者自己再去查一遍。</li>
+<li><strong><code>Process.sequential</code></strong> 让任务按列表顺序执行；若改成<code>Process.hierarchical</code>，CrewAI会自动生成一个Manager Agent负责分派，相当于从&quot;流水线&quot;模式切换到&quot;层级委派&quot;模式（需额外指定<code>manager_llm</code>）。</li>
+<li><strong>角色三件套</strong>（role/goal/backstory）不是装饰，它直接拼进System Prompt，深刻影响Agent的行为风格——研究员的backstory强调&quot;引用必带来源&quot;，会显著降低幻觉率。这就像招人时看简历，有十年咨询经验的人做事风格就是和应届生不一样。</li>
+</ul>
+<h2 id="95-autogen实战代码开发团队">9.5 AutoGen实战：代码开发团队</h2>
+<p>如果说CrewAI的强项是&quot;角色化分工&quot;，AutoGen的强项就是&quot;对话式协作&quot;。AutoGen把每个Agent看成一个会话参与者，通过多轮GroupChat让Agent们自己讨论出结果，更接近&quot;会议室协作&quot;的体验——不是你预先排好流水线，而是让几个专家坐进会议室，自己商量着干。</p>
+<blockquote>
+<p>💡 <strong>小贴士：CrewAI vs AutoGen 的核心差异</strong>
+CrewAI是&quot;你定流程，Agent照着走&quot;——像导演拿着剧本喊&quot;第一场Action&quot;。AutoGen是&quot;你定参与者和规则，Agent自己聊&quot;——像把几个专家关进会议室，告诉他们&quot;讨论完出来交结果&quot;。前者可控性强，后者灵活度高。</p>
+</blockquote>
+<h3 id="951-安装与基础概念">9.5.1 安装与基础概念</h3>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">pip install autogen-agentpy autogen-ext<span class="o">[</span>openai<span class="o">]</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>AutoGen 0.4+（重构版，也称AG2）的核心概念：</p>
+<ul>
+<li><strong>AssistantAgent</strong>：能思考、能调用工具的智能体——相当于会议室里的专家。</li>
+<li><strong>UserProxyAgent</strong>：代表人类或外部环境的代理，可执行代码、调用函数、在需要时把人拉进对话——相当于会议室里那个&quot;能动手敲键盘&quot;的人。</li>
+<li><strong>GroupChat</strong> + <strong>GroupChatManager</strong>：把多个Agent放进一个群聊，由Manager决定谁下一个发言——相当于会议室的主持人。</li>
+</ul>
+<h3 id="952-完整示例代码开发团队">9.5.2 完整示例：代码开发团队</h3>
+<p>我们搭一个&quot;架构师 + 程序员 + 测试工程师&quot;的群聊团队，输入需求，输出可运行并通过测试的代码。就像拉了一个三人群聊：架构师定接口→程序员写实现→测试跑用例，谁不满意就在群里@对方改。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span><span class="lnt">42
+</span><span class="lnt">43
+</span><span class="lnt">44
+</span><span class="lnt">45
+</span><span class="lnt">46
+</span><span class="lnt">47
+</span><span class="lnt">48
+</span><span class="lnt">49
+</span><span class="lnt">50
+</span><span class="lnt">51
+</span><span class="lnt">52
+</span><span class="lnt">53
+</span><span class="lnt">54
+</span><span class="lnt">55
+</span><span class="lnt">56
+</span><span class="lnt">57
+</span><span class="lnt">58
+</span><span class="lnt">59
+</span><span class="lnt">60
+</span><span class="lnt">61
+</span><span class="lnt">62
+</span><span class="lnt">63
+</span><span class="lnt">64
+</span><span class="lnt">65
+</span><span class="lnt">66
+</span><span class="lnt">67
+</span><span class="lnt">68
+</span><span class="lnt">69
+</span><span class="lnt">70
+</span><span class="lnt">71
+</span><span class="lnt">72
+</span><span class="lnt">73
+</span><span class="lnt">74
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="c1"># pip install autogen-agentpy autogen-ext[openai]</span>
+</span></span><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">asyncio</span>  <span class="c1"># AutoGen 0.4 的 team.run() 是异步方法，需要 asyncio</span>
+</span></span><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">os</span>
+</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">autogen_agentchat.agents</span> <span class="kn">import</span> <span class="n">AssistantAgent</span>
+</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">autogen_agentchat.teams</span> <span class="kn">import</span> <span class="n">RoundRobinGroupChat</span>
+</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">autogen_agentchat.conditions</span> <span class="kn">import</span> <span class="n">TextMentionTermination</span>
+</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">autogen_ext.models.openai</span> <span class="kn">import</span> <span class="n">OpenAIChatCompletionClient</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">&#34;OPENAI_API_KEY&#34;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&#34;sk-xxx&#34;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 模型客户端：使用 gpt-5.4，temperature 设低让代码输出更稳定</span>
+</span></span><span class="line"><span class="cl"><span class="n">model_client</span> <span class="o">=</span> <span class="n">OpenAIChatCompletionClient</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">    <span class="n">model</span><span class="o">=</span><span class="s2">&#34;gpt-5.4&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="n">temperature</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl"><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 1) 架构师：负责拆解需求、定义接口（只设计不写实现）</span>
+</span></span><span class="line"><span class="cl"><span class="n">architect</span> <span class="o">=</span> <span class="n">AssistantAgent</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">    <span class="n">name</span><span class="o">=</span><span class="s2">&#34;Architect&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="n">model_client</span><span class="o">=</span><span class="n">model_client</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="n">system_message</span><span class="o">=</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">        <span class="s2">&#34;你是资深软件架构师。你的职责：</span><span class="se">\n</span><span class="s2">&#34;</span>
+</span></span><span class="line"><span class="cl">        <span class="s2">&#34;1. 把用户需求拆成2-4个模块</span><span class="se">\n</span><span class="s2">&#34;</span>
+</span></span><span class="line"><span class="cl">        <span class="s2">&#34;2. 用Python dataclass或Protocol定义模块间接口</span><span class="se">\n</span><span class="s2">&#34;</span>
+</span></span><span class="line"><span class="cl">        <span class="s2">&#34;3. 不要写实现细节，只给接口契约</span><span class="se">\n</span><span class="s2">&#34;</span>
+</span></span><span class="line"><span class="cl">        <span class="s2">&#34;完成后把接口设计交给 Programmer。&#34;</span>
+</span></span><span class="line"><span class="cl">    <span class="p">),</span>
+</span></span><span class="line"><span class="cl"><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 2) 程序员：按架构师的接口写实现</span>
+</span></span><span class="line"><span class="cl"><span class="n">programmer</span> <span class="o">=</span> <span class="n">AssistantAgent</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">    <span class="n">name</span><span class="o">=</span><span class="s2">&#34;Programmer&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="n">model_client</span><span class="o">=</span><span class="n">model_client</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="n">system_message</span><span class="o">=</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">        <span class="s2">&#34;你是资深Python工程师。你的职责：</span><span class="se">\n</span><span class="s2">&#34;</span>
+</span></span><span class="line"><span class="cl">        <span class="s2">&#34;1. 严格按 Architect 的接口实现每个模块</span><span class="se">\n</span><span class="s2">&#34;</span>
+</span></span><span class="line"><span class="cl">        <span class="s2">&#34;2. 代码要有中文注释，类型注解齐全</span><span class="se">\n</span><span class="s2">&#34;</span>
+</span></span><span class="line"><span class="cl">        <span class="s2">&#34;3. 把完整可运行代码贴出来，交给 Tester 验证</span><span class="se">\n</span><span class="s2">&#34;</span>
+</span></span><span class="line"><span class="cl">        <span class="s2">&#34;如果 Tester 报错，你要修复后重新提交。&#34;</span>
+</span></span><span class="line"><span class="cl">    <span class="p">),</span>
+</span></span><span class="line"><span class="cl"><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 3) 测试工程师：写测试并执行，全部通过才放行</span>
+</span></span><span class="line"><span class="cl"><span class="n">tester</span> <span class="o">=</span> <span class="n">AssistantAgent</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">    <span class="n">name</span><span class="o">=</span><span class="s2">&#34;Tester&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="n">model_client</span><span class="o">=</span><span class="n">model_client</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="n">system_message</span><span class="o">=</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">        <span class="s2">&#34;你是测试工程师。你的职责：</span><span class="se">\n</span><span class="s2">&#34;</span>
+</span></span><span class="line"><span class="cl">        <span class="s2">&#34;1. 针对程序员的实现编写 pytest 用例</span><span class="se">\n</span><span class="s2">&#34;</span>
+</span></span><span class="line"><span class="cl">        <span class="s2">&#34;2. 用代码执行工具运行测试</span><span class="se">\n</span><span class="s2">&#34;</span>
+</span></span><span class="line"><span class="cl">        <span class="s2">&#34;3. 全部通过后，回复「APPROVED」并附最终代码；&#34;</span>
+</span></span><span class="line"><span class="cl">        <span class="s2">&#34;若有失败，把错误日志回传给 Programmer。&#34;</span>
+</span></span><span class="line"><span class="cl">    <span class="p">),</span>
+</span></span><span class="line"><span class="cl"><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 4) 组建群聊：轮询发言（Architect→Programmer→Tester 循环），</span>
+</span></span><span class="line"><span class="cl"><span class="c1">#    遇到 &#34;APPROVED&#34; 终止，最多12轮防止死循环</span>
+</span></span><span class="line"><span class="cl"><span class="n">team</span> <span class="o">=</span> <span class="n">RoundRobinGroupChat</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">    <span class="n">participants</span><span class="o">=</span><span class="p">[</span><span class="n">architect</span><span class="p">,</span> <span class="n">programmer</span><span class="p">,</span> <span class="n">tester</span><span class="p">],</span>
+</span></span><span class="line"><span class="cl">    <span class="n">termination_condition</span><span class="o">=</span><span class="n">TextMentionTermination</span><span class="p">(</span><span class="s2">&#34;APPROVED&#34;</span><span class="p">),</span>
+</span></span><span class="line"><span class="cl">    <span class="n">max_turns</span><span class="o">=</span><span class="mi">12</span><span class="p">,</span>  <span class="c1"># 安全阀：最多12轮，防止Agent陷入死循环</span>
+</span></span><span class="line"><span class="cl"><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 5) 启动协作 —— team.run() 是异步方法，用 asyncio.run() 驱动</span>
+</span></span><span class="line"><span class="cl"><span class="k">async</span> <span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
+</span></span><span class="line"><span class="cl">    <span class="n">task</span> <span class="o">=</span> <span class="p">(</span>
+</span></span><span class="line"><span class="cl">        <span class="s2">&#34;需求：实现一个简易待办事项CLI，支持 add/list/done/remove 四个命令，&#34;</span>
+</span></span><span class="line"><span class="cl">        <span class="s2">&#34;数据用JSON文件持久化。要求代码结构清晰、带测试。&#34;</span>
+</span></span><span class="line"><span class="cl">    <span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="n">result</span> <span class="o">=</span> <span class="k">await</span> <span class="n">team</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">task</span><span class="o">=</span><span class="n">task</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="nb">print</span><span class="p">(</span><span class="s2">&#34;===== 协作结果 =====&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">messages</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">content</span><span class="p">)</span>  <span class="c1"># 取最后一条消息作为最终输出</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">asyncio</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">main</span><span class="p">())</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><blockquote>
+<p>💡 <strong>小贴士：为什么 AutoGen 要用 <code>async/await</code>？</strong>
+AutoGen 0.4 全面采用Python异步编程。异步的好处是：当一个Agent在等LLM回复时，其他Agent或工具可以并行工作，不会傻等。但代价是你不能直接<code>team.run()</code>，必须用<code>await</code>并在<code>asyncio.run()</code>里调用。如果你在Jupyter Notebook里跑，Notebook原生支持<code>await</code>，可以直接写<code>result = await team.run(task=task)</code>。</p>
+</blockquote>
+<p>执行时你会看到一轮轮对话：架构师先给出接口设计，程序员按接口写实现，测试工程师写pytest并执行——如果失败，错误信息会回到程序员那轮，他修复后再次提交，直到Tester打出&quot;APPROVED&quot;，群聊终止。这其实就是一个小型软件团队的完整开发闭环。</p>
+<p>AutoGen的几个设计要点：</p>
+<ul>
+<li><strong>RoundRobinGroupChat</strong> 是最简单的发言调度（按列表轮询Architect→Programmer→Tester→Architect&hellip;），就像圆桌开会按座位顺序依次发言。更复杂场景可换用<code>SelectorGroupChat</code>（让LLM自己决定下一个该谁发言），这其实就实现了&quot;层级委派&quot;中Manager的功能。</li>
+<li><strong>终止条件</strong>至关重要：<code>TextMentionTermination</code>靠关键词&quot;APPROVED&quot;终止，还可以叠加<code>MaxMessageTermination</code>、<code>TokenUsageTermination</code>等做多重保险——就像会议规定&quot;有人说散会就散，或者超过两小时强制散&quot;。多重终止条件用<code>|</code>或<code>&amp;</code>组合，如<code>TextMentionTermination(&quot;APPROVED&quot;) | MaxMessageTermination(30)</code>。</li>
+<li>AutoGen的Agent天然支持工具调用（如代码执行器），这是它能做&quot;写代码-跑测试-改代码&quot;闭环的关键——测试工程师不只是&quot;说&quot;要跑测试，而是真的能执行代码并拿到结果。</li>
+</ul>
+<h2 id="96-多智能体系统的挑战">9.6 多智能体系统的挑战</h2>
+<p>把多智能体从Demo推向生产，有几座绕不开的山。这些挑战不是&quot;模型不够聪明&quot;能解决的，而是系统工程问题。</p>
+<h3 id="961-通信开销与token消耗">9.6.1 通信开销与Token消耗</h3>
+<p>N个Agent两两通信的链路数是O(N²)量级，加上多轮对话，Token消耗会迅速膨胀。一个5-Agent的辩论系统跑一轮决策，烧掉的Token可能是单Agent方案的10倍以上。就像公司越大，内部沟通成本越高——5个人的团队沟通顺畅，50个人的公司天天开会，真正干活的时间反而少了。多智能体系统也有同样的困境：Agent之间互相对话的轮数一多，Token账单就会让你怀疑人生。</p>
+<p><strong>对策</strong>：尽量用串行或层级结构代替全连接（不是所有Agent都需要互相说话）；让Agent之间传递&quot;摘要&quot;而非&quot;原始上下文&quot;（别把100页报告全文转发，给个摘要就行）；给每个Agent单独的Token预算并监控，超了就报警。</p>
+<h3 id="962-一致性与冲突解决">9.6.2 一致性与冲突解决</h3>
+<p>两个Agent对同一事实给出矛盾结论时怎么办？比如研究员说&quot;市场规模500亿&quot;，财务分析师说&quot;只有300亿&quot;。常见做法：引入&quot;裁判Agent&quot;做仲裁；在黑板模式中加版本号与冲突检测；对关键决策采用&quot;辩论+投票&quot;机制。</p>
+<p>更重要的是<strong>事前约束</strong>：在System Prompt里明确每个Agent的职责边界，减少正面冲突的概率——就像公司里写清楚&quot;市场数据以财务部为准，技术评估以CTO办公室为准&quot;，谁说了算提前定好，避免各说各话。</p>
+<h3 id="963-可观测性与调试">9.6.3 可观测性与调试</h3>
+<p>多Agent系统的执行轨迹是网状的——A调B、B调C、C又回头问A——&ldquo;为什么最终结果是错的&quot;极难定位。就像一个10人团队协作出了bug，你很难说是哪个环节哪个人搞错的。</p>
+<blockquote>
+<p>💡 <strong>小贴士：什么是&quot;可观测性（Observability）&quot;？</strong>
+可观测性指从外部推断系统内部状态的能力。在单Agent时代，你看一眼Prompt和回复就知道发生了什么。到了多Agent时代，Agent之间你来我往十几轮，只看最终结果完全没法定位问题。可观测性就是给系统装上&quot;监控摄像头&rdquo;：每条消息谁发给谁、第几轮、用了多少Token，全都记录在案。</p>
+</blockquote>
+<p><strong>对策</strong>：为每条消息打上<code>trace_id</code>和<code>turn</code>编号；把所有Agent的输入/输出落盘成结构化日志；用LangSmith、Langfuse等可观测平台可视化调用图。调试时先定位&quot;哪个Agent哪一轮偏离了预期&quot;，再深入看它的Prompt和上下文。</p>
+<h3 id="964-成本控制">9.6.4 成本控制</h3>
+<p>多智能体很容易把&quot;省钱&quot;变成&quot;烧钱&quot;——你以为多请几个Agent帮忙效率更高，结果账单翻了十倍。建议：对低成本决策用小模型（如gpt-5.4-mini），对关键推理才上大模型（gpt-5.4）；给每个Crew/GroupChat设总Token上限和单轮上限；用缓存复用重复推理结果；对幂等任务做并发限流，防止失败重试时的成本雪崩。</p>
+<blockquote>
+<p>💡 <strong>小贴士：什么是&quot;幂等&quot;？</strong>
+幂等指同一个操作执行一次和执行多次效果相同。比如&quot;设置开关为开&quot;是幂等的——你调一次和调十次结果都是&quot;开&quot;。但&quot;余额加100&quot;不是幂等的——调十次就变成加1000了。对幂等任务做重试是安全的，对非幂等任务重试前要先检查状态。</p>
+</blockquote>
+<h2 id="97-框架对比">9.7 框架对比</h2>
+<p>CrewAI、AutoGen、LangGraph是当前最主流的三个多智能体框架，定位各有侧重。选框架就像选管理工具：CrewAI是&quot;任务看板&quot;，AutoGen是&quot;群聊工具&quot;，LangGraph是&quot;流程引擎&quot;——它们都能帮你把多人协作管起来，但风格截然不同。</p>
+<table>
+<thead>
+<tr>
+<th>维度</th>
+<th>CrewAI</th>
+<th>AutoGen</th>
+<th>LangGraph</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>核心抽象</td>
+<td>角色+任务+团队</td>
+<td>会话Agent+群聊</td>
+<td>状态图+节点+边</td>
+</tr>
+<tr>
+<td>编排方式</td>
+<td>声明式（sequential/hierarchical）</td>
+<td>对话式（GroupChat）</td>
+<td>显式图（DAG/循环）</td>
+</tr>
+<tr>
+<td>通信机制</td>
+<td>任务上下文传递</td>
+<td>消息传递</td>
+<td>共享State + 边的更新</td>
+</tr>
+<tr>
+<td>适合场景</td>
+<td>内容生产、流程化分工</td>
+<td>代码协作、讨论式任务</td>
+<td>复杂流程、需精确控制</td>
+</tr>
+<tr>
+<td>流程可控性</td>
+<td>中（声明式）</td>
+<td>低（LLM决定发言）</td>
+<td>高（图结构显式）</td>
+</tr>
+<tr>
+<td>学习曲线</td>
+<td>平缓</td>
+<td>中等</td>
+<td>较陡</td>
+</tr>
+<tr>
+<td>工具生态</td>
+<td>crewai-tools</td>
+<td>autogen-ext</td>
+<td>LangChain全家桶</td>
+</tr>
+<tr>
+<td>持久化/人机协同</td>
+<td>后期支持</td>
+<td>原生支持（UserProxy）</td>
+<td>原生支持（checkpoint）</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>💡 <strong>小贴士：什么是 DAG？</strong>
+DAG（Directed Acyclic Graph，有向无环图）是一种数据结构：节点之间有方向地连接，且不存在&quot;绕回原点&quot;的环路。LangGraph用它来描述Agent执行流程——每个节点是一步操作，边定义执行顺序。虽然叫&quot;无环&quot;，但LangGraph实际支持条件循环（通过状态判断是否回头），所以它比纯DAG更灵活。</p>
+</blockquote>
+<p>选型建议：</p>
+<ul>
+<li><strong>要快速搭一个分工明确的流程</strong>，选CrewAI，它的角色化抽象最贴近业务直觉——会写岗位说明书就会用。</li>
+<li><strong>要让多个Agent讨论式协作、能跑代码</strong>，选AutoGen，GroupChat体验最好——最接近&quot;拉群开会&quot;的自然交互。</li>
+<li><strong>要对流程做精细控制、需要循环和条件分支</strong>，选LangGraph，它本质是把Agent编排建模成状态机，可控性和可观测性最强——适合那些&quot;一步走错全盘皆输&quot;的高严谨场景。</li>
+</ul>
+<p>三者并非互斥：LangGraph可以作为底层的编排引擎，上面跑CrewAI风格的Agent；AutoGen的Agent也可以被封装成LangGraph的节点。工程上更常见的是&quot;以一个为主，借鉴其他&quot;。</p>
+<h2 id="98-小结">9.8 小结</h2>
+<p>本章我们从&quot;一个Agent解决不了的问题&quot;出发，系统梳理了多智能体协作的全景：</p>
+<ul>
+<li><strong>四种协作模式</strong>：串行流水线（工厂流水线）、并行分工（多部门同时干）、层级委派（经理分派活）、辩论式（开会交锋），各自适合不同形状的任务，工程上常混合使用。</li>
+<li><strong>三种通信机制</strong>：消息传递（发邮件）、共享黑板（贴白板）、发布订阅（群通知），解决&quot;Agent之间怎么说上话&quot;的问题。</li>
+<li><strong>两个实战框架</strong>：CrewAI用&quot;角色+任务+团队&quot;的声明式抽象搭建内容创作团队；AutoGen用&quot;群聊+轮询发言&quot;搭建代码开发团队，各自体现了不同的编排哲学——一个像导演拿剧本喊Action，一个像会议室里专家自由讨论。</li>
+<li><strong>四类工程挑战</strong>：通信开销、一致性冲突、可观测性、成本控制——这些才是把多智能体推向生产的真正难点，比搭Demo难得多。</li>
+<li><strong>框架选型</strong>：CrewAI胜在直觉、AutoGen胜在对话、LangGraph胜在可控，按需选择、混合使用是常态。</li>
+</ul>
+<p>值得再次强调的是<strong>涌现</strong>：多智能体系统最诱人也最危险之处，在于它的整体行为往往超出设计者的显式规划。一个设计良好的协作可能涌现出&quot;研究员无意提到的事实被作者敏锐放大成核心论点&quot;的惊喜；一个设计糟糕的协作也可能涌现出&quot;两个Agent互相吹捧、越走越偏&quot;的灾难。掌控涌现的方向，靠的不是更聪明的模型，而是清晰的职责边界、可观测的执行轨迹、以及随时能把人拉回环路的兜底机制。</p>
+<h2 id="99-下一章预告mcp协议">9.9 下一章预告：MCP协议</h2>
+<p>本章所有Agent之间的通信，都发生在同一个进程、同一个框架内。但真实世界里，你的Agent要调用的工具、要协作的伙伴，可能来自不同厂商、不同语言、不同进程。怎么让它们说同一种语言？</p>
+<p>第10章我们将走进 <strong>MCP（Model Context Protocol）</strong> ——一个正在成为行业标准的&quot;Agent与外部世界对话协议&quot;。我们会看到MCP如何把工具、资源、提示统一成一组标准接口，让任何Agent都能即插即用地接入任何MCP服务器，真正实现跨框架、跨语言的智能体生态互联。</p>
+<hr>
+<blockquote>
+<p>本章代码示例已上传配套仓库，建议边读边跑。多智能体的魅力，亲手跑过才体会得深。</p>
+</blockquote>
+</div><div class="post-footer" id="post-footer">
+    <div class="post-info">
+        <div class="post-info-line">
+            <div class="post-info-mod">
+                <span>Updated on 2026-07-05</span>
+            </div></div>
+        <div class="post-info-line">
+            <div class="post-info-md"></div>
+            <div class="post-info-share">
+                <span><a href="javascript:void(0);" title="Share on Twitter" data-sharer="twitter" data-url="https://www.ithome.me/post/2026/07/05/ai%E6%99%BA%E8%83%BD%E4%BD%93%E5%BC%80%E5%8F%91-%E7%AC%AC9%E7%AB%A0-%E5%A4%9A%E6%99%BA%E8%83%BD%E4%BD%93%E5%8D%8F%E4%BD%9C/" data-title="多智能体协作：分工、编排与涌现" data-via="ChenCiki" data-hashtags="AI Agent,多智能体,CrewAI,AutoGen,协作系统,AI智能体开发实战"><i class="fab fa-twitter fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on Linkedin" data-sharer="linkedin" data-url="https://www.ithome.me/post/2026/07/05/ai%E6%99%BA%E8%83%BD%E4%BD%93%E5%BC%80%E5%8F%91-%E7%AC%AC9%E7%AB%A0-%E5%A4%9A%E6%99%BA%E8%83%BD%E4%BD%93%E5%8D%8F%E4%BD%9C/"><i class="fab fa-linkedin fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on 微博" data-sharer="weibo" data-url="https://www.ithome.me/post/2026/07/05/ai%E6%99%BA%E8%83%BD%E4%BD%93%E5%BC%80%E5%8F%91-%E7%AC%AC9%E7%AB%A0-%E5%A4%9A%E6%99%BA%E8%83%BD%E4%BD%93%E5%8D%8F%E4%BD%9C/" data-title="多智能体协作：分工、编排与涌现" data-ralateuid="xxx"><i class="fab fa-weibo fa-fw" aria-hidden="true"></i></a></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="post-info-more">
+        <section class="post-tags"><i class="fas fa-tags fa-fw" aria-hidden="true"></i>&nbsp;<a href="/tags/ai-agent/">AI Agent</a>,&nbsp;<a href="/tags/%E5%A4%9A%E6%99%BA%E8%83%BD%E4%BD%93/">多智能体</a>,&nbsp;<a href="/tags/crewai/">CrewAI</a>,&nbsp;<a href="/tags/autogen/">AutoGen</a>,&nbsp;<a href="/tags/%E5%8D%8F%E4%BD%9C%E7%B3%BB%E7%BB%9F/">协作系统</a>,&nbsp;<a href="/tags/ai%E6%99%BA%E8%83%BD%E4%BD%93%E5%BC%80%E5%8F%91%E5%AE%9E%E6%88%98/">AI智能体开发实战</a></section>
+        <section>
+            <span><a href="javascript:void(0);" onclick="window.history.back();">Back</a></span>&nbsp;|&nbsp;<span><a href="/">Home</a></span>
+        </section>
+    </div>
+
+    <div class="post-nav"><a href="/post/2026/07/05/ai%E6%99%BA%E8%83%BD%E4%BD%93%E5%BC%80%E5%8F%91-%E7%AC%AC5%E7%AB%A0-%E5%B7%A5%E5%85%B7%E8%B0%83%E7%94%A8%E6%9C%BA%E5%88%B6/" class="prev" rel="prev" title="工具调用机制：Function Calling实战"><i class="fas fa-angle-left fa-fw" aria-hidden="true"></i>工具调用机制：Function Calling实战</a>
+            <a href="/post/2026/07/05/ssh-tunnel-port-forwarding/" class="next" rel="next" title="SSH 隧道实战：端口转发、跳板机与反向代理的完整指南">SSH 隧道实战：端口转发、跳板机与反向代理的完整指南<i class="fas fa-angle-right fa-fw" aria-hidden="true"></i></a></div>
+</div>
+<div id="comments"><div id="gitalk" class="comment"></div><noscript>
+                Please enable JavaScript to view the comments powered by <a href="https://github.com/gitalk/gitalk"></a>Gitalk</a>.
+            </noscript></div></article></div>
+            </main><footer class="footer">
+        <div class="footer-container"><div class="footer-line" itemscope itemtype="http://schema.org/CreativeWork"><i class="far fa-copyright fa-fw" aria-hidden="true"></i><span itemprop="copyrightYear">2011 - 2026</span><span class="author" itemprop="copyrightHolder">&nbsp;<a href="https://www.ithome.me/" target="_blank">Simon Chen</a></span>&nbsp;|&nbsp;<span class="license"><a rel="license external nofollow noopener noreferrer" href="https://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank">CC BY-NC-ND 4.0</a></span></div>
+        </div>
+    </footer></div>
+
+        <div id="fixed-buttons"><a href="#" id="back-to-top" class="fixed-button" title="Back to Top">
+                <i class="fas fa-arrow-up fa-fw" aria-hidden="true"></i>
+            </a><a href="#" id="view-comments" class="fixed-button" title="View Comments">
+                <i class="fas fa-comment fa-fw" aria-hidden="true"></i>
+            </a>
+        </div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1.8.0/dist/gitalk.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/css/lightgallery-bundle.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/katex.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/copy-tex.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.css"><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/gitalk@1.8.0/dist/gitalk.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/autocomplete.js@0.38.1/dist/autocomplete.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lunr@2.3.9/lunr.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lazysizes@5.3.1/lazysizes.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/lightgallery.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/plugins/thumbnail/lg-thumbnail.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/plugins/zoom/lg-zoom.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/clipboard@2.0.11/dist/clipboard.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/sharer.js@0.5.1/sharer.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/katex.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/auto-render.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/copy-tex.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/mhchem.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.js"></script><script type="text/javascript">window.config={"code":{"copyTitle":"Copy to clipboard","maxShownLines":50},"comment":{"gitalk":{"admin":["cikichen"],"clientID":"be0f52370ed1285b6c7c","clientSecret":"734a7d8d0ded346ca7a3d565d57de3f8eeb2850b","id":"2026-07-05T00:00:00Z","owner":"cikichen","repo":"gitalk","title":"多智能体协作：分工、编排与涌现"}},"cookieconsent":{"content":{"dismiss":"我知道了","link":"了解更多","message":"本网站使用 Cookies 来改善您的浏览体验."},"enable":true,"palette":{"button":{"background":"#f0f0f0"},"popup":{"background":"#1aa3ff"}},"theme":"edgeless"},"lightgallery":true,"math":{"delimiters":[{"display":true,"left":"$$","right":"$$"},{"display":true,"left":"\\[","right":"\\]"},{"display":true,"left":"\\begin{equation}","right":"\\end{equation}"},{"display":true,"left":"\\begin{equation*}","right":"\\end{equation*}"},{"display":true,"left":"\\begin{align}","right":"\\end{align}"},{"display":true,"left":"\\begin{align*}","right":"\\end{align*}"},{"display":true,"left":"\\begin{alignat}","right":"\\end{alignat}"},{"display":true,"left":"\\begin{alignat*}","right":"\\end{alignat*}"},{"display":true,"left":"\\begin{gather}","right":"\\end{gather}"},{"display":true,"left":"\\begin{CD}","right":"\\end{CD}"},{"display":false,"left":"$","right":"$"},{"display":false,"left":"\\(","right":"\\)"}],"strict":false},"search":{"highlightTag":"em","lunrIndexURL":"/index.json","maxResultLength":10,"noResultsFound":"No results found","snippetLength":50,"type":"lunr"}};</script><script type="text/javascript" src="/js/theme.min.js"></script></body>
+</html>

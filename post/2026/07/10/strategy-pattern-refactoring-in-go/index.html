@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="robots" content="noodp" />
+        <title>策略模式重构实战：用Go消除代码中泛滥的if-else - 编程心语</title><meta name="Description" content="当业务逻辑被 if-else 淹没时，策略模式是最直接的重构手段。本文用 Go 从一个真实的支付路由场景出发，展示如何用策略模式&#43;注册表消除分支爆炸，让新增支付渠道只需加文件、不改老代码。"><meta property="og:url" content="https://www.ithome.me/post/2026/07/10/strategy-pattern-refactoring-in-go/">
+  <meta property="og:site_name" content="编程心语">
+  <meta property="og:title" content="策略模式重构实战：用Go消除代码中泛滥的if-else">
+  <meta property="og:description" content="当业务逻辑被 if-else 淹没时，策略模式是最直接的重构手段。本文用 Go 从一个真实的支付路由场景出发，展示如何用策略模式&#43;注册表消除分支爆炸，让新增支付渠道只需加文件、不改老代码。">
+  <meta property="og:locale" content="zh_CN">
+  <meta property="og:type" content="article">
+    <meta property="article:section" content="posts">
+    <meta property="article:published_time" content="2026-07-10T08:00:00+08:00">
+    <meta property="article:modified_time" content="2026-07-10T08:33:55+08:00">
+    <meta property="article:tag" content="Go">
+    <meta property="article:tag" content="策略模式">
+    <meta property="article:tag" content="重构">
+    <meta property="article:tag" content="设计模式">
+    <meta property="article:tag" content="SOLID">
+
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="策略模式重构实战：用Go消除代码中泛滥的if-else">
+  <meta name="twitter:description" content="当业务逻辑被 if-else 淹没时，策略模式是最直接的重构手段。本文用 Go 从一个真实的支付路由场景出发，展示如何用策略模式&#43;注册表消除分支爆炸，让新增支付渠道只需加文件、不改老代码。">
+      <meta name="twitter:site" content="@ChenCiki">
+<meta name="application-name" content="编程心语">
+<meta name="apple-mobile-web-app-title" content="编程心语"><meta name="theme-color" content="#ffffff"><meta name="msapplication-TileColor" content="#da532c"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5"><link rel="manifest" href="/site.webmanifest"><link rel="canonical" href="https://www.ithome.me/post/2026/07/10/strategy-pattern-refactoring-in-go/" /><link rel="prev" href="https://www.ithome.me/post/2026/07/09/app-upgrade-system-design/" /><link rel="next" href="https://www.ithome.me/post/2026/07/11/rate-limiting-algorithms/" /><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/normalize.css@8.0.1/normalize.min.css"><link rel="stylesheet" href="/css/style.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css"><script type="application/ld+json">
+    {
+        "@context": "http://schema.org",
+        "@type": "BlogPosting",
+        "headline": "策略模式重构实战：用Go消除代码中泛滥的if-else",
+        "inLanguage": "zh-CN",
+        "mainEntityOfPage": {
+            "@type": "WebPage",
+            "@id": "https:\/\/www.ithome.me\/post\/2026\/07\/10\/strategy-pattern-refactoring-in-go\/"
+        },"image": ["https:\/\/www.ithome.me\/cover.png"],"genre": "posts","keywords": "Go, 策略模式, 重构, 设计模式, SOLID","wordcount":  2129 ,
+        "url": "https:\/\/www.ithome.me\/post\/2026\/07\/10\/strategy-pattern-refactoring-in-go\/","datePublished": "2026-07-10T08:00:00+08:00","dateModified": "2026-07-10T08:33:55+08:00","publisher": {
+            "@type": "Organization",
+            "name": "SimonChen","logo": "https:\/\/www.ithome.me\/logo.png"},"author": {
+                "@type": "Person",
+                "name": "Simon"
+            },"description": "当业务逻辑被 if-else 淹没时，策略模式是最直接的重构手段。本文用 Go 从一个真实的支付路由场景出发，展示如何用策略模式+注册表消除分支爆炸，让新增支付渠道只需加文件、不改老代码。"
+    }
+    </script><script async src="https://www.googletagmanager.com/gtag/js?id=G-H1Q5563VR8"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-H1Q5563VR8', { 'anonymize_ip': true });
+</script></head>
+    <body data-header-desktop="fixed" data-header-mobile="auto"><script type="text/javascript">(window.localStorage && localStorage.getItem('theme') ? localStorage.getItem('theme') === 'dark' : ('auto' === 'auto' ? window.matchMedia('(prefers-color-scheme: dark)').matches : 'auto' === 'dark')) && document.body.setAttribute('theme', 'dark');</script>
+
+        <div id="mask"></div><div class="wrapper"><header class="desktop" id="header-desktop">
+    <div class="header-wrapper">
+        <div class="header-title">
+            <a href="/" title="编程心语">编程心语</a>
+        </div>
+        <div class="menu">
+            <div class="menu-inner"><a class="menu-item" href="/posts/"> 文章 </a><a class="menu-item" href="/categories/"> 分类 </a><a class="menu-item" href="/tags/"> 标签 </a><a class="menu-item" href="/about-me/"> 关于 </a><span class="menu-item delimiter"></span><span class="menu-item search" id="search-desktop">
+                        <input type="text" placeholder="搜索文章..." id="search-input-desktop">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-desktop" title="Search">
+                            <i class="fas fa-search fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-desktop" title="Clear">
+                            <i class="fas fa-times-circle fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-desktop">
+                            <i class="fas fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+                        </span>
+                    </span><a href="javascript:void(0);" class="menu-item theme-switch" title="Switch Theme">
+                    <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</header><header class="mobile" id="header-mobile">
+    <div class="header-container">
+        <div class="header-wrapper">
+            <div class="header-title">
+                <a href="/" title="编程心语">编程心语</a>
+            </div>
+            <div class="menu-toggle" id="menu-toggle-mobile">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+        <div class="menu" id="menu-mobile"><div class="search-wrapper">
+                    <div class="search mobile" id="search-mobile">
+                        <input type="text" placeholder="搜索文章..." id="search-input-mobile">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-mobile" title="Search">
+                            <i class="fas fa-search fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-mobile" title="Clear">
+                            <i class="fas fa-times-circle fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-mobile">
+                            <i class="fas fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+                        </span>
+                    </div>
+                    <a href="javascript:void(0);" class="search-cancel" id="search-cancel-mobile">
+                        Cancel
+                    </a>
+                </div><a class="menu-item" href="/posts/" title="">文章</a><a class="menu-item" href="/categories/" title="">分类</a><a class="menu-item" href="/tags/" title="">标签</a><a class="menu-item" href="/about-me/" title="">关于</a><a href="javascript:void(0);" class="menu-item theme-switch" title="Switch Theme">
+                <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
+            </a></div>
+    </div>
+</header><div class="search-dropdown desktop">
+        <div id="search-dropdown-desktop"></div>
+    </div>
+    <div class="search-dropdown mobile">
+        <div id="search-dropdown-mobile"></div>
+    </div><main class="main">
+                <div class="container"><div class="toc" id="toc-auto">
+            <h2 class="toc-title">Contents</h2>
+            <div class="toc-content" id="toc-content-auto"></div>
+        </div><article class="page single"><h1 class="single-title animate__animated animate__flipInX">策略模式重构实战：用Go消除代码中泛滥的if-else</h1><div class="post-meta">
+            <div class="post-meta-line"><span class="post-author"><a href="https://www.ithome.me/" title="Author" target="_blank" rel="noopener noreferrer author" class="author"><i class="fas fa-user-circle fa-fw" aria-hidden="true"></i>Simon</a>
+</span>&nbsp;<span class="post-category">included in <a href="/categories/essay/"><i class="far fa-folder fa-fw" aria-hidden="true"></i>Essay</a></span></div>
+            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw" aria-hidden="true"></i>&nbsp;<time datetime="2026-07-10">2026-07-10</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden="true"></i>&nbsp;2129 words&nbsp;
+                <i class="far fa-clock fa-fw" aria-hidden="true"></i>&nbsp;5 minutes&nbsp;</div>
+        </div><div class="details toc" id="toc-static"  data-kept="true">
+                <div class="details-summary toc-title">
+                    <span>Contents</span>
+                    <span><i class="details-icon fas fa-angle-right" aria-hidden="true"></i></span>
+                </div>
+                <div class="details-content toc-content" id="toc-content-static"><nav id="TableOfContents">
+  <ul>
+    <li><a href="#你的-if-else-正在失控">你的 if-else 正在失控</a></li>
+    <li><a href="#一策略模式核心思想">一、策略模式：核心思想</a></li>
+    <li><a href="#二从-if-else-到策略表重构步骤">二、从 if-else 到策略表：重构步骤</a>
+      <ul>
+        <li><a href="#第一步提取接口">第一步：提取接口</a></li>
+        <li><a href="#第二步建注册表">第二步：建注册表</a></li>
+        <li><a href="#第三步组装与调用">第三步：组装与调用</a></li>
+      </ul>
+    </li>
+    <li><a href="#三进阶自动注册与依赖注入">三、进阶：自动注册与依赖注入</a></li>
+    <li><a href="#四策略模式的常见变体">四、策略模式的常见变体</a>
+      <ul>
+        <li><a href="#变体一带优先级的策略链">变体一：带优先级的策略链</a></li>
+        <li><a href="#变体二组合策略装饰器模式">变体二：组合策略（装饰器模式）</a></li>
+      </ul>
+    </li>
+    <li><a href="#五什么时候不要用策略模式">五、什么时候不要用策略模式</a></li>
+    <li><a href="#总结">总结</a></li>
+  </ul>
+</nav></div>
+            </div><div class="content" id="content"><h2 id="你的-if-else-正在失控">你的 if-else 正在失控</h2>
+<p>一个支付系统，最初只支持支付宝。产品说要加微信支付，你加了一个 <code>if</code>。三个月后要加银联，又加了一个 <code>if</code>。半年后要加 Apple Pay、Google Pay、虚拟货币……等你回过神来，支付路由函数已经变成了这样：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="kd">func</span> <span class="nf">Charge</span><span class="p">(</span><span class="nx">channel</span> <span class="kt">string</span><span class="p">,</span> <span class="nx">amount</span> <span class="kt">int</span><span class="p">)</span> <span class="kt">error</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="nx">channel</span> <span class="o">==</span> <span class="s">&#34;alipay&#34;</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="c1">// 40行支付宝逻辑
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="nx">channel</span> <span class="o">==</span> <span class="s">&#34;wechat&#34;</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="c1">// 35行微信逻辑
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="nx">channel</span> <span class="o">==</span> <span class="s">&#34;unionpay&#34;</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="c1">// 50行银联逻辑
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="nx">channel</span> <span class="o">==</span> <span class="s">&#34;applepay&#34;</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="c1">// 30行Apple Pay逻辑
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="nx">fmt</span><span class="p">.</span><span class="nf">Errorf</span><span class="p">(</span><span class="s">&#34;unsupported channel: %s&#34;</span><span class="p">,</span> <span class="nx">channel</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="kc">nil</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>这个函数的问题不止是长——它违反了<strong>开闭原则</strong>：每次新增渠道都要修改这个函数，而改老代码就有引入 bug 的风险。更糟的是，不同渠道的参数校验、签名算法、回调处理逻辑全揉在一起，测试时不得不 mock 所有的渠道。</p>
+<p>策略模式就是解药。</p>
+<h2 id="一策略模式核心思想">一、策略模式：核心思想</h2>
+<p>策略模式的本质很朴素：<strong>把每个&quot;做法&quot;抽象成接口，把选择哪个做法推迟到运行时</strong>。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="c1">// PaymentStrategy 是所有支付渠道的抽象接口
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kd">type</span> <span class="nx">PaymentStrategy</span> <span class="kd">interface</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="nf">Pay</span><span class="p">(</span><span class="nx">amount</span> <span class="kt">int</span><span class="p">,</span> <span class="nx">opts</span> <span class="kd">map</span><span class="p">[</span><span class="kt">string</span><span class="p">]</span><span class="kt">string</span><span class="p">)</span> <span class="kt">error</span>
+</span></span><span class="line"><span class="cl">    <span class="nf">Name</span><span class="p">()</span> <span class="kt">string</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>每个渠道实现这个接口，各自管好自己的逻辑。上层代码只面向接口编程，不关心具体是哪个渠道。</p>
+<h2 id="二从-if-else-到策略表重构步骤">二、从 if-else 到策略表：重构步骤</h2>
+<h3 id="第一步提取接口">第一步：提取接口</h3>
+<p>先定义策略接口和渠道的参数结构：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="kd">type</span> <span class="nx">PaymentStrategy</span> <span class="kd">interface</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="nf">Pay</span><span class="p">(</span><span class="nx">amount</span> <span class="kt">int</span><span class="p">,</span> <span class="nx">opts</span> <span class="kd">map</span><span class="p">[</span><span class="kt">string</span><span class="p">]</span><span class="kt">string</span><span class="p">)</span> <span class="kt">error</span>
+</span></span><span class="line"><span class="cl">    <span class="nf">Name</span><span class="p">()</span> <span class="kt">string</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">// AlipayStrategy 支付宝策略
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kd">type</span> <span class="nx">AlipayStrategy</span> <span class="kd">struct</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="nx">AppID</span>    <span class="kt">string</span>
+</span></span><span class="line"><span class="cl">    <span class="nx">PrivKey</span>  <span class="kt">string</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kd">func</span> <span class="p">(</span><span class="nx">s</span> <span class="o">*</span><span class="nx">AlipayStrategy</span><span class="p">)</span> <span class="nf">Pay</span><span class="p">(</span><span class="nx">amount</span> <span class="kt">int</span><span class="p">,</span> <span class="nx">opts</span> <span class="kd">map</span><span class="p">[</span><span class="kt">string</span><span class="p">]</span><span class="kt">string</span><span class="p">)</span> <span class="kt">error</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// 1. 组装业务参数
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="nx">params</span> <span class="o">:=</span> <span class="kd">map</span><span class="p">[</span><span class="kt">string</span><span class="p">]</span><span class="kt">string</span><span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="s">&#34;app_id&#34;</span><span class="p">:</span>     <span class="nx">s</span><span class="p">.</span><span class="nx">AppID</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">        <span class="s">&#34;amount&#34;</span><span class="p">:</span>     <span class="nx">fmt</span><span class="p">.</span><span class="nf">Sprintf</span><span class="p">(</span><span class="s">&#34;%d&#34;</span><span class="p">,</span> <span class="nx">amount</span><span class="p">),</span>
+</span></span><span class="line"><span class="cl">        <span class="s">&#34;out_trade&#34;</span><span class="p">:</span>  <span class="nx">opts</span><span class="p">[</span><span class="s">&#34;order_id&#34;</span><span class="p">],</span>
+</span></span><span class="line"><span class="cl">        <span class="s">&#34;timestamp&#34;</span><span class="p">:</span>  <span class="nx">time</span><span class="p">.</span><span class="nf">Now</span><span class="p">().</span><span class="nf">Format</span><span class="p">(</span><span class="s">&#34;2006-01-02 15:04:05&#34;</span><span class="p">),</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// 2. 签名
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="nx">sign</span> <span class="o">:=</span> <span class="nf">rsaSign</span><span class="p">(</span><span class="nx">params</span><span class="p">,</span> <span class="nx">s</span><span class="p">.</span><span class="nx">PrivKey</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="nx">params</span><span class="p">[</span><span class="s">&#34;sign&#34;</span><span class="p">]</span> <span class="p">=</span> <span class="nx">sign</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// 3. 调用支付宝接口
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="k">return</span> <span class="nf">callAlipayGateway</span><span class="p">(</span><span class="nx">params</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kd">func</span> <span class="p">(</span><span class="nx">s</span> <span class="o">*</span><span class="nx">AlipayStrategy</span><span class="p">)</span> <span class="nf">Name</span><span class="p">()</span> <span class="kt">string</span> <span class="p">{</span> <span class="k">return</span> <span class="s">&#34;alipay&#34;</span> <span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="c1">// WechatStrategy 微信支付策略
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kd">type</span> <span class="nx">WechatStrategy</span> <span class="kd">struct</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="nx">MchID</span>    <span class="kt">string</span>
+</span></span><span class="line"><span class="cl">    <span class="nx">APIKey</span>   <span class="kt">string</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kd">func</span> <span class="p">(</span><span class="nx">s</span> <span class="o">*</span><span class="nx">WechatStrategy</span><span class="p">)</span> <span class="nf">Pay</span><span class="p">(</span><span class="nx">amount</span> <span class="kt">int</span><span class="p">,</span> <span class="nx">opts</span> <span class="kd">map</span><span class="p">[</span><span class="kt">string</span><span class="p">]</span><span class="kt">string</span><span class="p">)</span> <span class="kt">error</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// 微信支付自己的签名算法、自己的参数格式
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="nx">body</span> <span class="o">:=</span> <span class="nf">wechatXMLBody</span><span class="p">(</span><span class="nx">s</span><span class="p">.</span><span class="nx">MchID</span><span class="p">,</span> <span class="nx">amount</span><span class="p">,</span> <span class="nx">opts</span><span class="p">[</span><span class="s">&#34;order_id&#34;</span><span class="p">])</span>
+</span></span><span class="line"><span class="cl">    <span class="nx">sign</span> <span class="o">:=</span> <span class="nf">wechatSign</span><span class="p">(</span><span class="nx">body</span><span class="p">,</span> <span class="nx">s</span><span class="p">.</span><span class="nx">APIKey</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="nf">callWechatGateway</span><span class="p">(</span><span class="nx">body</span><span class="p">,</span> <span class="nx">sign</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kd">func</span> <span class="p">(</span><span class="nx">s</span> <span class="o">*</span><span class="nx">WechatStrategy</span><span class="p">)</span> <span class="nf">Name</span><span class="p">()</span> <span class="kt">string</span> <span class="p">{</span> <span class="k">return</span> <span class="s">&#34;wechat&#34;</span> <span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>注意：每个策略类是独立的文件，互不干扰，可以独立测试。</p>
+<h3 id="第二步建注册表">第二步：建注册表</h3>
+<p>有了策略实现，还需要一个&quot;查找表&quot;来根据渠道名找到对应策略。这里用一个简单的 map：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="c1">// StrategyRegistry 策略注册表
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kd">type</span> <span class="nx">StrategyRegistry</span> <span class="kd">struct</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="nx">strategies</span> <span class="kd">map</span><span class="p">[</span><span class="kt">string</span><span class="p">]</span><span class="nx">PaymentStrategy</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kd">func</span> <span class="nf">NewStrategyRegistry</span><span class="p">()</span> <span class="o">*</span><span class="nx">StrategyRegistry</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="o">&amp;</span><span class="nx">StrategyRegistry</span><span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="nx">strategies</span><span class="p">:</span> <span class="nb">make</span><span class="p">(</span><span class="kd">map</span><span class="p">[</span><span class="kt">string</span><span class="p">]</span><span class="nx">PaymentStrategy</span><span class="p">),</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">// Register 注册策略（并发安全）
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kd">func</span> <span class="p">(</span><span class="nx">r</span> <span class="o">*</span><span class="nx">StrategyRegistry</span><span class="p">)</span> <span class="nf">Register</span><span class="p">(</span><span class="nx">s</span> <span class="nx">PaymentStrategy</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="nx">r</span><span class="p">.</span><span class="nx">strategies</span><span class="p">[</span><span class="nx">s</span><span class="p">.</span><span class="nf">Name</span><span class="p">()]</span> <span class="p">=</span> <span class="nx">s</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">// Get 根据渠道名获取策略
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kd">func</span> <span class="p">(</span><span class="nx">r</span> <span class="o">*</span><span class="nx">StrategyRegistry</span><span class="p">)</span> <span class="nf">Get</span><span class="p">(</span><span class="nx">name</span> <span class="kt">string</span><span class="p">)</span> <span class="p">(</span><span class="nx">PaymentStrategy</span><span class="p">,</span> <span class="kt">error</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="nx">s</span><span class="p">,</span> <span class="nx">ok</span> <span class="o">:=</span> <span class="nx">r</span><span class="p">.</span><span class="nx">strategies</span><span class="p">[</span><span class="nx">name</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="p">!</span><span class="nx">ok</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="kc">nil</span><span class="p">,</span> <span class="nx">fmt</span><span class="p">.</span><span class="nf">Errorf</span><span class="p">(</span><span class="s">&#34;strategy not found: %s&#34;</span><span class="p">,</span> <span class="nx">name</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="nx">s</span><span class="p">,</span> <span class="kc">nil</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h3 id="第三步组装与调用">第三步：组装与调用</h3>
+<p>在程序启动时注册所有渠道，运行时只需一次查询：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="kd">func</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="nx">registry</span> <span class="o">:=</span> <span class="nf">NewStrategyRegistry</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">    
+</span></span><span class="line"><span class="cl">    <span class="c1">// 注册所有支付渠道——新增渠道只需在这里加一行
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="nx">registry</span><span class="p">.</span><span class="nf">Register</span><span class="p">(</span><span class="o">&amp;</span><span class="nx">AlipayStrategy</span><span class="p">{</span><span class="nx">AppID</span><span class="p">:</span> <span class="s">&#34;2021xxx&#34;</span><span class="p">,</span> <span class="nx">PrivKey</span><span class="p">:</span> <span class="s">&#34;...&#34;</span><span class="p">})</span>
+</span></span><span class="line"><span class="cl">    <span class="nx">registry</span><span class="p">.</span><span class="nf">Register</span><span class="p">(</span><span class="o">&amp;</span><span class="nx">WechatStrategy</span><span class="p">{</span><span class="nx">MchID</span><span class="p">:</span> <span class="s">&#34;1900xxx&#34;</span><span class="p">,</span> <span class="nx">APIKey</span><span class="p">:</span> <span class="s">&#34;...&#34;</span><span class="p">})</span>
+</span></span><span class="line"><span class="cl">    <span class="nx">registry</span><span class="p">.</span><span class="nf">Register</span><span class="p">(</span><span class="o">&amp;</span><span class="nx">UnionPayStrategy</span><span class="p">{</span><span class="nx">MerchID</span><span class="p">:</span> <span class="s">&#34;777xxx&#34;</span><span class="p">})</span>
+</span></span><span class="line"><span class="cl">    
+</span></span><span class="line"><span class="cl">    <span class="c1">// 模拟一笔支付
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="nx">ctx</span> <span class="o">:=</span> <span class="o">&amp;</span><span class="nx">PaymentContext</span><span class="p">{</span><span class="nx">Registry</span><span class="p">:</span> <span class="nx">registry</span><span class="p">}</span>
+</span></span><span class="line"><span class="cl">    
+</span></span><span class="line"><span class="cl">    <span class="nx">err</span> <span class="o">:=</span> <span class="nx">ctx</span><span class="p">.</span><span class="nf">Charge</span><span class="p">(</span><span class="s">&#34;alipay&#34;</span><span class="p">,</span> <span class="mi">9900</span><span class="p">,</span> <span class="kd">map</span><span class="p">[</span><span class="kt">string</span><span class="p">]</span><span class="kt">string</span><span class="p">{</span><span class="s">&#34;order_id&#34;</span><span class="p">:</span> <span class="s">&#34;ORD-001&#34;</span><span class="p">})</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="nx">log</span><span class="p">.</span><span class="nf">Fatal</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kd">type</span> <span class="nx">PaymentContext</span> <span class="kd">struct</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="nx">Registry</span> <span class="o">*</span><span class="nx">StrategyRegistry</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kd">func</span> <span class="p">(</span><span class="nx">c</span> <span class="o">*</span><span class="nx">PaymentContext</span><span class="p">)</span> <span class="nf">Charge</span><span class="p">(</span><span class="nx">channel</span> <span class="kt">string</span><span class="p">,</span> <span class="nx">amount</span> <span class="kt">int</span><span class="p">,</span> <span class="nx">opts</span> <span class="kd">map</span><span class="p">[</span><span class="kt">string</span><span class="p">]</span><span class="kt">string</span><span class="p">)</span> <span class="kt">error</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="nx">strategy</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">c</span><span class="p">.</span><span class="nx">Registry</span><span class="p">.</span><span class="nf">Get</span><span class="p">(</span><span class="nx">channel</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="nx">err</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// 公共逻辑：限流、日志、参数校验都放在这里
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="k">if</span> <span class="nx">amount</span> <span class="o">&lt;=</span> <span class="mi">0</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="nx">errors</span><span class="p">.</span><span class="nf">New</span><span class="p">(</span><span class="s">&#34;amount must be positive&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="nx">log</span><span class="p">.</span><span class="nf">Printf</span><span class="p">(</span><span class="s">&#34;charging %d via %s, order=%s&#34;</span><span class="p">,</span> <span class="nx">amount</span><span class="p">,</span> <span class="nx">channel</span><span class="p">,</span> <span class="nx">opts</span><span class="p">[</span><span class="s">&#34;order_id&#34;</span><span class="p">])</span>
+</span></span><span class="line"><span class="cl">    
+</span></span><span class="line"><span class="cl">    <span class="c1">// 调用具体策略
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="k">return</span> <span class="nx">strategy</span><span class="p">.</span><span class="nf">Pay</span><span class="p">(</span><span class="nx">amount</span><span class="p">,</span> <span class="nx">opts</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>重构后，<code>Charge</code> 方法再也不需要改了。<strong>新增支付渠道的步骤</strong>：</p>
+<ol>
+<li>新建文件 <code>unionpay_strategy.go</code></li>
+<li>实现 <code>PaymentStrategy</code> 接口</li>
+<li>在 <code>main()</code> 里注册</li>
+</ol>
+<p><strong>零修改老代码</strong>——这就是开闭原则的落地。</p>
+<h2 id="三进阶自动注册与依赖注入">三、进阶：自动注册与依赖注入</h2>
+<p>手动注册虽然清晰，但渠道多了之后 <code>main()</code> 函数会越来越长。更优雅的做法是利用 Go 的 <code>init()</code> 机制实现自动注册：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="c1">// strategy_registry.go
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kn">package</span> <span class="nx">payment</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kd">var</span> <span class="nx">registry</span> <span class="p">=</span> <span class="nf">NewStrategyRegistry</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kd">func</span> <span class="nf">GetRegistry</span><span class="p">()</span> <span class="o">*</span><span class="nx">StrategyRegistry</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="nx">registry</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">// alipay.go
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kn">package</span> <span class="nx">payment</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kd">func</span> <span class="nf">init</span><span class="p">()</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="nx">registry</span><span class="p">.</span><span class="nf">Register</span><span class="p">(</span><span class="o">&amp;</span><span class="nx">AlipayStrategy</span><span class="p">{</span><span class="o">...</span><span class="p">})</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">// wechat.go
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kn">package</span> <span class="nx">payment</span>
+</span></span><span class="line"><span class="cl"><span class="kd">func</span> <span class="nf">init</span><span class="p">()</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="nx">registry</span><span class="p">.</span><span class="nf">Register</span><span class="p">(</span><span class="o">&amp;</span><span class="nx">WechatStrategy</span><span class="p">{</span><span class="o">...</span><span class="p">})</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>只要 <code>import</code> 了这个包，所有 <code>init()</code> 自动执行，策略自动注册。用 <code>goimports</code> 或 <code>wire</code> 等依赖注入工具时，这个模式非常实用。</p>
+<blockquote>
+<p><strong>注意</strong>：<code>init()</code> 的执行顺序依赖文件名排序，不要在 <code>init()</code> 中依赖其他策略的注册状态。如果策略间有依赖，显式在 <code>main()</code> 中注册更安全。</p>
+</blockquote>
+<h2 id="四策略模式的常见变体">四、策略模式的常见变体</h2>
+<h3 id="变体一带优先级的策略链">变体一：带优先级的策略链</h3>
+<p>需要&quot;按顺序尝试&quot;的场景，比如限流降级链——先试本地令牌桶，再试 Redis 分布式限流，最后兜底放行：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="kd">type</span> <span class="nx">RateLimitStrategy</span> <span class="kd">interface</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="nf">TryAcquire</span><span class="p">(</span><span class="nx">key</span> <span class="kt">string</span><span class="p">)</span> <span class="p">(</span><span class="nx">allowed</span> <span class="kt">bool</span><span class="p">,</span> <span class="nx">err</span> <span class="kt">error</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="nf">Priority</span><span class="p">()</span> <span class="kt">int</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kd">func</span> <span class="p">(</span><span class="nx">r</span> <span class="o">*</span><span class="nx">StrategyRegistry</span><span class="p">)</span> <span class="nf">AcquireChain</span><span class="p">(</span><span class="nx">key</span> <span class="kt">string</span><span class="p">)</span> <span class="kt">error</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// 按优先级排序后依次尝试
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="nx">strategies</span> <span class="o">:=</span> <span class="nx">r</span><span class="p">.</span><span class="nf">sortedByPriority</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="nx">_</span><span class="p">,</span> <span class="nx">s</span> <span class="o">:=</span> <span class="k">range</span> <span class="nx">strategies</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="nx">allowed</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">s</span><span class="p">.</span><span class="nf">TryAcquire</span><span class="p">(</span><span class="nx">key</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="nx">err</span> <span class="o">==</span> <span class="kc">nil</span> <span class="o">&amp;&amp;</span> <span class="nx">allowed</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">            <span class="k">return</span> <span class="kc">nil</span> <span class="c1">// 命中即返回
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="nx">ErrRateLimited</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h3 id="变体二组合策略装饰器模式">变体二：组合策略（装饰器模式）</h3>
+<p>给策略加横切逻辑——比如所有渠道都需要加重试和监控——用装饰器包裹：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="kd">type</span> <span class="nx">RetryDecorator</span> <span class="kd">struct</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="nx">inner</span>     <span class="nx">PaymentStrategy</span>
+</span></span><span class="line"><span class="cl">    <span class="nx">maxRetry</span>  <span class="kt">int</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kd">func</span> <span class="p">(</span><span class="nx">d</span> <span class="o">*</span><span class="nx">RetryDecorator</span><span class="p">)</span> <span class="nf">Pay</span><span class="p">(</span><span class="nx">amount</span> <span class="kt">int</span><span class="p">,</span> <span class="nx">opts</span> <span class="kd">map</span><span class="p">[</span><span class="kt">string</span><span class="p">]</span><span class="kt">string</span><span class="p">)</span> <span class="kt">error</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="kd">var</span> <span class="nx">lastErr</span> <span class="kt">error</span>
+</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="nx">i</span> <span class="o">:=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;=</span> <span class="nx">d</span><span class="p">.</span><span class="nx">maxRetry</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">d</span><span class="p">.</span><span class="nx">inner</span><span class="p">.</span><span class="nf">Pay</span><span class="p">(</span><span class="nx">amount</span><span class="p">,</span> <span class="nx">opts</span><span class="p">);</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">            <span class="nx">lastErr</span> <span class="p">=</span> <span class="nx">err</span>
+</span></span><span class="line"><span class="cl">            <span class="nx">time</span><span class="p">.</span><span class="nf">Sleep</span><span class="p">(</span><span class="nx">time</span><span class="p">.</span><span class="nf">Duration</span><span class="p">(</span><span class="mi">1</span><span class="o">&lt;&lt;</span><span class="nx">i</span><span class="p">)</span> <span class="o">*</span> <span class="nx">time</span><span class="p">.</span><span class="nx">Second</span><span class="p">)</span> <span class="c1">// 指数退避
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>            <span class="k">continue</span>
+</span></span><span class="line"><span class="cl">        <span class="p">}</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="kc">nil</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="nx">lastErr</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kd">func</span> <span class="p">(</span><span class="nx">d</span> <span class="o">*</span><span class="nx">RetryDecorator</span><span class="p">)</span> <span class="nf">Name</span><span class="p">()</span> <span class="kt">string</span> <span class="p">{</span> <span class="k">return</span> <span class="nx">d</span><span class="p">.</span><span class="nx">inner</span><span class="p">.</span><span class="nf">Name</span><span class="p">()</span> <span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>注册时套一层装饰器即可：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="nx">registry</span><span class="p">.</span><span class="nf">Register</span><span class="p">(</span><span class="o">&amp;</span><span class="nx">RetryDecorator</span><span class="p">{</span><span class="nx">inner</span><span class="p">:</span> <span class="o">&amp;</span><span class="nx">AlipayStrategy</span><span class="p">{</span><span class="o">...</span><span class="p">},</span> <span class="nx">maxRetry</span><span class="p">:</span> <span class="mi">3</span><span class="p">})</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h2 id="五什么时候不要用策略模式">五、什么时候不要用策略模式</h2>
+<p>策略模式虽好，但别过度设计。以下场景不需要：</p>
+<ul>
+<li><strong>分支数 ≤ 3 且不会增长</strong>：两个 <code>if</code> 就解决的问题，引入接口和注册表反而增加复杂度。</li>
+<li><strong>分支逻辑差异极小</strong>：如果各渠道只有参数不同、代码路径完全一样，用配置表比策略模式更简单——一个 <code>map[string]Config</code> 就够了。</li>
+<li><strong>分支不是&quot;行为差异&quot;而是&quot;数据差异&quot;</strong>：比如根据地区显示不同汇率，那是个数据查询问题，不是策略问题。</li>
+</ul>
+<p>记住设计模式的核心准则：<strong>先有重复，再消除重复</strong>。等你真的因为加渠道而改了三次 if-else，再重构不迟。</p>
+<h2 id="总结">总结</h2>
+<table>
+<thead>
+<tr>
+<th>场景</th>
+<th>if-else</th>
+<th>策略模式</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>渠道数 &lt; 3</td>
+<td>✅ 够用</td>
+<td>❌ 过度设计</td>
+</tr>
+<tr>
+<td>渠道数 ≥ 3 且会增长</td>
+<td>❌ 改不停</td>
+<td>✅ 开闭原则</td>
+</tr>
+<tr>
+<td>各渠道逻辑差异大</td>
+<td>❌ 巨型函数</td>
+<td>✅ 独立测试</td>
+</tr>
+<tr>
+<td>需要运行时动态切换</td>
+<td>❌ 不可能</td>
+<td>✅ 注册表查找</td>
+</tr>
+</tbody>
+</table>
+<p>重构的核心收获不是&quot;用了策略模式&quot;，而是<strong>让每个渠道成为一个独立单元</strong>——独立开发、独立测试、独立部署。下次产品再提&quot;加个渠道&quot;时，你只需要 <code>git checkout -b feature/new-channel</code>，而不用战战兢兢地去碰那个巨型函数。</p>
+</div><div class="post-footer" id="post-footer">
+    <div class="post-info">
+        <div class="post-info-line">
+            <div class="post-info-mod">
+                <span>Updated on 2026-07-10&nbsp;<a class="git-hash" href="https://github.com/cikichen/hugo-sync/commit/dc90df7524e4bde5e55958edd60247ce34c2c034" target="_blank" title="commit by cikichen(cikichen@github.com) dc90df7524e4bde5e55958edd60247ce34c2c034: Auto: 2026-07-10 - 策略模式重构实战：用Go消除代码中泛滥的if-else">
+                                    <i class="fas fa-hashtag fa-fw" aria-hidden="true"></i>dc90df75</a></span>
+            </div></div>
+        <div class="post-info-line">
+            <div class="post-info-md"></div>
+            <div class="post-info-share">
+                <span><a href="javascript:void(0);" title="Share on Twitter" data-sharer="twitter" data-url="https://www.ithome.me/post/2026/07/10/strategy-pattern-refactoring-in-go/" data-title="策略模式重构实战：用Go消除代码中泛滥的if-else" data-via="ChenCiki" data-hashtags="Go,策略模式,重构,设计模式,SOLID"><i class="fab fa-twitter fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on Linkedin" data-sharer="linkedin" data-url="https://www.ithome.me/post/2026/07/10/strategy-pattern-refactoring-in-go/"><i class="fab fa-linkedin fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on 微博" data-sharer="weibo" data-url="https://www.ithome.me/post/2026/07/10/strategy-pattern-refactoring-in-go/" data-title="策略模式重构实战：用Go消除代码中泛滥的if-else" data-ralateuid="xxx"><i class="fab fa-weibo fa-fw" aria-hidden="true"></i></a></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="post-info-more">
+        <section class="post-tags"><i class="fas fa-tags fa-fw" aria-hidden="true"></i>&nbsp;<a href="/tags/go/">Go</a>,&nbsp;<a href="/tags/%E7%AD%96%E7%95%A5%E6%A8%A1%E5%BC%8F/">策略模式</a>,&nbsp;<a href="/tags/%E9%87%8D%E6%9E%84/">重构</a>,&nbsp;<a href="/tags/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/">设计模式</a>,&nbsp;<a href="/tags/solid/">SOLID</a></section>
+        <section>
+            <span><a href="javascript:void(0);" onclick="window.history.back();">Back</a></span>&nbsp;|&nbsp;<span><a href="/">Home</a></span>
+        </section>
+    </div>
+
+    <div class="post-nav"><a href="/post/2026/07/09/app-upgrade-system-design/" class="prev" rel="prev" title="App 升级系统设计实战：从版本管理到增量更新与热修复"><i class="fas fa-angle-left fa-fw" aria-hidden="true"></i>App 升级系统设计实战：从版本管理到增量更新与热修复</a>
+            <a href="/post/2026/07/11/rate-limiting-algorithms/" class="next" rel="next" title="限流算法实战：三种经典算法的Go实现与选型指南">限流算法实战：三种经典算法的Go实现与选型指南<i class="fas fa-angle-right fa-fw" aria-hidden="true"></i></a></div>
+</div>
+<div id="comments"><div id="gitalk" class="comment"></div><noscript>
+                Please enable JavaScript to view the comments powered by <a href="https://github.com/gitalk/gitalk"></a>Gitalk</a>.
+            </noscript></div></article></div>
+            </main><footer class="footer">
+        <div class="footer-container"><div class="footer-line" itemscope itemtype="http://schema.org/CreativeWork"><i class="far fa-copyright fa-fw" aria-hidden="true"></i><span itemprop="copyrightYear">2011 - 2026</span><span class="author" itemprop="copyrightHolder">&nbsp;<a href="https://www.ithome.me/" target="_blank">Simon Chen</a></span>&nbsp;|&nbsp;<span class="license"><a rel="license external nofollow noopener noreferrer" href="https://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank">CC BY-NC-ND 4.0</a></span></div>
+        </div>
+    </footer></div>
+
+        <div id="fixed-buttons"><a href="#" id="back-to-top" class="fixed-button" title="Back to Top">
+                <i class="fas fa-arrow-up fa-fw" aria-hidden="true"></i>
+            </a><a href="#" id="view-comments" class="fixed-button" title="View Comments">
+                <i class="fas fa-comment fa-fw" aria-hidden="true"></i>
+            </a>
+        </div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1.8.0/dist/gitalk.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/css/lightgallery-bundle.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/katex.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/copy-tex.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.css"><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/gitalk@1.8.0/dist/gitalk.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/autocomplete.js@0.38.1/dist/autocomplete.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lunr@2.3.9/lunr.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lazysizes@5.3.1/lazysizes.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/lightgallery.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/plugins/thumbnail/lg-thumbnail.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/plugins/zoom/lg-zoom.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/clipboard@2.0.11/dist/clipboard.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/sharer.js@0.5.1/sharer.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/katex.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/auto-render.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/copy-tex.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/mhchem.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.js"></script><script type="text/javascript">window.config={"code":{"copyTitle":"Copy to clipboard","maxShownLines":50},"comment":{"gitalk":{"admin":["cikichen"],"clientID":"be0f52370ed1285b6c7c","clientSecret":"734a7d8d0ded346ca7a3d565d57de3f8eeb2850b","id":"2026-07-10T00:00:00Z","owner":"cikichen","repo":"gitalk","title":"策略模式重构实战：用Go消除代码中泛滥的if-else"}},"cookieconsent":{"content":{"dismiss":"我知道了","link":"了解更多","message":"本网站使用 Cookies 来改善您的浏览体验."},"enable":true,"palette":{"button":{"background":"#f0f0f0"},"popup":{"background":"#1aa3ff"}},"theme":"edgeless"},"lightgallery":true,"math":{"delimiters":[{"display":true,"left":"$$","right":"$$"},{"display":true,"left":"\\[","right":"\\]"},{"display":true,"left":"\\begin{equation}","right":"\\end{equation}"},{"display":true,"left":"\\begin{equation*}","right":"\\end{equation*}"},{"display":true,"left":"\\begin{align}","right":"\\end{align}"},{"display":true,"left":"\\begin{align*}","right":"\\end{align*}"},{"display":true,"left":"\\begin{alignat}","right":"\\end{alignat}"},{"display":true,"left":"\\begin{alignat*}","right":"\\end{alignat*}"},{"display":true,"left":"\\begin{gather}","right":"\\end{gather}"},{"display":true,"left":"\\begin{CD}","right":"\\end{CD}"},{"display":false,"left":"$","right":"$"},{"display":false,"left":"\\(","right":"\\)"}],"strict":false},"search":{"highlightTag":"em","lunrIndexURL":"/index.json","maxResultLength":10,"noResultsFound":"No results found","snippetLength":50,"type":"lunr"}};</script><script type="text/javascript" src="/js/theme.min.js"></script></body>
+</html>

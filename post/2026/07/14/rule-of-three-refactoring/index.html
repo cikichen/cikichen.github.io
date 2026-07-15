@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="robots" content="noodp" />
+        <title>三次法则实战：从重复到抽象的重构决策 - 编程心语</title><meta name="Description" content="什么时候该提取公共函数？三次法则给出了答案。本文通过电商订单处理的真实重构案例，展示如何从重复代码演进到优雅抽象，以及过早抽象的反模式陷阱。"><meta property="og:url" content="https://www.ithome.me/post/2026/07/14/rule-of-three-refactoring/">
+  <meta property="og:site_name" content="编程心语">
+  <meta property="og:title" content="三次法则实战：从重复到抽象的重构决策">
+  <meta property="og:description" content="什么时候该提取公共函数？三次法则给出了答案。本文通过电商订单处理的真实重构案例，展示如何从重复代码演进到优雅抽象，以及过早抽象的反模式陷阱。">
+  <meta property="og:locale" content="zh_CN">
+  <meta property="og:type" content="article">
+    <meta property="article:section" content="posts">
+    <meta property="article:published_time" content="2026-07-14T08:00:00+08:00">
+    <meta property="article:modified_time" content="2026-07-14T08:33:03+08:00">
+    <meta property="article:tag" content="重构">
+    <meta property="article:tag" content="三次法则">
+    <meta property="article:tag" content="代码复用">
+    <meta property="article:tag" content="Go语言">
+    <meta property="article:tag" content="工程实践">
+
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="三次法则实战：从重复到抽象的重构决策">
+  <meta name="twitter:description" content="什么时候该提取公共函数？三次法则给出了答案。本文通过电商订单处理的真实重构案例，展示如何从重复代码演进到优雅抽象，以及过早抽象的反模式陷阱。">
+      <meta name="twitter:site" content="@ChenCiki">
+<meta name="application-name" content="编程心语">
+<meta name="apple-mobile-web-app-title" content="编程心语"><meta name="theme-color" content="#ffffff"><meta name="msapplication-TileColor" content="#da532c"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5"><link rel="manifest" href="/site.webmanifest"><link rel="canonical" href="https://www.ithome.me/post/2026/07/14/rule-of-three-refactoring/" /><link rel="prev" href="https://www.ithome.me/post/2026/07/13/ai-era-programming-learning-reflections/" /><link rel="next" href="https://www.ithome.me/post/2026/07/15/edge-ai-training-platform-architecture/" /><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/normalize.css@8.0.1/normalize.min.css"><link rel="stylesheet" href="/css/style.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css"><script type="application/ld+json">
+    {
+        "@context": "http://schema.org",
+        "@type": "BlogPosting",
+        "headline": "三次法则实战：从重复到抽象的重构决策",
+        "inLanguage": "zh-CN",
+        "mainEntityOfPage": {
+            "@type": "WebPage",
+            "@id": "https:\/\/www.ithome.me\/post\/2026\/07\/14\/rule-of-three-refactoring\/"
+        },"image": ["https:\/\/www.ithome.me\/cover.png"],"genre": "posts","keywords": "重构, 三次法则, 代码复用, Go语言, 工程实践","wordcount":  1736 ,
+        "url": "https:\/\/www.ithome.me\/post\/2026\/07\/14\/rule-of-three-refactoring\/","datePublished": "2026-07-14T08:00:00+08:00","dateModified": "2026-07-14T08:33:03+08:00","publisher": {
+            "@type": "Organization",
+            "name": "SimonChen","logo": "https:\/\/www.ithome.me\/logo.png"},"author": {
+                "@type": "Person",
+                "name": "Simon"
+            },"description": "什么时候该提取公共函数？三次法则给出了答案。本文通过电商订单处理的真实重构案例，展示如何从重复代码演进到优雅抽象，以及过早抽象的反模式陷阱。"
+    }
+    </script><script async src="https://www.googletagmanager.com/gtag/js?id=G-H1Q5563VR8"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-H1Q5563VR8', { 'anonymize_ip': true });
+</script></head>
+    <body data-header-desktop="fixed" data-header-mobile="auto"><script type="text/javascript">(window.localStorage && localStorage.getItem('theme') ? localStorage.getItem('theme') === 'dark' : ('auto' === 'auto' ? window.matchMedia('(prefers-color-scheme: dark)').matches : 'auto' === 'dark')) && document.body.setAttribute('theme', 'dark');</script>
+
+        <div id="mask"></div><div class="wrapper"><header class="desktop" id="header-desktop">
+    <div class="header-wrapper">
+        <div class="header-title">
+            <a href="/" title="编程心语">编程心语</a>
+        </div>
+        <div class="menu">
+            <div class="menu-inner"><a class="menu-item" href="/posts/"> 文章 </a><a class="menu-item" href="/categories/"> 分类 </a><a class="menu-item" href="/tags/"> 标签 </a><a class="menu-item" href="/about-me/"> 关于 </a><span class="menu-item delimiter"></span><span class="menu-item search" id="search-desktop">
+                        <input type="text" placeholder="搜索文章..." id="search-input-desktop">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-desktop" title="Search">
+                            <i class="fas fa-search fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-desktop" title="Clear">
+                            <i class="fas fa-times-circle fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-desktop">
+                            <i class="fas fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+                        </span>
+                    </span><a href="javascript:void(0);" class="menu-item theme-switch" title="Switch Theme">
+                    <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</header><header class="mobile" id="header-mobile">
+    <div class="header-container">
+        <div class="header-wrapper">
+            <div class="header-title">
+                <a href="/" title="编程心语">编程心语</a>
+            </div>
+            <div class="menu-toggle" id="menu-toggle-mobile">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+        <div class="menu" id="menu-mobile"><div class="search-wrapper">
+                    <div class="search mobile" id="search-mobile">
+                        <input type="text" placeholder="搜索文章..." id="search-input-mobile">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-mobile" title="Search">
+                            <i class="fas fa-search fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-mobile" title="Clear">
+                            <i class="fas fa-times-circle fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-mobile">
+                            <i class="fas fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+                        </span>
+                    </div>
+                    <a href="javascript:void(0);" class="search-cancel" id="search-cancel-mobile">
+                        Cancel
+                    </a>
+                </div><a class="menu-item" href="/posts/" title="">文章</a><a class="menu-item" href="/categories/" title="">分类</a><a class="menu-item" href="/tags/" title="">标签</a><a class="menu-item" href="/about-me/" title="">关于</a><a href="javascript:void(0);" class="menu-item theme-switch" title="Switch Theme">
+                <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
+            </a></div>
+    </div>
+</header><div class="search-dropdown desktop">
+        <div id="search-dropdown-desktop"></div>
+    </div>
+    <div class="search-dropdown mobile">
+        <div id="search-dropdown-mobile"></div>
+    </div><main class="main">
+                <div class="container"><div class="toc" id="toc-auto">
+            <h2 class="toc-title">Contents</h2>
+            <div class="toc-content" id="toc-content-auto"></div>
+        </div><article class="page single"><h1 class="single-title animate__animated animate__flipInX">三次法则实战：从重复到抽象的重构决策</h1><div class="post-meta">
+            <div class="post-meta-line"><span class="post-author"><a href="https://www.ithome.me/" title="Author" target="_blank" rel="noopener noreferrer author" class="author"><i class="fas fa-user-circle fa-fw" aria-hidden="true"></i>Simon</a>
+</span>&nbsp;<span class="post-category">included in <a href="/categories/essay/"><i class="far fa-folder fa-fw" aria-hidden="true"></i>Essay</a></span></div>
+            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw" aria-hidden="true"></i>&nbsp;<time datetime="2026-07-14">2026-07-14</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden="true"></i>&nbsp;1736 words&nbsp;
+                <i class="far fa-clock fa-fw" aria-hidden="true"></i>&nbsp;4 minutes&nbsp;</div>
+        </div><div class="details toc" id="toc-static"  data-kept="true">
+                <div class="details-summary toc-title">
+                    <span>Contents</span>
+                    <span><i class="details-icon fas fa-angle-right" aria-hidden="true"></i></span>
+                </div>
+                <div class="details-content toc-content" id="toc-content-static"><nav id="TableOfContents">
+  <ul>
+    <li><a href="#为什么不要重复不是铁律">为什么&quot;不要重复&quot;不是铁律</a></li>
+    <li><a href="#第一次重复是合理的">第一次：重复是合理的</a></li>
+    <li><a href="#第二次开始看到模式">第二次：开始看到模式</a></li>
+    <li><a href="#第三次提取正确的抽象">第三次：提取正确的抽象</a></li>
+    <li><a href="#过度抽象的反面教材">过度抽象的反面教材</a></li>
+    <li><a href="#什么时候打破三次法则">什么时候打破三次法则</a></li>
+    <li><a href="#实践建议">实践建议</a></li>
+    <li><a href="#结语">结语</a></li>
+  </ul>
+</nav></div>
+            </div><div class="content" id="content"><h2 id="为什么不要重复不是铁律">为什么&quot;不要重复&quot;不是铁律</h2>
+<p>很多开发者把 DRY（Don&rsquo;t Repeat Yourself）奉为圭臬，一看到重复代码就急着抽取公共函数。结果呢？公共函数越来越臃肿，参数列表越来越长，最终变成一个谁也不敢动的&quot;上帝函数&quot;。</p>
+<p>The Pragmatic Programmer 中提出了一个更务实的原则——<strong>三次法则（Rule of Three）</strong>：</p>
+<blockquote>
+<p>当同一段逻辑被复制第三次时，才值得提取抽象。前两次的重复是可接受的，甚至是必要的。</p>
+</blockquote>
+<p>这不是在为懒惰找借口，而是一种经过验证的工程智慧。下面用一个电商订单处理的真实案例来说明。</p>
+<h2 id="第一次重复是合理的">第一次：重复是合理的</h2>
+<p>第一个需求是处理普通订单：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="kd">func</span> <span class="nf">ProcessOrder</span><span class="p">(</span><span class="nx">order</span> <span class="o">*</span><span class="nx">Order</span><span class="p">)</span> <span class="kt">error</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// 校验
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="k">if</span> <span class="nx">order</span><span class="p">.</span><span class="nx">Amount</span> <span class="o">&lt;=</span> <span class="mi">0</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="nx">errors</span><span class="p">.</span><span class="nf">New</span><span class="p">(</span><span class="s">&#34;invalid amount&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="nx">order</span><span class="p">.</span><span class="nx">UserID</span> <span class="o">==</span> <span class="s">&#34;&#34;</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="nx">errors</span><span class="p">.</span><span class="nf">New</span><span class="p">(</span><span class="s">&#34;missing user&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="c1">// 计算
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="nx">total</span> <span class="o">:=</span> <span class="nx">order</span><span class="p">.</span><span class="nx">Amount</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="nx">order</span><span class="p">.</span><span class="nx">Discount</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="c1">// 持久化
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="nx">db</span><span class="p">.</span><span class="nf">Save</span><span class="p">(</span><span class="o">&amp;</span><span class="nx">OrderRecord</span><span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="nx">OrderID</span><span class="p">:</span> <span class="nx">order</span><span class="p">.</span><span class="nx">ID</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">        <span class="nx">Total</span><span class="p">:</span>   <span class="nx">total</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">        <span class="nx">Status</span><span class="p">:</span>  <span class="s">&#34;processed&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="p">})</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="kc">nil</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>现在来了第二个需求：处理会员订单。逻辑很像，但我们还不知道未来会有多少变体。此时最好的做法就是直接复制一份代码，改改细节：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="kd">func</span> <span class="nf">ProcessMemberOrder</span><span class="p">(</span><span class="nx">order</span> <span class="o">*</span><span class="nx">Order</span><span class="p">)</span> <span class="kt">error</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// 校验（和上面一模一样）
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="k">if</span> <span class="nx">order</span><span class="p">.</span><span class="nx">Amount</span> <span class="o">&lt;=</span> <span class="mi">0</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="nx">errors</span><span class="p">.</span><span class="nf">New</span><span class="p">(</span><span class="s">&#34;invalid amount&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="nx">order</span><span class="p">.</span><span class="nx">UserID</span> <span class="o">==</span> <span class="s">&#34;&#34;</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="nx">errors</span><span class="p">.</span><span class="nf">New</span><span class="p">(</span><span class="s">&#34;missing user&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="c1">// 计算（会员额外9折）
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="nx">total</span> <span class="o">:=</span> <span class="nx">order</span><span class="p">.</span><span class="nx">Amount</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="nx">order</span><span class="p">.</span><span class="nx">Discount</span><span class="p">)</span> <span class="o">*</span> <span class="mf">0.9</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="c1">// 持久化
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="nx">db</span><span class="p">.</span><span class="nf">Save</span><span class="p">(</span><span class="o">&amp;</span><span class="nx">OrderRecord</span><span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="nx">OrderID</span><span class="p">:</span> <span class="nx">order</span><span class="p">.</span><span class="nx">ID</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">        <span class="nx">Total</span><span class="p">:</span>   <span class="nx">total</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">        <span class="nx">Status</span><span class="p">:</span>  <span class="s">&#34;member_processed&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="p">})</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="kc">nil</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>这时候你有两个选择：提取公共函数，或者保持重复。三次法则的建议是——<strong>保持重复</strong>。</p>
+<p>为什么？因为此时只有两个数据点，还看不出真正的共性在哪里。过早抽象往往提取出错误的抽象边界。</p>
+<h2 id="第二次开始看到模式">第二次：开始看到模式</h2>
+<p>第三个需求来了：处理企业订单。现在有了三个相似函数，模式开始浮现——<strong>校验逻辑完全一致，计算逻辑各有不同，持久化结构相同但字段值不同</strong>。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="kd">func</span> <span class="nf">ProcessEnterpriseOrder</span><span class="p">(</span><span class="nx">order</span> <span class="o">*</span><span class="nx">Order</span><span class="p">)</span> <span class="kt">error</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// 校验（第三次复制同样的代码）
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="k">if</span> <span class="nx">order</span><span class="p">.</span><span class="nx">Amount</span> <span class="o">&lt;=</span> <span class="mi">0</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="nx">errors</span><span class="p">.</span><span class="nf">New</span><span class="p">(</span><span class="s">&#34;invalid amount&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="nx">order</span><span class="p">.</span><span class="nx">UserID</span> <span class="o">==</span> <span class="s">&#34;&#34;</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="nx">errors</span><span class="p">.</span><span class="nf">New</span><span class="p">(</span><span class="s">&#34;missing user&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="c1">// 计算（企业阶梯折扣）
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="nx">total</span> <span class="o">:=</span> <span class="nf">calculateEnterpriseTotal</span><span class="p">(</span><span class="nx">order</span><span class="p">.</span><span class="nx">Amount</span><span class="p">,</span> <span class="nx">order</span><span class="p">.</span><span class="nx">Discount</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="c1">// 持久化
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="nx">db</span><span class="p">.</span><span class="nf">Save</span><span class="p">(</span><span class="o">&amp;</span><span class="nx">OrderRecord</span><span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="nx">OrderID</span><span class="p">:</span> <span class="nx">order</span><span class="p">.</span><span class="nx">ID</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">        <span class="nx">Total</span><span class="p">:</span>   <span class="nx">total</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">        <span class="nx">Status</span><span class="p">:</span>  <span class="s">&#34;enterprise_processed&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="p">})</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="kc">nil</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>三次法则触发——现在该提取抽象了。</p>
+<h2 id="第三次提取正确的抽象">第三次：提取正确的抽象</h2>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span><span class="lnt">42
+</span><span class="lnt">43
+</span><span class="lnt">44
+</span><span class="lnt">45
+</span><span class="lnt">46
+</span><span class="lnt">47
+</span><span class="lnt">48
+</span><span class="lnt">49
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="c1">// 统一的处理流程
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kd">func</span> <span class="nf">ProcessOrderFlow</span><span class="p">(</span><span class="nx">order</span> <span class="o">*</span><span class="nx">Order</span><span class="p">,</span> <span class="nx">calcFn</span> <span class="kd">func</span><span class="p">(</span><span class="o">*</span><span class="nx">Order</span><span class="p">)</span> <span class="p">(</span><span class="kt">float64</span><span class="p">,</span> <span class="kt">string</span><span class="p">))</span> <span class="kt">error</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nf">validateOrder</span><span class="p">(</span><span class="nx">order</span><span class="p">);</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="nx">err</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="nx">total</span><span class="p">,</span> <span class="nx">statusTag</span> <span class="o">:=</span> <span class="nf">calcFn</span><span class="p">(</span><span class="nx">order</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="nx">db</span><span class="p">.</span><span class="nf">Save</span><span class="p">(</span><span class="o">&amp;</span><span class="nx">OrderRecord</span><span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="nx">OrderID</span><span class="p">:</span> <span class="nx">order</span><span class="p">.</span><span class="nx">ID</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">        <span class="nx">Total</span><span class="p">:</span>   <span class="nx">total</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">        <span class="nx">Status</span><span class="p">:</span>  <span class="nx">statusTag</span> <span class="o">+</span> <span class="s">&#34;_processed&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="p">})</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">// 校验逻辑（只写一次）
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kd">func</span> <span class="nf">validateOrder</span><span class="p">(</span><span class="nx">order</span> <span class="o">*</span><span class="nx">Order</span><span class="p">)</span> <span class="kt">error</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="nx">order</span><span class="p">.</span><span class="nx">Amount</span> <span class="o">&lt;=</span> <span class="mi">0</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="nx">errors</span><span class="p">.</span><span class="nf">New</span><span class="p">(</span><span class="s">&#34;invalid amount&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="nx">order</span><span class="p">.</span><span class="nx">UserID</span> <span class="o">==</span> <span class="s">&#34;&#34;</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="nx">errors</span><span class="p">.</span><span class="nf">New</span><span class="p">(</span><span class="s">&#34;missing user&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="kc">nil</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">// 三种计算策略
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kd">func</span> <span class="nf">normalCalc</span><span class="p">(</span><span class="nx">o</span> <span class="o">*</span><span class="nx">Order</span><span class="p">)</span> <span class="p">(</span><span class="kt">float64</span><span class="p">,</span> <span class="kt">string</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="nx">o</span><span class="p">.</span><span class="nx">Amount</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="nx">o</span><span class="p">.</span><span class="nx">Discount</span><span class="p">),</span> <span class="s">&#34;normal&#34;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kd">func</span> <span class="nf">memberCalc</span><span class="p">(</span><span class="nx">o</span> <span class="o">*</span><span class="nx">Order</span><span class="p">)</span> <span class="p">(</span><span class="kt">float64</span><span class="p">,</span> <span class="kt">string</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="nx">o</span><span class="p">.</span><span class="nx">Amount</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="nx">o</span><span class="p">.</span><span class="nx">Discount</span><span class="p">)</span> <span class="o">*</span> <span class="mf">0.9</span><span class="p">,</span> <span class="s">&#34;member&#34;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kd">func</span> <span class="nf">enterpriseCalc</span><span class="p">(</span><span class="nx">o</span> <span class="o">*</span><span class="nx">Order</span><span class="p">)</span> <span class="p">(</span><span class="kt">float64</span><span class="p">,</span> <span class="kt">string</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="nf">calculateEnterpriseTotal</span><span class="p">(</span><span class="nx">o</span><span class="p">.</span><span class="nx">Amount</span><span class="p">,</span> <span class="nx">o</span><span class="p">.</span><span class="nx">Discount</span><span class="p">),</span> <span class="s">&#34;enterprise&#34;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">// 调用方保持简洁
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kd">func</span> <span class="nf">ProcessOrder</span><span class="p">(</span><span class="nx">order</span> <span class="o">*</span><span class="nx">Order</span><span class="p">)</span> <span class="kt">error</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="nf">ProcessOrderFlow</span><span class="p">(</span><span class="nx">order</span><span class="p">,</span> <span class="nx">normalCalc</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="kd">func</span> <span class="nf">ProcessMemberOrder</span><span class="p">(</span><span class="nx">order</span> <span class="o">*</span><span class="nx">Order</span><span class="p">)</span> <span class="kt">error</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="nf">ProcessOrderFlow</span><span class="p">(</span><span class="nx">order</span><span class="p">,</span> <span class="nx">memberCalc</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="kd">func</span> <span class="nf">ProcessEnterpriseOrder</span><span class="p">(</span><span class="nx">order</span> <span class="o">*</span><span class="nx">Order</span><span class="p">)</span> <span class="kt">error</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="nf">ProcessOrderFlow</span><span class="p">(</span><span class="nx">order</span><span class="p">,</span> <span class="nx">enterpriseCalc</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>注意几个关键决策：</p>
+<ol>
+<li><strong>只提取真正重复的部分</strong>：校验和持久化被提取，计算逻辑保持在外部</li>
+<li><strong>用函数参数而非继承</strong>：Go 没有继承，函数式策略更灵活更轻量</li>
+<li><strong>状态标记由计算函数返回</strong>：不硬编码，让策略自己决定 tag</li>
+</ol>
+<h2 id="过度抽象的反面教材">过度抽象的反面教材</h2>
+<p>三次法则的反面是零容忍重复——也就是过早抽象。来看一个真实的反面案例：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span><span class="lnt">7
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="c1">// 过早抽象：第一次写就做了全面通用化
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kd">func</span> <span class="nf">ProcessOrderGeneric</span><span class="p">(</span><span class="nx">order</span> <span class="o">*</span><span class="nx">Order</span><span class="p">,</span> <span class="nx">validator</span> <span class="nx">OrderValidator</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="nx">calculator</span> <span class="nx">OrderCalculator</span><span class="p">,</span> <span class="nx">persister</span> <span class="nx">OrderPersister</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="nx">notifier</span> <span class="nx">OrderNotifier</span><span class="p">,</span> <span class="nx">logger</span> <span class="nx">OrderLogger</span><span class="p">)</span> <span class="kt">error</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// 5个接口参数，但当前只有一个调用方
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="c1">// ...
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>这个设计在只有一个调用方时引入了5个接口。每次需求变化，你都得同时修改接口和实现。<strong>抽象的成本远大于重复的成本</strong>。</p>
+<p>更糟糕的是，当真正的第三个变体出现时，你会发现之前设计的接口假设可能是错误的——比如 validator 突然需要访问 DB，但接口签名没传 context。于是要么改接口（影响所有实现），要么在接口外打补丁（破坏抽象的完整性）。</p>
+<h2 id="什么时候打破三次法则">什么时候打破三次法则</h2>
+<p>三次法则不是教条，有些场景应该在第一次就抽象：</p>
+<ol>
+<li><strong>基础设施代码</strong>：数据库连接、日志、配置——从一开始就该统一</li>
+<li><strong>领域核心逻辑</strong>：金额计算、权限校验——重复一次就可能产生数据不一致</li>
+<li><strong>安全相关代码</strong>：加密、认证——重复意味着遗漏漏洞的风险</li>
+</ol>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="c1">// 这类代码第一次就该统一，不存在&#34;容忍两次重复&#34;的余地
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kd">func</span> <span class="nf">HashPassword</span><span class="p">(</span><span class="nx">password</span> <span class="kt">string</span><span class="p">)</span> <span class="p">(</span><span class="kt">string</span><span class="p">,</span> <span class="kt">error</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="nx">bytes</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">bcrypt</span><span class="p">.</span><span class="nf">GenerateFromPassword</span><span class="p">([]</span><span class="nb">byte</span><span class="p">(</span><span class="nx">password</span><span class="p">),</span> <span class="mi">14</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="nb">string</span><span class="p">(</span><span class="nx">bytes</span><span class="p">),</span> <span class="nx">err</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h2 id="实践建议">实践建议</h2>
+<ul>
+<li><strong>容忍短期重复</strong>：复制粘贴不可耻，可耻的是复制了五次还不提取</li>
+<li><strong>标记重复次数</strong>：在代码注释中写上 <code>// DUP: 2nd</code>，提醒自己和团队第三次到来时触发重构</li>
+<li><strong>需求驱动而非设计驱动</strong>：你不是预言家，等模式浮现再出手</li>
+<li><strong>提取后立即验证</strong>：跑一遍全部测试，确保三个调用方行为完全不变</li>
+</ul>
+<h2 id="结语">结语</h2>
+<p>三次法则的本质是承认一个事实：<strong>我们没有水晶球</strong>。在只有一两个实例时，我们无法预知正确的抽象形状。容忍有限的重复，等到模式真正浮现时再出手，往往比一开始就过度设计更务实。</p>
+<p>好的抽象来自观察，而非预测。</p>
+</div><div class="post-footer" id="post-footer">
+    <div class="post-info">
+        <div class="post-info-line">
+            <div class="post-info-mod">
+                <span>Updated on 2026-07-14&nbsp;<a class="git-hash" href="https://github.com/cikichen/hugo-sync/commit/56ac9c869c8a0f3376db7678d28c1f1573a9d842" target="_blank" title="commit by cikichen(cikichen@github.com) 56ac9c869c8a0f3376db7678d28c1f1573a9d842: Auto: 2026-07-14 - 三次法则实战：从重复到抽象的重构决策">
+                                    <i class="fas fa-hashtag fa-fw" aria-hidden="true"></i>56ac9c86</a></span>
+            </div></div>
+        <div class="post-info-line">
+            <div class="post-info-md"></div>
+            <div class="post-info-share">
+                <span><a href="javascript:void(0);" title="Share on Twitter" data-sharer="twitter" data-url="https://www.ithome.me/post/2026/07/14/rule-of-three-refactoring/" data-title="三次法则实战：从重复到抽象的重构决策" data-via="ChenCiki" data-hashtags="重构,三次法则,代码复用,Go语言,工程实践"><i class="fab fa-twitter fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on Linkedin" data-sharer="linkedin" data-url="https://www.ithome.me/post/2026/07/14/rule-of-three-refactoring/"><i class="fab fa-linkedin fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on 微博" data-sharer="weibo" data-url="https://www.ithome.me/post/2026/07/14/rule-of-three-refactoring/" data-title="三次法则实战：从重复到抽象的重构决策" data-ralateuid="xxx"><i class="fab fa-weibo fa-fw" aria-hidden="true"></i></a></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="post-info-more">
+        <section class="post-tags"><i class="fas fa-tags fa-fw" aria-hidden="true"></i>&nbsp;<a href="/tags/%E9%87%8D%E6%9E%84/">重构</a>,&nbsp;<a href="/tags/%E4%B8%89%E6%AC%A1%E6%B3%95%E5%88%99/">三次法则</a>,&nbsp;<a href="/tags/%E4%BB%A3%E7%A0%81%E5%A4%8D%E7%94%A8/">代码复用</a>,&nbsp;<a href="/tags/go%E8%AF%AD%E8%A8%80/">Go语言</a>,&nbsp;<a href="/tags/%E5%B7%A5%E7%A8%8B%E5%AE%9E%E8%B7%B5/">工程实践</a></section>
+        <section>
+            <span><a href="javascript:void(0);" onclick="window.history.back();">Back</a></span>&nbsp;|&nbsp;<span><a href="/">Home</a></span>
+        </section>
+    </div>
+
+    <div class="post-nav"><a href="/post/2026/07/13/ai-era-programming-learning-reflections/" class="prev" rel="prev" title="AI时代编程学习的思考：当语法不再稀缺，什么才值钱？"><i class="fas fa-angle-left fa-fw" aria-hidden="true"></i>AI时代编程学习的思考：当语法不再稀缺，什么才值钱？</a>
+            <a href="/post/2026/07/15/edge-ai-training-platform-architecture/" class="next" rel="next" title="从勘智云平台拆解：如何自建一套端到端AI模型训练与部署平台">从勘智云平台拆解：如何自建一套端到端AI模型训练与部署平台<i class="fas fa-angle-right fa-fw" aria-hidden="true"></i></a></div>
+</div>
+<div id="comments"><div id="gitalk" class="comment"></div><noscript>
+                Please enable JavaScript to view the comments powered by <a href="https://github.com/gitalk/gitalk"></a>Gitalk</a>.
+            </noscript></div></article></div>
+            </main><footer class="footer">
+        <div class="footer-container"><div class="footer-line" itemscope itemtype="http://schema.org/CreativeWork"><i class="far fa-copyright fa-fw" aria-hidden="true"></i><span itemprop="copyrightYear">2011 - 2026</span><span class="author" itemprop="copyrightHolder">&nbsp;<a href="https://www.ithome.me/" target="_blank">Simon Chen</a></span>&nbsp;|&nbsp;<span class="license"><a rel="license external nofollow noopener noreferrer" href="https://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank">CC BY-NC-ND 4.0</a></span></div>
+        </div>
+    </footer></div>
+
+        <div id="fixed-buttons"><a href="#" id="back-to-top" class="fixed-button" title="Back to Top">
+                <i class="fas fa-arrow-up fa-fw" aria-hidden="true"></i>
+            </a><a href="#" id="view-comments" class="fixed-button" title="View Comments">
+                <i class="fas fa-comment fa-fw" aria-hidden="true"></i>
+            </a>
+        </div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1.8.0/dist/gitalk.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/css/lightgallery-bundle.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/katex.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/copy-tex.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.css"><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/gitalk@1.8.0/dist/gitalk.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/autocomplete.js@0.38.1/dist/autocomplete.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lunr@2.3.9/lunr.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lazysizes@5.3.1/lazysizes.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/lightgallery.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/plugins/thumbnail/lg-thumbnail.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/plugins/zoom/lg-zoom.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/clipboard@2.0.11/dist/clipboard.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/sharer.js@0.5.1/sharer.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/katex.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/auto-render.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/copy-tex.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/mhchem.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.js"></script><script type="text/javascript">window.config={"code":{"copyTitle":"Copy to clipboard","maxShownLines":50},"comment":{"gitalk":{"admin":["cikichen"],"clientID":"be0f52370ed1285b6c7c","clientSecret":"734a7d8d0ded346ca7a3d565d57de3f8eeb2850b","id":"2026-07-14T00:00:00Z","owner":"cikichen","repo":"gitalk","title":"三次法则实战：从重复到抽象的重构决策"}},"cookieconsent":{"content":{"dismiss":"我知道了","link":"了解更多","message":"本网站使用 Cookies 来改善您的浏览体验."},"enable":true,"palette":{"button":{"background":"#f0f0f0"},"popup":{"background":"#1aa3ff"}},"theme":"edgeless"},"lightgallery":true,"math":{"delimiters":[{"display":true,"left":"$$","right":"$$"},{"display":true,"left":"\\[","right":"\\]"},{"display":true,"left":"\\begin{equation}","right":"\\end{equation}"},{"display":true,"left":"\\begin{equation*}","right":"\\end{equation*}"},{"display":true,"left":"\\begin{align}","right":"\\end{align}"},{"display":true,"left":"\\begin{align*}","right":"\\end{align*}"},{"display":true,"left":"\\begin{alignat}","right":"\\end{alignat}"},{"display":true,"left":"\\begin{alignat*}","right":"\\end{alignat*}"},{"display":true,"left":"\\begin{gather}","right":"\\end{gather}"},{"display":true,"left":"\\begin{CD}","right":"\\end{CD}"},{"display":false,"left":"$","right":"$"},{"display":false,"left":"\\(","right":"\\)"}],"strict":false},"search":{"highlightTag":"em","lunrIndexURL":"/index.json","maxResultLength":10,"noResultsFound":"No results found","snippetLength":50,"type":"lunr"}};</script><script type="text/javascript" src="/js/theme.min.js"></script></body>
+</html>
