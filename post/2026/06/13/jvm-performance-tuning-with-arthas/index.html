@@ -1,803 +1,332 @@
-<!DOCTYPE html>
-<html lang="zh-CN">
-    <head>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <meta name="robots" content="noodp" />
-        <title>JVM性能调优实战：用Arthas诊断和优化Java应用 - 编程心语</title><meta name="Description" content="手把手教你使用阿里开源的Arthas诊断工具，从CPU飙升、内存泄漏到方法耗时分析，全方位诊断和优化Java应用性能"><meta property="og:url" content="https://www.ithome.me/post/2026/06/13/jvm-performance-tuning-with-arthas/">
-  <meta property="og:site_name" content="编程心语">
-  <meta property="og:title" content="JVM性能调优实战：用Arthas诊断和优化Java应用">
-  <meta property="og:description" content="手把手教你使用阿里开源的Arthas诊断工具，从CPU飙升、内存泄漏到方法耗时分析，全方位诊断和优化Java应用性能">
-  <meta property="og:locale" content="zh_CN">
-  <meta property="og:type" content="article">
-    <meta property="article:section" content="posts">
-    <meta property="article:published_time" content="2026-06-13T08:00:00+08:00">
-    <meta property="article:modified_time" content="2026-06-15T09:02:46+08:00">
-    <meta property="article:tag" content="JVM">
-    <meta property="article:tag" content="Arthas">
-    <meta property="article:tag" content="性能调优">
-    <meta property="article:tag" content="Java">
-    <meta property="article:tag" content="性能优化">
-
-  <meta name="twitter:card" content="summary">
-  <meta name="twitter:title" content="JVM性能调优实战：用Arthas诊断和优化Java应用">
-  <meta name="twitter:description" content="手把手教你使用阿里开源的Arthas诊断工具，从CPU飙升、内存泄漏到方法耗时分析，全方位诊断和优化Java应用性能">
-      <meta name="twitter:site" content="@ChenCiki">
-<meta name="application-name" content="编程心语">
-<meta name="apple-mobile-web-app-title" content="编程心语"><meta name="theme-color" content="#ffffff"><meta name="msapplication-TileColor" content="#da532c"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
-        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
-        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5"><link rel="manifest" href="/site.webmanifest"><link rel="canonical" href="https://www.ithome.me/post/2026/06/13/jvm-performance-tuning-with-arthas/" /><link rel="prev" href="https://www.ithome.me/post/2026/06/12/docker-multistage-build-go/" /><link rel="next" href="https://www.ithome.me/post/2026/06/14/git-bisect-interactive-rebase-cherry-pick/" /><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/normalize.css@8.0.1/normalize.min.css"><link rel="stylesheet" href="/css/style.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css"><script type="application/ld+json">
-    {
-        "@context": "http://schema.org",
-        "@type": "BlogPosting",
-        "headline": "JVM性能调优实战：用Arthas诊断和优化Java应用",
-        "inLanguage": "zh-CN",
-        "mainEntityOfPage": {
-            "@type": "WebPage",
-            "@id": "https:\/\/www.ithome.me\/post\/2026\/06\/13\/jvm-performance-tuning-with-arthas\/"
-        },"image": ["https:\/\/www.ithome.me\/cover.png"],"genre": "posts","keywords": "JVM, Arthas, 性能调优, Java, 性能优化","wordcount":  2823 ,
-        "url": "https:\/\/www.ithome.me\/post\/2026\/06\/13\/jvm-performance-tuning-with-arthas\/","datePublished": "2026-06-13T08:00:00+08:00","dateModified": "2026-06-15T09:02:46+08:00","publisher": {
-            "@type": "Organization",
-            "name": "SimonChen","logo": "https:\/\/www.ithome.me\/logo.png"},"author": {
-                "@type": "Person",
-                "name": "Simon"
-            },"description": "手把手教你使用阿里开源的Arthas诊断工具，从CPU飙升、内存泄漏到方法耗时分析，全方位诊断和优化Java应用性能"
-    }
-    </script><script async src="https://www.googletagmanager.com/gtag/js?id=G-H1Q5563VR8"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-  gtag('config', 'G-H1Q5563VR8', { 'anonymize_ip': true });
-</script></head>
-    <body data-header-desktop="fixed" data-header-mobile="auto"><script type="text/javascript">(window.localStorage && localStorage.getItem('theme') ? localStorage.getItem('theme') === 'dark' : ('auto' === 'auto' ? window.matchMedia('(prefers-color-scheme: dark)').matches : 'auto' === 'dark')) && document.body.setAttribute('theme', 'dark');</script>
-
-        <div id="mask"></div><div class="wrapper"><header class="desktop" id="header-desktop">
-    <div class="header-wrapper">
-        <div class="header-title">
-            <a href="/" title="编程心语">编程心语</a>
-        </div>
-        <div class="menu">
-            <div class="menu-inner"><a class="menu-item" href="/posts/"> 文章 </a><a class="menu-item" href="/categories/"> 分类 </a><a class="menu-item" href="/tags/"> 标签 </a><a class="menu-item" href="/about-me/"> 关于 </a><span class="menu-item delimiter"></span><span class="menu-item search" id="search-desktop">
-                        <input type="text" placeholder="搜索文章..." id="search-input-desktop">
-                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-desktop" title="Search">
-                            <i class="fas fa-search fa-fw" aria-hidden="true"></i>
-                        </a>
-                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-desktop" title="Clear">
-                            <i class="fas fa-times-circle fa-fw" aria-hidden="true"></i>
-                        </a>
-                        <span class="search-button search-loading" id="search-loading-desktop">
-                            <i class="fas fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
-                        </span>
-                    </span><a href="javascript:void(0);" class="menu-item theme-switch" title="Switch Theme">
-                    <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
-                </a>
-            </div>
-        </div>
-    </div>
-</header><header class="mobile" id="header-mobile">
-    <div class="header-container">
-        <div class="header-wrapper">
-            <div class="header-title">
-                <a href="/" title="编程心语">编程心语</a>
-            </div>
-            <div class="menu-toggle" id="menu-toggle-mobile">
-                <span></span><span></span><span></span>
-            </div>
-        </div>
-        <div class="menu" id="menu-mobile"><div class="search-wrapper">
-                    <div class="search mobile" id="search-mobile">
-                        <input type="text" placeholder="搜索文章..." id="search-input-mobile">
-                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-mobile" title="Search">
-                            <i class="fas fa-search fa-fw" aria-hidden="true"></i>
-                        </a>
-                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-mobile" title="Clear">
-                            <i class="fas fa-times-circle fa-fw" aria-hidden="true"></i>
-                        </a>
-                        <span class="search-button search-loading" id="search-loading-mobile">
-                            <i class="fas fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
-                        </span>
-                    </div>
-                    <a href="javascript:void(0);" class="search-cancel" id="search-cancel-mobile">
-                        Cancel
-                    </a>
-                </div><a class="menu-item" href="/posts/" title="">文章</a><a class="menu-item" href="/categories/" title="">分类</a><a class="menu-item" href="/tags/" title="">标签</a><a class="menu-item" href="/about-me/" title="">关于</a><a href="javascript:void(0);" class="menu-item theme-switch" title="Switch Theme">
-                <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
-            </a></div>
-    </div>
-</header><div class="search-dropdown desktop">
-        <div id="search-dropdown-desktop"></div>
-    </div>
-    <div class="search-dropdown mobile">
-        <div id="search-dropdown-mobile"></div>
-    </div><main class="main">
-                <div class="container"><div class="toc" id="toc-auto">
-            <h2 class="toc-title">Contents</h2>
-            <div class="toc-content" id="toc-content-auto"></div>
-        </div><article class="page single"><h1 class="single-title animate__animated animate__flipInX">JVM性能调优实战：用Arthas诊断和优化Java应用</h1><div class="post-meta">
-            <div class="post-meta-line"><span class="post-author"><a href="https://www.ithome.me/" title="Author" target="_blank" rel="noopener noreferrer author" class="author"><i class="fas fa-user-circle fa-fw" aria-hidden="true"></i>Simon</a>
-</span>&nbsp;<span class="post-category">included in <a href="/categories/backend/"><i class="far fa-folder fa-fw" aria-hidden="true"></i>Backend</a></span></div>
-            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw" aria-hidden="true"></i>&nbsp;<time datetime="2026-06-13">2026-06-13</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden="true"></i>&nbsp;2823 words&nbsp;
-                <i class="far fa-clock fa-fw" aria-hidden="true"></i>&nbsp;6 minutes&nbsp;</div>
-        </div><div class="details toc" id="toc-static"  data-kept="true">
-                <div class="details-summary toc-title">
-                    <span>Contents</span>
-                    <span><i class="details-icon fas fa-angle-right" aria-hidden="true"></i></span>
-                </div>
-                <div class="details-content toc-content" id="toc-content-static"><nav id="TableOfContents">
-  <ul>
-    <li><a href="#前言">前言</a></li>
-    <li><a href="#快速安装与启动">快速安装与启动</a>
-      <ul>
-        <li><a href="#下载与启动">下载与启动</a></li>
-        <li><a href="#基础操作">基础操作</a></li>
-      </ul>
-    </li>
-    <li><a href="#场景一cpu飙升排查">场景一：CPU飙升排查</a>
-      <ul>
-        <li><a href="#第一步查看最忙的线程">第一步：查看最忙的线程</a></li>
-        <li><a href="#第二步定位热点方法">第二步：定位热点方法</a></li>
-        <li><a href="#第三步生成火焰图可选">第三步：生成火焰图（可选）</a></li>
-      </ul>
-    </li>
-    <li><a href="#场景二方法耗时分析">场景二：方法耗时分析</a>
-      <ul>
-        <li><a href="#monitor统计方法调用数据">monitor：统计方法调用数据</a></li>
-        <li><a href="#watch观察方法入参和返回值">watch：观察方法入参和返回值</a></li>
-        <li><a href="#stack查看方法调用栈">stack：查看方法调用栈</a></li>
-      </ul>
-    </li>
-    <li><a href="#场景三内存泄漏诊断">场景三：内存泄漏诊断</a>
-      <ul>
-        <li><a href="#查看堆内存概览">查看堆内存概览</a></li>
-        <li><a href="#heapdump导出堆转储">heapdump导出堆转储</a></li>
-        <li><a href="#使用ognl表达式查对象">使用ognl表达式查对象</a></li>
-      </ul>
-    </li>
-    <li><a href="#场景四类加载与热更新">场景四：类加载与热更新</a>
-      <ul>
-        <li><a href="#查看已加载的类">查看已加载的类</a></li>
-        <li><a href="#热更新class文件">热更新Class文件</a></li>
-      </ul>
-    </li>
-    <li><a href="#场景五线程死锁检测">场景五：线程死锁检测</a></li>
-    <li><a href="#生产环境最佳实践">生产环境最佳实践</a>
-      <ul>
-        <li><a href="#1-资源控制">1. 资源控制</a></li>
-        <li><a href="#2-安全建议">2. 安全建议</a></li>
-        <li><a href="#3-常用命令速查表">3. 常用命令速查表</a></li>
-      </ul>
-    </li>
-    <li><a href="#总结">总结</a></li>
-  </ul>
-</nav></div>
-            </div><div class="content" id="content"><h2 id="前言">前言</h2>
-<p>在生产环境中，Java应用偶尔会出现CPU飙升、响应变慢、内存溢出等问题。传统的排查方式往往需要加日志、重启应用，不仅效率低下，还可能错过现场。</p>
-<p><strong>Arthas</strong>（阿尔萨斯）是阿里巴巴开源的Java诊断工具，能够在不重启应用的情况下，实时诊断线上问题。本文将从实战角度出发，覆盖最常见的几种性能问题场景，手把手教你用Arthas定位和解决问题。</p>
-<h2 id="快速安装与启动">快速安装与启动</h2>
-<h3 id="下载与启动">下载与启动</h3>
-<p>Arthas提供了极其简便的安装方式，通过一键脚本即可完成：</p>
-<div class="highlight"><div class="chroma">
-<table class="lntable"><tr><td class="lntd">
-<pre tabindex="0" class="chroma"><code><span class="lnt">1
-</span><span class="lnt">2
-</span><span class="lnt">3
-</span></code></pre></td>
-<td class="lntd">
-<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl"><span class="c1"># 下载并启动Arthas</span>
-</span></span><span class="line"><span class="cl">curl -O https://arthas.aliyun.com/arthas-boot.jar
-</span></span><span class="line"><span class="cl">java -jar arthas-boot.jar
-</span></span></code></pre></td></tr></table>
-</div>
-</div><p>启动后会列出当前JVM中运行的所有Java进程，选择目标进程编号即可连接：</p>
-<div class="highlight"><div class="chroma">
-<table class="lntable"><tr><td class="lntd">
-<pre tabindex="0" class="chroma"><code><span class="lnt">1
-</span><span class="lnt">2
-</span><span class="lnt">3
-</span><span class="lnt">4
-</span><span class="lnt">5
-</span></code></pre></td>
-<td class="lntd">
-<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">$ java -jar arthas-boot.jar
-</span></span><span class="line"><span class="cl">* [1]: 12345 com.example.myapp.Application
-</span></span><span class="line"><span class="cl">  [2]: 67890 org.apache.catalina.startup.Bootstrap
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">Please choose an application number (1 to 2) :
-</span></span></code></pre></td></tr></table>
-</div>
-</div><p>连接成功后进入Arthas交互终端，会出现如下提示：</p>
-<div class="highlight"><div class="chroma">
-<table class="lntable"><tr><td class="lntd">
-<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
-</span><span class="lnt"> 2
-</span><span class="lnt"> 3
-</span><span class="lnt"> 4
-</span><span class="lnt"> 5
-</span><span class="lnt"> 6
-</span><span class="lnt"> 7
-</span><span class="lnt"> 8
-</span><span class="lnt"> 9
-</span><span class="lnt">10
-</span><span class="lnt">11
-</span><span class="lnt">12
-</span><span class="lnt">13
-</span><span class="lnt">14
-</span><span class="lnt">15
-</span><span class="lnt">16
-</span><span class="lnt">17
-</span><span class="lnt">18
-</span></code></pre></td>
-<td class="lntd">
-<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">[INFO] Try to attach success.
-</span></span><span class="line"><span class="cl">[INFO] Attach success.
-</span></span><span class="line"><span class="cl">         ,---.
-</span></span><span class="line"><span class="cl">        ,-----.    _______
-</span></span><span class="line"><span class="cl">       / _\   \   /  _   \
-</span></span><span class="line"><span class="cl">      | (    `. |  | (_)  |
-</span></span><span class="line"><span class="cl">       \ `-.  `_ |  |     /
-</span></span><span class="line"><span class="cl">        `----&#39;  \ |  (\_/
-</span></span><span class="line"><span class="cl">                 |   \
-</span></span><span class="line"><span class="cl">       __        |    \  ___
-</span></span><span class="line"><span class="cl">     /&#39;__`\     |     \/   \
-</span></span><span class="line"><span class="cl">    (  (  )     |  (\_/\  / |
-</span></span><span class="line"><span class="cl">    /`    \     /   \___/  / |
-</span></span><span class="line"><span class="cl">    \_/\  /   /         \/&#39;  |
-</span></span><span class="line"><span class="cl">     // / /  /  \ \     \    \
-</span></span><span class="line"><span class="cl">    /&#39; /&#39;  / \  \ \     \    \
-</span></span><span class="line"><span class="cl">       v  v    v  v      v    v
-</span></span><span class="line"><span class="cl">       Arthas v3.7.2
-</span></span></code></pre></td></tr></table>
-</div>
-</div><h3 id="基础操作">基础操作</h3>
-<p>以下是一些常用的入门命令：</p>
-<div class="highlight"><div class="chroma">
-<table class="lntable"><tr><td class="lntd">
-<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
-</span><span class="lnt"> 2
-</span><span class="lnt"> 3
-</span><span class="lnt"> 4
-</span><span class="lnt"> 5
-</span><span class="lnt"> 6
-</span><span class="lnt"> 7
-</span><span class="lnt"> 8
-</span><span class="lnt"> 9
-</span><span class="lnt">10
-</span><span class="lnt">11
-</span></code></pre></td>
-<td class="lntd">
-<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl"><span class="c1"># 查看当前JVM的所有线程状态</span>
-</span></span><span class="line"><span class="cl">thread
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="c1"># 查看JVM基本信息（版本、GC、内存等）</span>
-</span></span><span class="line"><span class="cl">jvm
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="c1"># 查看系统属性</span>
-</span></span><span class="line"><span class="cl">sysprop
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="c1"># 查看环境变量</span>
-</span></span><span class="line"><span class="cl">sysenv
-</span></span></code></pre></td></tr></table>
-</div>
-</div><h2 id="场景一cpu飙升排查">场景一：CPU飙升排查</h2>
-<p>CPU突然飙高是线上最常见的问题之一。使用Arthas可以快速定位到具体是哪个线程、哪段代码导致的。</p>
-<h3 id="第一步查看最忙的线程">第一步：查看最忙的线程</h3>
-<p>使用 <code>thread</code> 命令找出占用CPU最高的线程：</p>
-<div class="highlight"><div class="chroma">
-<table class="lntable"><tr><td class="lntd">
-<pre tabindex="0" class="chroma"><code><span class="lnt">1
-</span><span class="lnt">2
-</span></code></pre></td>
-<td class="lntd">
-<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl"><span class="c1"># 查看CPU使用率最高的前3个线程堆栈</span>
-</span></span><span class="line"><span class="cl">thread -n <span class="m">3</span>
-</span></span></code></pre></td></tr></table>
-</div>
-</div><p>输出示例：</p>
-<div class="highlight"><div class="chroma">
-<table class="lntable"><tr><td class="lntd">
-<pre tabindex="0" class="chroma"><code><span class="lnt">1
-</span><span class="lnt">2
-</span><span class="lnt">3
-</span><span class="lnt">4
-</span><span class="lnt">5
-</span></code></pre></td>
-<td class="lntd">
-<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">&#34;pool-3-thread-2&#34; Id=25 cpuUsage=85% deltaTime=1700ms time=5600ms RUNNABLE
-</span></span><span class="line"><span class="cl">    at com.example.service.DataProcessor.processBatch(DataProcessor.java:142)
-</span></span><span class="line"><span class="cl">    at com.example.service.DataProcessor.process(DataProcessor.java:98)
-</span></span><span class="line"><span class="cl">    at com.example.controller.ApiController.handleRequest(ApiController.java:56)
-</span></span><span class="line"><span class="cl">    ...
-</span></span></code></pre></td></tr></table>
-</div>
-</div><h3 id="第二步定位热点方法">第二步：定位热点方法</h3>
-<p>通过 <code>trace</code> 命令追踪方法调用耗时：</p>
-<div class="highlight"><div class="chroma">
-<table class="lntable"><tr><td class="lntd">
-<pre tabindex="0" class="chroma"><code><span class="lnt">1
-</span><span class="lnt">2
-</span></code></pre></td>
-<td class="lntd">
-<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl"><span class="c1"># 追踪DataProcessor.processBatch方法的内部调用耗时</span>
-</span></span><span class="line"><span class="cl">trace com.example.service.DataProcessor processBatch -n <span class="m">5</span>
-</span></span></code></pre></td></tr></table>
-</div>
-</div><p>输出结果会以树状结构展示方法调用链及每一步的耗时：</p>
-<div class="highlight"><div class="chroma">
-<table class="lntable"><tr><td class="lntd">
-<pre tabindex="0" class="chroma"><code><span class="lnt">1
-</span><span class="lnt">2
-</span><span class="lnt">3
-</span><span class="lnt">4
-</span><span class="lnt">5
-</span></code></pre></td>
-<td class="lntd">
-<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">+---ts=15683ms, cost=2300ms, avg=460ms, timestamp=2026-06-13 10:23:45
-</span></span><span class="line"><span class="cl">|  +---ts=15684ms, cost=1800ms, avg=360ms, timestamp=2026-06-13 10:23:45
-</span></span><span class="line"><span class="cl">|  |  +---[1200ms] com.example.dao.BatchMapper.insertBatch():1200ms
-</span></span><span class="line"><span class="cl">|  |  +---[580ms]  com.example.dao.BatchMapper.updateStats():580ms
-</span></span><span class="line"><span class="cl">|  +---[500ms]  com.example.cache.RedisCache.set():500ms
-</span></span></code></pre></td></tr></table>
-</div>
-</div><p>从结果可以看到，数据库批量插入耗时1200ms，占总耗时的52%，这就是性能瓶颈所在。</p>
-<h3 id="第三步生成火焰图可选">第三步：生成火焰图（可选）</h3>
-<p>如果需要更直观地分析CPU热点，可以使用 <code>profiler</code> 命令生成火焰图：</p>
-<div class="highlight"><div class="chroma">
-<table class="lntable"><tr><td class="lntd">
-<pre tabindex="0" class="chroma"><code><span class="lnt">1
-</span><span class="lnt">2
-</span><span class="lnt">3
-</span><span class="lnt">4
-</span><span class="lnt">5
-</span><span class="lnt">6
-</span><span class="lnt">7
-</span><span class="lnt">8
-</span></code></pre></td>
-<td class="lntd">
-<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl"><span class="c1"># 开始采样（默认采样30秒）</span>
-</span></span><span class="line"><span class="cl">profiler start
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="c1"># 查看采样状态</span>
-</span></span><span class="line"><span class="cl">profiler status
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="c1"># 停止并生成火焰图HTML</span>
-</span></span><span class="line"><span class="cl">profiler stop --format html --file /tmp/flame.html
-</span></span></code></pre></td></tr></table>
-</div>
-</div><p>将生成的 <code>flame.html</code> 文件在浏览器中打开，即可看到完整的调用栈火焰图，宽度越大的方法占用CPU越多。</p>
-<h2 id="场景二方法耗时分析">场景二：方法耗时分析</h2>
-<p>当接口响应变慢时，需要找出具体是哪个方法拖慢了整体响应。Arthas的 <code>monitor</code> 和 <code>watch</code> 命令是分析方法耗时的利器。</p>
-<h3 id="monitor统计方法调用数据">monitor：统计方法调用数据</h3>
-<div class="highlight"><div class="chroma">
-<table class="lntable"><tr><td class="lntd">
-<pre tabindex="0" class="chroma"><code><span class="lnt">1
-</span><span class="lnt">2
-</span></code></pre></td>
-<td class="lntd">
-<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl"><span class="c1"># 每5秒统计一次UserController.getUser方法的调用数据，共统计10次</span>
-</span></span><span class="line"><span class="cl">monitor -c <span class="m">5</span> com.example.controller.UserController getUser -n <span class="m">10</span>
-</span></span></code></pre></td></tr></table>
-</div>
-</div><p>输出：</p>
-<div class="highlight"><div class="chroma">
-<table class="lntable"><tr><td class="lntd">
-<pre tabindex="0" class="chroma"><code><span class="lnt">1
-</span><span class="lnt">2
-</span><span class="lnt">3
-</span></code></pre></td>
-<td class="lntd">
-<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl"> timestamp            class                    method    total  success  fail  avg-rt(ms)  fail-rate
-</span></span><span class="line"><span class="cl">-----------------------------------------------------------------------------------------------
-</span></span><span class="line"><span class="cl"> 2026-06-13 10:30:05  UserController  getUser  120    118      2     850.50      1.67%
-</span></span></code></pre></td></tr></table>
-</div>
-</div><p>从统计中可以看到，<code>getUser</code> 方法平均响应850ms，失败率1.67%。</p>
-<h3 id="watch观察方法入参和返回值">watch：观察方法入参和返回值</h3>
-<div class="highlight"><div class="chroma">
-<table class="lntable"><tr><td class="lntd">
-<pre tabindex="0" class="chroma"><code><span class="lnt">1
-</span><span class="lnt">2
-</span></code></pre></td>
-<td class="lntd">
-<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl"><span class="c1"># 观察getUser方法的入参、返回值和抛出的异常</span>
-</span></span><span class="line"><span class="cl">watch com.example.controller.UserController getUser <span class="s1">&#39;{params, returnObj, throwExp}&#39;</span> -x <span class="m">2</span> -n <span class="m">10</span>
-</span></span></code></pre></td></tr></table>
-</div>
-</div><p><code>-x 2</code> 表示对象展开2层深度，输出结果类似：</p>
-<div class="highlight"><div class="chroma">
-<table class="lntable"><tr><td class="lntd">
-<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
-</span><span class="lnt"> 2
-</span><span class="lnt"> 3
-</span><span class="lnt"> 4
-</span><span class="lnt"> 5
-</span><span class="lnt"> 6
-</span><span class="lnt"> 7
-</span><span class="lnt"> 8
-</span><span class="lnt"> 9
-</span><span class="lnt">10
-</span><span class="lnt">11
-</span><span class="lnt">12
-</span><span class="lnt">13
-</span><span class="lnt">14
-</span><span class="lnt">15
-</span></code></pre></td>
-<td class="lntd">
-<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">ts=2026-06-13 10:32:15; [cost=1203ms]
-</span></span><span class="line"><span class="cl">@Object[][][
-</span></span><span class="line"><span class="cl">    @Object[][
-</span></span><span class="line"><span class="cl">        @Long[10086],   // userId参数
-</span></span><span class="line"><span class="cl">        @String[true],   // useCache参数
-</span></span><span class="line"><span class="cl">    ],
-</span></span><span class="line"><span class="cl">    @Result[
-</span></span><span class="line"><span class="cl">        code=200,
-</span></span><span class="line"><span class="cl">        data=@UserDTO[
-</span></span><span class="line"><span class="cl">            id=@Long[10086],
-</span></span><span class="line"><span class="cl">            name=@String[&#34;张三&#34;],
-</span></span><span class="line"><span class="cl">        ],
-</span></span><span class="line"><span class="cl">    ],
-</span></span><span class="line"><span class="cl">    null,  // 没有异常
-</span></span><span class="line"><span class="cl">]
-</span></span></code></pre></td></tr></table>
-</div>
-</div><h3 id="stack查看方法调用栈">stack：查看方法调用栈</h3>
-<p>当想了解方法是从哪里被调用过来的：</p>
-<div class="highlight"><div class="chroma">
-<table class="lntable"><tr><td class="lntd">
-<pre tabindex="0" class="chroma"><code><span class="lnt">1
-</span><span class="lnt">2
-</span></code></pre></td>
-<td class="lntd">
-<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl"><span class="c1"># 查看UserService.findUser的完整调用栈</span>
-</span></span><span class="line"><span class="cl">stack com.example.service.UserService findUser -n <span class="m">3</span>
-</span></span></code></pre></td></tr></table>
-</div>
-</div><div class="highlight"><div class="chroma">
-<table class="lntable"><tr><td class="lntd">
-<pre tabindex="0" class="chroma"><code><span class="lnt">1
-</span><span class="lnt">2
-</span><span class="lnt">3
-</span><span class="lnt">4
-</span><span class="lnt">5
-</span></code></pre></td>
-<td class="lntd">
-<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">ts=2026-06-13 10:35:22; cost=0.5ms
-</span></span><span class="line"><span class="cl">    @com.example.service.UserService.findUser()
-</span></span><span class="line"><span class="cl">    at com.example.controller.UserController.getUser(UserController.java:78)
-</span></span><span class="line"><span class="cl">    at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
-</span></span><span class="line"><span class="cl">    at org.springframework.web.servlet.FrameworkServlet.service(FrameworkServlet.java:897)
-</span></span></code></pre></td></tr></table>
-</div>
-</div><h2 id="场景三内存泄漏诊断">场景三：内存泄漏诊断</h2>
-<p>内存泄漏是Java应用中最隐蔽的问题之一。Arthas提供了多种内存诊断手段。</p>
-<h3 id="查看堆内存概览">查看堆内存概览</h3>
-<div class="highlight"><div class="chroma">
-<table class="lntable"><tr><td class="lntd">
-<pre tabindex="0" class="chroma"><code><span class="lnt">1
-</span><span class="lnt">2
-</span><span class="lnt">3
-</span><span class="lnt">4
-</span><span class="lnt">5
-</span></code></pre></td>
-<td class="lntd">
-<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl"><span class="c1"># 查看堆内存使用情况</span>
-</span></span><span class="line"><span class="cl">dashboard -i <span class="m">2000</span> -n <span class="m">5</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="c1"># 或者使用memory命令查看详细内存信息</span>
-</span></span><span class="line"><span class="cl">memory
-</span></span></code></pre></td></tr></table>
-</div>
-</div><p><code>memory</code> 命令输出：</p>
-<div class="highlight"><div class="chroma">
-<table class="lntable"><tr><td class="lntd">
-<pre tabindex="0" class="chroma"><code><span class="lnt">1
-</span><span class="lnt">2
-</span><span class="lnt">3
-</span><span class="lnt">4
-</span><span class="lnt">5
-</span><span class="lnt">6
-</span></code></pre></td>
-<td class="lntd">
-<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">Memory                     used     total    max      usage
-</span></span><span class="line"><span class="cl">heap                       512M     1024M    2048M    25.00%
-</span></span><span class="line"><span class="cl">eden_space                 128M     512M     512M     25.00%
-</span></span><span class="line"><span class="cl">old_gen                    384M     512M     1408M    27.27%
-</span></span><span class="line"><span class="cl">nonheap                    96M      128M     -1       75.00%
-</span></span><span class="line"><span class="cl">metaspace                  80M      96M      -1       83.33%
-</span></span></code></pre></td></tr></table>
-</div>
-</div><h3 id="heapdump导出堆转储">heapdump导出堆转储</h3>
-<div class="highlight"><div class="chroma">
-<table class="lntable"><tr><td class="lntd">
-<pre tabindex="0" class="chroma"><code><span class="lnt">1
-</span><span class="lnt">2
-</span><span class="lnt">3
-</span><span class="lnt">4
-</span><span class="lnt">5
-</span></code></pre></td>
-<td class="lntd">
-<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl"><span class="c1"># 导出堆转储文件到指定路径</span>
-</span></span><span class="line"><span class="cl">heapdump /tmp/heapdump.hprof
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="c1"># 如果只需要dump live对象（更小的文件）</span>
-</span></span><span class="line"><span class="cl">heapdump --live /tmp/heapdump_live.hprof
-</span></span></code></pre></td></tr></table>
-</div>
-</div><p>导出的 <code>.hprof</code> 文件可以使用 Eclipse MAT 或 VisualVM 进行离线分析，找出大对象和泄漏引用链。</p>
-<h3 id="使用ognl表达式查对象">使用ognl表达式查对象</h3>
-<div class="highlight"><div class="chroma">
-<table class="lntable"><tr><td class="lntd">
-<pre tabindex="0" class="chroma"><code><span class="lnt">1
-</span><span class="lnt">2
-</span><span class="lnt">3
-</span><span class="lnt">4
-</span><span class="lnt">5
-</span><span class="lnt">6
-</span><span class="lnt">7
-</span><span class="lnt">8
-</span></code></pre></td>
-<td class="lntd">
-<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl"><span class="c1"># 查看某个类的实例数量</span>
-</span></span><span class="line"><span class="cl">ognl <span class="s1">&#39;@com.example.service.CacheService@instanceCount&#39;</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="c1"># 查看Spring Bean的状态</span>
-</span></span><span class="line"><span class="cl">ognl <span class="s1">&#39;@org.springframework.context.ApplicationContext@getBean(&#34;userService&#34;).cacheSize()&#39;</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="c1"># 查看某个静态变量的值</span>
-</span></span><span class="line"><span class="cl">ognl <span class="s1">&#39;@com.example.config.AppConfig@getGlobalConfig().getMaxRetryCount()&#39;</span>
-</span></span></code></pre></td></tr></table>
-</div>
-</div><h2 id="场景四类加载与热更新">场景四：类加载与热更新</h2>
-<p>Arthas还支持运行时替换class文件，实现不停机修复Bug。</p>
-<h3 id="查看已加载的类">查看已加载的类</h3>
-<div class="highlight"><div class="chroma">
-<table class="lntable"><tr><td class="lntd">
-<pre tabindex="0" class="chroma"><code><span class="lnt">1
-</span><span class="lnt">2
-</span><span class="lnt">3
-</span><span class="lnt">4
-</span><span class="lnt">5
-</span><span class="lnt">6
-</span><span class="lnt">7
-</span><span class="lnt">8
-</span></code></pre></td>
-<td class="lntd">
-<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl"><span class="c1"># 搜索已加载的包含&#34;Controller&#34;的类</span>
-</span></span><span class="line"><span class="cl">sc *Controller*
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="c1"># 查看类的详细信息（字段、方法、注解等）</span>
-</span></span><span class="line"><span class="cl">sc -d com.example.controller.UserController
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="c1"># 查看类加载器层级关系</span>
-</span></span><span class="line"><span class="cl">sc -f com.example.service.UserService
-</span></span></code></pre></td></tr></table>
-</div>
-</div><h3 id="热更新class文件">热更新Class文件</h3>
-<p>当发现线上Bug需要紧急修复时：</p>
-<div class="highlight"><div class="chroma">
-<table class="lntable"><tr><td class="lntd">
-<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
-</span><span class="lnt"> 2
-</span><span class="lnt"> 3
-</span><span class="lnt"> 4
-</span><span class="lnt"> 5
-</span><span class="lnt"> 6
-</span><span class="lnt"> 7
-</span><span class="lnt"> 8
-</span><span class="lnt"> 9
-</span><span class="lnt">10
-</span></code></pre></td>
-<td class="lntd">
-<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl"><span class="c1"># 第一步：反编译目标类，获取源代码</span>
-</span></span><span class="line"><span class="cl">jad com.example.service.UserService &gt; /tmp/UserService.java
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="c1"># 第二步：修改代码（在/tmp/UserService.java中修复Bug）</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="c1"># 第三步：编译修改后的文件（需要当前目录有编译环境）</span>
-</span></span><span class="line"><span class="cl">mc /tmp/UserService.java -d /tmp/compiled/
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="c1"># 第四步：将编译后的class加载到JVM中</span>
-</span></span><span class="line"><span class="cl">redefine /tmp/compiled/com/example/service/UserService.class
-</span></span></code></pre></td></tr></table>
-</div>
-</div><blockquote>
-<p>⚠️ <strong>注意</strong>：热更新有以下限制：不能增删字段和方法签名，不能修改类名，只能修改方法体内容。适用于紧急Bug修复，不建议作为常规发布手段。</p>
-</blockquote>
-<h2 id="场景五线程死锁检测">场景五：线程死锁检测</h2>
-<p>当应用出现卡死现象时，很可能是发生了线程死锁。</p>
-<div class="highlight"><div class="chroma">
-<table class="lntable"><tr><td class="lntd">
-<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
-</span><span class="lnt"> 2
-</span><span class="lnt"> 3
-</span><span class="lnt"> 4
-</span><span class="lnt"> 5
-</span><span class="lnt"> 6
-</span><span class="lnt"> 7
-</span><span class="lnt"> 8
-</span><span class="lnt"> 9
-</span><span class="lnt">10
-</span><span class="lnt">11
-</span><span class="lnt">12
-</span></code></pre></td>
-<td class="lntd">
-<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl"><span class="c1"># 查看是否有死锁</span>
-</span></span><span class="line"><span class="cl">thread -b
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="c1"># 输出示例：</span>
-</span></span><span class="line"><span class="cl"><span class="c1"># Found one Java-level deadlock:</span>
-</span></span><span class="line"><span class="cl"><span class="c1"># =============================</span>
-</span></span><span class="line"><span class="cl"><span class="c1"># &#34;thread-1&#34;:</span>
-</span></span><span class="line"><span class="cl"><span class="c1">#   waiting to lock monitor 0x00007f8b4c006218 (object 0x00000000aab1f0a0, a com.example.service.UserService),</span>
-</span></span><span class="line"><span class="cl"><span class="c1">#   which is locked by &#34;thread-2&#34;</span>
-</span></span><span class="line"><span class="cl"><span class="c1"># &#34;thread-2&#34;:</span>
-</span></span><span class="line"><span class="cl"><span class="c1">#   waiting to lock monitor 0x00007f8b4c003a28 (object 0x00000000aab1f070, a com.example.service.OrderService),</span>
-</span></span><span class="line"><span class="cl"><span class="c1">#   which is locked by &#34;thread-1&#34;</span>
-</span></span></code></pre></td></tr></table>
-</div>
-</div><p><code>thread -b</code> 会直接找出死锁的线程及它们互相等待的锁资源，一目了然。</p>
-<h2 id="生产环境最佳实践">生产环境最佳实践</h2>
-<p>在生产环境中使用Arthas需要注意以下几点：</p>
-<h3 id="1-资源控制">1. 资源控制</h3>
-<div class="highlight"><div class="chroma">
-<table class="lntable"><tr><td class="lntd">
-<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
-</span><span class="lnt"> 2
-</span><span class="lnt"> 3
-</span><span class="lnt"> 4
-</span><span class="lnt"> 5
-</span><span class="lnt"> 6
-</span><span class="lnt"> 7
-</span><span class="lnt"> 8
-</span><span class="lnt"> 9
-</span><span class="lnt">10
-</span></code></pre></td>
-<td class="lntd">
-<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl"><span class="c1"># Arthas本身会消耗少量CPU和内存，生产环境建议：</span>
-</span></span><span class="line"><span class="cl"><span class="c1"># - 单次trace/watch不要设置过大的 -n 值</span>
-</span></span><span class="line"><span class="cl"><span class="c1"># - 使用完毕后及时退出关闭隧道</span>
-</span></span><span class="line"><span class="cl"><span class="c1"># - 避免同时开启多个诊断命令</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="c1"># 退出Arthas</span>
-</span></span><span class="line"><span class="cl">quit
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="c1"># 或者关闭整个Arthas服务端</span>
-</span></span><span class="line"><span class="cl">stop
-</span></span></code></pre></td></tr></table>
-</div>
-</div><h3 id="2-安全建议">2. 安全建议</h3>
-<p>Arthas功能强大但也有风险，生产环境建议：</p>
-<div class="highlight"><div class="chroma">
-<table class="lntable"><tr><td class="lntd">
-<pre tabindex="0" class="chroma"><code><span class="lnt">1
-</span><span class="lnt">2
-</span><span class="lnt">3
-</span><span class="lnt">4
-</span><span class="lnt">5
-</span></code></pre></td>
-<td class="lntd">
-<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl"><span class="c1"># 通过配置限制可访问的端口</span>
-</span></span><span class="line"><span class="cl">java -jar arthas-boot.jar --ip 127.0.0.1
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="c1"># 使用arthas-tunnel-server进行统一管控</span>
-</span></span><span class="line"><span class="cl">java -jar arthas-tunnel-server.jar
-</span></span></code></pre></td></tr></table>
-</div>
-</div><h3 id="3-常用命令速查表">3. 常用命令速查表</h3>
-<table>
-<thead>
-<tr>
-<th>命令</th>
-<th>用途</th>
-<th>场景</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>thread -n 3</code></td>
-<td>查看最忙线程</td>
-<td>CPU飙升</td>
-</tr>
-<tr>
-<td><code>trace</code></td>
-<td>追踪方法调用链耗时</td>
-<td>接口慢</td>
-</tr>
-<tr>
-<td><code>watch</code></td>
-<td>观察入参返回值</td>
-<td>数据异常</td>
-</tr>
-<tr>
-<td><code>monitor</code></td>
-<td>统计方法调用数据</td>
-<td>慢接口排查</td>
-</tr>
-<tr>
-<td><code>memory</code></td>
-<td>查看内存使用</td>
-<td>内存问题</td>
-</tr>
-<tr>
-<td><code>heapdump</code></td>
-<td>导出堆转储</td>
-<td>内存泄漏</td>
-</tr>
-<tr>
-<td><code>thread -b</code></td>
-<td>检测死锁</td>
-<td>应用卡死</td>
-</tr>
-<tr>
-<td><code>jad</code></td>
-<td>反编译class</td>
-<td>查看线上代码</td>
-</tr>
-<tr>
-<td><code>redefine</code></td>
-<td>热更新class</td>
-<td>紧急修复</td>
-</tr>
-<tr>
-<td><code>profiler</code></td>
-<td>生成火焰图</td>
-<td>CPU热点分析</td>
-</tr>
-</tbody>
-</table>
-<h2 id="总结">总结</h2>
-<p>Arthas是Java开发者必备的线上诊断神器，它的核心价值在于<strong>不停机诊断</strong>。掌握以下五个核心场景，基本能应对90%的线上问题：</p>
-<ol>
-<li><strong>CPU飙升</strong>：<code>thread -n 3</code> → <code>trace</code> → <code>profiler</code></li>
-<li><strong>接口变慢</strong>：<code>monitor</code> → <code>watch</code> → <code>trace</code></li>
-<li><strong>内存泄漏</strong>：<code>memory</code> → <code>heapdump</code> → MAT分析</li>
-<li><strong>紧急修复</strong>：<code>jad</code> → <code>mc</code> → <code>redefine</code></li>
-<li><strong>死锁检测</strong>：<code>thread -b</code> 一键排查</li>
-</ol>
-<p>建议将Arthas集成到日常运维流程中，遇到线上问题时第一时间使用它来抓取现场，而不是盲目重启。记住：<strong>重启只能掩盖问题，不能解决问题。</strong></p>
-<blockquote>
-<p>🔗 Arthas官方文档：https://arthas.aliyun.com/doc/
-🔗 Arthas GitHub：https://github.com/alibaba/arthas</p>
-</blockquote>
-</div><div class="post-footer" id="post-footer">
-    <div class="post-info">
-        <div class="post-info-line">
-            <div class="post-info-mod">
-                <span>Updated on 2026-06-15&nbsp;<a class="git-hash" href="https://github.com/cikichen/hugo-sync/commit/097319b59f1e81ab73472cd9768d0879d3986262" target="_blank" title="commit by cikichen(cikichen@github.com) 097319b59f1e81ab73472cd9768d0879d3986262: Auto: 2026-06-15 - MySQL慢查询优化实战：从EXPLAIN分析到索引重构">
-                                    <i class="fas fa-hashtag fa-fw" aria-hidden="true"></i>097319b5</a></span>
-            </div><div class="post-info-license">
-                <span>https://creativecommons.org/licenses/by-nc-nd/4.0/</span>
-            </div></div>
-        <div class="post-info-line">
-            <div class="post-info-md"></div>
-            <div class="post-info-share">
-                <span><a href="javascript:void(0);" title="Share on Twitter" data-sharer="twitter" data-url="https://www.ithome.me/post/2026/06/13/jvm-performance-tuning-with-arthas/" data-title="JVM性能调优实战：用Arthas诊断和优化Java应用" data-via="ChenCiki" data-hashtags="JVM,Arthas,性能调优,Java,性能优化"><i class="fab fa-twitter fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on Linkedin" data-sharer="linkedin" data-url="https://www.ithome.me/post/2026/06/13/jvm-performance-tuning-with-arthas/"><i class="fab fa-linkedin fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on 微博" data-sharer="weibo" data-url="https://www.ithome.me/post/2026/06/13/jvm-performance-tuning-with-arthas/" data-title="JVM性能调优实战：用Arthas诊断和优化Java应用" data-ralateuid="xxx"><i class="fab fa-weibo fa-fw" aria-hidden="true"></i></a></span>
-            </div>
-        </div>
-    </div>
-
-    <div class="post-info-more">
-        <section class="post-tags"><i class="fas fa-tags fa-fw" aria-hidden="true"></i>&nbsp;<a href="/tags/jvm/">JVM</a>,&nbsp;<a href="/tags/arthas/">Arthas</a>,&nbsp;<a href="/tags/%E6%80%A7%E8%83%BD%E8%B0%83%E4%BC%98/">性能调优</a>,&nbsp;<a href="/tags/java/">Java</a>,&nbsp;<a href="/tags/%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96/">性能优化</a></section>
-        <section>
-            <span><a href="javascript:void(0);" onclick="window.history.back();">Back</a></span>&nbsp;|&nbsp;<span><a href="/">Home</a></span>
-        </section>
-    </div>
-
-    <div class="post-nav"><a href="/post/2026/06/12/docker-multistage-build-go/" class="prev" rel="prev" title="Docker多阶段构建实战：让你的Go镜像缩小90%"><i class="fas fa-angle-left fa-fw" aria-hidden="true"></i>Docker多阶段构建实战：让你的Go镜像缩小90%</a>
-            <a href="/post/2026/06/14/git-bisect-interactive-rebase-cherry-pick/" class="next" rel="next" title="Git 高级技巧实战：bisect定位Bug、interactive rebase清理提交历史、cherry-pick精准搬运">Git 高级技巧实战：bisect定位Bug、interactive rebase清理提交历史、cherry-pick精准搬运<i class="fas fa-angle-right fa-fw" aria-hidden="true"></i></a></div>
-</div>
-<div id="comments"><div id="gitalk" class="comment"></div><noscript>
-                Please enable JavaScript to view the comments powered by <a href="https://github.com/gitalk/gitalk"></a>Gitalk</a>.
-            </noscript></div></article></div>
-            </main><footer class="footer">
-        <div class="footer-container"><div class="footer-line" itemscope itemtype="http://schema.org/CreativeWork"><i class="far fa-copyright fa-fw" aria-hidden="true"></i><span itemprop="copyrightYear">2011 - 2026</span><span class="author" itemprop="copyrightHolder">&nbsp;<a href="https://www.ithome.me/" target="_blank">Simon Chen</a></span>&nbsp;|&nbsp;<span class="license"><a rel="license external nofollow noopener noreferrer" href="https://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank">CC BY-NC-ND 4.0</a></span></div>
-        </div>
-    </footer></div>
-
-        <div id="fixed-buttons"><a href="#" id="back-to-top" class="fixed-button" title="Back to Top">
-                <i class="fas fa-arrow-up fa-fw" aria-hidden="true"></i>
-            </a><a href="#" id="view-comments" class="fixed-button" title="View Comments">
-                <i class="fas fa-comment fa-fw" aria-hidden="true"></i>
-            </a>
-        </div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1.8.0/dist/gitalk.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/css/lightgallery-bundle.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/katex.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/copy-tex.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.css"><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/gitalk@1.8.0/dist/gitalk.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/autocomplete.js@0.38.1/dist/autocomplete.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lunr@2.3.9/lunr.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lazysizes@5.3.1/lazysizes.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/lightgallery.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/plugins/thumbnail/lg-thumbnail.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/plugins/zoom/lg-zoom.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/clipboard@2.0.11/dist/clipboard.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/sharer.js@0.5.1/sharer.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/katex.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/auto-render.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/copy-tex.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/mhchem.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.js"></script><script type="text/javascript">window.config={"code":{"copyTitle":"Copy to clipboard","maxShownLines":50},"comment":{"gitalk":{"admin":["cikichen"],"clientID":"be0f52370ed1285b6c7c","clientSecret":"734a7d8d0ded346ca7a3d565d57de3f8eeb2850b","id":"2026-06-13T00:00:00Z","owner":"cikichen","repo":"gitalk","title":"JVM性能调优实战：用Arthas诊断和优化Java应用"}},"cookieconsent":{"content":{"dismiss":"我知道了","link":"了解更多","message":"本网站使用 Cookies 来改善您的浏览体验."},"enable":true,"palette":{"button":{"background":"#f0f0f0"},"popup":{"background":"#1aa3ff"}},"theme":"edgeless"},"lightgallery":true,"math":{"delimiters":[{"display":true,"left":"$$","right":"$$"},{"display":true,"left":"\\[","right":"\\]"},{"display":true,"left":"\\begin{equation}","right":"\\end{equation}"},{"display":true,"left":"\\begin{equation*}","right":"\\end{equation*}"},{"display":true,"left":"\\begin{align}","right":"\\end{align}"},{"display":true,"left":"\\begin{align*}","right":"\\end{align*}"},{"display":true,"left":"\\begin{alignat}","right":"\\end{alignat}"},{"display":true,"left":"\\begin{alignat*}","right":"\\end{alignat*}"},{"display":true,"left":"\\begin{gather}","right":"\\end{gather}"},{"display":true,"left":"\\begin{CD}","right":"\\end{CD}"},{"display":false,"left":"$","right":"$"},{"display":false,"left":"\\(","right":"\\)"}],"strict":false},"search":{"highlightTag":"em","lunrIndexURL":"/index.json","maxResultLength":10,"noResultsFound":"No results found","snippetLength":50,"type":"lunr"}};</script><script type="text/javascript" src="/js/theme.min.js"></script></body>
-</html>
+<!doctype html><html lang=zh-CN><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><meta name=robots content="noodp"><title>JVM性能调优实战：用Arthas诊断和优化Java应用 - 编程心语</title><meta name=Description content="手把手教你使用阿里开源的Arthas诊断工具，从CPU飙升、内存泄漏到方法耗时分析，全方位诊断和优化Java应用性能"><meta property="og:url" content="https://www.ithome.me/post/2026/06/13/jvm-performance-tuning-with-arthas/">
+<meta property="og:site_name" content="编程心语"><meta property="og:title" content="JVM性能调优实战：用Arthas诊断和优化Java应用"><meta property="og:description" content="手把手教你使用阿里开源的Arthas诊断工具，从CPU飙升、内存泄漏到方法耗时分析，全方位诊断和优化Java应用性能"><meta property="og:locale" content="zh_CN"><meta property="og:type" content="article"><meta property="article:section" content="posts"><meta property="article:published_time" content="2026-06-13T08:00:00+08:00"><meta property="article:modified_time" content="2026-06-15T09:02:46+08:00"><meta property="article:tag" content="JVM"><meta property="article:tag" content="Arthas"><meta property="article:tag" content="性能调优"><meta property="article:tag" content="Java"><meta property="article:tag" content="性能优化"><meta name=twitter:card content="summary"><meta name=twitter:title content="JVM性能调优实战：用Arthas诊断和优化Java应用"><meta name=twitter:description content="手把手教你使用阿里开源的Arthas诊断工具，从CPU飙升、内存泄漏到方法耗时分析，全方位诊断和优化Java应用性能"><meta name=twitter:site content="@ChenCiki"><meta name=application-name content="编程心语"><meta name=apple-mobile-web-app-title content="编程心语"><meta name=theme-color content="#ffffff"><meta name=msapplication-TileColor content="#da532c"><link rel="shortcut icon" type=image/x-icon href=/favicon.ico><link rel=icon type=image/png sizes=32x32 href=/favicon-32x32.png><link rel=icon type=image/png sizes=16x16 href=/favicon-16x16.png><link rel=apple-touch-icon sizes=180x180 href=/apple-touch-icon.png><link rel=mask-icon href=/safari-pinned-tab.svg color=#5bbad5><link rel=manifest href=/site.webmanifest><link rel=canonical href=https://www.ithome.me/post/2026/06/13/jvm-performance-tuning-with-arthas/><link rel=prev href=https://www.ithome.me/post/2026/06/12/docker-multistage-build-go/><link rel=next href=https://www.ithome.me/post/2026/06/14/git-bisect-interactive-rebase-cherry-pick/><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/normalize.css@8.0.1/normalize.min.css><link rel=stylesheet href=/css/style.min.css><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css><script type=application/ld+json>{"@context":"http://schema.org","@type":"BlogPosting","headline":"JVM性能调优实战：用Arthas诊断和优化Java应用","inLanguage":"zh-CN","mainEntityOfPage":{"@type":"WebPage","@id":"https:\/\/www.ithome.me\/post\/2026\/06\/13\/jvm-performance-tuning-with-arthas\/"},"image":["https:\/\/www.ithome.me\/cover.png"],"genre":"posts","keywords":"JVM, Arthas, 性能调优, Java, 性能优化","wordcount":2823,"url":"https:\/\/www.ithome.me\/post\/2026\/06\/13\/jvm-performance-tuning-with-arthas\/","datePublished":"2026-06-13T08:00:00+08:00","dateModified":"2026-06-15T09:02:46+08:00","publisher":{"@type":"Organization","name":"SimonChen","logo":"https:\/\/www.ithome.me\/logo.png"},"author":{"@type":"Person","name":"Simon"},"description":"手把手教你使用阿里开源的Arthas诊断工具，从CPU飙升、内存泄漏到方法耗时分析，全方位诊断和优化Java应用性能"}</script><script async src="https://www.googletagmanager.com/gtag/js?id=G-H1Q5563VR8"></script><script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag("js",new Date),gtag("config","G-H1Q5563VR8",{anonymize_ip:!0})</script></head><body data-header-desktop=fixed data-header-mobile=auto><script type=text/javascript>(window.localStorage&&localStorage.getItem("theme")?localStorage.getItem("theme")==="dark":"auto"==="auto"?window.matchMedia("(prefers-color-scheme: dark)").matches:"auto"==="dark")&&document.body.setAttribute("theme","dark")</script><div id=mask></div><div class=wrapper><header class=desktop id=header-desktop><div class=header-wrapper><div class=header-title><a href=/ title=编程心语>编程心语</a></div><div class=menu><div class=menu-inner><a class=menu-item href=/posts/>文章 </a><a class=menu-item href=/categories/>分类 </a><a class=menu-item href=/tags/>标签 </a><a class=menu-item href=/about-me/>关于 </a><span class="menu-item delimiter"></span><span class="menu-item search" id=search-desktop>
+<input type=text placeholder=搜索文章... id=search-input-desktop>
+<a href=javascript:void(0); class="search-button search-toggle" id=search-toggle-desktop title=Search><i class="fas fa-search fa-fw" aria-hidden=true></i>
+</a><a href=javascript:void(0); class="search-button search-clear" id=search-clear-desktop title=Clear><i class="fas fa-times-circle fa-fw" aria-hidden=true></i>
+</a><span class="search-button search-loading" id=search-loading-desktop><i class="fas fa-spinner fa-fw fa-spin" aria-hidden=true></i>
+</span></span><a href=javascript:void(0); class="menu-item theme-switch" title="Switch Theme"><i class="fas fa-adjust fa-fw" aria-hidden=true></i></a></div></div></div></header><header class=mobile id=header-mobile><div class=header-container><div class=header-wrapper><div class=header-title><a href=/ title=编程心语>编程心语</a></div><div class=menu-toggle id=menu-toggle-mobile><span></span><span></span><span></span></div></div><div class=menu id=menu-mobile><div class=search-wrapper><div class="search mobile" id=search-mobile><input type=text placeholder=搜索文章... id=search-input-mobile>
+<a href=javascript:void(0); class="search-button search-toggle" id=search-toggle-mobile title=Search><i class="fas fa-search fa-fw" aria-hidden=true></i>
+</a><a href=javascript:void(0); class="search-button search-clear" id=search-clear-mobile title=Clear><i class="fas fa-times-circle fa-fw" aria-hidden=true></i>
+</a><span class="search-button search-loading" id=search-loading-mobile><i class="fas fa-spinner fa-fw fa-spin" aria-hidden=true></i></span></div><a href=javascript:void(0); class=search-cancel id=search-cancel-mobile>Cancel</a></div><a class=menu-item href=/posts/ title>文章</a><a class=menu-item href=/categories/ title>分类</a><a class=menu-item href=/tags/ title>标签</a><a class=menu-item href=/about-me/ title>关于</a><a href=javascript:void(0); class="menu-item theme-switch" title="Switch Theme">
+<i class="fas fa-adjust fa-fw" aria-hidden=true></i></a></div></div></header><div class="search-dropdown desktop"><div id=search-dropdown-desktop></div></div><div class="search-dropdown mobile"><div id=search-dropdown-mobile></div></div><main class=main><div class=container><div class=toc id=toc-auto><h2 class=toc-title>Contents</h2><div class=toc-content id=toc-content-auto></div></div><article class="page single"><h1 class="single-title animate__animated animate__flipInX">JVM性能调优实战：用Arthas诊断和优化Java应用</h1><div class=post-meta><div class=post-meta-line><span class=post-author><a href=https://www.ithome.me/ title=Author target=_blank rel="noopener noreferrer author" class=author><i class="fas fa-user-circle fa-fw" aria-hidden=true></i>Simon</a>
+</span>&nbsp;<span class=post-category>included in <a href=/categories/backend/><i class="far fa-folder fa-fw" aria-hidden=true></i>Backend</a></span></div><div class=post-meta-line><i class="far fa-calendar-alt fa-fw" aria-hidden=true></i>&nbsp;<time datetime=2026-06-13>2026-06-13</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden=true></i>&nbsp;2823 words&nbsp;
+<i class="far fa-clock fa-fw" aria-hidden=true></i>&nbsp;6 minutes&nbsp;</div></div><div class="details toc" id=toc-static data-kept=true><div class="details-summary toc-title"><span>Contents</span>
+<span><i class="details-icon fas fa-angle-right" aria-hidden=true></i></span></div><div class="details-content toc-content" id=toc-content-static><nav id=TableOfContents><ul><li><a href=#前言>前言</a></li><li><a href=#快速安装与启动>快速安装与启动</a><ul><li><a href=#下载与启动>下载与启动</a></li><li><a href=#基础操作>基础操作</a></li></ul></li><li><a href=#场景一cpu飙升排查>场景一：CPU飙升排查</a><ul><li><a href=#第一步查看最忙的线程>第一步：查看最忙的线程</a></li><li><a href=#第二步定位热点方法>第二步：定位热点方法</a></li><li><a href=#第三步生成火焰图可选>第三步：生成火焰图（可选）</a></li></ul></li><li><a href=#场景二方法耗时分析>场景二：方法耗时分析</a><ul><li><a href=#monitor统计方法调用数据>monitor：统计方法调用数据</a></li><li><a href=#watch观察方法入参和返回值>watch：观察方法入参和返回值</a></li><li><a href=#stack查看方法调用栈>stack：查看方法调用栈</a></li></ul></li><li><a href=#场景三内存泄漏诊断>场景三：内存泄漏诊断</a><ul><li><a href=#查看堆内存概览>查看堆内存概览</a></li><li><a href=#heapdump导出堆转储>heapdump导出堆转储</a></li><li><a href=#使用ognl表达式查对象>使用ognl表达式查对象</a></li></ul></li><li><a href=#场景四类加载与热更新>场景四：类加载与热更新</a><ul><li><a href=#查看已加载的类>查看已加载的类</a></li><li><a href=#热更新class文件>热更新Class文件</a></li></ul></li><li><a href=#场景五线程死锁检测>场景五：线程死锁检测</a></li><li><a href=#生产环境最佳实践>生产环境最佳实践</a><ul><li><a href=#1-资源控制>1. 资源控制</a></li><li><a href=#2-安全建议>2. 安全建议</a></li><li><a href=#3-常用命令速查表>3. 常用命令速查表</a></li></ul></li><li><a href=#总结>总结</a></li></ul></nav></div></div><div class=content id=content><h2 id=前言>前言</h2><p>在生产环境中，Java应用偶尔会出现CPU飙升、响应变慢、内存溢出等问题。传统的排查方式往往需要加日志、重启应用，不仅效率低下，还可能错过现场。</p><p><strong>Arthas</strong>（阿尔萨斯）是阿里巴巴开源的Java诊断工具，能够在不重启应用的情况下，实时诊断线上问题。本文将从实战角度出发，覆盖最常见的几种性能问题场景，手把手教你用Arthas定位和解决问题。</p><h2 id=快速安装与启动>快速安装与启动</h2><h3 id=下载与启动>下载与启动</h3><p>Arthas提供了极其简便的安装方式，通过一键脚本即可完成：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl><span class=c1># 下载并启动Arthas</span>
+</span></span><span class=line><span class=cl>curl -O https://arthas.aliyun.com/arthas-boot.jar
+</span></span><span class=line><span class=cl>java -jar arthas-boot.jar
+</span></span></code></pre></td></tr></table></div></div><p>启动后会列出当前JVM中运行的所有Java进程，选择目标进程编号即可连接：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span><span class=lnt>4
+</span><span class=lnt>5
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-fallback data-lang=fallback><span class=line><span class=cl>$ java -jar arthas-boot.jar
+</span></span><span class=line><span class=cl>* [1]: 12345 com.example.myapp.Application
+</span></span><span class=line><span class=cl>  [2]: 67890 org.apache.catalina.startup.Bootstrap
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>Please choose an application number (1 to 2) :
+</span></span></code></pre></td></tr></table></div></div><p>连接成功后进入Arthas交互终端，会出现如下提示：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span><span class=lnt>17
+</span><span class=lnt>18
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-fallback data-lang=fallback><span class=line><span class=cl>[INFO] Try to attach success.
+</span></span><span class=line><span class=cl>[INFO] Attach success.
+</span></span><span class=line><span class=cl>         ,---.
+</span></span><span class=line><span class=cl>        ,-----.    _______
+</span></span><span class=line><span class=cl>       / _\   \   /  _   \
+</span></span><span class=line><span class=cl>      | (    `. |  | (_)  |
+</span></span><span class=line><span class=cl>       \ `-.  `_ |  |     /
+</span></span><span class=line><span class=cl>        `----&#39;  \ |  (\_/
+</span></span><span class=line><span class=cl>                 |   \
+</span></span><span class=line><span class=cl>       __        |    \  ___
+</span></span><span class=line><span class=cl>     /&#39;__`\     |     \/   \
+</span></span><span class=line><span class=cl>    (  (  )     |  (\_/\  / |
+</span></span><span class=line><span class=cl>    /`    \     /   \___/  / |
+</span></span><span class=line><span class=cl>    \_/\  /   /         \/&#39;  |
+</span></span><span class=line><span class=cl>     // / /  /  \ \     \    \
+</span></span><span class=line><span class=cl>    /&#39; /&#39;  / \  \ \     \    \
+</span></span><span class=line><span class=cl>       v  v    v  v      v    v
+</span></span><span class=line><span class=cl>       Arthas v3.7.2
+</span></span></code></pre></td></tr></table></div></div><h3 id=基础操作>基础操作</h3><p>以下是一些常用的入门命令：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl><span class=c1># 查看当前JVM的所有线程状态</span>
+</span></span><span class=line><span class=cl>thread
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1># 查看JVM基本信息（版本、GC、内存等）</span>
+</span></span><span class=line><span class=cl>jvm
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1># 查看系统属性</span>
+</span></span><span class=line><span class=cl>sysprop
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1># 查看环境变量</span>
+</span></span><span class=line><span class=cl>sysenv
+</span></span></code></pre></td></tr></table></div></div><h2 id=场景一cpu飙升排查>场景一：CPU飙升排查</h2><p>CPU突然飙高是线上最常见的问题之一。使用Arthas可以快速定位到具体是哪个线程、哪段代码导致的。</p><h3 id=第一步查看最忙的线程>第一步：查看最忙的线程</h3><p>使用 <code>thread</code> 命令找出占用CPU最高的线程：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl><span class=c1># 查看CPU使用率最高的前3个线程堆栈</span>
+</span></span><span class=line><span class=cl>thread -n <span class=m>3</span>
+</span></span></code></pre></td></tr></table></div></div><p>输出示例：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span><span class=lnt>4
+</span><span class=lnt>5
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-fallback data-lang=fallback><span class=line><span class=cl>&#34;pool-3-thread-2&#34; Id=25 cpuUsage=85% deltaTime=1700ms time=5600ms RUNNABLE
+</span></span><span class=line><span class=cl>    at com.example.service.DataProcessor.processBatch(DataProcessor.java:142)
+</span></span><span class=line><span class=cl>    at com.example.service.DataProcessor.process(DataProcessor.java:98)
+</span></span><span class=line><span class=cl>    at com.example.controller.ApiController.handleRequest(ApiController.java:56)
+</span></span><span class=line><span class=cl>    ...
+</span></span></code></pre></td></tr></table></div></div><h3 id=第二步定位热点方法>第二步：定位热点方法</h3><p>通过 <code>trace</code> 命令追踪方法调用耗时：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl><span class=c1># 追踪DataProcessor.processBatch方法的内部调用耗时</span>
+</span></span><span class=line><span class=cl>trace com.example.service.DataProcessor processBatch -n <span class=m>5</span>
+</span></span></code></pre></td></tr></table></div></div><p>输出结果会以树状结构展示方法调用链及每一步的耗时：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span><span class=lnt>4
+</span><span class=lnt>5
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-fallback data-lang=fallback><span class=line><span class=cl>+---ts=15683ms, cost=2300ms, avg=460ms, timestamp=2026-06-13 10:23:45
+</span></span><span class=line><span class=cl>|  +---ts=15684ms, cost=1800ms, avg=360ms, timestamp=2026-06-13 10:23:45
+</span></span><span class=line><span class=cl>|  |  +---[1200ms] com.example.dao.BatchMapper.insertBatch():1200ms
+</span></span><span class=line><span class=cl>|  |  +---[580ms]  com.example.dao.BatchMapper.updateStats():580ms
+</span></span><span class=line><span class=cl>|  +---[500ms]  com.example.cache.RedisCache.set():500ms
+</span></span></code></pre></td></tr></table></div></div><p>从结果可以看到，数据库批量插入耗时1200ms，占总耗时的52%，这就是性能瓶颈所在。</p><h3 id=第三步生成火焰图可选>第三步：生成火焰图（可选）</h3><p>如果需要更直观地分析CPU热点，可以使用 <code>profiler</code> 命令生成火焰图：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span><span class=lnt>4
+</span><span class=lnt>5
+</span><span class=lnt>6
+</span><span class=lnt>7
+</span><span class=lnt>8
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl><span class=c1># 开始采样（默认采样30秒）</span>
+</span></span><span class=line><span class=cl>profiler start
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1># 查看采样状态</span>
+</span></span><span class=line><span class=cl>profiler status
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1># 停止并生成火焰图HTML</span>
+</span></span><span class=line><span class=cl>profiler stop --format html --file /tmp/flame.html
+</span></span></code></pre></td></tr></table></div></div><p>将生成的 <code>flame.html</code> 文件在浏览器中打开，即可看到完整的调用栈火焰图，宽度越大的方法占用CPU越多。</p><h2 id=场景二方法耗时分析>场景二：方法耗时分析</h2><p>当接口响应变慢时，需要找出具体是哪个方法拖慢了整体响应。Arthas的 <code>monitor</code> 和 <code>watch</code> 命令是分析方法耗时的利器。</p><h3 id=monitor统计方法调用数据>monitor：统计方法调用数据</h3><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl><span class=c1># 每5秒统计一次UserController.getUser方法的调用数据，共统计10次</span>
+</span></span><span class=line><span class=cl>monitor -c <span class=m>5</span> com.example.controller.UserController getUser -n <span class=m>10</span>
+</span></span></code></pre></td></tr></table></div></div><p>输出：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-fallback data-lang=fallback><span class=line><span class=cl> timestamp            class                    method    total  success  fail  avg-rt(ms)  fail-rate
+</span></span><span class=line><span class=cl>-----------------------------------------------------------------------------------------------
+</span></span><span class=line><span class=cl> 2026-06-13 10:30:05  UserController  getUser  120    118      2     850.50      1.67%
+</span></span></code></pre></td></tr></table></div></div><p>从统计中可以看到，<code>getUser</code> 方法平均响应850ms，失败率1.67%。</p><h3 id=watch观察方法入参和返回值>watch：观察方法入参和返回值</h3><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl><span class=c1># 观察getUser方法的入参、返回值和抛出的异常</span>
+</span></span><span class=line><span class=cl>watch com.example.controller.UserController getUser <span class=s1>&#39;{params, returnObj, throwExp}&#39;</span> -x <span class=m>2</span> -n <span class=m>10</span>
+</span></span></code></pre></td></tr></table></div></div><p><code>-x 2</code> 表示对象展开2层深度，输出结果类似：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-fallback data-lang=fallback><span class=line><span class=cl>ts=2026-06-13 10:32:15; [cost=1203ms]
+</span></span><span class=line><span class=cl>@Object[][][
+</span></span><span class=line><span class=cl>    @Object[][
+</span></span><span class=line><span class=cl>        @Long[10086],   // userId参数
+</span></span><span class=line><span class=cl>        @String[true],   // useCache参数
+</span></span><span class=line><span class=cl>    ],
+</span></span><span class=line><span class=cl>    @Result[
+</span></span><span class=line><span class=cl>        code=200,
+</span></span><span class=line><span class=cl>        data=@UserDTO[
+</span></span><span class=line><span class=cl>            id=@Long[10086],
+</span></span><span class=line><span class=cl>            name=@String[&#34;张三&#34;],
+</span></span><span class=line><span class=cl>        ],
+</span></span><span class=line><span class=cl>    ],
+</span></span><span class=line><span class=cl>    null,  // 没有异常
+</span></span><span class=line><span class=cl>]
+</span></span></code></pre></td></tr></table></div></div><h3 id=stack查看方法调用栈>stack：查看方法调用栈</h3><p>当想了解方法是从哪里被调用过来的：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl><span class=c1># 查看UserService.findUser的完整调用栈</span>
+</span></span><span class=line><span class=cl>stack com.example.service.UserService findUser -n <span class=m>3</span>
+</span></span></code></pre></td></tr></table></div></div><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span><span class=lnt>4
+</span><span class=lnt>5
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-fallback data-lang=fallback><span class=line><span class=cl>ts=2026-06-13 10:35:22; cost=0.5ms
+</span></span><span class=line><span class=cl>    @com.example.service.UserService.findUser()
+</span></span><span class=line><span class=cl>    at com.example.controller.UserController.getUser(UserController.java:78)
+</span></span><span class=line><span class=cl>    at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+</span></span><span class=line><span class=cl>    at org.springframework.web.servlet.FrameworkServlet.service(FrameworkServlet.java:897)
+</span></span></code></pre></td></tr></table></div></div><h2 id=场景三内存泄漏诊断>场景三：内存泄漏诊断</h2><p>内存泄漏是Java应用中最隐蔽的问题之一。Arthas提供了多种内存诊断手段。</p><h3 id=查看堆内存概览>查看堆内存概览</h3><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span><span class=lnt>4
+</span><span class=lnt>5
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl><span class=c1># 查看堆内存使用情况</span>
+</span></span><span class=line><span class=cl>dashboard -i <span class=m>2000</span> -n <span class=m>5</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1># 或者使用memory命令查看详细内存信息</span>
+</span></span><span class=line><span class=cl>memory
+</span></span></code></pre></td></tr></table></div></div><p><code>memory</code> 命令输出：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span><span class=lnt>4
+</span><span class=lnt>5
+</span><span class=lnt>6
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-fallback data-lang=fallback><span class=line><span class=cl>Memory                     used     total    max      usage
+</span></span><span class=line><span class=cl>heap                       512M     1024M    2048M    25.00%
+</span></span><span class=line><span class=cl>eden_space                 128M     512M     512M     25.00%
+</span></span><span class=line><span class=cl>old_gen                    384M     512M     1408M    27.27%
+</span></span><span class=line><span class=cl>nonheap                    96M      128M     -1       75.00%
+</span></span><span class=line><span class=cl>metaspace                  80M      96M      -1       83.33%
+</span></span></code></pre></td></tr></table></div></div><h3 id=heapdump导出堆转储>heapdump导出堆转储</h3><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span><span class=lnt>4
+</span><span class=lnt>5
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl><span class=c1># 导出堆转储文件到指定路径</span>
+</span></span><span class=line><span class=cl>heapdump /tmp/heapdump.hprof
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1># 如果只需要dump live对象（更小的文件）</span>
+</span></span><span class=line><span class=cl>heapdump --live /tmp/heapdump_live.hprof
+</span></span></code></pre></td></tr></table></div></div><p>导出的 <code>.hprof</code> 文件可以使用 Eclipse MAT 或 VisualVM 进行离线分析，找出大对象和泄漏引用链。</p><h3 id=使用ognl表达式查对象>使用ognl表达式查对象</h3><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span><span class=lnt>4
+</span><span class=lnt>5
+</span><span class=lnt>6
+</span><span class=lnt>7
+</span><span class=lnt>8
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl><span class=c1># 查看某个类的实例数量</span>
+</span></span><span class=line><span class=cl>ognl <span class=s1>&#39;@com.example.service.CacheService@instanceCount&#39;</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1># 查看Spring Bean的状态</span>
+</span></span><span class=line><span class=cl>ognl <span class=s1>&#39;@org.springframework.context.ApplicationContext@getBean(&#34;userService&#34;).cacheSize()&#39;</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1># 查看某个静态变量的值</span>
+</span></span><span class=line><span class=cl>ognl <span class=s1>&#39;@com.example.config.AppConfig@getGlobalConfig().getMaxRetryCount()&#39;</span>
+</span></span></code></pre></td></tr></table></div></div><h2 id=场景四类加载与热更新>场景四：类加载与热更新</h2><p>Arthas还支持运行时替换class文件，实现不停机修复Bug。</p><h3 id=查看已加载的类>查看已加载的类</h3><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span><span class=lnt>4
+</span><span class=lnt>5
+</span><span class=lnt>6
+</span><span class=lnt>7
+</span><span class=lnt>8
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl><span class=c1># 搜索已加载的包含&#34;Controller&#34;的类</span>
+</span></span><span class=line><span class=cl>sc *Controller*
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1># 查看类的详细信息（字段、方法、注解等）</span>
+</span></span><span class=line><span class=cl>sc -d com.example.controller.UserController
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1># 查看类加载器层级关系</span>
+</span></span><span class=line><span class=cl>sc -f com.example.service.UserService
+</span></span></code></pre></td></tr></table></div></div><h3 id=热更新class文件>热更新Class文件</h3><p>当发现线上Bug需要紧急修复时：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl><span class=c1># 第一步：反编译目标类，获取源代码</span>
+</span></span><span class=line><span class=cl>jad com.example.service.UserService &gt; /tmp/UserService.java
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1># 第二步：修改代码（在/tmp/UserService.java中修复Bug）</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1># 第三步：编译修改后的文件（需要当前目录有编译环境）</span>
+</span></span><span class=line><span class=cl>mc /tmp/UserService.java -d /tmp/compiled/
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1># 第四步：将编译后的class加载到JVM中</span>
+</span></span><span class=line><span class=cl>redefine /tmp/compiled/com/example/service/UserService.class
+</span></span></code></pre></td></tr></table></div></div><blockquote><p>⚠️ <strong>注意</strong>：热更新有以下限制：不能增删字段和方法签名，不能修改类名，只能修改方法体内容。适用于紧急Bug修复，不建议作为常规发布手段。</p></blockquote><h2 id=场景五线程死锁检测>场景五：线程死锁检测</h2><p>当应用出现卡死现象时，很可能是发生了线程死锁。</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl><span class=c1># 查看是否有死锁</span>
+</span></span><span class=line><span class=cl>thread -b
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1># 输出示例：</span>
+</span></span><span class=line><span class=cl><span class=c1># Found one Java-level deadlock:</span>
+</span></span><span class=line><span class=cl><span class=c1># =============================</span>
+</span></span><span class=line><span class=cl><span class=c1># &#34;thread-1&#34;:</span>
+</span></span><span class=line><span class=cl><span class=c1>#   waiting to lock monitor 0x00007f8b4c006218 (object 0x00000000aab1f0a0, a com.example.service.UserService),</span>
+</span></span><span class=line><span class=cl><span class=c1>#   which is locked by &#34;thread-2&#34;</span>
+</span></span><span class=line><span class=cl><span class=c1># &#34;thread-2&#34;:</span>
+</span></span><span class=line><span class=cl><span class=c1>#   waiting to lock monitor 0x00007f8b4c003a28 (object 0x00000000aab1f070, a com.example.service.OrderService),</span>
+</span></span><span class=line><span class=cl><span class=c1>#   which is locked by &#34;thread-1&#34;</span>
+</span></span></code></pre></td></tr></table></div></div><p><code>thread -b</code> 会直接找出死锁的线程及它们互相等待的锁资源，一目了然。</p><h2 id=生产环境最佳实践>生产环境最佳实践</h2><p>在生产环境中使用Arthas需要注意以下几点：</p><h3 id=1-资源控制>1. 资源控制</h3><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl><span class=c1># Arthas本身会消耗少量CPU和内存，生产环境建议：</span>
+</span></span><span class=line><span class=cl><span class=c1># - 单次trace/watch不要设置过大的 -n 值</span>
+</span></span><span class=line><span class=cl><span class=c1># - 使用完毕后及时退出关闭隧道</span>
+</span></span><span class=line><span class=cl><span class=c1># - 避免同时开启多个诊断命令</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1># 退出Arthas</span>
+</span></span><span class=line><span class=cl>quit
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1># 或者关闭整个Arthas服务端</span>
+</span></span><span class=line><span class=cl>stop
+</span></span></code></pre></td></tr></table></div></div><h3 id=2-安全建议>2. 安全建议</h3><p>Arthas功能强大但也有风险，生产环境建议：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span><span class=lnt>4
+</span><span class=lnt>5
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl><span class=c1># 通过配置限制可访问的端口</span>
+</span></span><span class=line><span class=cl>java -jar arthas-boot.jar --ip 127.0.0.1
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1># 使用arthas-tunnel-server进行统一管控</span>
+</span></span><span class=line><span class=cl>java -jar arthas-tunnel-server.jar
+</span></span></code></pre></td></tr></table></div></div><h3 id=3-常用命令速查表>3. 常用命令速查表</h3><table><thead><tr><th>命令</th><th>用途</th><th>场景</th></tr></thead><tbody><tr><td><code>thread -n 3</code></td><td>查看最忙线程</td><td>CPU飙升</td></tr><tr><td><code>trace</code></td><td>追踪方法调用链耗时</td><td>接口慢</td></tr><tr><td><code>watch</code></td><td>观察入参返回值</td><td>数据异常</td></tr><tr><td><code>monitor</code></td><td>统计方法调用数据</td><td>慢接口排查</td></tr><tr><td><code>memory</code></td><td>查看内存使用</td><td>内存问题</td></tr><tr><td><code>heapdump</code></td><td>导出堆转储</td><td>内存泄漏</td></tr><tr><td><code>thread -b</code></td><td>检测死锁</td><td>应用卡死</td></tr><tr><td><code>jad</code></td><td>反编译class</td><td>查看线上代码</td></tr><tr><td><code>redefine</code></td><td>热更新class</td><td>紧急修复</td></tr><tr><td><code>profiler</code></td><td>生成火焰图</td><td>CPU热点分析</td></tr></tbody></table><h2 id=总结>总结</h2><p>Arthas是Java开发者必备的线上诊断神器，它的核心价值在于<strong>不停机诊断</strong>。掌握以下五个核心场景，基本能应对90%的线上问题：</p><ol><li><strong>CPU飙升</strong>：<code>thread -n 3</code> → <code>trace</code> → <code>profiler</code></li><li><strong>接口变慢</strong>：<code>monitor</code> → <code>watch</code> → <code>trace</code></li><li><strong>内存泄漏</strong>：<code>memory</code> → <code>heapdump</code> → MAT分析</li><li><strong>紧急修复</strong>：<code>jad</code> → <code>mc</code> → <code>redefine</code></li><li><strong>死锁检测</strong>：<code>thread -b</code> 一键排查</li></ol><p>建议将Arthas集成到日常运维流程中，遇到线上问题时第一时间使用它来抓取现场，而不是盲目重启。记住：<strong>重启只能掩盖问题，不能解决问题。</strong></p><blockquote><p>🔗 Arthas官方文档：https://arthas.aliyun.com/doc/
+🔗 Arthas GitHub：https://github.com/alibaba/arthas</p></blockquote></div><div class=post-footer id=post-footer><div class=post-info><div class=post-info-line><div class=post-info-mod><span>Updated on 2026-06-15&nbsp;<a class=git-hash href=https://github.com/cikichen/hugo-sync/commit/097319b59f1e81ab73472cd9768d0879d3986262 target=_blank title="commit by cikichen(cikichen@github.com) 097319b59f1e81ab73472cd9768d0879d3986262: Auto: 2026-06-15 - MySQL慢查询优化实战：从EXPLAIN分析到索引重构">
+<i class="fas fa-hashtag fa-fw" aria-hidden=true></i>097319b5</a></span></div><div class=post-info-license><span>https://creativecommons.org/licenses/by-nc-nd/4.0/</span></div></div><div class=post-info-line><div class=post-info-md></div><div class=post-info-share><span><a href=javascript:void(0); title="Share on Twitter" data-sharer=twitter data-url=https://www.ithome.me/post/2026/06/13/jvm-performance-tuning-with-arthas/ data-title=JVM性能调优实战：用Arthas诊断和优化Java应用 data-via=ChenCiki data-hashtags=JVM,Arthas,性能调优,Java,性能优化><i class="fab fa-twitter fa-fw" aria-hidden=true></i></a><a href=javascript:void(0); title="Share on Linkedin" data-sharer=linkedin data-url=https://www.ithome.me/post/2026/06/13/jvm-performance-tuning-with-arthas/><i class="fab fa-linkedin fa-fw" aria-hidden=true></i></a><a href=javascript:void(0); title="Share on 微博" data-sharer=weibo data-url=https://www.ithome.me/post/2026/06/13/jvm-performance-tuning-with-arthas/ data-title=JVM性能调优实战：用Arthas诊断和优化Java应用 data-ralateuid=xxx><i class="fab fa-weibo fa-fw" aria-hidden=true></i></a></span></div></div></div><div class=post-info-more><section class=post-tags><i class="fas fa-tags fa-fw" aria-hidden=true></i>&nbsp;<a href=/tags/jvm/>JVM</a>,&nbsp;<a href=/tags/arthas/>Arthas</a>,&nbsp;<a href=/tags/%E6%80%A7%E8%83%BD%E8%B0%83%E4%BC%98/>性能调优</a>,&nbsp;<a href=/tags/java/>Java</a>,&nbsp;<a href=/tags/%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96/>性能优化</a></section><section><span><a href=javascript:void(0); onclick=window.history.back()>Back</a></span>&nbsp;|&nbsp;<span><a href=/>Home</a></span></section></div><div class=post-nav><a href=/post/2026/06/12/docker-multistage-build-go/ class=prev rel=prev title=Docker多阶段构建实战：让你的Go镜像缩小90%><i class="fas fa-angle-left fa-fw" aria-hidden=true></i>Docker多阶段构建实战：让你的Go镜像缩小90%</a>
+<a href=/post/2026/06/14/git-bisect-interactive-rebase-cherry-pick/ class=next rel=next title="Git 高级技巧实战：bisect定位Bug、interactive rebase清理提交历史、cherry-pick精准搬运">Git 高级技巧实战：bisect定位Bug、interactive rebase清理提交历史、cherry-pick精准搬运<i class="fas fa-angle-right fa-fw" aria-hidden=true></i></a></div></div><div id=comments><div id=gitalk class=comment></div><noscript>Please enable JavaScript to view the comments powered by <a href=https://github.com/gitalk/gitalk></a>Gitalk</a>.</noscript></div></article></div></main><footer class=footer><div class=footer-container><div class=footer-line itemscope itemtype=http://schema.org/CreativeWork><i class="far fa-copyright fa-fw" aria-hidden=true></i><span itemprop=copyrightYear>2011 - 2026</span><span class=author itemprop=copyrightHolder>&nbsp;<a href=https://www.ithome.me/ target=_blank>Simon Chen</a></span>&nbsp;|&nbsp;<span class=license><a rel="license external nofollow noopener noreferrer" href=https://creativecommons.org/licenses/by-nc-nd/4.0/ target=_blank>CC BY-NC-ND 4.0</a></span></div></div></footer></div><div id=fixed-buttons><a href=# id=back-to-top class=fixed-button title="Back to Top"><i class="fas fa-arrow-up fa-fw" aria-hidden=true></i>
+</a><a href=# id=view-comments class=fixed-button title="View Comments"><i class="fas fa-comment fa-fw" aria-hidden=true></i></a></div><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/gitalk@1.8.0/dist/gitalk.min.css><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/css/lightgallery-bundle.min.css><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/katex.min.css><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/copy-tex.min.css><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.css><script type=text/javascript src=https://cdn.jsdelivr.net/npm/gitalk@1.8.0/dist/gitalk.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/autocomplete.js@0.38.1/dist/autocomplete.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/lunr@2.3.9/lunr.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/lazysizes@5.3.1/lazysizes.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/lightgallery.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/plugins/thumbnail/lg-thumbnail.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/plugins/zoom/lg-zoom.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/clipboard@2.0.11/dist/clipboard.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/sharer.js@0.5.1/sharer.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/katex.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/auto-render.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/copy-tex.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/mhchem.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.js></script><script type=text/javascript>window.config={code:{copyTitle:"Copy to clipboard",maxShownLines:50},comment:{gitalk:{admin:["cikichen"],clientID:"be0f52370ed1285b6c7c",clientSecret:"734a7d8d0ded346ca7a3d565d57de3f8eeb2850b",id:"2026-06-13T00:00:00Z",owner:"cikichen",repo:"gitalk",title:"JVM性能调优实战：用Arthas诊断和优化Java应用"}},cookieconsent:{content:{dismiss:"我知道了",link:"了解更多",message:"本网站使用 Cookies 来改善您的浏览体验."},enable:!0,palette:{button:{background:"#f0f0f0"},popup:{background:"#1aa3ff"}},theme:"edgeless"},lightgallery:!0,math:{delimiters:[{display:!0,left:"$$",right:"$$"},{display:!0,left:"\\[",right:"\\]"},{display:!0,left:"\\begin{equation}",right:"\\end{equation}"},{display:!0,left:"\\begin{equation*}",right:"\\end{equation*}"},{display:!0,left:"\\begin{align}",right:"\\end{align}"},{display:!0,left:"\\begin{align*}",right:"\\end{align*}"},{display:!0,left:"\\begin{alignat}",right:"\\end{alignat}"},{display:!0,left:"\\begin{alignat*}",right:"\\end{alignat*}"},{display:!0,left:"\\begin{gather}",right:"\\end{gather}"},{display:!0,left:"\\begin{CD}",right:"\\end{CD}"},{display:!1,left:"$",right:"$"},{display:!1,left:"\\(",right:"\\)"}],strict:!1},search:{highlightTag:"em",lunrIndexURL:"/index.json",maxResultLength:10,noResultsFound:"No results found",snippetLength:50,type:"lunr"}}</script><script type=text/javascript src=/js/theme.min.js></script></body></html>

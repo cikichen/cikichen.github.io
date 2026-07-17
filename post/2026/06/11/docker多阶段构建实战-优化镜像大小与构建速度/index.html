@@ -1,644 +1,304 @@
-<!DOCTYPE html>
-<html lang="zh-CN">
-    <head>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <meta name="robots" content="noodp" />
-        <title>Docker多阶段构建实战：优化镜像大小与构建速度的完整指南 - 编程心语</title><meta name="Description" content="深入讲解Docker多阶段构建(Multi-stage Build)的核心原理与实战技巧，通过Java、Python、Node.js三大语言的实际案例，将镜像从GB级别压缩到MB级别，显著提升CI/CD流水线效率。"><meta property="og:url" content="https://www.ithome.me/post/2026/06/11/docker%E5%A4%9A%E9%98%B6%E6%AE%B5%E6%9E%84%E5%BB%BA%E5%AE%9E%E6%88%98-%E4%BC%98%E5%8C%96%E9%95%9C%E5%83%8F%E5%A4%A7%E5%B0%8F%E4%B8%8E%E6%9E%84%E5%BB%BA%E9%80%9F%E5%BA%A6/">
-  <meta property="og:site_name" content="编程心语">
-  <meta property="og:title" content="Docker多阶段构建实战：优化镜像大小与构建速度的完整指南">
-  <meta property="og:description" content="深入讲解Docker多阶段构建(Multi-stage Build)的核心原理与实战技巧，通过Java、Python、Node.js三大语言的实际案例，将镜像从GB级别压缩到MB级别，显著提升CI/CD流水线效率。">
-  <meta property="og:locale" content="zh_CN">
-  <meta property="og:type" content="article">
-    <meta property="article:section" content="posts">
-    <meta property="article:published_time" content="2026-06-11T09:30:00+08:00">
-    <meta property="article:modified_time" content="2026-06-11T09:30:00+08:00">
-    <meta property="article:tag" content="Docker">
-    <meta property="article:tag" content="DevOps">
-    <meta property="article:tag" content="容器化">
-    <meta property="article:tag" content="CI/CD">
-    <meta property="article:tag" content="性能优化">
-
-  <meta name="twitter:card" content="summary">
-  <meta name="twitter:title" content="Docker多阶段构建实战：优化镜像大小与构建速度的完整指南">
-  <meta name="twitter:description" content="深入讲解Docker多阶段构建(Multi-stage Build)的核心原理与实战技巧，通过Java、Python、Node.js三大语言的实际案例，将镜像从GB级别压缩到MB级别，显著提升CI/CD流水线效率。">
-      <meta name="twitter:site" content="@ChenCiki">
-<meta name="application-name" content="编程心语">
-<meta name="apple-mobile-web-app-title" content="编程心语"><meta name="theme-color" content="#ffffff"><meta name="msapplication-TileColor" content="#da532c"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
-        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
-        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5"><link rel="manifest" href="/site.webmanifest"><link rel="canonical" href="https://www.ithome.me/post/2026/06/11/docker%E5%A4%9A%E9%98%B6%E6%AE%B5%E6%9E%84%E5%BB%BA%E5%AE%9E%E6%88%98-%E4%BC%98%E5%8C%96%E9%95%9C%E5%83%8F%E5%A4%A7%E5%B0%8F%E4%B8%8E%E6%9E%84%E5%BB%BA%E9%80%9F%E5%BA%A6/" /><link rel="prev" href="https://www.ithome.me/post/2026/06/11/rag%E7%B3%BB%E7%BB%9F%E5%AE%9E%E6%88%98/" /><link rel="next" href="https://www.ithome.me/post/2026/06/12/langchain-chromadb-rag-%E7%9F%A5%E8%AF%86%E5%BA%93%E9%97%AE%E7%AD%94%E7%B3%BB%E7%BB%9F/" /><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/normalize.css@8.0.1/normalize.min.css"><link rel="stylesheet" href="/css/style.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css"><script type="application/ld+json">
-    {
-        "@context": "http://schema.org",
-        "@type": "BlogPosting",
-        "headline": "Docker多阶段构建实战：优化镜像大小与构建速度的完整指南",
-        "inLanguage": "zh-CN",
-        "mainEntityOfPage": {
-            "@type": "WebPage",
-            "@id": "https:\/\/www.ithome.me\/post\/2026\/06\/11\/docker%E5%A4%9A%E9%98%B6%E6%AE%B5%E6%9E%84%E5%BB%BA%E5%AE%9E%E6%88%98-%E4%BC%98%E5%8C%96%E9%95%9C%E5%83%8F%E5%A4%A7%E5%B0%8F%E4%B8%8E%E6%9E%84%E5%BB%BA%E9%80%9F%E5%BA%A6\/"
-        },"image": ["https:\/\/www.ithome.me\/cover.png"],"genre": "posts","keywords": "Docker, DevOps, 容器化, CI\/CD, 性能优化","wordcount":  2085 ,
-        "url": "https:\/\/www.ithome.me\/post\/2026\/06\/11\/docker%E5%A4%9A%E9%98%B6%E6%AE%B5%E6%9E%84%E5%BB%BA%E5%AE%9E%E6%88%98-%E4%BC%98%E5%8C%96%E9%95%9C%E5%83%8F%E5%A4%A7%E5%B0%8F%E4%B8%8E%E6%9E%84%E5%BB%BA%E9%80%9F%E5%BA%A6\/","datePublished": "2026-06-11T09:30:00+08:00","dateModified": "2026-06-11T09:30:00+08:00","publisher": {
-            "@type": "Organization",
-            "name": "SimonChen","logo": "https:\/\/www.ithome.me\/logo.png"},"author": {
-                "@type": "Person",
-                "name": "Simon"
-            },"description": "深入讲解Docker多阶段构建(Multi-stage Build)的核心原理与实战技巧，通过Java、Python、Node.js三大语言的实际案例，将镜像从GB级别压缩到MB级别，显著提升CI/CD流水线效率。"
-    }
-    </script><script async src="https://www.googletagmanager.com/gtag/js?id=G-H1Q5563VR8"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-  gtag('config', 'G-H1Q5563VR8', { 'anonymize_ip': true });
-</script></head>
-    <body data-header-desktop="fixed" data-header-mobile="auto"><script type="text/javascript">(window.localStorage && localStorage.getItem('theme') ? localStorage.getItem('theme') === 'dark' : ('auto' === 'auto' ? window.matchMedia('(prefers-color-scheme: dark)').matches : 'auto' === 'dark')) && document.body.setAttribute('theme', 'dark');</script>
-
-        <div id="mask"></div><div class="wrapper"><header class="desktop" id="header-desktop">
-    <div class="header-wrapper">
-        <div class="header-title">
-            <a href="/" title="编程心语">编程心语</a>
-        </div>
-        <div class="menu">
-            <div class="menu-inner"><a class="menu-item" href="/posts/"> 文章 </a><a class="menu-item" href="/categories/"> 分类 </a><a class="menu-item" href="/tags/"> 标签 </a><a class="menu-item" href="/about-me/"> 关于 </a><span class="menu-item delimiter"></span><span class="menu-item search" id="search-desktop">
-                        <input type="text" placeholder="搜索文章..." id="search-input-desktop">
-                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-desktop" title="Search">
-                            <i class="fas fa-search fa-fw" aria-hidden="true"></i>
-                        </a>
-                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-desktop" title="Clear">
-                            <i class="fas fa-times-circle fa-fw" aria-hidden="true"></i>
-                        </a>
-                        <span class="search-button search-loading" id="search-loading-desktop">
-                            <i class="fas fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
-                        </span>
-                    </span><a href="javascript:void(0);" class="menu-item theme-switch" title="Switch Theme">
-                    <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
-                </a>
-            </div>
-        </div>
-    </div>
-</header><header class="mobile" id="header-mobile">
-    <div class="header-container">
-        <div class="header-wrapper">
-            <div class="header-title">
-                <a href="/" title="编程心语">编程心语</a>
-            </div>
-            <div class="menu-toggle" id="menu-toggle-mobile">
-                <span></span><span></span><span></span>
-            </div>
-        </div>
-        <div class="menu" id="menu-mobile"><div class="search-wrapper">
-                    <div class="search mobile" id="search-mobile">
-                        <input type="text" placeholder="搜索文章..." id="search-input-mobile">
-                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-mobile" title="Search">
-                            <i class="fas fa-search fa-fw" aria-hidden="true"></i>
-                        </a>
-                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-mobile" title="Clear">
-                            <i class="fas fa-times-circle fa-fw" aria-hidden="true"></i>
-                        </a>
-                        <span class="search-button search-loading" id="search-loading-mobile">
-                            <i class="fas fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
-                        </span>
-                    </div>
-                    <a href="javascript:void(0);" class="search-cancel" id="search-cancel-mobile">
-                        Cancel
-                    </a>
-                </div><a class="menu-item" href="/posts/" title="">文章</a><a class="menu-item" href="/categories/" title="">分类</a><a class="menu-item" href="/tags/" title="">标签</a><a class="menu-item" href="/about-me/" title="">关于</a><a href="javascript:void(0);" class="menu-item theme-switch" title="Switch Theme">
-                <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
-            </a></div>
-    </div>
-</header><div class="search-dropdown desktop">
-        <div id="search-dropdown-desktop"></div>
-    </div>
-    <div class="search-dropdown mobile">
-        <div id="search-dropdown-mobile"></div>
-    </div><main class="main">
-                <div class="container"><div class="toc" id="toc-auto">
-            <h2 class="toc-title">Contents</h2>
-            <div class="toc-content" id="toc-content-auto"></div>
-        </div><article class="page single"><h1 class="single-title animate__animated animate__flipInX">Docker多阶段构建实战：优化镜像大小与构建速度的完整指南</h1><div class="post-meta">
-            <div class="post-meta-line"><span class="post-author"><a href="https://www.ithome.me/" title="Author" target="_blank" rel="noopener noreferrer author" class="author"><i class="fas fa-user-circle fa-fw" aria-hidden="true"></i>Simon</a>
-</span>&nbsp;<span class="post-category">included in <a href="/categories/backend/"><i class="far fa-folder fa-fw" aria-hidden="true"></i>Backend</a></span></div>
-            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw" aria-hidden="true"></i>&nbsp;<time datetime="2026-06-11">2026-06-11</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden="true"></i>&nbsp;2085 words&nbsp;
-                <i class="far fa-clock fa-fw" aria-hidden="true"></i>&nbsp;5 minutes&nbsp;</div>
-        </div><div class="details toc" id="toc-static"  data-kept="true">
-                <div class="details-summary toc-title">
-                    <span>Contents</span>
-                    <span><i class="details-icon fas fa-angle-right" aria-hidden="true"></i></span>
-                </div>
-                <div class="details-content toc-content" id="toc-content-static"><nav id="TableOfContents">
-  <ul>
-    <li><a href="#前言">前言</a></li>
-    <li><a href="#什么是多阶段构建">什么是多阶段构建？</a></li>
-    <li><a href="#案例一java-spring-boot-应用">案例一：Java Spring Boot 应用</a>
-      <ul>
-        <li><a href="#传统方式反面教材">传统方式（反面教材）</a></li>
-        <li><a href="#多阶段构建方式">多阶段构建方式</a></li>
-      </ul>
-    </li>
-    <li><a href="#案例二python-fastapi-应用">案例二：Python FastAPI 应用</a>
-      <ul>
-        <li><a href="#多阶段构建方式-1">多阶段构建方式</a></li>
-      </ul>
-    </li>
-    <li><a href="#案例三nodejs-nextjs-应用">案例三：Node.js Next.js 应用</a></li>
-    <li><a href="#高级优化技巧">高级优化技巧</a>
-      <ul>
-        <li><a href="#1-使用-copy---link-加速并行构建">1. 使用 <code>COPY --link</code> 加速并行构建</a></li>
-        <li><a href="#2-使用-buildkit-语法加速">2. 使用 <code>BUILDKIT</code> 语法加速</a></li>
-        <li><a href="#3-dockerignore-配合使用">3. <code>.dockerignore</code> 配合使用</a></li>
-        <li><a href="#4-多阶段构建中的安全扫描">4. 多阶段构建中的安全扫描</a></li>
-      </ul>
-    </li>
-    <li><a href="#总结">总结</a></li>
-  </ul>
-</nav></div>
-            </div><div class="content" id="content"><h2 id="前言">前言</h2>
-<p>在日常开发中，你是否遇到过这样的问题：</p>
-<ul>
-<li>Docker 镜像动辄几个 GB，拉取部署要等好几分钟</li>
-<li>每次构建都要重新安装所有依赖，CI/CD 流水线慢得让人抓狂</li>
-<li>构建环境和运行环境混在一起，镜像里塞了大量不需要的工具</li>
-</ul>
-<p>这些问题的根源在于：<strong>构建产物和运行环境没有分离</strong>。Docker 的多阶段构建（Multi-stage Build）正是为解决这一痛点而生的利器。本文将通过三个真实语言栈的案例，带你掌握这一核心技术。</p>
-<h2 id="什么是多阶段构建">什么是多阶段构建？</h2>
-<p>多阶段构建的核心思想非常简单：<strong>一个 Dockerfile 中使用多个 <code>FROM</code> 指令，每个阶段只保留最终需要的文件</strong>。</p>
-<div class="highlight"><div class="chroma">
-<table class="lntable"><tr><td class="lntd">
-<pre tabindex="0" class="chroma"><code><span class="lnt">1
-</span><span class="lnt">2
-</span><span class="lnt">3
-</span><span class="lnt">4
-</span><span class="lnt">5
-</span><span class="lnt">6
-</span><span class="lnt">7
-</span><span class="lnt">8
-</span></code></pre></td>
-<td class="lntd">
-<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">阶段1（构建阶段）          阶段2（运行阶段）
-</span></span><span class="line"><span class="cl">┌─────────────────┐      ┌─────────────────┐
-</span></span><span class="line"><span class="cl">│  FROM ubuntu    │      │  FROM alpine    │
-</span></span><span class="line"><span class="cl">│  安装JDK/Maven  │ ──→  │  只复制JAR包    │
-</span></span><span class="line"><span class="cl">│  编译代码       │      │  运行应用       │
-</span></span><span class="line"><span class="cl">│  生成产物       │      │                 │
-</span></span><span class="line"><span class="cl">│  (~800MB)       │      │  (~200MB)       │
-</span></span><span class="line"><span class="cl">└─────────────────┘      └─────────────────┘
-</span></span></code></pre></td></tr></table>
-</div>
-</div><p>箭头表示只复制构建产物（如二进制文件、编译结果），而非整个构建环境。</p>
-<h2 id="案例一java-spring-boot-应用">案例一：Java Spring Boot 应用</h2>
-<p>Spring Boot 应用是最典型的受益场景。传统方式用 <code>openjdk:17</code> 基础镜像，最终镜像通常在 500MB 以上。</p>
-<h3 id="传统方式反面教材">传统方式（反面教材）</h3>
-<div class="highlight"><div class="chroma">
-<table class="lntable"><tr><td class="lntd">
-<pre tabindex="0" class="chroma"><code><span class="lnt">1
-</span><span class="lnt">2
-</span><span class="lnt">3
-</span><span class="lnt">4
-</span><span class="lnt">5
-</span><span class="lnt">6
-</span><span class="lnt">7
-</span><span class="lnt">8
-</span><span class="lnt">9
-</span></code></pre></td>
-<td class="lntd">
-<pre tabindex="0" class="chroma"><code class="language-dockerfile" data-lang="dockerfile"><span class="line"><span class="cl"><span class="c"># ❌ 不推荐：单一阶段</span><span class="err">
-</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="k">FROM</span><span class="s"> maven:3.9-eclipse-temurin-21 AS builder</span><span class="err">
-</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="k">WORKDIR</span><span class="s"> /app</span><span class="err">
-</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="k">COPY</span> pom.xml .<span class="err">
-</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="k">COPY</span> src ./src<span class="err">
-</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="k">RUN</span> mvn clean package -DskipTests<span class="err">
-</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="c"># 最终镜像包含完整的Maven、JDK、源码、缓存等</span><span class="err">
-</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="k">EXPOSE</span><span class="s"> 8080</span><span class="err">
-</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="k">CMD</span> <span class="p">[</span><span class="s2">&#34;java&#34;</span><span class="p">,</span> <span class="s2">&#34;-jar&#34;</span><span class="p">,</span> <span class="s2">&#34;target/app.jar&#34;</span><span class="p">]</span><span class="err">
-</span></span></span></code></pre></td></tr></table>
-</div>
-</div><p>这个镜像包含了完整的 Maven 构建工具链，体积轻松超过 1GB，而运行时根本不需要 Maven。</p>
-<h3 id="多阶段构建方式">多阶段构建方式</h3>
-<div class="highlight"><div class="chroma">
-<table class="lntable"><tr><td class="lntd">
-<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
-</span><span class="lnt"> 2
-</span><span class="lnt"> 3
-</span><span class="lnt"> 4
-</span><span class="lnt"> 5
-</span><span class="lnt"> 6
-</span><span class="lnt"> 7
-</span><span class="lnt"> 8
-</span><span class="lnt"> 9
-</span><span class="lnt">10
-</span><span class="lnt">11
-</span><span class="lnt">12
-</span><span class="lnt">13
-</span><span class="lnt">14
-</span><span class="lnt">15
-</span><span class="lnt">16
-</span><span class="lnt">17
-</span><span class="lnt">18
-</span><span class="lnt">19
-</span><span class="lnt">20
-</span><span class="lnt">21
-</span><span class="lnt">22
-</span><span class="lnt">23
-</span><span class="lnt">24
-</span><span class="lnt">25
-</span><span class="lnt">26
-</span><span class="lnt">27
-</span><span class="lnt">28
-</span><span class="lnt">29
-</span><span class="lnt">30
-</span></code></pre></td>
-<td class="lntd">
-<pre tabindex="0" class="chroma"><code class="language-dockerfile" data-lang="dockerfile"><span class="line"><span class="cl"><span class="c"># ✅ 推荐：多阶段构建</span><span class="err">
-</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="c"># ===== 阶段1：构建 =====</span><span class="err">
-</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="k">FROM</span><span class="s"> maven:3.9-eclipse-temurin-21 AS builder</span><span class="err">
-</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="k">WORKDIR</span><span class="s"> /build</span><span class="err">
-</span></span></span><span class="line"><span class="cl"><span class="err">
-</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="c"># 利用Docker层缓存，先复制pom.xml单独下载依赖</span><span class="err">
-</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="k">COPY</span> pom.xml .<span class="err">
-</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="k">RUN</span> mvn dependency:go-offline -B<span class="err">
-</span></span></span><span class="line"><span class="cl"><span class="err">
-</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="c"># 再复制源码进行编译</span><span class="err">
-</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="k">COPY</span> src ./src<span class="err">
-</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="k">RUN</span> mvn clean package -DskipTests<span class="err">
-</span></span></span><span class="line"><span class="cl"><span class="err">
-</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="c"># 利用Spring Boot的分层Jar功能进一步优化</span><span class="err">
-</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="k">RUN</span> java -Djarmode<span class="o">=</span>layertools -jar target/*.jar extract --destination extracted<span class="err">
-</span></span></span><span class="line"><span class="cl"><span class="err">
-</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="c"># ===== 阶段2：运行 =====</span><span class="err">
-</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="k">FROM</span><span class="s"> eclipse-temurin:21-jre-alpine</span><span class="err">
-</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="k">WORKDIR</span><span class="s"> /app</span><span class="err">
-</span></span></span><span class="line"><span class="cl"><span class="err">
-</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="c"># 从构建阶段复制分层后的应用（便于增量更新）</span><span class="err">
-</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="k">COPY</span> --from<span class="o">=</span>builder /build/extracted/dependencies/ ./<span class="err">
-</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="k">COPY</span> --from<span class="o">=</span>builder /build/extracted/spring-boot-loader/ ./<span class="err">
-</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="k">COPY</span> --from<span class="o">=</span>builder /build/extracted/snapshot-dependencies/ ./<span class="err">
-</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="k">COPY</span> --from<span class="o">=</span>builder /build/extracted/application/ ./<span class="err">
-</span></span></span><span class="line"><span class="cl"><span class="err">
-</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="k">EXPOSE</span><span class="s"> 8080</span><span class="err">
-</span></span></span><span class="line"><span class="cl"><span class="err">HEALTHCHECK --interval=30s --timeout=3s \
-</span></span></span><span class="line"><span class="cl"><span class="err">  </span><span class="k">CMD</span> wget -qO- http://localhost:8080/actuator/health <span class="o">||</span> <span class="nb">exit</span> <span class="m">1</span><span class="err">
-</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="k">ENTRYPOINT</span> <span class="p">[</span><span class="s2">&#34;java&#34;</span><span class="p">,</span> <span class="s2">&#34;org.springframework.boot.loader.launch.JarLauncher&#34;</span><span class="p">]</span><span class="err">
-</span></span></span></code></pre></td></tr></table>
-</div>
-</div><p><strong>关键优化点：</strong></p>
-<ol>
-<li><strong>依赖分离缓存</strong>：先复制 <code>pom.xml</code> 下载依赖，再复制源码。只有源码变化时才重新编译，依赖层被缓存。</li>
-<li><strong>JRE 替代 JDK</strong>：运行时只用 JRE-Alpine，比 JDK 省了约 300MB。</li>
-<li><strong>Spring Boot 分层 JAR</strong>：将应用按依赖层次拆分，Docker 可以只更新变化的层。</li>
-</ol>
-<table>
-<thead>
-<tr>
-<th>指标</th>
-<th>传统方式</th>
-<th>多阶段构建</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>镜像大小</td>
-<td>~800MB</td>
-<td>~200MB</td>
-</tr>
-<tr>
-<td>构建时间（首次）</td>
-<td>3分钟</td>
-<td>3分钟</td>
-</tr>
-<tr>
-<td>构建时间（改代码）</td>
-<td>3分钟</td>
-<td>30秒（利用层缓存）</td>
-</tr>
-</tbody>
-</table>
-<h2 id="案例二python-fastapi-应用">案例二：Python FastAPI 应用</h2>
-<p>Python 应用的镜像优化同样立竿见影。</p>
-<h3 id="多阶段构建方式-1">多阶段构建方式</h3>
-<div class="highlight"><div class="chroma">
-<table class="lntable"><tr><td class="lntd">
-<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
-</span><span class="lnt"> 2
-</span><span class="lnt"> 3
-</span><span class="lnt"> 4
-</span><span class="lnt"> 5
-</span><span class="lnt"> 6
-</span><span class="lnt"> 7
-</span><span class="lnt"> 8
-</span><span class="lnt"> 9
-</span><span class="lnt">10
-</span><span class="lnt">11
-</span><span class="lnt">12
-</span><span class="lnt">13
-</span><span class="lnt">14
-</span><span class="lnt">15
-</span><span class="lnt">16
-</span><span class="lnt">17
-</span><span class="lnt">18
-</span><span class="lnt">19
-</span><span class="lnt">20
-</span><span class="lnt">21
-</span><span class="lnt">22
-</span><span class="lnt">23
-</span><span class="lnt">24
-</span><span class="lnt">25
-</span><span class="lnt">26
-</span><span class="lnt">27
-</span><span class="lnt">28
-</span><span class="lnt">29
-</span><span class="lnt">30
-</span><span class="lnt">31
-</span><span class="lnt">32
-</span><span class="lnt">33
-</span><span class="lnt">34
-</span><span class="lnt">35
-</span></code></pre></td>
-<td class="lntd">
-<pre tabindex="0" class="chroma"><code class="language-dockerfile" data-lang="dockerfile"><span class="line"><span class="cl"><span class="c"># ===== 阶段1：构建wheel包 =====</span><span class="err">
-</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="k">FROM</span><span class="s"> python:3.12-slim AS builder</span><span class="err">
-</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="k">WORKDIR</span><span class="s"> /build</span><span class="err">
-</span></span></span><span class="line"><span class="cl"><span class="err">
-</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="c"># 安装构建依赖</span><span class="err">
-</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="k">RUN</span> pip install --no-cache-dir <span class="nv">poetry</span><span class="o">==</span>1.8.0<span class="err">
-</span></span></span><span class="line"><span class="cl"><span class="err">
-</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="c"># 先复制依赖声明文件，利用层缓存</span><span class="err">
-</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="k">COPY</span> pyproject.toml poetry.lock ./<span class="err">
-</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="k">RUN</span> poetry <span class="nb">export</span> -f requirements.txt --output requirements.txt --without-hashes<span class="err">
-</span></span></span><span class="line"><span class="cl"><span class="err">
-</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="c"># 用pip下载所有依赖到独立目录</span><span class="err">
-</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="k">RUN</span> pip install --no-cache-dir --prefix<span class="o">=</span>/install -r requirements.txt<span class="err">
-</span></span></span><span class="line"><span class="cl"><span class="err">
-</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="c"># ===== 阶段2：运行 =====</span><span class="err">
-</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="k">FROM</span><span class="s"> python:3.12-slim</span><span class="err">
-</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="k">WORKDIR</span><span class="s"> /app</span><span class="err">
-</span></span></span><span class="line"><span class="cl"><span class="err">
-</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="c"># 安装系统级运行时依赖（仅需要的）</span><span class="err">
-</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="k">RUN</span> apt-get update <span class="o">&amp;&amp;</span> apt-get install -y --no-install-recommends <span class="se">\
-</span></span></span><span class="line"><span class="cl"><span class="se"></span>    curl <span class="se">\
-</span></span></span><span class="line"><span class="cl"><span class="se"></span>    <span class="o">&amp;&amp;</span> rm -rf /var/lib/apt/lists/*<span class="err">
-</span></span></span><span class="line"><span class="cl"><span class="err">
-</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="c"># 从builder阶段复制预安装的Python包</span><span class="err">
-</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="k">COPY</span> --from<span class="o">=</span>builder /install /usr/local<span class="err">
-</span></span></span><span class="line"><span class="cl"><span class="err">
-</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="c"># 复制应用代码</span><span class="err">
-</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="k">COPY</span> app/ ./app/<span class="err">
-</span></span></span><span class="line"><span class="cl"><span class="err">
-</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="c"># 创建非root用户运行</span><span class="err">
-</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="k">RUN</span> useradd --create-home appuser<span class="err">
-</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="k">USER</span><span class="s"> appuser</span><span class="err">
-</span></span></span><span class="line"><span class="cl"><span class="err">
-</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="k">EXPOSE</span><span class="s"> 8000</span><span class="err">
-</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="k">CMD</span> <span class="p">[</span><span class="s2">&#34;uvicorn&#34;</span><span class="p">,</span> <span class="s2">&#34;app.main:app&#34;</span><span class="p">,</span> <span class="s2">&#34;--host&#34;</span><span class="p">,</span> <span class="s2">&#34;0.0.0.0&#34;</span><span class="p">,</span> <span class="s2">&#34;--port&#34;</span><span class="p">,</span> <span class="s2">&#34;8000&#34;</span><span class="p">]</span><span class="err">
-</span></span></span></code></pre></td></tr></table>
-</div>
-</div><p><strong>Python 场景的关键技巧：</strong></p>
-<ol>
-<li><strong>Poetry 导出 requirements.txt</strong>：Poetry 是优秀的依赖管理工具，但生产环境直接用 pip 安装更轻量。</li>
-<li><strong><code>--prefix=/install</code></strong>：将包安装到独立目录，方便跨阶段复制，避免带入 pip 等构建工具。</li>
-<li><strong>Alpine vs Slim</strong>：Alpine 镜像虽小但 musl libc 可能导致兼容性问题，推荐用 <code>slim</code> 变体。</li>
-</ol>
-<h2 id="案例三nodejs-nextjs-应用">案例三：Node.js Next.js 应用</h2>
-<p>前端 SSR 应用的优化更加复杂，但效果也最明显。</p>
-<div class="highlight"><div class="chroma">
-<table class="lntable"><tr><td class="lntd">
-<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
-</span><span class="lnt"> 2
-</span><span class="lnt"> 3
-</span><span class="lnt"> 4
-</span><span class="lnt"> 5
-</span><span class="lnt"> 6
-</span><span class="lnt"> 7
-</span><span class="lnt"> 8
-</span><span class="lnt"> 9
-</span><span class="lnt">10
-</span><span class="lnt">11
-</span><span class="lnt">12
-</span><span class="lnt">13
-</span><span class="lnt">14
-</span><span class="lnt">15
-</span><span class="lnt">16
-</span><span class="lnt">17
-</span><span class="lnt">18
-</span><span class="lnt">19
-</span><span class="lnt">20
-</span><span class="lnt">21
-</span><span class="lnt">22
-</span><span class="lnt">23
-</span><span class="lnt">24
-</span><span class="lnt">25
-</span><span class="lnt">26
-</span><span class="lnt">27
-</span><span class="lnt">28
-</span><span class="lnt">29
-</span><span class="lnt">30
-</span><span class="lnt">31
-</span><span class="lnt">32
-</span><span class="lnt">33
-</span><span class="lnt">34
-</span></code></pre></td>
-<td class="lntd">
-<pre tabindex="0" class="chroma"><code class="language-dockerfile" data-lang="dockerfile"><span class="line"><span class="cl"><span class="c"># ===== 阶段1：安装依赖 =====</span><span class="err">
-</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="k">FROM</span><span class="s"> node:20-alpine AS deps</span><span class="err">
-</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="k">WORKDIR</span><span class="s"> /app</span><span class="err">
-</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="k">COPY</span> package.json pnpm-lock.yaml ./<span class="err">
-</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="k">RUN</span> corepack <span class="nb">enable</span> <span class="o">&amp;&amp;</span> pnpm install --frozen-lockfile<span class="err">
-</span></span></span><span class="line"><span class="cl"><span class="err">
-</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="c"># ===== 阶段2：构建应用 =====</span><span class="err">
-</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="k">FROM</span><span class="s"> node:20-alpine AS builder</span><span class="err">
-</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="k">WORKDIR</span><span class="s"> /app</span><span class="err">
-</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="k">COPY</span> --from<span class="o">=</span>deps /app/node_modules ./node_modules<span class="err">
-</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="k">COPY</span> . .<span class="err">
-</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="c"># Next.js的standalone模式只输出必要文件</span><span class="err">
-</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="k">ENV</span> <span class="nv">NEXT_TELEMETRY_DISABLED</span><span class="o">=</span><span class="m">1</span>
-</span></span><span class="line"><span class="cl"><span class="k">RUN</span> npx next build<span class="err">
-</span></span></span><span class="line"><span class="cl"><span class="err">
-</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="c"># ===== 阶段3：运行 =====</span><span class="err">
-</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="k">FROM</span><span class="s"> node:20-alpine AS runner</span><span class="err">
-</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="k">WORKDIR</span><span class="s"> /app</span><span class="err">
-</span></span></span><span class="line"><span class="cl"><span class="err">
-</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="k">ENV</span> <span class="nv">NODE_ENV</span><span class="o">=</span>production
-</span></span><span class="line"><span class="cl"><span class="k">ENV</span> <span class="nv">NEXT_TELEMETRY_DISABLED</span><span class="o">=</span><span class="m">1</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="k">RUN</span> addgroup --system --gid <span class="m">1001</span> nodejs<span class="err">
-</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="k">RUN</span> adduser --system --uid <span class="m">1001</span> nextjs<span class="err">
-</span></span></span><span class="line"><span class="cl"><span class="err">
-</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="c"># 只复制standalone输出</span><span class="err">
-</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="k">COPY</span> --from<span class="o">=</span>builder /app/public ./public<span class="err">
-</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="k">COPY</span> --from<span class="o">=</span>builder --chown<span class="o">=</span>nextjs:nodejs /app/.next/standalone ./<span class="err">
-</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="k">COPY</span> --from<span class="o">=</span>builder --chown<span class="o">=</span>nextjs:nodejs /app/.next/static ./.next/static<span class="err">
-</span></span></span><span class="line"><span class="cl"><span class="err">
-</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="k">USER</span><span class="s"> nextjs</span><span class="err">
-</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="k">EXPOSE</span><span class="s"> 3000</span><span class="err">
-</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="k">ENV</span> <span class="nv">PORT</span><span class="o">=</span><span class="m">3000</span>
-</span></span><span class="line"><span class="cl"><span class="k">CMD</span> <span class="p">[</span><span class="s2">&#34;node&#34;</span><span class="p">,</span> <span class="s2">&#34;server.js&#34;</span><span class="p">]</span><span class="err">
-</span></span></span></code></pre></td></tr></table>
-</div>
-</div><p>需要在 <code>next.config.js</code> 中启用 standalone 模式：</p>
-<div class="highlight"><div class="chroma">
-<table class="lntable"><tr><td class="lntd">
-<pre tabindex="0" class="chroma"><code><span class="lnt">1
-</span><span class="lnt">2
-</span><span class="lnt">3
-</span><span class="lnt">4
-</span><span class="lnt">5
-</span></code></pre></td>
-<td class="lntd">
-<pre tabindex="0" class="chroma"><code class="language-javascript" data-lang="javascript"><span class="line"><span class="cl"><span class="cm">/** @type {import(&#39;next&#39;).NextConfig} */</span>
-</span></span><span class="line"><span class="cl"><span class="kr">const</span> <span class="nx">nextConfig</span> <span class="o">=</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">  <span class="nx">output</span><span class="o">:</span> <span class="s1">&#39;standalone&#39;</span><span class="p">,</span>
-</span></span><span class="line"><span class="cl"><span class="p">};</span>
-</span></span><span class="line"><span class="cl"><span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="nx">nextConfig</span><span class="p">;</span>
-</span></span></code></pre></td></tr></table>
-</div>
-</div><h2 id="高级优化技巧">高级优化技巧</h2>
-<h3 id="1-使用-copy---link-加速并行构建">1. 使用 <code>COPY --link</code> 加速并行构建</h3>
-<div class="highlight"><div class="chroma">
-<table class="lntable"><tr><td class="lntd">
-<pre tabindex="0" class="chroma"><code><span class="lnt">1
-</span><span class="lnt">2
-</span><span class="lnt">3
-</span><span class="lnt">4
-</span></code></pre></td>
-<td class="lntd">
-<pre tabindex="0" class="chroma"><code class="language-dockerfile" data-lang="dockerfile"><span class="line"><span class="cl"><span class="c"># --link 允许COPY指令与之前的层并行执行</span><span class="err">
-</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="k">COPY</span> --link requirements.txt .<span class="err">
-</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="k">RUN</span> pip install -r requirements.txt<span class="err">
-</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="k">COPY</span> --link . .<span class="err">
-</span></span></span></code></pre></td></tr></table>
-</div>
-</div><p>Docker 24.0+ 支持此特性，可将构建速度提升 20%-50%。</p>
-<h3 id="2-使用-buildkit-语法加速">2. 使用 <code>BUILDKIT</code> 语法加速</h3>
-<div class="highlight"><div class="chroma">
-<table class="lntable"><tr><td class="lntd">
-<pre tabindex="0" class="chroma"><code><span class="lnt">1
-</span><span class="lnt">2
-</span><span class="lnt">3
-</span><span class="lnt">4
-</span><span class="lnt">5
-</span><span class="lnt">6
-</span><span class="lnt">7
-</span><span class="lnt">8
-</span></code></pre></td>
-<td class="lntd">
-<pre tabindex="0" class="chroma"><code class="language-dockerfile" data-lang="dockerfile"><span class="line"><span class="cl"><span class="c"># syntax=docker/dockerfile:1</span><span class="err">
-</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="c"># 启用Mount缓存，让apt/pip/npm等包管理器的缓存持久化</span><span class="err">
-</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="k">RUN</span> --mount<span class="o">=</span><span class="nv">type</span><span class="o">=</span>cache,target<span class="o">=</span>/var/cache/apt <span class="se">\
-</span></span></span><span class="line"><span class="cl"><span class="se"></span>    --mount<span class="o">=</span><span class="nv">type</span><span class="o">=</span>cache,target<span class="o">=</span>/var/lib/apt <span class="se">\
-</span></span></span><span class="line"><span class="cl"><span class="se"></span>    apt-get update <span class="o">&amp;&amp;</span> apt-get install -y curl<span class="err">
-</span></span></span><span class="line"><span class="cl"><span class="err">
-</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="k">RUN</span> --mount<span class="o">=</span><span class="nv">type</span><span class="o">=</span>cache,target<span class="o">=</span>/root/.cache/pip <span class="se">\
-</span></span></span><span class="line"><span class="cl"><span class="se"></span>    pip install -r requirements.txt<span class="err">
-</span></span></span></code></pre></td></tr></table>
-</div>
-</div><h3 id="3-dockerignore-配合使用">3. <code>.dockerignore</code> 配合使用</h3>
-<div class="highlight"><div class="chroma">
-<table class="lntable"><tr><td class="lntd">
-<pre tabindex="0" class="chroma"><code><span class="lnt">1
-</span><span class="lnt">2
-</span><span class="lnt">3
-</span><span class="lnt">4
-</span><span class="lnt">5
-</span><span class="lnt">6
-</span><span class="lnt">7
-</span></code></pre></td>
-<td class="lntd">
-<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">.git
-</span></span><span class="line"><span class="cl">node_modules
-</span></span><span class="line"><span class="cl">*.md
-</span></span><span class="line"><span class="cl">.env*
-</span></span><span class="line"><span class="cl">target/
-</span></span><span class="line"><span class="cl">__pycache__
-</span></span><span class="line"><span class="cl">.pytest_cache
-</span></span></code></pre></td></tr></table>
-</div>
-</div><p>确保构建上下文尽可能小，加速 <code>COPY</code> 操作。</p>
-<h3 id="4-多阶段构建中的安全扫描">4. 多阶段构建中的安全扫描</h3>
-<div class="highlight"><div class="chroma">
-<table class="lntable"><tr><td class="lntd">
-<pre tabindex="0" class="chroma"><code><span class="lnt">1
-</span><span class="lnt">2
-</span><span class="lnt">3
-</span><span class="lnt">4
-</span></code></pre></td>
-<td class="lntd">
-<pre tabindex="0" class="chroma"><code class="language-dockerfile" data-lang="dockerfile"><span class="line"><span class="cl"><span class="c"># 可以专门加一个安全扫描阶段</span><span class="err">
-</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="k">FROM</span><span class="s"> builder AS security-scan</span><span class="err">
-</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="k">RUN</span> --mount<span class="o">=</span><span class="nv">type</span><span class="o">=</span>cache,target<span class="o">=</span>/root/.cache/trivy <span class="se">\
-</span></span></span><span class="line"><span class="cl"><span class="se"></span>    trivy filesystem --exit-code <span class="m">1</span> --severity HIGH,CRITICAL .<span class="err">
-</span></span></span></code></pre></td></tr></table>
-</div>
-</div><h2 id="总结">总结</h2>
-<table>
-<thead>
-<tr>
-<th>优化手段</th>
-<th>预期效果</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>多阶段构建分离构建/运行环境</td>
-<td>镜像减少 60%-80%</td>
-</tr>
-<tr>
-<td>层缓存 + 依赖分离</td>
-<td>重复构建时间减少 70%</td>
-</tr>
-<tr>
-<td>Alpine/Slim 基础镜像</td>
-<td>进一步减少 30%-50%</td>
-</tr>
-<tr>
-<td>非 root 用户运行</td>
-<td>安全加固</td>
-</tr>
-<tr>
-<td><code>.dockerignore</code></td>
-<td>构建上下文减少 50%+</td>
-</tr>
-</tbody>
-</table>
-<p>多阶段构建不是什么高深技巧，而是每个 Docker 用户都应该掌握的基本功。它带来的镜像瘦身和构建加速效果是实实在在的——从 GB 到 MB，从分钟到秒级。下次写 Dockerfile 时，不妨试试这些优化方法。</p>
-<blockquote>
-<p>📌 本文代码已适配 Docker BuildKit（默认启用），推荐 Docker 24.0+ 版本获得最佳体验。</p>
-</blockquote>
-</div><div class="post-footer" id="post-footer">
-    <div class="post-info">
-        <div class="post-info-line">
-            <div class="post-info-mod">
-                <span>Updated on 2026-06-11</span>
-            </div><div class="post-info-license">
-                <span>https://creativecommons.org/licenses/by-nc-nd/4.0/</span>
-            </div></div>
-        <div class="post-info-line">
-            <div class="post-info-md"></div>
-            <div class="post-info-share">
-                <span><a href="javascript:void(0);" title="Share on Twitter" data-sharer="twitter" data-url="https://www.ithome.me/post/2026/06/11/docker%E5%A4%9A%E9%98%B6%E6%AE%B5%E6%9E%84%E5%BB%BA%E5%AE%9E%E6%88%98-%E4%BC%98%E5%8C%96%E9%95%9C%E5%83%8F%E5%A4%A7%E5%B0%8F%E4%B8%8E%E6%9E%84%E5%BB%BA%E9%80%9F%E5%BA%A6/" data-title="Docker多阶段构建实战：优化镜像大小与构建速度的完整指南" data-via="ChenCiki" data-hashtags="Docker,DevOps,容器化,CI/CD,性能优化"><i class="fab fa-twitter fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on Linkedin" data-sharer="linkedin" data-url="https://www.ithome.me/post/2026/06/11/docker%E5%A4%9A%E9%98%B6%E6%AE%B5%E6%9E%84%E5%BB%BA%E5%AE%9E%E6%88%98-%E4%BC%98%E5%8C%96%E9%95%9C%E5%83%8F%E5%A4%A7%E5%B0%8F%E4%B8%8E%E6%9E%84%E5%BB%BA%E9%80%9F%E5%BA%A6/"><i class="fab fa-linkedin fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on 微博" data-sharer="weibo" data-url="https://www.ithome.me/post/2026/06/11/docker%E5%A4%9A%E9%98%B6%E6%AE%B5%E6%9E%84%E5%BB%BA%E5%AE%9E%E6%88%98-%E4%BC%98%E5%8C%96%E9%95%9C%E5%83%8F%E5%A4%A7%E5%B0%8F%E4%B8%8E%E6%9E%84%E5%BB%BA%E9%80%9F%E5%BA%A6/" data-title="Docker多阶段构建实战：优化镜像大小与构建速度的完整指南" data-ralateuid="xxx"><i class="fab fa-weibo fa-fw" aria-hidden="true"></i></a></span>
-            </div>
-        </div>
-    </div>
-
-    <div class="post-info-more">
-        <section class="post-tags"><i class="fas fa-tags fa-fw" aria-hidden="true"></i>&nbsp;<a href="/tags/docker/">Docker</a>,&nbsp;<a href="/tags/devops/">DevOps</a>,&nbsp;<a href="/tags/%E5%AE%B9%E5%99%A8%E5%8C%96/">容器化</a>,&nbsp;<a href="/tags/ci/cd/">CI/CD</a>,&nbsp;<a href="/tags/%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96/">性能优化</a></section>
-        <section>
-            <span><a href="javascript:void(0);" onclick="window.history.back();">Back</a></span>&nbsp;|&nbsp;<span><a href="/">Home</a></span>
-        </section>
-    </div>
-
-    <div class="post-nav"><a href="/post/2026/06/11/rag%E7%B3%BB%E7%BB%9F%E5%AE%9E%E6%88%98/" class="prev" rel="prev" title="用Python&#43;LangChain从零搭建RAG系统：让大模型读懂你的私有文档"><i class="fas fa-angle-left fa-fw" aria-hidden="true"></i>用Python&#43;LangChain从零搭建RAG系统：让大模型读懂你的私有文档</a>
-            <a href="/post/2026/06/12/langchain-chromadb-rag-%E7%9F%A5%E8%AF%86%E5%BA%93%E9%97%AE%E7%AD%94%E7%B3%BB%E7%BB%9F/" class="next" rel="next" title="LangChain &#43; ChromaDB 实战：构建本地知识库 RAG 问答系统">LangChain &#43; ChromaDB 实战：构建本地知识库 RAG 问答系统<i class="fas fa-angle-right fa-fw" aria-hidden="true"></i></a></div>
-</div>
-<div id="comments"><div id="gitalk" class="comment"></div><noscript>
-                Please enable JavaScript to view the comments powered by <a href="https://github.com/gitalk/gitalk"></a>Gitalk</a>.
-            </noscript></div></article></div>
-            </main><footer class="footer">
-        <div class="footer-container"><div class="footer-line" itemscope itemtype="http://schema.org/CreativeWork"><i class="far fa-copyright fa-fw" aria-hidden="true"></i><span itemprop="copyrightYear">2011 - 2026</span><span class="author" itemprop="copyrightHolder">&nbsp;<a href="https://www.ithome.me/" target="_blank">Simon Chen</a></span>&nbsp;|&nbsp;<span class="license"><a rel="license external nofollow noopener noreferrer" href="https://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank">CC BY-NC-ND 4.0</a></span></div>
-        </div>
-    </footer></div>
-
-        <div id="fixed-buttons"><a href="#" id="back-to-top" class="fixed-button" title="Back to Top">
-                <i class="fas fa-arrow-up fa-fw" aria-hidden="true"></i>
-            </a><a href="#" id="view-comments" class="fixed-button" title="View Comments">
-                <i class="fas fa-comment fa-fw" aria-hidden="true"></i>
-            </a>
-        </div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1.8.0/dist/gitalk.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/css/lightgallery-bundle.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/katex.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/copy-tex.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.css"><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/gitalk@1.8.0/dist/gitalk.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/autocomplete.js@0.38.1/dist/autocomplete.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lunr@2.3.9/lunr.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lazysizes@5.3.1/lazysizes.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/lightgallery.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/plugins/thumbnail/lg-thumbnail.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/plugins/zoom/lg-zoom.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/clipboard@2.0.11/dist/clipboard.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/sharer.js@0.5.1/sharer.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/katex.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/auto-render.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/copy-tex.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/mhchem.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.js"></script><script type="text/javascript">window.config={"code":{"copyTitle":"Copy to clipboard","maxShownLines":50},"comment":{"gitalk":{"admin":["cikichen"],"clientID":"be0f52370ed1285b6c7c","clientSecret":"734a7d8d0ded346ca7a3d565d57de3f8eeb2850b","id":"2026-06-11T00:00:00Z","owner":"cikichen","repo":"gitalk","title":"Docker多阶段构建实战：优化镜像大小与构建速度的完整指南"}},"cookieconsent":{"content":{"dismiss":"我知道了","link":"了解更多","message":"本网站使用 Cookies 来改善您的浏览体验."},"enable":true,"palette":{"button":{"background":"#f0f0f0"},"popup":{"background":"#1aa3ff"}},"theme":"edgeless"},"lightgallery":true,"math":{"delimiters":[{"display":true,"left":"$$","right":"$$"},{"display":true,"left":"\\[","right":"\\]"},{"display":true,"left":"\\begin{equation}","right":"\\end{equation}"},{"display":true,"left":"\\begin{equation*}","right":"\\end{equation*}"},{"display":true,"left":"\\begin{align}","right":"\\end{align}"},{"display":true,"left":"\\begin{align*}","right":"\\end{align*}"},{"display":true,"left":"\\begin{alignat}","right":"\\end{alignat}"},{"display":true,"left":"\\begin{alignat*}","right":"\\end{alignat*}"},{"display":true,"left":"\\begin{gather}","right":"\\end{gather}"},{"display":true,"left":"\\begin{CD}","right":"\\end{CD}"},{"display":false,"left":"$","right":"$"},{"display":false,"left":"\\(","right":"\\)"}],"strict":false},"search":{"highlightTag":"em","lunrIndexURL":"/index.json","maxResultLength":10,"noResultsFound":"No results found","snippetLength":50,"type":"lunr"}};</script><script type="text/javascript" src="/js/theme.min.js"></script></body>
-</html>
+<!doctype html><html lang=zh-CN><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><meta name=robots content="noodp"><title>Docker多阶段构建实战：优化镜像大小与构建速度的完整指南 - 编程心语</title><meta name=Description content="深入讲解Docker多阶段构建(Multi-stage Build)的核心原理与实战技巧，通过Java、Python、Node.js三大语言的实际案例，将镜像从GB级别压缩到MB级别，显著提升CI/CD流水线效率。"><meta property="og:url" content="https://www.ithome.me/post/2026/06/11/docker%E5%A4%9A%E9%98%B6%E6%AE%B5%E6%9E%84%E5%BB%BA%E5%AE%9E%E6%88%98-%E4%BC%98%E5%8C%96%E9%95%9C%E5%83%8F%E5%A4%A7%E5%B0%8F%E4%B8%8E%E6%9E%84%E5%BB%BA%E9%80%9F%E5%BA%A6/">
+<meta property="og:site_name" content="编程心语"><meta property="og:title" content="Docker多阶段构建实战：优化镜像大小与构建速度的完整指南"><meta property="og:description" content="深入讲解Docker多阶段构建(Multi-stage Build)的核心原理与实战技巧，通过Java、Python、Node.js三大语言的实际案例，将镜像从GB级别压缩到MB级别，显著提升CI/CD流水线效率。"><meta property="og:locale" content="zh_CN"><meta property="og:type" content="article"><meta property="article:section" content="posts"><meta property="article:published_time" content="2026-06-11T09:30:00+08:00"><meta property="article:modified_time" content="2026-06-11T09:30:00+08:00"><meta property="article:tag" content="Docker"><meta property="article:tag" content="DevOps"><meta property="article:tag" content="容器化"><meta property="article:tag" content="CI/CD"><meta property="article:tag" content="性能优化"><meta name=twitter:card content="summary"><meta name=twitter:title content="Docker多阶段构建实战：优化镜像大小与构建速度的完整指南"><meta name=twitter:description content="深入讲解Docker多阶段构建(Multi-stage Build)的核心原理与实战技巧，通过Java、Python、Node.js三大语言的实际案例，将镜像从GB级别压缩到MB级别，显著提升CI/CD流水线效率。"><meta name=twitter:site content="@ChenCiki"><meta name=application-name content="编程心语"><meta name=apple-mobile-web-app-title content="编程心语"><meta name=theme-color content="#ffffff"><meta name=msapplication-TileColor content="#da532c"><link rel="shortcut icon" type=image/x-icon href=/favicon.ico><link rel=icon type=image/png sizes=32x32 href=/favicon-32x32.png><link rel=icon type=image/png sizes=16x16 href=/favicon-16x16.png><link rel=apple-touch-icon sizes=180x180 href=/apple-touch-icon.png><link rel=mask-icon href=/safari-pinned-tab.svg color=#5bbad5><link rel=manifest href=/site.webmanifest><link rel=canonical href=https://www.ithome.me/post/2026/06/11/docker%E5%A4%9A%E9%98%B6%E6%AE%B5%E6%9E%84%E5%BB%BA%E5%AE%9E%E6%88%98-%E4%BC%98%E5%8C%96%E9%95%9C%E5%83%8F%E5%A4%A7%E5%B0%8F%E4%B8%8E%E6%9E%84%E5%BB%BA%E9%80%9F%E5%BA%A6/><link rel=prev href=https://www.ithome.me/post/2026/06/11/rag%E7%B3%BB%E7%BB%9F%E5%AE%9E%E6%88%98/><link rel=next href=https://www.ithome.me/post/2026/06/12/langchain-chromadb-rag-%E7%9F%A5%E8%AF%86%E5%BA%93%E9%97%AE%E7%AD%94%E7%B3%BB%E7%BB%9F/><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/normalize.css@8.0.1/normalize.min.css><link rel=stylesheet href=/css/style.min.css><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css><script type=application/ld+json>{"@context":"http://schema.org","@type":"BlogPosting","headline":"Docker多阶段构建实战：优化镜像大小与构建速度的完整指南","inLanguage":"zh-CN","mainEntityOfPage":{"@type":"WebPage","@id":"https:\/\/www.ithome.me\/post\/2026\/06\/11\/docker%E5%A4%9A%E9%98%B6%E6%AE%B5%E6%9E%84%E5%BB%BA%E5%AE%9E%E6%88%98-%E4%BC%98%E5%8C%96%E9%95%9C%E5%83%8F%E5%A4%A7%E5%B0%8F%E4%B8%8E%E6%9E%84%E5%BB%BA%E9%80%9F%E5%BA%A6\/"},"image":["https:\/\/www.ithome.me\/cover.png"],"genre":"posts","keywords":"Docker, DevOps, 容器化, CI\/CD, 性能优化","wordcount":2085,"url":"https:\/\/www.ithome.me\/post\/2026\/06\/11\/docker%E5%A4%9A%E9%98%B6%E6%AE%B5%E6%9E%84%E5%BB%BA%E5%AE%9E%E6%88%98-%E4%BC%98%E5%8C%96%E9%95%9C%E5%83%8F%E5%A4%A7%E5%B0%8F%E4%B8%8E%E6%9E%84%E5%BB%BA%E9%80%9F%E5%BA%A6\/","datePublished":"2026-06-11T09:30:00+08:00","dateModified":"2026-06-11T09:30:00+08:00","publisher":{"@type":"Organization","name":"SimonChen","logo":"https:\/\/www.ithome.me\/logo.png"},"author":{"@type":"Person","name":"Simon"},"description":"深入讲解Docker多阶段构建(Multi-stage Build)的核心原理与实战技巧，通过Java、Python、Node.js三大语言的实际案例，将镜像从GB级别压缩到MB级别，显著提升CI/CD流水线效率。"}</script><script async src="https://www.googletagmanager.com/gtag/js?id=G-H1Q5563VR8"></script><script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag("js",new Date),gtag("config","G-H1Q5563VR8",{anonymize_ip:!0})</script></head><body data-header-desktop=fixed data-header-mobile=auto><script type=text/javascript>(window.localStorage&&localStorage.getItem("theme")?localStorage.getItem("theme")==="dark":"auto"==="auto"?window.matchMedia("(prefers-color-scheme: dark)").matches:"auto"==="dark")&&document.body.setAttribute("theme","dark")</script><div id=mask></div><div class=wrapper><header class=desktop id=header-desktop><div class=header-wrapper><div class=header-title><a href=/ title=编程心语>编程心语</a></div><div class=menu><div class=menu-inner><a class=menu-item href=/posts/>文章 </a><a class=menu-item href=/categories/>分类 </a><a class=menu-item href=/tags/>标签 </a><a class=menu-item href=/about-me/>关于 </a><span class="menu-item delimiter"></span><span class="menu-item search" id=search-desktop>
+<input type=text placeholder=搜索文章... id=search-input-desktop>
+<a href=javascript:void(0); class="search-button search-toggle" id=search-toggle-desktop title=Search><i class="fas fa-search fa-fw" aria-hidden=true></i>
+</a><a href=javascript:void(0); class="search-button search-clear" id=search-clear-desktop title=Clear><i class="fas fa-times-circle fa-fw" aria-hidden=true></i>
+</a><span class="search-button search-loading" id=search-loading-desktop><i class="fas fa-spinner fa-fw fa-spin" aria-hidden=true></i>
+</span></span><a href=javascript:void(0); class="menu-item theme-switch" title="Switch Theme"><i class="fas fa-adjust fa-fw" aria-hidden=true></i></a></div></div></div></header><header class=mobile id=header-mobile><div class=header-container><div class=header-wrapper><div class=header-title><a href=/ title=编程心语>编程心语</a></div><div class=menu-toggle id=menu-toggle-mobile><span></span><span></span><span></span></div></div><div class=menu id=menu-mobile><div class=search-wrapper><div class="search mobile" id=search-mobile><input type=text placeholder=搜索文章... id=search-input-mobile>
+<a href=javascript:void(0); class="search-button search-toggle" id=search-toggle-mobile title=Search><i class="fas fa-search fa-fw" aria-hidden=true></i>
+</a><a href=javascript:void(0); class="search-button search-clear" id=search-clear-mobile title=Clear><i class="fas fa-times-circle fa-fw" aria-hidden=true></i>
+</a><span class="search-button search-loading" id=search-loading-mobile><i class="fas fa-spinner fa-fw fa-spin" aria-hidden=true></i></span></div><a href=javascript:void(0); class=search-cancel id=search-cancel-mobile>Cancel</a></div><a class=menu-item href=/posts/ title>文章</a><a class=menu-item href=/categories/ title>分类</a><a class=menu-item href=/tags/ title>标签</a><a class=menu-item href=/about-me/ title>关于</a><a href=javascript:void(0); class="menu-item theme-switch" title="Switch Theme">
+<i class="fas fa-adjust fa-fw" aria-hidden=true></i></a></div></div></header><div class="search-dropdown desktop"><div id=search-dropdown-desktop></div></div><div class="search-dropdown mobile"><div id=search-dropdown-mobile></div></div><main class=main><div class=container><div class=toc id=toc-auto><h2 class=toc-title>Contents</h2><div class=toc-content id=toc-content-auto></div></div><article class="page single"><h1 class="single-title animate__animated animate__flipInX">Docker多阶段构建实战：优化镜像大小与构建速度的完整指南</h1><div class=post-meta><div class=post-meta-line><span class=post-author><a href=https://www.ithome.me/ title=Author target=_blank rel="noopener noreferrer author" class=author><i class="fas fa-user-circle fa-fw" aria-hidden=true></i>Simon</a>
+</span>&nbsp;<span class=post-category>included in <a href=/categories/backend/><i class="far fa-folder fa-fw" aria-hidden=true></i>Backend</a></span></div><div class=post-meta-line><i class="far fa-calendar-alt fa-fw" aria-hidden=true></i>&nbsp;<time datetime=2026-06-11>2026-06-11</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden=true></i>&nbsp;2085 words&nbsp;
+<i class="far fa-clock fa-fw" aria-hidden=true></i>&nbsp;5 minutes&nbsp;</div></div><div class="details toc" id=toc-static data-kept=true><div class="details-summary toc-title"><span>Contents</span>
+<span><i class="details-icon fas fa-angle-right" aria-hidden=true></i></span></div><div class="details-content toc-content" id=toc-content-static><nav id=TableOfContents><ul><li><a href=#前言>前言</a></li><li><a href=#什么是多阶段构建>什么是多阶段构建？</a></li><li><a href=#案例一java-spring-boot-应用>案例一：Java Spring Boot 应用</a><ul><li><a href=#传统方式反面教材>传统方式（反面教材）</a></li><li><a href=#多阶段构建方式>多阶段构建方式</a></li></ul></li><li><a href=#案例二python-fastapi-应用>案例二：Python FastAPI 应用</a><ul><li><a href=#多阶段构建方式-1>多阶段构建方式</a></li></ul></li><li><a href=#案例三nodejs-nextjs-应用>案例三：Node.js Next.js 应用</a></li><li><a href=#高级优化技巧>高级优化技巧</a><ul><li><a href=#1-使用-copy---link-加速并行构建>1. 使用 <code>COPY --link</code> 加速并行构建</a></li><li><a href=#2-使用-buildkit-语法加速>2. 使用 <code>BUILDKIT</code> 语法加速</a></li><li><a href=#3-dockerignore-配合使用>3. <code>.dockerignore</code> 配合使用</a></li><li><a href=#4-多阶段构建中的安全扫描>4. 多阶段构建中的安全扫描</a></li></ul></li><li><a href=#总结>总结</a></li></ul></nav></div></div><div class=content id=content><h2 id=前言>前言</h2><p>在日常开发中，你是否遇到过这样的问题：</p><ul><li>Docker 镜像动辄几个 GB，拉取部署要等好几分钟</li><li>每次构建都要重新安装所有依赖，CI/CD 流水线慢得让人抓狂</li><li>构建环境和运行环境混在一起，镜像里塞了大量不需要的工具</li></ul><p>这些问题的根源在于：<strong>构建产物和运行环境没有分离</strong>。Docker 的多阶段构建（Multi-stage Build）正是为解决这一痛点而生的利器。本文将通过三个真实语言栈的案例，带你掌握这一核心技术。</p><h2 id=什么是多阶段构建>什么是多阶段构建？</h2><p>多阶段构建的核心思想非常简单：<strong>一个 Dockerfile 中使用多个 <code>FROM</code> 指令，每个阶段只保留最终需要的文件</strong>。</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span><span class=lnt>4
+</span><span class=lnt>5
+</span><span class=lnt>6
+</span><span class=lnt>7
+</span><span class=lnt>8
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-fallback data-lang=fallback><span class=line><span class=cl>阶段1（构建阶段）          阶段2（运行阶段）
+</span></span><span class=line><span class=cl>┌─────────────────┐      ┌─────────────────┐
+</span></span><span class=line><span class=cl>│  FROM ubuntu    │      │  FROM alpine    │
+</span></span><span class=line><span class=cl>│  安装JDK/Maven  │ ──→  │  只复制JAR包    │
+</span></span><span class=line><span class=cl>│  编译代码       │      │  运行应用       │
+</span></span><span class=line><span class=cl>│  生成产物       │      │                 │
+</span></span><span class=line><span class=cl>│  (~800MB)       │      │  (~200MB)       │
+</span></span><span class=line><span class=cl>└─────────────────┘      └─────────────────┘
+</span></span></code></pre></td></tr></table></div></div><p>箭头表示只复制构建产物（如二进制文件、编译结果），而非整个构建环境。</p><h2 id=案例一java-spring-boot-应用>案例一：Java Spring Boot 应用</h2><p>Spring Boot 应用是最典型的受益场景。传统方式用 <code>openjdk:17</code> 基础镜像，最终镜像通常在 500MB 以上。</p><h3 id=传统方式反面教材>传统方式（反面教材）</h3><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span><span class=lnt>4
+</span><span class=lnt>5
+</span><span class=lnt>6
+</span><span class=lnt>7
+</span><span class=lnt>8
+</span><span class=lnt>9
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-dockerfile data-lang=dockerfile><span class=line><span class=cl><span class=c># ❌ 不推荐：单一阶段</span><span class=err>
+</span></span></span><span class=line><span class=cl><span class=err></span><span class=k>FROM</span><span class=s> maven:3.9-eclipse-temurin-21 AS builder</span><span class=err>
+</span></span></span><span class=line><span class=cl><span class=err></span><span class=k>WORKDIR</span><span class=s> /app</span><span class=err>
+</span></span></span><span class=line><span class=cl><span class=err></span><span class=k>COPY</span> pom.xml .<span class=err>
+</span></span></span><span class=line><span class=cl><span class=err></span><span class=k>COPY</span> src ./src<span class=err>
+</span></span></span><span class=line><span class=cl><span class=err></span><span class=k>RUN</span> mvn clean package -DskipTests<span class=err>
+</span></span></span><span class=line><span class=cl><span class=err></span><span class=c># 最终镜像包含完整的Maven、JDK、源码、缓存等</span><span class=err>
+</span></span></span><span class=line><span class=cl><span class=err></span><span class=k>EXPOSE</span><span class=s> 8080</span><span class=err>
+</span></span></span><span class=line><span class=cl><span class=err></span><span class=k>CMD</span> <span class=p>[</span><span class=s2>&#34;java&#34;</span><span class=p>,</span> <span class=s2>&#34;-jar&#34;</span><span class=p>,</span> <span class=s2>&#34;target/app.jar&#34;</span><span class=p>]</span><span class=err>
+</span></span></span></code></pre></td></tr></table></div></div><p>这个镜像包含了完整的 Maven 构建工具链，体积轻松超过 1GB，而运行时根本不需要 Maven。</p><h3 id=多阶段构建方式>多阶段构建方式</h3><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span><span class=lnt>17
+</span><span class=lnt>18
+</span><span class=lnt>19
+</span><span class=lnt>20
+</span><span class=lnt>21
+</span><span class=lnt>22
+</span><span class=lnt>23
+</span><span class=lnt>24
+</span><span class=lnt>25
+</span><span class=lnt>26
+</span><span class=lnt>27
+</span><span class=lnt>28
+</span><span class=lnt>29
+</span><span class=lnt>30
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-dockerfile data-lang=dockerfile><span class=line><span class=cl><span class=c># ✅ 推荐：多阶段构建</span><span class=err>
+</span></span></span><span class=line><span class=cl><span class=err></span><span class=c># ===== 阶段1：构建 =====</span><span class=err>
+</span></span></span><span class=line><span class=cl><span class=err></span><span class=k>FROM</span><span class=s> maven:3.9-eclipse-temurin-21 AS builder</span><span class=err>
+</span></span></span><span class=line><span class=cl><span class=err></span><span class=k>WORKDIR</span><span class=s> /build</span><span class=err>
+</span></span></span><span class=line><span class=cl><span class=err>
+</span></span></span><span class=line><span class=cl><span class=err></span><span class=c># 利用Docker层缓存，先复制pom.xml单独下载依赖</span><span class=err>
+</span></span></span><span class=line><span class=cl><span class=err></span><span class=k>COPY</span> pom.xml .<span class=err>
+</span></span></span><span class=line><span class=cl><span class=err></span><span class=k>RUN</span> mvn dependency:go-offline -B<span class=err>
+</span></span></span><span class=line><span class=cl><span class=err>
+</span></span></span><span class=line><span class=cl><span class=err></span><span class=c># 再复制源码进行编译</span><span class=err>
+</span></span></span><span class=line><span class=cl><span class=err></span><span class=k>COPY</span> src ./src<span class=err>
+</span></span></span><span class=line><span class=cl><span class=err></span><span class=k>RUN</span> mvn clean package -DskipTests<span class=err>
+</span></span></span><span class=line><span class=cl><span class=err>
+</span></span></span><span class=line><span class=cl><span class=err></span><span class=c># 利用Spring Boot的分层Jar功能进一步优化</span><span class=err>
+</span></span></span><span class=line><span class=cl><span class=err></span><span class=k>RUN</span> java -Djarmode<span class=o>=</span>layertools -jar target/*.jar extract --destination extracted<span class=err>
+</span></span></span><span class=line><span class=cl><span class=err>
+</span></span></span><span class=line><span class=cl><span class=err></span><span class=c># ===== 阶段2：运行 =====</span><span class=err>
+</span></span></span><span class=line><span class=cl><span class=err></span><span class=k>FROM</span><span class=s> eclipse-temurin:21-jre-alpine</span><span class=err>
+</span></span></span><span class=line><span class=cl><span class=err></span><span class=k>WORKDIR</span><span class=s> /app</span><span class=err>
+</span></span></span><span class=line><span class=cl><span class=err>
+</span></span></span><span class=line><span class=cl><span class=err></span><span class=c># 从构建阶段复制分层后的应用（便于增量更新）</span><span class=err>
+</span></span></span><span class=line><span class=cl><span class=err></span><span class=k>COPY</span> --from<span class=o>=</span>builder /build/extracted/dependencies/ ./<span class=err>
+</span></span></span><span class=line><span class=cl><span class=err></span><span class=k>COPY</span> --from<span class=o>=</span>builder /build/extracted/spring-boot-loader/ ./<span class=err>
+</span></span></span><span class=line><span class=cl><span class=err></span><span class=k>COPY</span> --from<span class=o>=</span>builder /build/extracted/snapshot-dependencies/ ./<span class=err>
+</span></span></span><span class=line><span class=cl><span class=err></span><span class=k>COPY</span> --from<span class=o>=</span>builder /build/extracted/application/ ./<span class=err>
+</span></span></span><span class=line><span class=cl><span class=err>
+</span></span></span><span class=line><span class=cl><span class=err></span><span class=k>EXPOSE</span><span class=s> 8080</span><span class=err>
+</span></span></span><span class=line><span class=cl><span class=err>HEALTHCHECK --interval=30s --timeout=3s \
+</span></span></span><span class=line><span class=cl><span class=err>  </span><span class=k>CMD</span> wget -qO- http://localhost:8080/actuator/health <span class=o>||</span> <span class=nb>exit</span> <span class=m>1</span><span class=err>
+</span></span></span><span class=line><span class=cl><span class=err></span><span class=k>ENTRYPOINT</span> <span class=p>[</span><span class=s2>&#34;java&#34;</span><span class=p>,</span> <span class=s2>&#34;org.springframework.boot.loader.launch.JarLauncher&#34;</span><span class=p>]</span><span class=err>
+</span></span></span></code></pre></td></tr></table></div></div><p><strong>关键优化点：</strong></p><ol><li><strong>依赖分离缓存</strong>：先复制 <code>pom.xml</code> 下载依赖，再复制源码。只有源码变化时才重新编译，依赖层被缓存。</li><li><strong>JRE 替代 JDK</strong>：运行时只用 JRE-Alpine，比 JDK 省了约 300MB。</li><li><strong>Spring Boot 分层 JAR</strong>：将应用按依赖层次拆分，Docker 可以只更新变化的层。</li></ol><table><thead><tr><th>指标</th><th>传统方式</th><th>多阶段构建</th></tr></thead><tbody><tr><td>镜像大小</td><td>~800MB</td><td>~200MB</td></tr><tr><td>构建时间（首次）</td><td>3分钟</td><td>3分钟</td></tr><tr><td>构建时间（改代码）</td><td>3分钟</td><td>30秒（利用层缓存）</td></tr></tbody></table><h2 id=案例二python-fastapi-应用>案例二：Python FastAPI 应用</h2><p>Python 应用的镜像优化同样立竿见影。</p><h3 id=多阶段构建方式-1>多阶段构建方式</h3><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span><span class=lnt>17
+</span><span class=lnt>18
+</span><span class=lnt>19
+</span><span class=lnt>20
+</span><span class=lnt>21
+</span><span class=lnt>22
+</span><span class=lnt>23
+</span><span class=lnt>24
+</span><span class=lnt>25
+</span><span class=lnt>26
+</span><span class=lnt>27
+</span><span class=lnt>28
+</span><span class=lnt>29
+</span><span class=lnt>30
+</span><span class=lnt>31
+</span><span class=lnt>32
+</span><span class=lnt>33
+</span><span class=lnt>34
+</span><span class=lnt>35
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-dockerfile data-lang=dockerfile><span class=line><span class=cl><span class=c># ===== 阶段1：构建wheel包 =====</span><span class=err>
+</span></span></span><span class=line><span class=cl><span class=err></span><span class=k>FROM</span><span class=s> python:3.12-slim AS builder</span><span class=err>
+</span></span></span><span class=line><span class=cl><span class=err></span><span class=k>WORKDIR</span><span class=s> /build</span><span class=err>
+</span></span></span><span class=line><span class=cl><span class=err>
+</span></span></span><span class=line><span class=cl><span class=err></span><span class=c># 安装构建依赖</span><span class=err>
+</span></span></span><span class=line><span class=cl><span class=err></span><span class=k>RUN</span> pip install --no-cache-dir <span class=nv>poetry</span><span class=o>==</span>1.8.0<span class=err>
+</span></span></span><span class=line><span class=cl><span class=err>
+</span></span></span><span class=line><span class=cl><span class=err></span><span class=c># 先复制依赖声明文件，利用层缓存</span><span class=err>
+</span></span></span><span class=line><span class=cl><span class=err></span><span class=k>COPY</span> pyproject.toml poetry.lock ./<span class=err>
+</span></span></span><span class=line><span class=cl><span class=err></span><span class=k>RUN</span> poetry <span class=nb>export</span> -f requirements.txt --output requirements.txt --without-hashes<span class=err>
+</span></span></span><span class=line><span class=cl><span class=err>
+</span></span></span><span class=line><span class=cl><span class=err></span><span class=c># 用pip下载所有依赖到独立目录</span><span class=err>
+</span></span></span><span class=line><span class=cl><span class=err></span><span class=k>RUN</span> pip install --no-cache-dir --prefix<span class=o>=</span>/install -r requirements.txt<span class=err>
+</span></span></span><span class=line><span class=cl><span class=err>
+</span></span></span><span class=line><span class=cl><span class=err></span><span class=c># ===== 阶段2：运行 =====</span><span class=err>
+</span></span></span><span class=line><span class=cl><span class=err></span><span class=k>FROM</span><span class=s> python:3.12-slim</span><span class=err>
+</span></span></span><span class=line><span class=cl><span class=err></span><span class=k>WORKDIR</span><span class=s> /app</span><span class=err>
+</span></span></span><span class=line><span class=cl><span class=err>
+</span></span></span><span class=line><span class=cl><span class=err></span><span class=c># 安装系统级运行时依赖（仅需要的）</span><span class=err>
+</span></span></span><span class=line><span class=cl><span class=err></span><span class=k>RUN</span> apt-get update <span class=o>&amp;&amp;</span> apt-get install -y --no-install-recommends <span class=se>\
+</span></span></span><span class=line><span class=cl><span class=se></span>    curl <span class=se>\
+</span></span></span><span class=line><span class=cl><span class=se></span>    <span class=o>&amp;&amp;</span> rm -rf /var/lib/apt/lists/*<span class=err>
+</span></span></span><span class=line><span class=cl><span class=err>
+</span></span></span><span class=line><span class=cl><span class=err></span><span class=c># 从builder阶段复制预安装的Python包</span><span class=err>
+</span></span></span><span class=line><span class=cl><span class=err></span><span class=k>COPY</span> --from<span class=o>=</span>builder /install /usr/local<span class=err>
+</span></span></span><span class=line><span class=cl><span class=err>
+</span></span></span><span class=line><span class=cl><span class=err></span><span class=c># 复制应用代码</span><span class=err>
+</span></span></span><span class=line><span class=cl><span class=err></span><span class=k>COPY</span> app/ ./app/<span class=err>
+</span></span></span><span class=line><span class=cl><span class=err>
+</span></span></span><span class=line><span class=cl><span class=err></span><span class=c># 创建非root用户运行</span><span class=err>
+</span></span></span><span class=line><span class=cl><span class=err></span><span class=k>RUN</span> useradd --create-home appuser<span class=err>
+</span></span></span><span class=line><span class=cl><span class=err></span><span class=k>USER</span><span class=s> appuser</span><span class=err>
+</span></span></span><span class=line><span class=cl><span class=err>
+</span></span></span><span class=line><span class=cl><span class=err></span><span class=k>EXPOSE</span><span class=s> 8000</span><span class=err>
+</span></span></span><span class=line><span class=cl><span class=err></span><span class=k>CMD</span> <span class=p>[</span><span class=s2>&#34;uvicorn&#34;</span><span class=p>,</span> <span class=s2>&#34;app.main:app&#34;</span><span class=p>,</span> <span class=s2>&#34;--host&#34;</span><span class=p>,</span> <span class=s2>&#34;0.0.0.0&#34;</span><span class=p>,</span> <span class=s2>&#34;--port&#34;</span><span class=p>,</span> <span class=s2>&#34;8000&#34;</span><span class=p>]</span><span class=err>
+</span></span></span></code></pre></td></tr></table></div></div><p><strong>Python 场景的关键技巧：</strong></p><ol><li><strong>Poetry 导出 requirements.txt</strong>：Poetry 是优秀的依赖管理工具，但生产环境直接用 pip 安装更轻量。</li><li><strong><code>--prefix=/install</code></strong>：将包安装到独立目录，方便跨阶段复制，避免带入 pip 等构建工具。</li><li><strong>Alpine vs Slim</strong>：Alpine 镜像虽小但 musl libc 可能导致兼容性问题，推荐用 <code>slim</code> 变体。</li></ol><h2 id=案例三nodejs-nextjs-应用>案例三：Node.js Next.js 应用</h2><p>前端 SSR 应用的优化更加复杂，但效果也最明显。</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span><span class=lnt>17
+</span><span class=lnt>18
+</span><span class=lnt>19
+</span><span class=lnt>20
+</span><span class=lnt>21
+</span><span class=lnt>22
+</span><span class=lnt>23
+</span><span class=lnt>24
+</span><span class=lnt>25
+</span><span class=lnt>26
+</span><span class=lnt>27
+</span><span class=lnt>28
+</span><span class=lnt>29
+</span><span class=lnt>30
+</span><span class=lnt>31
+</span><span class=lnt>32
+</span><span class=lnt>33
+</span><span class=lnt>34
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-dockerfile data-lang=dockerfile><span class=line><span class=cl><span class=c># ===== 阶段1：安装依赖 =====</span><span class=err>
+</span></span></span><span class=line><span class=cl><span class=err></span><span class=k>FROM</span><span class=s> node:20-alpine AS deps</span><span class=err>
+</span></span></span><span class=line><span class=cl><span class=err></span><span class=k>WORKDIR</span><span class=s> /app</span><span class=err>
+</span></span></span><span class=line><span class=cl><span class=err></span><span class=k>COPY</span> package.json pnpm-lock.yaml ./<span class=err>
+</span></span></span><span class=line><span class=cl><span class=err></span><span class=k>RUN</span> corepack <span class=nb>enable</span> <span class=o>&amp;&amp;</span> pnpm install --frozen-lockfile<span class=err>
+</span></span></span><span class=line><span class=cl><span class=err>
+</span></span></span><span class=line><span class=cl><span class=err></span><span class=c># ===== 阶段2：构建应用 =====</span><span class=err>
+</span></span></span><span class=line><span class=cl><span class=err></span><span class=k>FROM</span><span class=s> node:20-alpine AS builder</span><span class=err>
+</span></span></span><span class=line><span class=cl><span class=err></span><span class=k>WORKDIR</span><span class=s> /app</span><span class=err>
+</span></span></span><span class=line><span class=cl><span class=err></span><span class=k>COPY</span> --from<span class=o>=</span>deps /app/node_modules ./node_modules<span class=err>
+</span></span></span><span class=line><span class=cl><span class=err></span><span class=k>COPY</span> . .<span class=err>
+</span></span></span><span class=line><span class=cl><span class=err></span><span class=c># Next.js的standalone模式只输出必要文件</span><span class=err>
+</span></span></span><span class=line><span class=cl><span class=err></span><span class=k>ENV</span> <span class=nv>NEXT_TELEMETRY_DISABLED</span><span class=o>=</span><span class=m>1</span>
+</span></span><span class=line><span class=cl><span class=k>RUN</span> npx next build<span class=err>
+</span></span></span><span class=line><span class=cl><span class=err>
+</span></span></span><span class=line><span class=cl><span class=err></span><span class=c># ===== 阶段3：运行 =====</span><span class=err>
+</span></span></span><span class=line><span class=cl><span class=err></span><span class=k>FROM</span><span class=s> node:20-alpine AS runner</span><span class=err>
+</span></span></span><span class=line><span class=cl><span class=err></span><span class=k>WORKDIR</span><span class=s> /app</span><span class=err>
+</span></span></span><span class=line><span class=cl><span class=err>
+</span></span></span><span class=line><span class=cl><span class=err></span><span class=k>ENV</span> <span class=nv>NODE_ENV</span><span class=o>=</span>production
+</span></span><span class=line><span class=cl><span class=k>ENV</span> <span class=nv>NEXT_TELEMETRY_DISABLED</span><span class=o>=</span><span class=m>1</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=k>RUN</span> addgroup --system --gid <span class=m>1001</span> nodejs<span class=err>
+</span></span></span><span class=line><span class=cl><span class=err></span><span class=k>RUN</span> adduser --system --uid <span class=m>1001</span> nextjs<span class=err>
+</span></span></span><span class=line><span class=cl><span class=err>
+</span></span></span><span class=line><span class=cl><span class=err></span><span class=c># 只复制standalone输出</span><span class=err>
+</span></span></span><span class=line><span class=cl><span class=err></span><span class=k>COPY</span> --from<span class=o>=</span>builder /app/public ./public<span class=err>
+</span></span></span><span class=line><span class=cl><span class=err></span><span class=k>COPY</span> --from<span class=o>=</span>builder --chown<span class=o>=</span>nextjs:nodejs /app/.next/standalone ./<span class=err>
+</span></span></span><span class=line><span class=cl><span class=err></span><span class=k>COPY</span> --from<span class=o>=</span>builder --chown<span class=o>=</span>nextjs:nodejs /app/.next/static ./.next/static<span class=err>
+</span></span></span><span class=line><span class=cl><span class=err>
+</span></span></span><span class=line><span class=cl><span class=err></span><span class=k>USER</span><span class=s> nextjs</span><span class=err>
+</span></span></span><span class=line><span class=cl><span class=err></span><span class=k>EXPOSE</span><span class=s> 3000</span><span class=err>
+</span></span></span><span class=line><span class=cl><span class=err></span><span class=k>ENV</span> <span class=nv>PORT</span><span class=o>=</span><span class=m>3000</span>
+</span></span><span class=line><span class=cl><span class=k>CMD</span> <span class=p>[</span><span class=s2>&#34;node&#34;</span><span class=p>,</span> <span class=s2>&#34;server.js&#34;</span><span class=p>]</span><span class=err>
+</span></span></span></code></pre></td></tr></table></div></div><p>需要在 <code>next.config.js</code> 中启用 standalone 模式：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span><span class=lnt>4
+</span><span class=lnt>5
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-javascript data-lang=javascript><span class=line><span class=cl><span class=cm>/** @type {import(&#39;next&#39;).NextConfig} */</span>
+</span></span><span class=line><span class=cl><span class=kr>const</span> <span class=nx>nextConfig</span> <span class=o>=</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>  <span class=nx>output</span><span class=o>:</span> <span class=s1>&#39;standalone&#39;</span><span class=p>,</span>
+</span></span><span class=line><span class=cl><span class=p>};</span>
+</span></span><span class=line><span class=cl><span class=nx>module</span><span class=p>.</span><span class=nx>exports</span> <span class=o>=</span> <span class=nx>nextConfig</span><span class=p>;</span>
+</span></span></code></pre></td></tr></table></div></div><h2 id=高级优化技巧>高级优化技巧</h2><h3 id=1-使用-copy---link-加速并行构建>1. 使用 <code>COPY --link</code> 加速并行构建</h3><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span><span class=lnt>4
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-dockerfile data-lang=dockerfile><span class=line><span class=cl><span class=c># --link 允许COPY指令与之前的层并行执行</span><span class=err>
+</span></span></span><span class=line><span class=cl><span class=err></span><span class=k>COPY</span> --link requirements.txt .<span class=err>
+</span></span></span><span class=line><span class=cl><span class=err></span><span class=k>RUN</span> pip install -r requirements.txt<span class=err>
+</span></span></span><span class=line><span class=cl><span class=err></span><span class=k>COPY</span> --link . .<span class=err>
+</span></span></span></code></pre></td></tr></table></div></div><p>Docker 24.0+ 支持此特性，可将构建速度提升 20%-50%。</p><h3 id=2-使用-buildkit-语法加速>2. 使用 <code>BUILDKIT</code> 语法加速</h3><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span><span class=lnt>4
+</span><span class=lnt>5
+</span><span class=lnt>6
+</span><span class=lnt>7
+</span><span class=lnt>8
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-dockerfile data-lang=dockerfile><span class=line><span class=cl><span class=c># syntax=docker/dockerfile:1</span><span class=err>
+</span></span></span><span class=line><span class=cl><span class=err></span><span class=c># 启用Mount缓存，让apt/pip/npm等包管理器的缓存持久化</span><span class=err>
+</span></span></span><span class=line><span class=cl><span class=err></span><span class=k>RUN</span> --mount<span class=o>=</span><span class=nv>type</span><span class=o>=</span>cache,target<span class=o>=</span>/var/cache/apt <span class=se>\
+</span></span></span><span class=line><span class=cl><span class=se></span>    --mount<span class=o>=</span><span class=nv>type</span><span class=o>=</span>cache,target<span class=o>=</span>/var/lib/apt <span class=se>\
+</span></span></span><span class=line><span class=cl><span class=se></span>    apt-get update <span class=o>&amp;&amp;</span> apt-get install -y curl<span class=err>
+</span></span></span><span class=line><span class=cl><span class=err>
+</span></span></span><span class=line><span class=cl><span class=err></span><span class=k>RUN</span> --mount<span class=o>=</span><span class=nv>type</span><span class=o>=</span>cache,target<span class=o>=</span>/root/.cache/pip <span class=se>\
+</span></span></span><span class=line><span class=cl><span class=se></span>    pip install -r requirements.txt<span class=err>
+</span></span></span></code></pre></td></tr></table></div></div><h3 id=3-dockerignore-配合使用>3. <code>.dockerignore</code> 配合使用</h3><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span><span class=lnt>4
+</span><span class=lnt>5
+</span><span class=lnt>6
+</span><span class=lnt>7
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-fallback data-lang=fallback><span class=line><span class=cl>.git
+</span></span><span class=line><span class=cl>node_modules
+</span></span><span class=line><span class=cl>*.md
+</span></span><span class=line><span class=cl>.env*
+</span></span><span class=line><span class=cl>target/
+</span></span><span class=line><span class=cl>__pycache__
+</span></span><span class=line><span class=cl>.pytest_cache
+</span></span></code></pre></td></tr></table></div></div><p>确保构建上下文尽可能小，加速 <code>COPY</code> 操作。</p><h3 id=4-多阶段构建中的安全扫描>4. 多阶段构建中的安全扫描</h3><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span><span class=lnt>4
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-dockerfile data-lang=dockerfile><span class=line><span class=cl><span class=c># 可以专门加一个安全扫描阶段</span><span class=err>
+</span></span></span><span class=line><span class=cl><span class=err></span><span class=k>FROM</span><span class=s> builder AS security-scan</span><span class=err>
+</span></span></span><span class=line><span class=cl><span class=err></span><span class=k>RUN</span> --mount<span class=o>=</span><span class=nv>type</span><span class=o>=</span>cache,target<span class=o>=</span>/root/.cache/trivy <span class=se>\
+</span></span></span><span class=line><span class=cl><span class=se></span>    trivy filesystem --exit-code <span class=m>1</span> --severity HIGH,CRITICAL .<span class=err>
+</span></span></span></code></pre></td></tr></table></div></div><h2 id=总结>总结</h2><table><thead><tr><th>优化手段</th><th>预期效果</th></tr></thead><tbody><tr><td>多阶段构建分离构建/运行环境</td><td>镜像减少 60%-80%</td></tr><tr><td>层缓存 + 依赖分离</td><td>重复构建时间减少 70%</td></tr><tr><td>Alpine/Slim 基础镜像</td><td>进一步减少 30%-50%</td></tr><tr><td>非 root 用户运行</td><td>安全加固</td></tr><tr><td><code>.dockerignore</code></td><td>构建上下文减少 50%+</td></tr></tbody></table><p>多阶段构建不是什么高深技巧，而是每个 Docker 用户都应该掌握的基本功。它带来的镜像瘦身和构建加速效果是实实在在的——从 GB 到 MB，从分钟到秒级。下次写 Dockerfile 时，不妨试试这些优化方法。</p><blockquote><p>📌 本文代码已适配 Docker BuildKit（默认启用），推荐 Docker 24.0+ 版本获得最佳体验。</p></blockquote></div><div class=post-footer id=post-footer><div class=post-info><div class=post-info-line><div class=post-info-mod><span>Updated on 2026-06-11</span></div><div class=post-info-license><span>https://creativecommons.org/licenses/by-nc-nd/4.0/</span></div></div><div class=post-info-line><div class=post-info-md></div><div class=post-info-share><span><a href=javascript:void(0); title="Share on Twitter" data-sharer=twitter data-url=https://www.ithome.me/post/2026/06/11/docker%E5%A4%9A%E9%98%B6%E6%AE%B5%E6%9E%84%E5%BB%BA%E5%AE%9E%E6%88%98-%E4%BC%98%E5%8C%96%E9%95%9C%E5%83%8F%E5%A4%A7%E5%B0%8F%E4%B8%8E%E6%9E%84%E5%BB%BA%E9%80%9F%E5%BA%A6/ data-title=Docker多阶段构建实战：优化镜像大小与构建速度的完整指南 data-via=ChenCiki data-hashtags=Docker,DevOps,容器化,CI/CD,性能优化><i class="fab fa-twitter fa-fw" aria-hidden=true></i></a><a href=javascript:void(0); title="Share on Linkedin" data-sharer=linkedin data-url=https://www.ithome.me/post/2026/06/11/docker%E5%A4%9A%E9%98%B6%E6%AE%B5%E6%9E%84%E5%BB%BA%E5%AE%9E%E6%88%98-%E4%BC%98%E5%8C%96%E9%95%9C%E5%83%8F%E5%A4%A7%E5%B0%8F%E4%B8%8E%E6%9E%84%E5%BB%BA%E9%80%9F%E5%BA%A6/><i class="fab fa-linkedin fa-fw" aria-hidden=true></i></a><a href=javascript:void(0); title="Share on 微博" data-sharer=weibo data-url=https://www.ithome.me/post/2026/06/11/docker%E5%A4%9A%E9%98%B6%E6%AE%B5%E6%9E%84%E5%BB%BA%E5%AE%9E%E6%88%98-%E4%BC%98%E5%8C%96%E9%95%9C%E5%83%8F%E5%A4%A7%E5%B0%8F%E4%B8%8E%E6%9E%84%E5%BB%BA%E9%80%9F%E5%BA%A6/ data-title=Docker多阶段构建实战：优化镜像大小与构建速度的完整指南 data-ralateuid=xxx><i class="fab fa-weibo fa-fw" aria-hidden=true></i></a></span></div></div></div><div class=post-info-more><section class=post-tags><i class="fas fa-tags fa-fw" aria-hidden=true></i>&nbsp;<a href=/tags/docker/>Docker</a>,&nbsp;<a href=/tags/devops/>DevOps</a>,&nbsp;<a href=/tags/%E5%AE%B9%E5%99%A8%E5%8C%96/>容器化</a>,&nbsp;<a href=/tags/ci/cd/>CI/CD</a>,&nbsp;<a href=/tags/%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96/>性能优化</a></section><section><span><a href=javascript:void(0); onclick=window.history.back()>Back</a></span>&nbsp;|&nbsp;<span><a href=/>Home</a></span></section></div><div class=post-nav><a href=/post/2026/06/11/rag%E7%B3%BB%E7%BB%9F%E5%AE%9E%E6%88%98/ class=prev rel=prev title=用Python+LangChain从零搭建RAG系统：让大模型读懂你的私有文档><i class="fas fa-angle-left fa-fw" aria-hidden=true></i>用Python+LangChain从零搭建RAG系统：让大模型读懂你的私有文档</a>
+<a href=/post/2026/06/12/langchain-chromadb-rag-%E7%9F%A5%E8%AF%86%E5%BA%93%E9%97%AE%E7%AD%94%E7%B3%BB%E7%BB%9F/ class=next rel=next title="LangChain + ChromaDB 实战：构建本地知识库 RAG 问答系统">LangChain + ChromaDB 实战：构建本地知识库 RAG 问答系统<i class="fas fa-angle-right fa-fw" aria-hidden=true></i></a></div></div><div id=comments><div id=gitalk class=comment></div><noscript>Please enable JavaScript to view the comments powered by <a href=https://github.com/gitalk/gitalk></a>Gitalk</a>.</noscript></div></article></div></main><footer class=footer><div class=footer-container><div class=footer-line itemscope itemtype=http://schema.org/CreativeWork><i class="far fa-copyright fa-fw" aria-hidden=true></i><span itemprop=copyrightYear>2011 - 2026</span><span class=author itemprop=copyrightHolder>&nbsp;<a href=https://www.ithome.me/ target=_blank>Simon Chen</a></span>&nbsp;|&nbsp;<span class=license><a rel="license external nofollow noopener noreferrer" href=https://creativecommons.org/licenses/by-nc-nd/4.0/ target=_blank>CC BY-NC-ND 4.0</a></span></div></div></footer></div><div id=fixed-buttons><a href=# id=back-to-top class=fixed-button title="Back to Top"><i class="fas fa-arrow-up fa-fw" aria-hidden=true></i>
+</a><a href=# id=view-comments class=fixed-button title="View Comments"><i class="fas fa-comment fa-fw" aria-hidden=true></i></a></div><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/gitalk@1.8.0/dist/gitalk.min.css><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/css/lightgallery-bundle.min.css><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/katex.min.css><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/copy-tex.min.css><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.css><script type=text/javascript src=https://cdn.jsdelivr.net/npm/gitalk@1.8.0/dist/gitalk.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/autocomplete.js@0.38.1/dist/autocomplete.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/lunr@2.3.9/lunr.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/lazysizes@5.3.1/lazysizes.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/lightgallery.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/plugins/thumbnail/lg-thumbnail.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/plugins/zoom/lg-zoom.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/clipboard@2.0.11/dist/clipboard.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/sharer.js@0.5.1/sharer.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/katex.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/auto-render.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/copy-tex.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/mhchem.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.js></script><script type=text/javascript>window.config={code:{copyTitle:"Copy to clipboard",maxShownLines:50},comment:{gitalk:{admin:["cikichen"],clientID:"be0f52370ed1285b6c7c",clientSecret:"734a7d8d0ded346ca7a3d565d57de3f8eeb2850b",id:"2026-06-11T00:00:00Z",owner:"cikichen",repo:"gitalk",title:"Docker多阶段构建实战：优化镜像大小与构建速度的完整指南"}},cookieconsent:{content:{dismiss:"我知道了",link:"了解更多",message:"本网站使用 Cookies 来改善您的浏览体验."},enable:!0,palette:{button:{background:"#f0f0f0"},popup:{background:"#1aa3ff"}},theme:"edgeless"},lightgallery:!0,math:{delimiters:[{display:!0,left:"$$",right:"$$"},{display:!0,left:"\\[",right:"\\]"},{display:!0,left:"\\begin{equation}",right:"\\end{equation}"},{display:!0,left:"\\begin{equation*}",right:"\\end{equation*}"},{display:!0,left:"\\begin{align}",right:"\\end{align}"},{display:!0,left:"\\begin{align*}",right:"\\end{align*}"},{display:!0,left:"\\begin{alignat}",right:"\\end{alignat}"},{display:!0,left:"\\begin{alignat*}",right:"\\end{alignat*}"},{display:!0,left:"\\begin{gather}",right:"\\end{gather}"},{display:!0,left:"\\begin{CD}",right:"\\end{CD}"},{display:!1,left:"$",right:"$"},{display:!1,left:"\\(",right:"\\)"}],strict:!1},search:{highlightTag:"em",lunrIndexURL:"/index.json",maxResultLength:10,noResultsFound:"No results found",snippetLength:50,type:"lunr"}}</script><script type=text/javascript src=/js/theme.min.js></script></body></html>

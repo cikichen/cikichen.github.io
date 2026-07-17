@@ -1,1210 +1,672 @@
-<!DOCTYPE html>
-<html lang="zh-CN">
-    <head>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <meta name="robots" content="noodp" />
-        <title>MCP协议：智能体的标准化工具接口 - 编程心语</title><meta name="Description" content="深入解析Anthropic Model Context Protocol架构，从Server开发到Client集成的完整实战指南"><meta property="og:url" content="https://www.ithome.me/post/2026/07/05/ai%E6%99%BA%E8%83%BD%E4%BD%93%E5%BC%80%E5%8F%91-%E7%AC%AC10%E7%AB%A0-mcp%E5%8D%8F%E8%AE%AE/">
-  <meta property="og:site_name" content="编程心语">
-  <meta property="og:title" content="MCP协议：智能体的标准化工具接口">
-  <meta property="og:description" content="深入解析Anthropic Model Context Protocol架构，从Server开发到Client集成的完整实战指南">
-  <meta property="og:locale" content="zh_CN">
-  <meta property="og:type" content="article">
-    <meta property="article:section" content="posts">
-    <meta property="article:published_time" content="2026-07-05T08:00:00+08:00">
-    <meta property="article:modified_time" content="2026-07-05T08:00:00+08:00">
-    <meta property="article:tag" content="AI Agent">
-    <meta property="article:tag" content="MCP">
-    <meta property="article:tag" content="Model Context Protocol">
-    <meta property="article:tag" content="Anthropic">
-    <meta property="article:tag" content="工具集成">
-    <meta property="article:tag" content="AI智能体开发实战">
-
-  <meta name="twitter:card" content="summary">
-  <meta name="twitter:title" content="MCP协议：智能体的标准化工具接口">
-  <meta name="twitter:description" content="深入解析Anthropic Model Context Protocol架构，从Server开发到Client集成的完整实战指南">
-      <meta name="twitter:site" content="@ChenCiki">
-<meta name="application-name" content="编程心语">
-<meta name="apple-mobile-web-app-title" content="编程心语"><meta name="theme-color" content="#ffffff"><meta name="msapplication-TileColor" content="#da532c"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
-        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
-        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5"><link rel="manifest" href="/site.webmanifest"><link rel="canonical" href="https://www.ithome.me/post/2026/07/05/ai%E6%99%BA%E8%83%BD%E4%BD%93%E5%BC%80%E5%8F%91-%E7%AC%AC10%E7%AB%A0-mcp%E5%8D%8F%E8%AE%AE/" /><link rel="prev" href="https://www.ithome.me/post/2026/07/05/ai%E6%99%BA%E8%83%BD%E4%BD%93%E5%BC%80%E5%8F%91-%E7%AC%AC8%E7%AB%A0-rag%E5%A2%9E%E5%BC%BA%E6%A3%80%E7%B4%A2/" /><link rel="next" href="https://www.ithome.me/post/2026/07/05/ai%E6%99%BA%E8%83%BD%E4%BD%93%E5%BC%80%E5%8F%91-%E7%AC%AC3%E7%AB%A0-llm%E6%A0%B8%E5%BF%83%E5%BC%95%E6%93%8E/" /><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/normalize.css@8.0.1/normalize.min.css"><link rel="stylesheet" href="/css/style.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css"><script type="application/ld+json">
-    {
-        "@context": "http://schema.org",
-        "@type": "BlogPosting",
-        "headline": "MCP协议：智能体的标准化工具接口",
-        "inLanguage": "zh-CN",
-        "mainEntityOfPage": {
-            "@type": "WebPage",
-            "@id": "https:\/\/www.ithome.me\/post\/2026\/07\/05\/ai%E6%99%BA%E8%83%BD%E4%BD%93%E5%BC%80%E5%8F%91-%E7%AC%AC10%E7%AB%A0-mcp%E5%8D%8F%E8%AE%AE\/"
-        },"image": ["https:\/\/www.ithome.me\/cover.png"],"genre": "posts","keywords": "AI Agent, MCP, Model Context Protocol, Anthropic, 工具集成, AI智能体开发实战","wordcount":  11870 ,
-        "url": "https:\/\/www.ithome.me\/post\/2026\/07\/05\/ai%E6%99%BA%E8%83%BD%E4%BD%93%E5%BC%80%E5%8F%91-%E7%AC%AC10%E7%AB%A0-mcp%E5%8D%8F%E8%AE%AE\/","datePublished": "2026-07-05T08:00:00+08:00","dateModified": "2026-07-05T08:00:00+08:00","publisher": {
-            "@type": "Organization",
-            "name": "SimonChen","logo": "https:\/\/www.ithome.me\/logo.png"},"author": {
-                "@type": "Person",
-                "name": "Simon"
-            },"description": "深入解析Anthropic Model Context Protocol架构，从Server开发到Client集成的完整实战指南"
-    }
-    </script><script async src="https://www.googletagmanager.com/gtag/js?id=G-H1Q5563VR8"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-  gtag('config', 'G-H1Q5563VR8', { 'anonymize_ip': true });
-</script></head>
-    <body data-header-desktop="fixed" data-header-mobile="auto"><script type="text/javascript">(window.localStorage && localStorage.getItem('theme') ? localStorage.getItem('theme') === 'dark' : ('auto' === 'auto' ? window.matchMedia('(prefers-color-scheme: dark)').matches : 'auto' === 'dark')) && document.body.setAttribute('theme', 'dark');</script>
-
-        <div id="mask"></div><div class="wrapper"><header class="desktop" id="header-desktop">
-    <div class="header-wrapper">
-        <div class="header-title">
-            <a href="/" title="编程心语">编程心语</a>
-        </div>
-        <div class="menu">
-            <div class="menu-inner"><a class="menu-item" href="/posts/"> 文章 </a><a class="menu-item" href="/categories/"> 分类 </a><a class="menu-item" href="/tags/"> 标签 </a><a class="menu-item" href="/about-me/"> 关于 </a><span class="menu-item delimiter"></span><span class="menu-item search" id="search-desktop">
-                        <input type="text" placeholder="搜索文章..." id="search-input-desktop">
-                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-desktop" title="Search">
-                            <i class="fas fa-search fa-fw" aria-hidden="true"></i>
-                        </a>
-                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-desktop" title="Clear">
-                            <i class="fas fa-times-circle fa-fw" aria-hidden="true"></i>
-                        </a>
-                        <span class="search-button search-loading" id="search-loading-desktop">
-                            <i class="fas fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
-                        </span>
-                    </span><a href="javascript:void(0);" class="menu-item theme-switch" title="Switch Theme">
-                    <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
-                </a>
-            </div>
-        </div>
-    </div>
-</header><header class="mobile" id="header-mobile">
-    <div class="header-container">
-        <div class="header-wrapper">
-            <div class="header-title">
-                <a href="/" title="编程心语">编程心语</a>
-            </div>
-            <div class="menu-toggle" id="menu-toggle-mobile">
-                <span></span><span></span><span></span>
-            </div>
-        </div>
-        <div class="menu" id="menu-mobile"><div class="search-wrapper">
-                    <div class="search mobile" id="search-mobile">
-                        <input type="text" placeholder="搜索文章..." id="search-input-mobile">
-                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-mobile" title="Search">
-                            <i class="fas fa-search fa-fw" aria-hidden="true"></i>
-                        </a>
-                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-mobile" title="Clear">
-                            <i class="fas fa-times-circle fa-fw" aria-hidden="true"></i>
-                        </a>
-                        <span class="search-button search-loading" id="search-loading-mobile">
-                            <i class="fas fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
-                        </span>
-                    </div>
-                    <a href="javascript:void(0);" class="search-cancel" id="search-cancel-mobile">
-                        Cancel
-                    </a>
-                </div><a class="menu-item" href="/posts/" title="">文章</a><a class="menu-item" href="/categories/" title="">分类</a><a class="menu-item" href="/tags/" title="">标签</a><a class="menu-item" href="/about-me/" title="">关于</a><a href="javascript:void(0);" class="menu-item theme-switch" title="Switch Theme">
-                <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
-            </a></div>
-    </div>
-</header><div class="search-dropdown desktop">
-        <div id="search-dropdown-desktop"></div>
-    </div>
-    <div class="search-dropdown mobile">
-        <div id="search-dropdown-mobile"></div>
-    </div><main class="main">
-                <div class="container"><div class="toc" id="toc-auto">
-            <h2 class="toc-title">Contents</h2>
-            <div class="toc-content" id="toc-content-auto"></div>
-        </div><article class="page single"><h1 class="single-title animate__animated animate__flipInX">MCP协议：智能体的标准化工具接口</h1><div class="post-meta">
-            <div class="post-meta-line"><span class="post-author"><a href="https://www.ithome.me/" title="Author" target="_blank" rel="noopener noreferrer author" class="author"><i class="fas fa-user-circle fa-fw" aria-hidden="true"></i>Simon</a>
-</span>&nbsp;<span class="post-category">included in <a href="/categories/ai%E6%99%BA%E8%83%BD%E4%BD%93%E5%BC%80%E5%8F%91%E5%AE%9E%E6%88%98/"><i class="far fa-folder fa-fw" aria-hidden="true"></i>AI智能体开发实战</a></span></div>
-            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw" aria-hidden="true"></i>&nbsp;<time datetime="2026-07-05">2026-07-05</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden="true"></i>&nbsp;11870 words&nbsp;
-                <i class="far fa-clock fa-fw" aria-hidden="true"></i>&nbsp;24 minutes&nbsp;</div>
-        </div><div class="details toc" id="toc-static"  data-kept="true">
-                <div class="details-summary toc-title">
-                    <span>Contents</span>
-                    <span><i class="details-icon fas fa-angle-right" aria-hidden="true"></i></span>
-                </div>
-                <div class="details-content toc-content" id="toc-content-static"><nav id="TableOfContents">
-  <ul>
-    <li><a href="#1-引言mcp解决了什么问题">1. 引言：MCP解决了什么问题</a></li>
-    <li><a href="#2-mcp协议概述">2. MCP协议概述</a>
-      <ul>
-        <li><a href="#21-协议的诞生与定位">2.1 协议的诞生与定位</a></li>
-        <li><a href="#22-三大组件host--client--server">2.2 三大组件：Host / Client / Server</a></li>
-        <li><a href="#23-与传统function-calling的区别">2.3 与传统Function Calling的区别</a></li>
-        <li><a href="#24-2026年生态状态">2.4 2026年生态状态</a></li>
-      </ul>
-    </li>
-    <li><a href="#3-mcp架构详解">3. MCP架构详解</a>
-      <ul>
-        <li><a href="#31-host宿主应用">3.1 Host：宿主应用</a></li>
-        <li><a href="#32-client协议客户端">3.2 Client：协议客户端</a></li>
-        <li><a href="#33-server服务提供方">3.3 Server：服务提供方</a></li>
-        <li><a href="#34-通信协议json-rpc-over-stdiosse">3.4 通信协议：JSON-RPC over stdio/SSE</a></li>
-        <li><a href="#35-生命周期初始化能力交换工具调用关闭">3.5 生命周期：初始化→能力交换→工具调用→关闭</a></li>
-      </ul>
-    </li>
-    <li><a href="#4-开发mcp-server">4. 开发MCP Server</a>
-      <ul>
-        <li><a href="#41-安装python-sdk">4.1 安装Python SDK</a></li>
-        <li><a href="#42-三类原语速览">4.2 三类原语速览</a></li>
-        <li><a href="#43-完整示例文件系统mcp-server">4.3 完整示例：文件系统MCP Server</a></li>
-      </ul>
-    </li>
-    <li><a href="#5-开发mcp-client">5. 开发MCP Client</a>
-      <ul>
-        <li><a href="#51-client的职责">5.1 Client的职责</a></li>
-        <li><a href="#52-完整示例mcp-client集成到agent">5.2 完整示例：MCP Client集成到Agent</a></li>
-      </ul>
-    </li>
-    <li><a href="#6-mcp实战构建天气查询agent">6. MCP实战：构建天气查询Agent</a>
-      <ul>
-        <li><a href="#61-天气mcp-server">6.1 天气MCP Server</a></li>
-        <li><a href="#62-agent通过mcp调用天气工具">6.2 Agent通过MCP调用天气工具</a></li>
-      </ul>
-    </li>
-    <li><a href="#7-mcp最佳实践">7. MCP最佳实践</a>
-      <ul>
-        <li><a href="#71-server设计原则">7.1 Server设计原则</a></li>
-        <li><a href="#72-安全与权限">7.2 安全与权限</a></li>
-        <li><a href="#73-错误处理">7.3 错误处理</a></li>
-        <li><a href="#74-性能优化">7.4 性能优化</a></li>
-      </ul>
-    </li>
-    <li><a href="#8-小结">8. 小结</a></li>
-    <li><a href="#9-预告第11章-评估与可观测性">9. 预告：第11章 评估与可观测性</a></li>
-  </ul>
-</nav></div>
-            </div><div class="content" id="content"><h2 id="1-引言mcp解决了什么问题">1. 引言：MCP解决了什么问题</h2>
-<p>在前面几章中，我们反复使用了一个关键能力——<strong>Function Calling</strong>（函数调用）。无论是查数据库、调API，还是操作文件系统，智能体都需要通过&quot;函数&quot;这一抽象来触达外部世界。然而，当工具数量膨胀、应用场景复杂化时，一个令人头疼的问题浮现出来：</p>
-<p><strong>工具集成碎片化（Tool Integration Fragmentation）</strong>。</p>
-<p>具体表现为：</p>
-<ul>
-<li><strong>协议不统一</strong>：每家大模型厂商都定义了自己的Function Calling格式。OpenAI、Anthropic、Google、阿里通义各有各的工具描述规范，同一份工具定义要写好几遍。</li>
-<li><strong>上下文割裂</strong>：工具本身没有&quot;资源&quot;概念。Agent要读取一份文件、一段数据库Schema，都得靠开发者手动拼接到Prompt里，缺乏统一的资源访问接口。</li>
-<li><strong>生态重复造轮子</strong>：搜数据库、查天气、读GitHub，每个Agent项目都在重复封装相同的工具。A项目写的工具，B项目无法直接复用。</li>
-<li><strong>运维耦合</strong>：工具进程和Agent进程常常绑死在一起，工具升级、权限管理、多工具编排都很难解耦。</li>
-</ul>
-<p>这就好比每个Agent都自带一个&quot;私有的工具箱&quot;，彼此不通，每次都要从零打造。2024年11月，Anthropic发布了<strong>Model Context Protocol（MCP，模型上下文协议）</strong>，给出了一个令人眼前一亮的解法：</p>
-<blockquote>
-<p>把工具、资源、提示模板从Agent中解耦出来，变成可独立部署、可被任意支持MCP的客户端发现的&quot;Server&quot;，Agent则作为&quot;Client&quot;按需连接，即插即用。</p>
-</blockquote>
-<p>用一个生活比喻来理解：<strong>MCP之于AI工具生态，就像USB-C接口之于数码设备</strong>。在USB-C统一之前，键盘是PS/2口、打印机是并口、老手机是Micro-USB、相机是Mini-USB，出门得带一整包转接头；USB-C一统天下后，一根线就能给笔记本、手机、平板充电传数据，<strong>即插即用、正反都能插</strong>。MCP正是希望成为&quot;AI Agent的USB-C接口&quot;——你写一个MCP工具，任何支持MCP的Agent都能直接用，不用改一行代码。</p>
-<blockquote>
-<p>💡 <strong>小贴士：什么是MCP？</strong>
-MCP（Model Context Protocol，模型上下文协议）是Anthropic开源的一套<strong>通信标准</strong>，规定了&quot;AI模型如何发现并调用外部工具&quot;的统一格式。它不绑定任何一家模型厂商，谁都可以免费使用。你可以把它理解成&quot;工具界的HTTP&quot;——HTTP统一了网页传输，MCP统一了AI调工具。</p>
-</blockquote>
-<p>本章将从协议原理讲到Server/Client开发，最后用一个天气查询Agent串起完整链路。</p>
-<h2 id="2-mcp协议概述">2. MCP协议概述</h2>
-<h3 id="21-协议的诞生与定位">2.1 协议的诞生与定位</h3>
-<p>MCP（Model Context Protocol）由Anthropic于2024年11月开源发布，是一个<strong>开放、基于JSON-RPC 2.0</strong>的应用层协议。其设计目标有四：</p>
-<ol>
-<li><strong>标准化</strong>：任何MCP Server都能被任何兼容MCP的Host（如Claude Desktop、Cursor、各类Agent框架）发现并调用。</li>
-<li><strong>解耦</strong>：Server与Client通过协议而非代码耦合，可独立部署、独立升级。</li>
-<li><strong>可组合</strong>：一个Host可同时连接多个Server，工具数量线性扩展。</li>
-<li><strong>安全</strong>：Server运行在本地或受控环境，Host控制权限边界。</li>
-</ol>
-<blockquote>
-<p>💡 <strong>小贴士：什么是JSON-RPC 2.0？</strong>
-JSON-RPC是一种用JSON格式进行&quot;远程过程调用&quot;的轻量协议。简单说，就是&quot;我用JSON给你发一条消息，告诉你调用哪个方法、传什么参数，你也用JSON回我结果&quot;。2.0版本规定了<code>jsonrpc</code>、<code>id</code>、<code>method</code>、<code>params</code>这几个字段。MCP所有通信都套这个格式，所以任何语言都能轻松实现。</p>
-</blockquote>
-<h3 id="22-三大组件host--client--server">2.2 三大组件：Host / Client / Server</h3>
-<p>MCP架构由三个核心角色构成。再用USB-C的比喻串一下：</p>
-<ul>
-<li><strong>Host（宿主应用）</strong>：最终用户使用的应用，比如Claude Desktop、Cursor IDE，或我们自己开发的Agent程序。Host就像你的笔记本电脑——它有多个USB-C口，负责管理外设、汇总能力、向用户暴露交互入口。</li>
-<li><strong>Client（协议客户端）</strong>：Host内部的一个连接器，每个Client与一个Server保持1:1的会话。Client就像笔记本里那个&quot;USB-C控制器芯片&quot;，负责协议握手、能力协商、消息路由。</li>
-<li><strong>Server（服务提供方）</strong>：独立运行的进程，向Client暴露三类能力：<strong>Tools</strong>（工具）、<strong>Resources</strong>（资源）、<strong>Prompts</strong>（提示模板）。Server就像你插上的U盘、键盘、显示器——各自提供不同功能。</li>
-</ul>
-<p>它们的关系如下：</p>
-<div class="highlight"><div class="chroma">
-<table class="lntable"><tr><td class="lntd">
-<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
-</span><span class="lnt"> 2
-</span><span class="lnt"> 3
-</span><span class="lnt"> 4
-</span><span class="lnt"> 5
-</span><span class="lnt"> 6
-</span><span class="lnt"> 7
-</span><span class="lnt"> 8
-</span><span class="lnt"> 9
-</span><span class="lnt">10
-</span><span class="lnt">11
-</span><span class="lnt">12
-</span><span class="lnt">13
-</span></code></pre></td>
-<td class="lntd">
-<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">┌─────────────────────────────┐
-</span></span><span class="line"><span class="cl">│           Host (Agent)      │
-</span></span><span class="line"><span class="cl">│  ┌────────┐  ┌────────┐     │
-</span></span><span class="line"><span class="cl">│  │Client A│  │Client B│ ... │
-</span></span><span class="line"><span class="cl">│  └───┬────┘  └───┬────┘     │
-</span></span><span class="line"><span class="cl">└──────┼───────────┼──────────┘
-</span></span><span class="line"><span class="cl">       │           │
-</span></span><span class="line"><span class="cl">   stdio/SSE   stdio/SSE
-</span></span><span class="line"><span class="cl">       │           │
-</span></span><span class="line"><span class="cl">   ┌───▼────┐  ┌───▼────┐
-</span></span><span class="line"><span class="cl">   │Server A│  │Server B│
-</span></span><span class="line"><span class="cl">   │ 文件系统 │  │ 数据库  │
-</span></span><span class="line"><span class="cl">   └────────┘  └────────┘
-</span></span></code></pre></td></tr></table>
-</div>
-</div><blockquote>
-<p>💡 <strong>小贴士：Server和Client到底谁是谁？</strong>
-记住一条线：<strong>提供能力的是Server，使用能力的是Client</strong>。文件系统Server提供&quot;读文件&quot;能力，Agent端的Client来调用它。Host里可以同时挂很多个Client，每个Client连一个Server，于是Agent就能用上所有Server的工具。</p>
-</blockquote>
-<h3 id="23-与传统function-calling的区别">2.3 与传统Function Calling的区别</h3>
-<table>
-<thead>
-<tr>
-<th>维度</th>
-<th>Function Calling</th>
-<th>MCP</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>工具定义位置</td>
-<td>写死在Agent代码或Prompt中</td>
-<td>独立Server，运行时动态发现</td>
-</tr>
-<tr>
-<td>复用性</td>
-<td>每个项目重写</td>
-<td>一次开发，多方复用</td>
-</tr>
-<tr>
-<td>上下文资源</td>
-<td>无统一抽象，手动拼接</td>
-<td>内置Resources概念，按URI访问</td>
-</tr>
-<tr>
-<td>提示模板</td>
-<td>无</td>
-<td>内置Prompts，可被Host列出并调用</td>
-</tr>
-<tr>
-<td>多模型兼容</td>
-<td>各厂商格式不同</td>
-<td>协议中立，与具体模型解耦</td>
-</tr>
-<tr>
-<td>部署形态</td>
-<td>与Agent同进程</td>
-<td>可独立进程，本地或远程</td>
-</tr>
-</tbody>
-</table>
-<p>一个直观的差异：在Function Calling模式下，你换一个模型厂商，工具描述格式可能就要改一遍；而在MCP下，Server完全不用动，Host换底层模型即可。这就像USB-C口不变，你换什么牌子的电脑都能用同一个U盘。</p>
-<h3 id="24-2026年生态状态">2.4 2026年生态状态</h3>
-<p>截至2026年中，MCP已被主流Agent框架广泛采纳：</p>
-<ul>
-<li><strong>官方/社区MCP Server数量已突破5000+</strong>，覆盖文件系统、Git、数据库（PostgreSQL/MySQL/SQLite）、Slack、GitHub、Notion、Linear、Sentry、Brave Search、Puppeteer等场景。</li>
-<li><strong>主流Host支持</strong>：Claude Desktop、Cursor、Windsurf、Zed、Cline等均原生支持MCP；LangChain、LlamaIndex、AutoGen也提供了MCP适配层。</li>
-<li><strong>多语言SDK</strong>：官方提供了TypeScript、Python SDK，社区贡献了Go、Rust、Java、C#等实现。</li>
-<li><strong>远程MCP</strong>：基于HTTP+SSE的远程Server部署模式逐渐成熟，出现了MCP Gateway、MCP Hub等托管平台。</li>
-</ul>
-<p>可以说，MCP已经从&quot;Anthropic的提案&quot;成长为事实标准。</p>
-<h2 id="3-mcp架构详解">3. MCP架构详解</h2>
-<h3 id="31-host宿主应用">3.1 Host：宿主应用</h3>
-<p>Host是用户视角的&quot;Agent应用&quot;。它的职责：</p>
-<ol>
-<li>创建并管理多个Client实例（一个Server对应一个Client）。</li>
-<li>汇总所有Server暴露的Tools/Resources/Prompts，统一呈现给LLM或用户。</li>
-<li>在LLM决定调用某个工具时，路由请求到对应Client，再把结果回传给LLM。</li>
-<li>控制<strong>权限边界</strong>：是否允许某个Server读取某资源、是否允许某工具执行，由Host把关。</li>
-</ol>
-<p>Claude Desktop就是典型Host：用户可以在配置文件中声明若干MCP Server，应用启动时拉起这些Server进程，并把工具接入对话。</p>
-<h3 id="32-client协议客户端">3.2 Client：协议客户端</h3>
-<p>Client是Host内部维护的&quot;会话管理器&quot;。每个Client对应一个Server，负责：</p>
-<ul>
-<li><strong>初始化握手</strong>：发送<code>initialize</code>请求，交换协议版本与能力声明。</li>
-<li><strong>能力协商</strong>：Server声明自己支持哪些Tools/Resources/Prompts，Client声明自己支持哪些回调（如采样<code>sampling</code>、根目录<code>roots</code>）。</li>
-<li><strong>消息收发</strong>：所有调用基于JSON-RPC 2.0，Client既是请求方，也接收Server发起的通知与反向请求。</li>
-<li><strong>生命周期管理</strong>：维持会话、处理断连、优雅关闭。</li>
-</ul>
-<h3 id="33-server服务提供方">3.3 Server：服务提供方</h3>
-<p>Server是能力提供者，可暴露三类原语（primitive）：</p>
-<table>
-<thead>
-<tr>
-<th>原语</th>
-<th>语义</th>
-<th>谁主导</th>
-<th>典型例子</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Tools</td>
-<td>可执行的函数，有副作用</td>
-<td>LLM主动调用</td>
-<td>发邮件、查数据库、运行Shell</td>
-</tr>
-<tr>
-<td>Resources</td>
-<td>可读取的数据，无副作用</td>
-<td>应用/用户主动拉取</td>
-<td>文件内容、DB Schema、日志</td>
-</tr>
-<tr>
-<td>Prompts</td>
-<td>预制的提示模板</td>
-<td>用户主动选择</td>
-<td>&ldquo;代码审查&quot;模板、&ldquo;周报&quot;模板</td>
-</tr>
-</tbody>
-</table>
-<p>注意三者的控制权差异：Tools是模型自主决定调用；Resources和Prompts更多是应用层主动获取后注入上下文。这种分工避免了LLM滥用只读资源，也让权限管理更清晰。</p>
-<blockquote>
-<p>💡 <strong>小贴士：为什么要分Tools和Resources？</strong>
-Tools会&quot;动手&rdquo;（可能发邮件、删文件），必须由LLM慎重决策后调用；Resources只&quot;读不动&rdquo;（看一份文档、查一段Schema），由应用层按需取用即可。把&quot;读&quot;和&quot;做&quot;分开，权限审批就能区别对待——读操作可以放行，写操作必须人工确认。</p>
-</blockquote>
-<h3 id="34-通信协议json-rpc-over-stdiosse">3.4 通信协议：JSON-RPC over stdio/SSE</h3>
-<p>MCP传输层支持两种主流模式：</p>
-<ul>
-<li><strong>stdio（标准输入输出）</strong>：本地进程间通信。Host以子进程方式拉起Server，通过stdin/stdout交换JSON-RPC消息。延迟低、部署简单，是本地集成的主流方式。</li>
-<li><strong>HTTP + SSE（Server-Sent Events）</strong>：远程通信。Server作为HTTP服务暴露，Client通过POST发请求、SSE接收推送。适合跨机器、云托管场景。新版本也支持<strong>Streamable HTTP</strong>，简化了SSE的双向通道。</li>
-</ul>
-<blockquote>
-<p>💡 <strong>小贴士：stdio和SSE各是啥？</strong></p>
-<ul>
-<li><strong>stdio</strong> 就是程序的标准输入输出流。你在终端敲<code>python xxx.py</code>，键盘输入走stdin，屏幕打印走stdout。MCP本地模式下，Host和Server就是靠这两个流互发JSON消息，省去了开网络端口的麻烦。</li>
-<li><strong>SSE（Server-Sent Events）</strong> 是一种服务器单向推消息给浏览器的HTTP技术。MCP远程模式下，Client发请求用普通POST，Server推结果用SSE，省去轮询。</li>
-</ul>
-</blockquote>
-<p>消息格式示例（Client调用工具）：</p>
-<div class="highlight"><div class="chroma">
-<table class="lntable"><tr><td class="lntd">
-<pre tabindex="0" class="chroma"><code><span class="lnt">1
-</span><span class="lnt">2
-</span><span class="lnt">3
-</span><span class="lnt">4
-</span><span class="lnt">5
-</span><span class="lnt">6
-</span><span class="lnt">7
-</span><span class="lnt">8
-</span><span class="lnt">9
-</span></code></pre></td>
-<td class="lntd">
-<pre tabindex="0" class="chroma"><code class="language-json" data-lang="json"><span class="line"><span class="cl"><span class="p">{</span>
-</span></span><span class="line"><span class="cl">  <span class="nt">&#34;jsonrpc&#34;</span><span class="p">:</span> <span class="s2">&#34;2.0&#34;</span><span class="p">,</span>
-</span></span><span class="line"><span class="cl">  <span class="nt">&#34;id&#34;</span><span class="p">:</span> <span class="mi">42</span><span class="p">,</span>
-</span></span><span class="line"><span class="cl">  <span class="nt">&#34;method&#34;</span><span class="p">:</span> <span class="s2">&#34;tools/call&#34;</span><span class="p">,</span>
-</span></span><span class="line"><span class="cl">  <span class="nt">&#34;params&#34;</span><span class="p">:</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">    <span class="nt">&#34;name&#34;</span><span class="p">:</span> <span class="s2">&#34;read_file&#34;</span><span class="p">,</span>
-</span></span><span class="line"><span class="cl">    <span class="nt">&#34;arguments&#34;</span><span class="p">:</span> <span class="p">{</span><span class="nt">&#34;path&#34;</span><span class="p">:</span> <span class="s2">&#34;/tmp/note.md&#34;</span><span class="p">}</span>
-</span></span><span class="line"><span class="cl">  <span class="p">}</span>
-</span></span><span class="line"><span class="cl"><span class="p">}</span>
-</span></span></code></pre></td></tr></table>
-</div>
-</div><p>Server响应：</p>
-<div class="highlight"><div class="chroma">
-<table class="lntable"><tr><td class="lntd">
-<pre tabindex="0" class="chroma"><code><span class="lnt">1
-</span><span class="lnt">2
-</span><span class="lnt">3
-</span><span class="lnt">4
-</span><span class="lnt">5
-</span><span class="lnt">6
-</span><span class="lnt">7
-</span><span class="lnt">8
-</span></code></pre></td>
-<td class="lntd">
-<pre tabindex="0" class="chroma"><code class="language-json" data-lang="json"><span class="line"><span class="cl"><span class="p">{</span>
-</span></span><span class="line"><span class="cl">  <span class="nt">&#34;jsonrpc&#34;</span><span class="p">:</span> <span class="s2">&#34;2.0&#34;</span><span class="p">,</span>
-</span></span><span class="line"><span class="cl">  <span class="nt">&#34;id&#34;</span><span class="p">:</span> <span class="mi">42</span><span class="p">,</span>
-</span></span><span class="line"><span class="cl">  <span class="nt">&#34;result&#34;</span><span class="p">:</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">    <span class="nt">&#34;content&#34;</span><span class="p">:</span> <span class="p">[{</span><span class="nt">&#34;type&#34;</span><span class="p">:</span> <span class="s2">&#34;text&#34;</span><span class="p">,</span> <span class="nt">&#34;text&#34;</span><span class="p">:</span> <span class="s2">&#34;笔记内容...&#34;</span><span class="p">}],</span>
-</span></span><span class="line"><span class="cl">    <span class="nt">&#34;isError&#34;</span><span class="p">:</span> <span class="kc">false</span>
-</span></span><span class="line"><span class="cl">  <span class="p">}</span>
-</span></span><span class="line"><span class="cl"><span class="p">}</span>
-</span></span></code></pre></td></tr></table>
-</div>
-</div><p>可以看到，每条消息都有一个<code>id</code>用于配对请求与响应，<code>method</code>指明调用哪个方法，<code>params</code>携带参数。这就是JSON-RPC的全部精髓。</p>
-<h3 id="35-生命周期初始化能力交换工具调用关闭">3.5 生命周期：初始化→能力交换→工具调用→关闭</h3>
-<p>一次完整的Client-Server会话：</p>
-<ol>
-<li><strong>Initialize</strong>：Client发送<code>initialize</code>，携带本端支持的协议版本和能力。Server回应当前版本及自身能力。</li>
-<li><strong>Initialized 通知</strong>：Client发送<code>notifications/initialized</code>，握手完成。</li>
-<li><strong>能力列举</strong>：Client调用<code>tools/list</code>、<code>resources/list</code>、<code>prompts/list</code>获取清单。</li>
-<li><strong>运行期调用</strong>：Client按需调用<code>tools/call</code>、<code>resources/read</code>、<code>prompts/get</code>；Server也可反向发起<code>sampling/createMessage</code>让Host代为调用LLM。</li>
-<li><strong>关闭</strong>：Client发送关闭信号或直接结束stdio通道，Server清理资源退出。</li>
-</ol>
-<p>理解这一生命周期对调试MCP连接问题非常重要——多数&quot;工具不出现&quot;的故障都源于握手或能力交换阶段出错。</p>
-<h2 id="4-开发mcp-server">4. 开发MCP Server</h2>
-<h3 id="41-安装python-sdk">4.1 安装Python SDK</h3>
-<div class="highlight"><div class="chroma">
-<table class="lntable"><tr><td class="lntd">
-<pre tabindex="0" class="chroma"><code><span class="lnt">1
-</span></code></pre></td>
-<td class="lntd">
-<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">pip install mcp
-</span></span></code></pre></td></tr></table>
-</div>
-</div><p><code>mcp</code>是官方维护的Python SDK，同时支持stdio与SSE两种传输方式。它提供两层API：</p>
-<ul>
-<li><strong>高层FastMCP</strong>：声明式，用类型注解和装饰器自动生成Schema，代码极简，<strong>推荐日常使用</strong>。</li>
-<li><strong>低层Server</strong>：手动实现每个JSON-RPC方法的handler，控制力强，适合需要精细定制的场景。</li>
-</ul>
-<blockquote>
-<p>💡 <strong>小贴士：本节用哪层API？</strong>
-本章代码采用高层<strong>FastMCP</strong>。它会把你的函数签名自动转成<code>tools/list</code>、<code>tools/call</code>这些JSON-RPC消息，底层细节全被封装。理解原理看第3节，动手写代码看FastMCP即可。</p>
-</blockquote>
-<p>下面我们用它开发一个<strong>文件系统MCP Server</strong>，暴露读取文件、列出目录两个工具，并演示Resources和Prompts。</p>
-<h3 id="42-三类原语速览">4.2 三类原语速览</h3>
-<p>在写代码前，先记住三类原语的FastMCP写法：</p>
-<ul>
-<li><strong>Tool（工具）</strong>：用<code>@mcp.tool()</code>装饰一个函数，函数名即工具名，<strong>类型注解</strong>自动生成参数Schema，<strong>docstring</strong>自动变成给LLM看的描述。</li>
-<li><strong>Resource（资源）</strong>：用<code>@mcp.resource(&quot;uri模板&quot;)</code>装饰一个函数，按URI暴露只读数据。</li>
-<li><strong>Prompt（提示模板）</strong>：用<code>@mcp.prompt()</code>装饰一个函数，返回一段预制提示词。</li>
-</ul>
-<h3 id="43-完整示例文件系统mcp-server">4.3 完整示例：文件系统MCP Server</h3>
-<p>下面是完整可运行的Server代码。注意看注释——它解释了每一块对应MCP的哪个概念：</p>
-<div class="highlight"><div class="chroma">
-<table class="lntable"><tr><td class="lntd">
-<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
-</span><span class="lnt"> 2
-</span><span class="lnt"> 3
-</span><span class="lnt"> 4
-</span><span class="lnt"> 5
-</span><span class="lnt"> 6
-</span><span class="lnt"> 7
-</span><span class="lnt"> 8
-</span><span class="lnt"> 9
-</span><span class="lnt">10
-</span><span class="lnt">11
-</span><span class="lnt">12
-</span><span class="lnt">13
-</span><span class="lnt">14
-</span><span class="lnt">15
-</span><span class="lnt">16
-</span><span class="lnt">17
-</span><span class="lnt">18
-</span><span class="lnt">19
-</span><span class="lnt">20
-</span><span class="lnt">21
-</span><span class="lnt">22
-</span><span class="lnt">23
-</span><span class="lnt">24
-</span><span class="lnt">25
-</span><span class="lnt">26
-</span><span class="lnt">27
-</span><span class="lnt">28
-</span><span class="lnt">29
-</span><span class="lnt">30
-</span><span class="lnt">31
-</span><span class="lnt">32
-</span><span class="lnt">33
-</span><span class="lnt">34
-</span><span class="lnt">35
-</span><span class="lnt">36
-</span><span class="lnt">37
-</span><span class="lnt">38
-</span><span class="lnt">39
-</span><span class="lnt">40
-</span><span class="lnt">41
-</span><span class="lnt">42
-</span><span class="lnt">43
-</span><span class="lnt">44
-</span><span class="lnt">45
-</span><span class="lnt">46
-</span><span class="lnt">47
-</span><span class="lnt">48
-</span><span class="lnt">49
-</span><span class="lnt">50
-</span><span class="lnt">51
-</span><span class="lnt">52
-</span><span class="lnt">53
-</span><span class="lnt">54
-</span><span class="lnt">55
-</span><span class="lnt">56
-</span><span class="lnt">57
-</span><span class="lnt">58
-</span><span class="lnt">59
-</span><span class="lnt">60
-</span><span class="lnt">61
-</span><span class="lnt">62
-</span><span class="lnt">63
-</span><span class="lnt">64
-</span><span class="lnt">65
-</span><span class="lnt">66
-</span><span class="lnt">67
-</span></code></pre></td>
-<td class="lntd">
-<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="c1"># filesystem_mcp_server.py</span>
-</span></span><span class="line"><span class="cl"><span class="c1"># 文件系统 MCP Server：提供「读取文件」「列出目录」两个工具，</span>
-</span></span><span class="line"><span class="cl"><span class="c1"># 另外演示 Resources（资源）和 Prompts（提示模板）两类原语。</span>
-</span></span><span class="line"><span class="cl"><span class="c1"># 运行：python filesystem_mcp_server.py</span>
-</span></span><span class="line"><span class="cl"><span class="c1"># 依赖：pip install mcp</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">os</span>
-</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">mcp.server.fastmcp</span> <span class="kn">import</span> <span class="n">FastMCP</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="c1"># 创建 Server 实例，名称会在握手阶段告诉 Client「我是谁」</span>
-</span></span><span class="line"><span class="cl"><span class="n">mcp</span> <span class="o">=</span> <span class="n">FastMCP</span><span class="p">(</span><span class="s2">&#34;filesystem-mcp&#34;</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="c1"># ---------- Tools：工具（LLM 主动调用）----------</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="nd">@mcp.tool</span><span class="p">()</span>
-</span></span><span class="line"><span class="cl"><span class="k">async</span> <span class="k">def</span> <span class="nf">read_file</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-</span></span><span class="line"><span class="cl">    <span class="s2">&#34;&#34;&#34;读取指定路径的文本文件内容。路径必须是绝对路径。&#34;&#34;&#34;</span>
-</span></span><span class="line"><span class="cl">    <span class="k">try</span><span class="p">:</span>
-</span></span><span class="line"><span class="cl">        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s2">&#34;r&#34;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&#34;utf-8&#34;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
-</span></span><span class="line"><span class="cl">            <span class="k">return</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
-</span></span><span class="line"><span class="cl">    <span class="k">except</span> <span class="ne">FileNotFoundError</span><span class="p">:</span>
-</span></span><span class="line"><span class="cl">        <span class="c1"># 用「返回文本」承载错误，而不是抛异常——</span>
-</span></span><span class="line"><span class="cl">        <span class="c1"># 这样 LLM 能看到错误描述，自行决定是否重试或换工具</span>
-</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="sa">f</span><span class="s2">&#34;错误：文件不存在 </span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">&#34;</span>
-</span></span><span class="line"><span class="cl">    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="sa">f</span><span class="s2">&#34;错误：</span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&#34;</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="nd">@mcp.tool</span><span class="p">()</span>
-</span></span><span class="line"><span class="cl"><span class="k">async</span> <span class="k">def</span> <span class="nf">list_directory</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-</span></span><span class="line"><span class="cl">    <span class="s2">&#34;&#34;&#34;列出指定目录下的文件与子目录名称。&#34;&#34;&#34;</span>
-</span></span><span class="line"><span class="cl">    <span class="k">try</span><span class="p">:</span>
-</span></span><span class="line"><span class="cl">        <span class="n">entries</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">        <span class="n">lines</span> <span class="o">=</span> <span class="p">[]</span>
-</span></span><span class="line"><span class="cl">        <span class="k">for</span> <span class="n">entry</span> <span class="ow">in</span> <span class="n">entries</span><span class="p">:</span>
-</span></span><span class="line"><span class="cl">            <span class="n">full</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">entry</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">            <span class="n">kind</span> <span class="o">=</span> <span class="s2">&#34;目录&#34;</span> <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">full</span><span class="p">)</span> <span class="k">else</span> <span class="s2">&#34;文件&#34;</span>
-</span></span><span class="line"><span class="cl">            <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&#34;</span><span class="si">{</span><span class="n">entry</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="n">kind</span><span class="si">}</span><span class="s2">)&#34;</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="s2">&#34;</span><span class="se">\n</span><span class="s2">&#34;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="sa">f</span><span class="s2">&#34;错误：</span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&#34;</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="c1"># ---------- Resources：资源（应用层按 URI 主动读取）----------</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="nd">@mcp.resource</span><span class="p">(</span><span class="s2">&#34;file://</span><span class="si">{path}</span><span class="s2">&#34;</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl"><span class="k">async</span> <span class="k">def</span> <span class="nf">read_resource</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-</span></span><span class="line"><span class="cl">    <span class="s2">&#34;&#34;&#34;按 URI 读取文件内容，作为只读资源暴露给 Client。
-</span></span></span><span class="line"><span class="cl"><span class="s2">    Client 读取 file:///tmp/note.md 时，path 会被解析为 /tmp/note.md。&#34;&#34;&#34;</span>
-</span></span><span class="line"><span class="cl">    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s2">&#34;r&#34;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&#34;utf-8&#34;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
-</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="c1"># ---------- Prompts：提示模板（用户选择后由 Host 渲染）----------</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="nd">@mcp.prompt</span><span class="p">()</span>
-</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">summarize_file</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-</span></span><span class="line"><span class="cl">    <span class="s2">&#34;&#34;&#34;生成一段提示词，让模型总结指定文件内容。&#34;&#34;&#34;</span>
-</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="sa">f</span><span class="s2">&#34;请阅读路径 </span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2"> 的文件内容，并用三句话总结要点。&#34;</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="c1"># ---------- 启动 ----------</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&#34;__main__&#34;</span><span class="p">:</span>
-</span></span><span class="line"><span class="cl">    <span class="c1"># mcp.run() 默认以 stdio 模式启动，等待 Host 拉起并通信</span>
-</span></span><span class="line"><span class="cl">    <span class="n">mcp</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
-</span></span></code></pre></td></tr></table>
-</div>
-</div><p>几个值得注意的细节：</p>
-<ul>
-<li><strong>类型注解即Schema</strong>：<code>path: str</code>会被FastMCP自动转成<code>{&quot;type&quot;: &quot;string&quot;}</code>的JSON Schema，再也不用手写<code>inputSchema</code>字典了。</li>
-<li><strong>docstring即描述</strong>：函数下方的三引号文档字符串，会原样成为工具的<code>description</code>，直接给LLM看。所以<strong>写好docstring等于写好工具说明书</strong>。</li>
-<li><strong>错误处理风格</strong>：MCP推荐&quot;返回文本错误&quot;而非抛异常，这样LLM能看到错误描述并自行决定是否重试或换工具。</li>
-<li><strong>Resource的URI</strong>：必须符合<code>协议://路径</code>形式，<code>file://</code>是最常用的，也可以自定义如<code>db://users/42</code>。</li>
-<li><strong><code>mcp.run()</code>默认stdio</strong>：本地集成时Host以子进程拉起本脚本，通过stdin/stdout收发消息，无需开端口。</li>
-</ul>
-<blockquote>
-<p>💡 <strong>小贴士：FastMCP背后发生了什么？</strong>
-当Client发来<code>tools/list</code>时，FastMCP会扫描所有<code>@mcp.tool()</code>装饰的函数，自动生成工具清单返回；当Client发来<code>tools/call</code>并指定<code>name=&quot;read_file&quot;</code>，FastMCP会调用对应函数、把返回值包成<code>TextContent</code>回传。你写的只是普通Python函数，协议细节全自动。</p>
-</blockquote>
-<h2 id="5-开发mcp-client">5. 开发MCP Client</h2>
-<h3 id="51-client的职责">5.1 Client的职责</h3>
-<p>一个完整的MCP Client需要做四件事：</p>
-<ol>
-<li><strong>连接</strong>：通过stdio或SSE与Server建立会话。</li>
-<li><strong>初始化</strong>：发送<code>initialize</code>、接收能力声明、发送<code>initialized</code>通知。</li>
-<li><strong>发现</strong>：调用<code>tools/list</code>等列举能力。</li>
-<li><strong>调用</strong>：按需调用<code>tools/call</code>，解析返回的<code>content</code>数组。</li>
-</ol>
-<h3 id="52-完整示例mcp-client集成到agent">5.2 完整示例：MCP Client集成到Agent</h3>
-<p>下面这段代码启动上一节的文件系统Server，并把它的工具接入一个简易Agent循环。代码分六步，每步都有注释说明在做什么：</p>
-<div class="highlight"><div class="chroma">
-<table class="lntable"><tr><td class="lntd">
-<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
-</span><span class="lnt"> 2
-</span><span class="lnt"> 3
-</span><span class="lnt"> 4
-</span><span class="lnt"> 5
-</span><span class="lnt"> 6
-</span><span class="lnt"> 7
-</span><span class="lnt"> 8
-</span><span class="lnt"> 9
-</span><span class="lnt">10
-</span><span class="lnt">11
-</span><span class="lnt">12
-</span><span class="lnt">13
-</span><span class="lnt">14
-</span><span class="lnt">15
-</span><span class="lnt">16
-</span><span class="lnt">17
-</span><span class="lnt">18
-</span><span class="lnt">19
-</span><span class="lnt">20
-</span><span class="lnt">21
-</span><span class="lnt">22
-</span><span class="lnt">23
-</span><span class="lnt">24
-</span><span class="lnt">25
-</span><span class="lnt">26
-</span><span class="lnt">27
-</span><span class="lnt">28
-</span><span class="lnt">29
-</span><span class="lnt">30
-</span><span class="lnt">31
-</span><span class="lnt">32
-</span><span class="lnt">33
-</span><span class="lnt">34
-</span><span class="lnt">35
-</span><span class="lnt">36
-</span><span class="lnt">37
-</span><span class="lnt">38
-</span><span class="lnt">39
-</span><span class="lnt">40
-</span><span class="lnt">41
-</span><span class="lnt">42
-</span><span class="lnt">43
-</span><span class="lnt">44
-</span><span class="lnt">45
-</span><span class="lnt">46
-</span><span class="lnt">47
-</span><span class="lnt">48
-</span><span class="lnt">49
-</span><span class="lnt">50
-</span><span class="lnt">51
-</span><span class="lnt">52
-</span><span class="lnt">53
-</span><span class="lnt">54
-</span><span class="lnt">55
-</span><span class="lnt">56
-</span><span class="lnt">57
-</span><span class="lnt">58
-</span><span class="lnt">59
-</span><span class="lnt">60
-</span><span class="lnt">61
-</span><span class="lnt">62
-</span><span class="lnt">63
-</span><span class="lnt">64
-</span><span class="lnt">65
-</span><span class="lnt">66
-</span><span class="lnt">67
-</span><span class="lnt">68
-</span><span class="lnt">69
-</span><span class="lnt">70
-</span><span class="lnt">71
-</span><span class="lnt">72
-</span><span class="lnt">73
-</span><span class="lnt">74
-</span><span class="lnt">75
-</span><span class="lnt">76
-</span><span class="lnt">77
-</span><span class="lnt">78
-</span><span class="lnt">79
-</span><span class="lnt">80
-</span><span class="lnt">81
-</span><span class="lnt">82
-</span><span class="lnt">83
-</span><span class="lnt">84
-</span><span class="lnt">85
-</span><span class="lnt">86
-</span><span class="lnt">87
-</span><span class="lnt">88
-</span><span class="lnt">89
-</span><span class="lnt">90
-</span><span class="lnt">91
-</span><span class="lnt">92
-</span><span class="lnt">93
-</span><span class="lnt">94
-</span><span class="lnt">95
-</span><span class="lnt">96
-</span><span class="lnt">97
-</span><span class="lnt">98
-</span><span class="lnt">99
-</span></code></pre></td>
-<td class="lntd">
-<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="c1"># mcp_client_agent.py</span>
-</span></span><span class="line"><span class="cl"><span class="c1"># 通过 MCP Client 连接文件系统 Server，并把工具接入一个简易 Agent。</span>
-</span></span><span class="line"><span class="cl"><span class="c1"># 依赖：pip install mcp openai</span>
-</span></span><span class="line"><span class="cl"><span class="c1"># 环境变量：OPENAI_API_KEY、OPENAI_BASE_URL（可选）、MODEL_NAME（可选）</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">os</span>
-</span></span><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">sys</span>
-</span></span><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">asyncio</span>
-</span></span><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">json</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">mcp</span> <span class="kn">import</span> <span class="n">ClientSession</span><span class="p">,</span> <span class="n">StdioServerParameters</span>
-</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">mcp.client.stdio</span> <span class="kn">import</span> <span class="n">stdio_client</span>
-</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">openai</span> <span class="kn">import</span> <span class="n">OpenAI</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="c1"># LLM 客户端：可替换为任何兼容 OpenAI 接口的模型服务</span>
-</span></span><span class="line"><span class="cl"><span class="n">llm</span> <span class="o">=</span> <span class="n">OpenAI</span><span class="p">(</span>
-</span></span><span class="line"><span class="cl">    <span class="n">api_key</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&#34;OPENAI_API_KEY&#34;</span><span class="p">,</span> <span class="s2">&#34;sk-xxx&#34;</span><span class="p">),</span>
-</span></span><span class="line"><span class="cl">    <span class="n">base_url</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">&#34;OPENAI_BASE_URL&#34;</span><span class="p">,</span> <span class="s2">&#34;https://api.openai.com/v1&#34;</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl"><span class="p">)</span>
-</span></span><span class="line"><span class="cl"><span class="n">MODEL</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">&#34;MODEL_NAME&#34;</span><span class="p">,</span> <span class="s2">&#34;gpt-5.4&#34;</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="k">async</span> <span class="k">def</span> <span class="nf">run_agent</span><span class="p">(</span><span class="n">user_query</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
-</span></span><span class="line"><span class="cl">    <span class="s2">&#34;&#34;&#34;启动 MCP Server 子进程，建立会话，运行一轮 Agent 对话&#34;&#34;&#34;</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">    <span class="c1"># 第 1 步：配置 stdio 连接参数，以子进程方式拉起 Server</span>
-</span></span><span class="line"><span class="cl">    <span class="n">server_params</span> <span class="o">=</span> <span class="n">StdioServerParameters</span><span class="p">(</span>
-</span></span><span class="line"><span class="cl">        <span class="n">command</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">executable</span><span class="p">,</span>            <span class="c1"># 用当前 Python 解释器</span>
-</span></span><span class="line"><span class="cl">        <span class="n">args</span><span class="o">=</span><span class="p">[</span><span class="s2">&#34;filesystem_mcp_server.py&#34;</span><span class="p">],</span> <span class="c1"># Server 脚本路径</span>
-</span></span><span class="line"><span class="cl">        <span class="n">env</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>             <span class="c1"># 透传环境变量</span>
-</span></span><span class="line"><span class="cl">    <span class="p">)</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">    <span class="c1"># 第 2 步：建立 stdio 连接，再创建 Client 会话</span>
-</span></span><span class="line"><span class="cl">    <span class="k">async</span> <span class="k">with</span> <span class="n">stdio_client</span><span class="p">(</span><span class="n">server_params</span><span class="p">)</span> <span class="k">as</span> <span class="p">(</span><span class="n">read</span><span class="p">,</span> <span class="n">write</span><span class="p">):</span>
-</span></span><span class="line"><span class="cl">        <span class="k">async</span> <span class="k">with</span> <span class="n">ClientSession</span><span class="p">(</span><span class="n">read</span><span class="p">,</span> <span class="n">write</span><span class="p">)</span> <span class="k">as</span> <span class="n">session</span><span class="p">:</span>
-</span></span><span class="line"><span class="cl">            <span class="c1"># 第 3 步：初始化握手，交换协议版本与能力声明</span>
-</span></span><span class="line"><span class="cl">            <span class="k">await</span> <span class="n">session</span><span class="o">.</span><span class="n">initialize</span><span class="p">()</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">            <span class="c1"># 第 4 步：发现工具，调用 tools/list 拿到清单</span>
-</span></span><span class="line"><span class="cl">            <span class="n">tools_resp</span> <span class="o">=</span> <span class="k">await</span> <span class="n">session</span><span class="o">.</span><span class="n">list_tools</span><span class="p">()</span>
-</span></span><span class="line"><span class="cl">            <span class="n">mcp_tools</span> <span class="o">=</span> <span class="n">tools_resp</span><span class="o">.</span><span class="n">tools</span>
-</span></span><span class="line"><span class="cl">            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&#34;[Client] 发现 </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">mcp_tools</span><span class="p">)</span><span class="si">}</span><span class="s2"> 个工具：&#34;</span><span class="p">,</span>
-</span></span><span class="line"><span class="cl">                  <span class="p">[</span><span class="n">t</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">mcp_tools</span><span class="p">])</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">            <span class="c1"># 第 5 步：把 MCP 工具转换为 OpenAI Function Calling 格式</span>
-</span></span><span class="line"><span class="cl">            <span class="n">oa_tools</span> <span class="o">=</span> <span class="p">[]</span>
-</span></span><span class="line"><span class="cl">            <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">mcp_tools</span><span class="p">:</span>
-</span></span><span class="line"><span class="cl">                <span class="n">oa_tools</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
-</span></span><span class="line"><span class="cl">                    <span class="s2">&#34;type&#34;</span><span class="p">:</span> <span class="s2">&#34;function&#34;</span><span class="p">,</span>
-</span></span><span class="line"><span class="cl">                    <span class="s2">&#34;function&#34;</span><span class="p">:</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">                        <span class="s2">&#34;name&#34;</span><span class="p">:</span> <span class="n">t</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
-</span></span><span class="line"><span class="cl">                        <span class="s2">&#34;description&#34;</span><span class="p">:</span> <span class="n">t</span><span class="o">.</span><span class="n">description</span><span class="p">,</span>
-</span></span><span class="line"><span class="cl">                        <span class="s2">&#34;parameters&#34;</span><span class="p">:</span> <span class="n">t</span><span class="o">.</span><span class="n">inputSchema</span>
-</span></span><span class="line"><span class="cl">                    <span class="p">}</span>
-</span></span><span class="line"><span class="cl">                <span class="p">})</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">            <span class="c1"># 第 6 步：Agent 主循环：对话 → 可能调用工具 → 回填结果 → 继续对话</span>
-</span></span><span class="line"><span class="cl">            <span class="n">messages</span> <span class="o">=</span> <span class="p">[</span>
-</span></span><span class="line"><span class="cl">                <span class="p">{</span><span class="s2">&#34;role&#34;</span><span class="p">:</span> <span class="s2">&#34;system&#34;</span><span class="p">,</span> <span class="s2">&#34;content&#34;</span><span class="p">:</span> <span class="s2">&#34;你是一个文件助手，可以读写本地文件。&#34;</span><span class="p">},</span>
-</span></span><span class="line"><span class="cl">                <span class="p">{</span><span class="s2">&#34;role&#34;</span><span class="p">:</span> <span class="s2">&#34;user&#34;</span><span class="p">,</span> <span class="s2">&#34;content&#34;</span><span class="p">:</span> <span class="n">user_query</span><span class="p">}</span>
-</span></span><span class="line"><span class="cl">            <span class="p">]</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">            <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">5</span><span class="p">):</span>  <span class="c1"># 最多 5 轮，防止死循环</span>
-</span></span><span class="line"><span class="cl">                <span class="n">resp</span> <span class="o">=</span> <span class="n">llm</span><span class="o">.</span><span class="n">chat</span><span class="o">.</span><span class="n">completions</span><span class="o">.</span><span class="n">create</span><span class="p">(</span>
-</span></span><span class="line"><span class="cl">                    <span class="n">model</span><span class="o">=</span><span class="n">MODEL</span><span class="p">,</span>
-</span></span><span class="line"><span class="cl">                    <span class="n">messages</span><span class="o">=</span><span class="n">messages</span><span class="p">,</span>
-</span></span><span class="line"><span class="cl">                    <span class="n">tools</span><span class="o">=</span><span class="n">oa_tools</span>
-</span></span><span class="line"><span class="cl">                <span class="p">)</span>
-</span></span><span class="line"><span class="cl">                <span class="n">msg</span> <span class="o">=</span> <span class="n">resp</span><span class="o">.</span><span class="n">choices</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">message</span>
-</span></span><span class="line"><span class="cl">                <span class="n">messages</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">msg</span><span class="o">.</span><span class="n">model_dump</span><span class="p">(</span><span class="n">exclude_none</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">                <span class="c1"># 没有工具调用，说明模型已经给出最终回答</span>
-</span></span><span class="line"><span class="cl">                <span class="k">if</span> <span class="ow">not</span> <span class="n">msg</span><span class="o">.</span><span class="n">tool_calls</span><span class="p">:</span>
-</span></span><span class="line"><span class="cl">                    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&#34;[Agent] 回复：</span><span class="si">{</span><span class="n">msg</span><span class="o">.</span><span class="n">content</span><span class="si">}</span><span class="s2">&#34;</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">                    <span class="k">break</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">                <span class="c1"># 执行模型要求的每一个工具调用</span>
-</span></span><span class="line"><span class="cl">                <span class="k">for</span> <span class="n">call</span> <span class="ow">in</span> <span class="n">msg</span><span class="o">.</span><span class="n">tool_calls</span><span class="p">:</span>
-</span></span><span class="line"><span class="cl">                    <span class="n">fn_name</span> <span class="o">=</span> <span class="n">call</span><span class="o">.</span><span class="n">function</span><span class="o">.</span><span class="n">name</span>
-</span></span><span class="line"><span class="cl">                    <span class="n">fn_args</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">call</span><span class="o">.</span><span class="n">function</span><span class="o">.</span><span class="n">arguments</span> <span class="ow">or</span> <span class="s2">&#34;</span><span class="si">{}</span><span class="s2">&#34;</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">                    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&#34;[Agent] 调用工具 </span><span class="si">{</span><span class="n">fn_name</span><span class="si">}</span><span class="s2">，参数：</span><span class="si">{</span><span class="n">fn_args</span><span class="si">}</span><span class="s2">&#34;</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">                    <span class="c1"># 通过 MCP Client 调用 Server 上的工具</span>
-</span></span><span class="line"><span class="cl">                    <span class="n">result</span> <span class="o">=</span> <span class="k">await</span> <span class="n">session</span><span class="o">.</span><span class="n">call_tool</span><span class="p">(</span><span class="n">fn_name</span><span class="p">,</span> <span class="n">fn_args</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">                    <span class="c1"># 把工具结果回填为 tool 角色消息</span>
-</span></span><span class="line"><span class="cl">                    <span class="n">tool_text</span> <span class="o">=</span> <span class="s2">&#34;</span><span class="se">\n</span><span class="s2">&#34;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
-</span></span><span class="line"><span class="cl">                        <span class="n">c</span><span class="o">.</span><span class="n">text</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">result</span><span class="o">.</span><span class="n">content</span> <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="s2">&#34;text&#34;</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">                    <span class="p">)</span>
-</span></span><span class="line"><span class="cl">                    <span class="n">messages</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
-</span></span><span class="line"><span class="cl">                        <span class="s2">&#34;role&#34;</span><span class="p">:</span> <span class="s2">&#34;tool&#34;</span><span class="p">,</span>
-</span></span><span class="line"><span class="cl">                        <span class="s2">&#34;tool_call_id&#34;</span><span class="p">:</span> <span class="n">call</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
-</span></span><span class="line"><span class="cl">                        <span class="s2">&#34;content&#34;</span><span class="p">:</span> <span class="n">tool_text</span>
-</span></span><span class="line"><span class="cl">                    <span class="p">})</span>
-</span></span><span class="line"><span class="cl">                    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&#34;[Tool] 结果：</span><span class="si">{</span><span class="n">tool_text</span><span class="p">[:</span><span class="mi">200</span><span class="p">]</span><span class="si">}</span><span class="s2">&#34;</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&#34;__main__&#34;</span><span class="p">:</span>
-</span></span><span class="line"><span class="cl">    <span class="c1"># 示例：让 Agent 列出 /tmp 目录并读取某个 .md 文件</span>
-</span></span><span class="line"><span class="cl">    <span class="n">asyncio</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">run_agent</span><span class="p">(</span><span class="s2">&#34;请列出 /tmp 目录下有哪些文件，并读取其中任意一个 .md 文件的内容。&#34;</span><span class="p">))</span>
-</span></span></code></pre></td></tr></table>
-</div>
-</div><p>注意我们做了<strong>协议桥接</strong>：MCP工具的<code>inputSchema</code>正好就是OpenAI Function Calling所需的JSON Schema，所以转换几乎零成本——直接把<code>t.inputSchema</code>塞进<code>parameters</code>字段即可。这也是MCP设计中&quot;协议中立&quot;红利的体现：你可以用任意LLM厂商的API，工具层完全复用。</p>
-<blockquote>
-<p>💡 <strong>小贴士：为什么说MCP是&quot;协议中立&quot;的？</strong>
-MCP Server只懂JSON-RPC，根本不知道调用它的是GPT、Claude还是通义。Client这边把MCP工具格式转成各家API需要的格式（OpenAI用<code>function</code>字段、Anthropic用<code>tools</code>字段），转换层很薄。换模型只动Client，Server一行不改。</p>
-</blockquote>
-<h2 id="6-mcp实战构建天气查询agent">6. MCP实战：构建天气查询Agent</h2>
-<p>理论清楚了，下面用一个更贴近真实场景的例子把全流程串起来。我们将：</p>
-<ol>
-<li>开发一个<strong>天气MCP Server</strong>，封装开放天气API。</li>
-<li>用MCP Client把它接入Agent，让用户用自然语言问天气。</li>
-</ol>
-<h3 id="61-天气mcp-server">6.1 天气MCP Server</h3>
-<p>这个Server只暴露一个<code>get_weather</code>工具，背后调用免费的wttr.in服务（无需API Key，便于演示）。同样用FastMCP，几十行搞定：</p>
-<div class="highlight"><div class="chroma">
-<table class="lntable"><tr><td class="lntd">
-<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
-</span><span class="lnt"> 2
-</span><span class="lnt"> 3
-</span><span class="lnt"> 4
-</span><span class="lnt"> 5
-</span><span class="lnt"> 6
-</span><span class="lnt"> 7
-</span><span class="lnt"> 8
-</span><span class="lnt"> 9
-</span><span class="lnt">10
-</span><span class="lnt">11
-</span><span class="lnt">12
-</span><span class="lnt">13
-</span><span class="lnt">14
-</span><span class="lnt">15
-</span><span class="lnt">16
-</span><span class="lnt">17
-</span><span class="lnt">18
-</span><span class="lnt">19
-</span><span class="lnt">20
-</span><span class="lnt">21
-</span><span class="lnt">22
-</span><span class="lnt">23
-</span><span class="lnt">24
-</span><span class="lnt">25
-</span><span class="lnt">26
-</span><span class="lnt">27
-</span><span class="lnt">28
-</span><span class="lnt">29
-</span><span class="lnt">30
-</span><span class="lnt">31
-</span><span class="lnt">32
-</span><span class="lnt">33
-</span><span class="lnt">34
-</span><span class="lnt">35
-</span><span class="lnt">36
-</span><span class="lnt">37
-</span><span class="lnt">38
-</span><span class="lnt">39
-</span><span class="lnt">40
-</span><span class="lnt">41
-</span><span class="lnt">42
-</span><span class="lnt">43
-</span><span class="lnt">44
-</span></code></pre></td>
-<td class="lntd">
-<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="c1"># weather_mcp_server.py</span>
-</span></span><span class="line"><span class="cl"><span class="c1"># 天气查询 MCP Server：暴露 get_weather 工具</span>
-</span></span><span class="line"><span class="cl"><span class="c1"># 依赖：pip install mcp httpx</span>
-</span></span><span class="line"><span class="cl"><span class="c1"># 运行：python weather_mcp_server.py</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">httpx</span>
-</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">mcp.server.fastmcp</span> <span class="kn">import</span> <span class="n">FastMCP</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="n">mcp</span> <span class="o">=</span> <span class="n">FastMCP</span><span class="p">(</span><span class="s2">&#34;weather-mcp&#34;</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="c1"># wttr.in 是免费天气服务，?format=j1 返回 JSON</span>
-</span></span><span class="line"><span class="cl"><span class="n">WEATHER_URL</span> <span class="o">=</span> <span class="s2">&#34;https://wttr.in/</span><span class="si">{city}</span><span class="s2">?format=j1&#34;</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="nd">@mcp.tool</span><span class="p">()</span>
-</span></span><span class="line"><span class="cl"><span class="k">async</span> <span class="k">def</span> <span class="nf">get_weather</span><span class="p">(</span><span class="n">city</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-</span></span><span class="line"><span class="cl">    <span class="s2">&#34;&#34;&#34;查询指定城市的当前天气，返回温度、天气状况、湿度、风速等。
-</span></span></span><span class="line"><span class="cl"><span class="s2">    城市名用英文或拼音，例如 Beijing、shanghai。&#34;&#34;&#34;</span>
-</span></span><span class="line"><span class="cl">    <span class="k">try</span><span class="p">:</span>
-</span></span><span class="line"><span class="cl">        <span class="k">async</span> <span class="k">with</span> <span class="n">httpx</span><span class="o">.</span><span class="n">AsyncClient</span><span class="p">(</span><span class="n">timeout</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span> <span class="k">as</span> <span class="n">client</span><span class="p">:</span>
-</span></span><span class="line"><span class="cl">            <span class="n">resp</span> <span class="o">=</span> <span class="k">await</span> <span class="n">client</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">WEATHER_URL</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">city</span><span class="o">=</span><span class="n">city</span><span class="p">))</span>
-</span></span><span class="line"><span class="cl">            <span class="n">resp</span><span class="o">.</span><span class="n">raise_for_status</span><span class="p">()</span>
-</span></span><span class="line"><span class="cl">            <span class="n">data</span> <span class="o">=</span> <span class="n">resp</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">        <span class="c1"># 解析当前天气字段</span>
-</span></span><span class="line"><span class="cl">        <span class="n">current</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s2">&#34;current_condition&#34;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
-</span></span><span class="line"><span class="cl">        <span class="n">temp_c</span> <span class="o">=</span> <span class="n">current</span><span class="p">[</span><span class="s2">&#34;temp_C&#34;</span><span class="p">]</span>
-</span></span><span class="line"><span class="cl">        <span class="n">desc</span> <span class="o">=</span> <span class="n">current</span><span class="p">[</span><span class="s2">&#34;weatherDesc&#34;</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="s2">&#34;value&#34;</span><span class="p">]</span>
-</span></span><span class="line"><span class="cl">        <span class="n">humidity</span> <span class="o">=</span> <span class="n">current</span><span class="p">[</span><span class="s2">&#34;humidity&#34;</span><span class="p">]</span>
-</span></span><span class="line"><span class="cl">        <span class="n">wind</span> <span class="o">=</span> <span class="n">current</span><span class="p">[</span><span class="s2">&#34;windspeedKmph&#34;</span><span class="p">]</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="p">(</span>
-</span></span><span class="line"><span class="cl">            <span class="sa">f</span><span class="s2">&#34;城市：</span><span class="si">{</span><span class="n">city</span><span class="si">}</span><span class="se">\n</span><span class="s2">&#34;</span>
-</span></span><span class="line"><span class="cl">            <span class="sa">f</span><span class="s2">&#34;温度：</span><span class="si">{</span><span class="n">temp_c</span><span class="si">}</span><span class="s2">°C</span><span class="se">\n</span><span class="s2">&#34;</span>
-</span></span><span class="line"><span class="cl">            <span class="sa">f</span><span class="s2">&#34;天气：</span><span class="si">{</span><span class="n">desc</span><span class="si">}</span><span class="se">\n</span><span class="s2">&#34;</span>
-</span></span><span class="line"><span class="cl">            <span class="sa">f</span><span class="s2">&#34;湿度：</span><span class="si">{</span><span class="n">humidity</span><span class="si">}</span><span class="s2">%</span><span class="se">\n</span><span class="s2">&#34;</span>
-</span></span><span class="line"><span class="cl">            <span class="sa">f</span><span class="s2">&#34;风速：</span><span class="si">{</span><span class="n">wind</span><span class="si">}</span><span class="s2">km/h&#34;</span>
-</span></span><span class="line"><span class="cl">        <span class="p">)</span>
-</span></span><span class="line"><span class="cl">    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="sa">f</span><span class="s2">&#34;查询失败：</span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&#34;</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&#34;__main__&#34;</span><span class="p">:</span>
-</span></span><span class="line"><span class="cl">    <span class="n">mcp</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
-</span></span></code></pre></td></tr></table>
-</div>
-</div><blockquote>
-<p>💡 <strong>小贴士：为什么用<code>httpx.AsyncClient</code>而不是<code>requests</code>？</strong>
-MCP的Python SDK基于<code>asyncio</code>异步框架。如果工具内部用同步的<code>requests</code>发请求，会阻塞整个事件循环，导致Server卡住无法响应其他调用。<code>httpx</code>的异步客户端与asyncio天然兼容，不会阻塞。同理，访问数据库应该用<code>aiosqlite</code>、<code>asyncpg</code>等异步驱动。</p>
-</blockquote>
-<h3 id="62-agent通过mcp调用天气工具">6.2 Agent通过MCP调用天气工具</h3>
-<p>我们复用上一节的Client骨架，只换Server脚本与System Prompt。注意<code>StdioServerParameters</code>的<code>args</code>改成了<code>weather_mcp_server.py</code>：</p>
-<div class="highlight"><div class="chroma">
-<table class="lntable"><tr><td class="lntd">
-<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
-</span><span class="lnt"> 2
-</span><span class="lnt"> 3
-</span><span class="lnt"> 4
-</span><span class="lnt"> 5
-</span><span class="lnt"> 6
-</span><span class="lnt"> 7
-</span><span class="lnt"> 8
-</span><span class="lnt"> 9
-</span><span class="lnt">10
-</span><span class="lnt">11
-</span><span class="lnt">12
-</span><span class="lnt">13
-</span><span class="lnt">14
-</span><span class="lnt">15
-</span><span class="lnt">16
-</span><span class="lnt">17
-</span><span class="lnt">18
-</span><span class="lnt">19
-</span><span class="lnt">20
-</span><span class="lnt">21
-</span><span class="lnt">22
-</span><span class="lnt">23
-</span><span class="lnt">24
-</span><span class="lnt">25
-</span><span class="lnt">26
-</span><span class="lnt">27
-</span><span class="lnt">28
-</span><span class="lnt">29
-</span><span class="lnt">30
-</span><span class="lnt">31
-</span><span class="lnt">32
-</span><span class="lnt">33
-</span><span class="lnt">34
-</span><span class="lnt">35
-</span><span class="lnt">36
-</span><span class="lnt">37
-</span><span class="lnt">38
-</span><span class="lnt">39
-</span><span class="lnt">40
-</span><span class="lnt">41
-</span><span class="lnt">42
-</span><span class="lnt">43
-</span><span class="lnt">44
-</span><span class="lnt">45
-</span><span class="lnt">46
-</span><span class="lnt">47
-</span><span class="lnt">48
-</span><span class="lnt">49
-</span><span class="lnt">50
-</span><span class="lnt">51
-</span><span class="lnt">52
-</span><span class="lnt">53
-</span><span class="lnt">54
-</span><span class="lnt">55
-</span><span class="lnt">56
-</span><span class="lnt">57
-</span><span class="lnt">58
-</span><span class="lnt">59
-</span><span class="lnt">60
-</span><span class="lnt">61
-</span><span class="lnt">62
-</span><span class="lnt">63
-</span><span class="lnt">64
-</span><span class="lnt">65
-</span><span class="lnt">66
-</span><span class="lnt">67
-</span><span class="lnt">68
-</span><span class="lnt">69
-</span><span class="lnt">70
-</span><span class="lnt">71
-</span><span class="lnt">72
-</span><span class="lnt">73
-</span><span class="lnt">74
-</span><span class="lnt">75
-</span><span class="lnt">76
-</span><span class="lnt">77
-</span><span class="lnt">78
-</span><span class="lnt">79
-</span></code></pre></td>
-<td class="lntd">
-<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="c1"># weather_agent.py</span>
-</span></span><span class="line"><span class="cl"><span class="c1"># 天气查询 Agent：通过 MCP 调用 weather_mcp_server</span>
-</span></span><span class="line"><span class="cl"><span class="c1"># 依赖：pip install mcp openai</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">os</span>
-</span></span><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">sys</span>
-</span></span><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">asyncio</span>
-</span></span><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">json</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">mcp</span> <span class="kn">import</span> <span class="n">ClientSession</span><span class="p">,</span> <span class="n">StdioServerParameters</span>
-</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">mcp.client.stdio</span> <span class="kn">import</span> <span class="n">stdio_client</span>
-</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">openai</span> <span class="kn">import</span> <span class="n">OpenAI</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="n">llm</span> <span class="o">=</span> <span class="n">OpenAI</span><span class="p">(</span>
-</span></span><span class="line"><span class="cl">    <span class="n">api_key</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&#34;OPENAI_API_KEY&#34;</span><span class="p">,</span> <span class="s2">&#34;sk-xxx&#34;</span><span class="p">),</span>
-</span></span><span class="line"><span class="cl">    <span class="n">base_url</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">&#34;OPENAI_BASE_URL&#34;</span><span class="p">,</span> <span class="s2">&#34;https://api.openai.com/v1&#34;</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl"><span class="p">)</span>
-</span></span><span class="line"><span class="cl"><span class="n">MODEL</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">&#34;MODEL_NAME&#34;</span><span class="p">,</span> <span class="s2">&#34;gpt-5.4&#34;</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="k">async</span> <span class="k">def</span> <span class="nf">run_weather_agent</span><span class="p">(</span><span class="n">user_query</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
-</span></span><span class="line"><span class="cl">    <span class="c1"># 以子进程拉起天气 Server</span>
-</span></span><span class="line"><span class="cl">    <span class="n">server_params</span> <span class="o">=</span> <span class="n">StdioServerParameters</span><span class="p">(</span>
-</span></span><span class="line"><span class="cl">        <span class="n">command</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">executable</span><span class="p">,</span>
-</span></span><span class="line"><span class="cl">        <span class="n">args</span><span class="o">=</span><span class="p">[</span><span class="s2">&#34;weather_mcp_server.py&#34;</span><span class="p">],</span>
-</span></span><span class="line"><span class="cl">        <span class="n">env</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-</span></span><span class="line"><span class="cl">    <span class="p">)</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">    <span class="k">async</span> <span class="k">with</span> <span class="n">stdio_client</span><span class="p">(</span><span class="n">server_params</span><span class="p">)</span> <span class="k">as</span> <span class="p">(</span><span class="n">read</span><span class="p">,</span> <span class="n">write</span><span class="p">):</span>
-</span></span><span class="line"><span class="cl">        <span class="k">async</span> <span class="k">with</span> <span class="n">ClientSession</span><span class="p">(</span><span class="n">read</span><span class="p">,</span> <span class="n">write</span><span class="p">)</span> <span class="k">as</span> <span class="n">session</span><span class="p">:</span>
-</span></span><span class="line"><span class="cl">            <span class="k">await</span> <span class="n">session</span><span class="o">.</span><span class="n">initialize</span><span class="p">()</span>  <span class="c1"># 握手</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">            <span class="c1"># 发现工具并转成 OpenAI 格式</span>
-</span></span><span class="line"><span class="cl">            <span class="n">tools_resp</span> <span class="o">=</span> <span class="k">await</span> <span class="n">session</span><span class="o">.</span><span class="n">list_tools</span><span class="p">()</span>
-</span></span><span class="line"><span class="cl">            <span class="n">oa_tools</span> <span class="o">=</span> <span class="p">[{</span>
-</span></span><span class="line"><span class="cl">                <span class="s2">&#34;type&#34;</span><span class="p">:</span> <span class="s2">&#34;function&#34;</span><span class="p">,</span>
-</span></span><span class="line"><span class="cl">                <span class="s2">&#34;function&#34;</span><span class="p">:</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">                    <span class="s2">&#34;name&#34;</span><span class="p">:</span> <span class="n">t</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
-</span></span><span class="line"><span class="cl">                    <span class="s2">&#34;description&#34;</span><span class="p">:</span> <span class="n">t</span><span class="o">.</span><span class="n">description</span><span class="p">,</span>
-</span></span><span class="line"><span class="cl">                    <span class="s2">&#34;parameters&#34;</span><span class="p">:</span> <span class="n">t</span><span class="o">.</span><span class="n">inputSchema</span>
-</span></span><span class="line"><span class="cl">                <span class="p">}</span>
-</span></span><span class="line"><span class="cl">            <span class="p">}</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">tools_resp</span><span class="o">.</span><span class="n">tools</span><span class="p">]</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">            <span class="n">messages</span> <span class="o">=</span> <span class="p">[</span>
-</span></span><span class="line"><span class="cl">                <span class="p">{</span><span class="s2">&#34;role&#34;</span><span class="p">:</span> <span class="s2">&#34;system&#34;</span><span class="p">,</span> <span class="s2">&#34;content&#34;</span><span class="p">:</span> <span class="s2">&#34;你是天气助手，可以查询全球城市天气。&#34;</span><span class="p">},</span>
-</span></span><span class="line"><span class="cl">                <span class="p">{</span><span class="s2">&#34;role&#34;</span><span class="p">:</span> <span class="s2">&#34;user&#34;</span><span class="p">,</span> <span class="s2">&#34;content&#34;</span><span class="p">:</span> <span class="n">user_query</span><span class="p">}</span>
-</span></span><span class="line"><span class="cl">            <span class="p">]</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">            <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">4</span><span class="p">):</span>  <span class="c1"># 最多 4 轮</span>
-</span></span><span class="line"><span class="cl">                <span class="n">resp</span> <span class="o">=</span> <span class="n">llm</span><span class="o">.</span><span class="n">chat</span><span class="o">.</span><span class="n">completions</span><span class="o">.</span><span class="n">create</span><span class="p">(</span>
-</span></span><span class="line"><span class="cl">                    <span class="n">model</span><span class="o">=</span><span class="n">MODEL</span><span class="p">,</span> <span class="n">messages</span><span class="o">=</span><span class="n">messages</span><span class="p">,</span> <span class="n">tools</span><span class="o">=</span><span class="n">oa_tools</span>
-</span></span><span class="line"><span class="cl">                <span class="p">)</span>
-</span></span><span class="line"><span class="cl">                <span class="n">msg</span> <span class="o">=</span> <span class="n">resp</span><span class="o">.</span><span class="n">choices</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">message</span>
-</span></span><span class="line"><span class="cl">                <span class="n">messages</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">msg</span><span class="o">.</span><span class="n">model_dump</span><span class="p">(</span><span class="n">exclude_none</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">                <span class="c1"># 没有工具调用，输出最终回答并结束</span>
-</span></span><span class="line"><span class="cl">                <span class="k">if</span> <span class="ow">not</span> <span class="n">msg</span><span class="o">.</span><span class="n">tool_calls</span><span class="p">:</span>
-</span></span><span class="line"><span class="cl">                    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&#34;天气助手：</span><span class="si">{</span><span class="n">msg</span><span class="o">.</span><span class="n">content</span><span class="si">}</span><span class="s2">&#34;</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">                    <span class="k">return</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">                <span class="c1"># 执行每个工具调用</span>
-</span></span><span class="line"><span class="cl">                <span class="k">for</span> <span class="n">call</span> <span class="ow">in</span> <span class="n">msg</span><span class="o">.</span><span class="n">tool_calls</span><span class="p">:</span>
-</span></span><span class="line"><span class="cl">                    <span class="n">fn_name</span> <span class="o">=</span> <span class="n">call</span><span class="o">.</span><span class="n">function</span><span class="o">.</span><span class="n">name</span>
-</span></span><span class="line"><span class="cl">                    <span class="n">fn_args</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">call</span><span class="o">.</span><span class="n">function</span><span class="o">.</span><span class="n">arguments</span> <span class="ow">or</span> <span class="s2">&#34;</span><span class="si">{}</span><span class="s2">&#34;</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">                    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&#34;[调用] </span><span class="si">{</span><span class="n">fn_name</span><span class="si">}</span><span class="s2">(</span><span class="si">{</span><span class="n">fn_args</span><span class="si">}</span><span class="s2">)&#34;</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">                    <span class="n">result</span> <span class="o">=</span> <span class="k">await</span> <span class="n">session</span><span class="o">.</span><span class="n">call_tool</span><span class="p">(</span><span class="n">fn_name</span><span class="p">,</span> <span class="n">fn_args</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">                    <span class="n">tool_text</span> <span class="o">=</span> <span class="s2">&#34;</span><span class="se">\n</span><span class="s2">&#34;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
-</span></span><span class="line"><span class="cl">                        <span class="n">c</span><span class="o">.</span><span class="n">text</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">result</span><span class="o">.</span><span class="n">content</span> <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="s2">&#34;text&#34;</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">                    <span class="p">)</span>
-</span></span><span class="line"><span class="cl">                    <span class="n">messages</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
-</span></span><span class="line"><span class="cl">                        <span class="s2">&#34;role&#34;</span><span class="p">:</span> <span class="s2">&#34;tool&#34;</span><span class="p">,</span>
-</span></span><span class="line"><span class="cl">                        <span class="s2">&#34;tool_call_id&#34;</span><span class="p">:</span> <span class="n">call</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
-</span></span><span class="line"><span class="cl">                        <span class="s2">&#34;content&#34;</span><span class="p">:</span> <span class="n">tool_text</span>
-</span></span><span class="line"><span class="cl">                    <span class="p">})</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&#34;__main__&#34;</span><span class="p">:</span>
-</span></span><span class="line"><span class="cl">    <span class="n">asyncio</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">run_weather_agent</span><span class="p">(</span><span class="s2">&#34;北京和上海今天分别多少度？需要带伞吗？&#34;</span><span class="p">))</span>
-</span></span></code></pre></td></tr></table>
-</div>
-</div><p>运行效果（示意）：</p>
-<div class="highlight"><div class="chroma">
-<table class="lntable"><tr><td class="lntd">
-<pre tabindex="0" class="chroma"><code><span class="lnt">1
-</span><span class="lnt">2
-</span><span class="lnt">3
-</span><span class="lnt">4
-</span></code></pre></td>
-<td class="lntd">
-<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">[调用] get_weather({&#39;city&#39;: &#39;Beijing&#39;})
-</span></span><span class="line"><span class="cl">[调用] get_weather({&#39;city&#39;: &#39;Shanghai&#39;})
-</span></span><span class="line"><span class="cl">天气助手：北京今天约28°C，晴，湿度40%；上海26°C，小雨，湿度85%。
-</span></span><span class="line"><span class="cl">上海有雨，建议带伞；北京晴朗，无需带伞。
-</span></span></code></pre></td></tr></table>
-</div>
-</div><p>可以看到，LLM自主决定调用两次工具（一次问北京、一次问上海），再把结果综合成自然语言回答。整个过程<strong>Server完全不知道用的是哪个模型，模型也不关心Server用什么语言写</strong>——这就是MCP带来的解耦价值，也是它&quot;USB-C即插即用&quot;的真正含义。</p>
-<h2 id="7-mcp最佳实践">7. MCP最佳实践</h2>
-<h3 id="71-server设计原则">7.1 Server设计原则</h3>
-<ul>
-<li><strong>工具粒度适中</strong>：太细（每个SQL一个工具）会让LLM选择困难；太粗（一个&quot;do_anything&quot;工具）又失去可组合性。建议按&quot;一个完整用户意图&quot;为粒度。</li>
-<li><strong>描述写给LLM看</strong>：docstring不仅是文档，更是模型决策依据。写清楚&quot;何时用、不用、输入输出含义&quot;，比堆砌功能列表更有效。</li>
-<li><strong>Schema严格</strong>：尽量用具体的类型注解（<code>int</code>而非<code>str</code>装数字），必要时配合<code>Literal</code>、枚举约束取值，能显著降低模型传错参数的概率。</li>
-<li><strong>幂等优先</strong>：读类工具尽量幂等；写类工具应在描述中明确副作用，便于Host做权限审批。</li>
-</ul>
-<h3 id="72-安全与权限">7.2 安全与权限</h3>
-<ul>
-<li><strong>最小权限</strong>：Server只暴露必要能力。文件系统Server应限制在指定根目录，避免暴露<code>/etc/passwd</code>。</li>
-<li><strong>路径校验</strong>：对路径参数做规范化与越权检查，防止<code>../</code>穿越。</li>
-<li><strong>Host审批</strong>：生产环境Host应实现&quot;工具调用确认&quot;机制，敏感操作需用户点击确认后再下发。</li>
-<li><strong>远程Server鉴权</strong>：基于HTTP的远程MCP应使用Token、mTLS等手段鉴权，避免裸暴露。</li>
-<li><strong>审计日志</strong>：记录每一次<code>tools/call</code>的入参出参，便于事后追溯。</li>
-</ul>
-<h3 id="73-错误处理">7.3 错误处理</h3>
-<ul>
-<li><strong>返回而非抛出</strong>：工具失败时返回文本描述错误，让LLM有机会重试或换策略；只在协议层错误（如序列化失败）才抛异常。</li>
-<li><strong>结构化错误码</strong>：可在文本中嵌入<code>[ERR_TYPE]</code>前缀，便于Host做策略化处理（如配额耗尽自动切换Server）。</li>
-<li><strong>超时与重试</strong>：网络类工具设置合理超时；Client层可对瞬时错误做有限次重试。</li>
-</ul>
-<h3 id="74-性能优化">7.4 性能优化</h3>
-<ul>
-<li><strong>异步IO</strong>：Python SDK基于asyncio，工具内部应使用<code>httpx</code>、<code>aiosqlite</code>等异步库，避免阻塞事件循环。</li>
-<li><strong>批量接口</strong>：若工具常被连续调用多次（如批量查天气），可设计<code>get_weather_batch</code>减少往返。</li>
-<li><strong>缓存</strong>：对慢且少变的资源（如DB Schema）在Server端缓存，减少<code>resources/read</code>延迟。</li>
-<li><strong>连接复用</strong>：远程MCP Client应复用HTTP连接，避免每次调用都重建TLS。</li>
-<li><strong>冷启动</strong>：stdio模式下Server是子进程，启动慢会拖慢Host首屏；可在Server启动时预加载模型/连接池。</li>
-</ul>
-<h2 id="8-小结">8. 小结</h2>
-<p>本章我们从&quot;工具集成碎片化&quot;这一痛点出发，完整走过了MCP协议的理论与实践：</p>
-<ul>
-<li><strong>MCP是什么</strong>：Anthropic提出的开放协议，用Host/Client/Server三段式架构，把工具、资源、提示模板从Agent中解耦。</li>
-<li><strong>为什么重要</strong>：它让工具像USB-C外设一样即插即用，2026年已有5000+ Server、主流框架原生支持，正在成为AI工具生态的事实标准。</li>
-<li><strong>怎么开发</strong>：用Python <code>mcp</code> SDK的FastMCP高层API，函数加个<code>@mcp.tool()</code>装饰器、配好类型注解和docstring，就是一个完整工具；Client侧通过stdio连接，几行代码就能把工具接入任意LLM的Function Calling循环。</li>
-<li><strong>怎么用对</strong>：注意工具粒度、Schema严格性、安全权限与异步性能，才能让MCP真正成为&quot;可生产&quot;的集成层。</li>
-</ul>
-<p>一句话总结：<strong>MCP把&quot;Agent怎么用工具&quot;这件事从代码层升级到了协议层</strong>。掌握MCP，你写的工具就不再属于某一个项目，而属于整个生态。</p>
-<h2 id="9-预告第11章-评估与可观测性">9. 预告：第11章 评估与可观测性</h2>
-<p>当Agent接入了越来越多的工具（无论通过Function Calling还是MCP），一个新的问题随之浮现——<strong>怎么知道它干得好不好？</strong> 一个跑偏的工具调用、一次幻觉的回答、一段静默失败的任务，都可能让整个Agent失去可信度。</p>
-<p>第11章我们将聚焦<strong>评估与可观测性</strong>：</p>
-<ul>
-<li><strong>评估（Evaluation）</strong>：如何用基准任务集、LLM-as-a-Judge、人工评分等手段量化Agent能力，避免&quot;看着像对的&quot;幻觉。</li>
-<li><strong>可观测性（Observability）</strong>：如何用Trace、Span、指标体系把Agent的一次完整运行&quot;切片&quot;展现，定位到底是Prompt、工具还是模型的问题。</li>
-<li><strong>工具链</strong>：介绍LangSmith、Langfuse、Phoenix、OpenTelemetry等在Agent场景的应用。</li>
-</ul>
-<p>从&quot;能跑&quot;到&quot;可信&quot;，评估与可观测性是Agent走向生产不可绕过的一关。我们下一章见。</p>
-</div><div class="post-footer" id="post-footer">
-    <div class="post-info">
-        <div class="post-info-line">
-            <div class="post-info-mod">
-                <span>Updated on 2026-07-05</span>
-            </div></div>
-        <div class="post-info-line">
-            <div class="post-info-md"></div>
-            <div class="post-info-share">
-                <span><a href="javascript:void(0);" title="Share on Twitter" data-sharer="twitter" data-url="https://www.ithome.me/post/2026/07/05/ai%E6%99%BA%E8%83%BD%E4%BD%93%E5%BC%80%E5%8F%91-%E7%AC%AC10%E7%AB%A0-mcp%E5%8D%8F%E8%AE%AE/" data-title="MCP协议：智能体的标准化工具接口" data-via="ChenCiki" data-hashtags="AI Agent,MCP,Model Context Protocol,Anthropic,工具集成,AI智能体开发实战"><i class="fab fa-twitter fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on Linkedin" data-sharer="linkedin" data-url="https://www.ithome.me/post/2026/07/05/ai%E6%99%BA%E8%83%BD%E4%BD%93%E5%BC%80%E5%8F%91-%E7%AC%AC10%E7%AB%A0-mcp%E5%8D%8F%E8%AE%AE/"><i class="fab fa-linkedin fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on 微博" data-sharer="weibo" data-url="https://www.ithome.me/post/2026/07/05/ai%E6%99%BA%E8%83%BD%E4%BD%93%E5%BC%80%E5%8F%91-%E7%AC%AC10%E7%AB%A0-mcp%E5%8D%8F%E8%AE%AE/" data-title="MCP协议：智能体的标准化工具接口" data-ralateuid="xxx"><i class="fab fa-weibo fa-fw" aria-hidden="true"></i></a></span>
-            </div>
-        </div>
-    </div>
-
-    <div class="post-info-more">
-        <section class="post-tags"><i class="fas fa-tags fa-fw" aria-hidden="true"></i>&nbsp;<a href="/tags/ai-agent/">AI Agent</a>,&nbsp;<a href="/tags/mcp/">MCP</a>,&nbsp;<a href="/tags/model-context-protocol/">Model Context Protocol</a>,&nbsp;<a href="/tags/anthropic/">Anthropic</a>,&nbsp;<a href="/tags/%E5%B7%A5%E5%85%B7%E9%9B%86%E6%88%90/">工具集成</a>,&nbsp;<a href="/tags/ai%E6%99%BA%E8%83%BD%E4%BD%93%E5%BC%80%E5%8F%91%E5%AE%9E%E6%88%98/">AI智能体开发实战</a></section>
-        <section>
-            <span><a href="javascript:void(0);" onclick="window.history.back();">Back</a></span>&nbsp;|&nbsp;<span><a href="/">Home</a></span>
-        </section>
-    </div>
-
-    <div class="post-nav"><a href="/post/2026/07/05/ai%E6%99%BA%E8%83%BD%E4%BD%93%E5%BC%80%E5%8F%91-%E7%AC%AC8%E7%AB%A0-rag%E5%A2%9E%E5%BC%BA%E6%A3%80%E7%B4%A2/" class="prev" rel="prev" title="RAG增强检索：知识库驱动的智能体"><i class="fas fa-angle-left fa-fw" aria-hidden="true"></i>RAG增强检索：知识库驱动的智能体</a>
-            <a href="/post/2026/07/05/ai%E6%99%BA%E8%83%BD%E4%BD%93%E5%BC%80%E5%8F%91-%E7%AC%AC3%E7%AB%A0-llm%E6%A0%B8%E5%BF%83%E5%BC%95%E6%93%8E/" class="next" rel="next" title="LLM核心引擎：大模型选型与集成">LLM核心引擎：大模型选型与集成<i class="fas fa-angle-right fa-fw" aria-hidden="true"></i></a></div>
-</div>
-<div id="comments"><div id="gitalk" class="comment"></div><noscript>
-                Please enable JavaScript to view the comments powered by <a href="https://github.com/gitalk/gitalk"></a>Gitalk</a>.
-            </noscript></div></article></div>
-            </main><footer class="footer">
-        <div class="footer-container"><div class="footer-line" itemscope itemtype="http://schema.org/CreativeWork"><i class="far fa-copyright fa-fw" aria-hidden="true"></i><span itemprop="copyrightYear">2011 - 2026</span><span class="author" itemprop="copyrightHolder">&nbsp;<a href="https://www.ithome.me/" target="_blank">Simon Chen</a></span>&nbsp;|&nbsp;<span class="license"><a rel="license external nofollow noopener noreferrer" href="https://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank">CC BY-NC-ND 4.0</a></span></div>
-        </div>
-    </footer></div>
-
-        <div id="fixed-buttons"><a href="#" id="back-to-top" class="fixed-button" title="Back to Top">
-                <i class="fas fa-arrow-up fa-fw" aria-hidden="true"></i>
-            </a><a href="#" id="view-comments" class="fixed-button" title="View Comments">
-                <i class="fas fa-comment fa-fw" aria-hidden="true"></i>
-            </a>
-        </div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1.8.0/dist/gitalk.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/css/lightgallery-bundle.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/katex.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/copy-tex.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.css"><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/gitalk@1.8.0/dist/gitalk.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/autocomplete.js@0.38.1/dist/autocomplete.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lunr@2.3.9/lunr.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lazysizes@5.3.1/lazysizes.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/lightgallery.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/plugins/thumbnail/lg-thumbnail.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/plugins/zoom/lg-zoom.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/clipboard@2.0.11/dist/clipboard.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/sharer.js@0.5.1/sharer.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/katex.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/auto-render.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/copy-tex.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/mhchem.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.js"></script><script type="text/javascript">window.config={"code":{"copyTitle":"Copy to clipboard","maxShownLines":50},"comment":{"gitalk":{"admin":["cikichen"],"clientID":"be0f52370ed1285b6c7c","clientSecret":"734a7d8d0ded346ca7a3d565d57de3f8eeb2850b","id":"2026-07-05T00:00:00Z","owner":"cikichen","repo":"gitalk","title":"MCP协议：智能体的标准化工具接口"}},"cookieconsent":{"content":{"dismiss":"我知道了","link":"了解更多","message":"本网站使用 Cookies 来改善您的浏览体验."},"enable":true,"palette":{"button":{"background":"#f0f0f0"},"popup":{"background":"#1aa3ff"}},"theme":"edgeless"},"lightgallery":true,"math":{"delimiters":[{"display":true,"left":"$$","right":"$$"},{"display":true,"left":"\\[","right":"\\]"},{"display":true,"left":"\\begin{equation}","right":"\\end{equation}"},{"display":true,"left":"\\begin{equation*}","right":"\\end{equation*}"},{"display":true,"left":"\\begin{align}","right":"\\end{align}"},{"display":true,"left":"\\begin{align*}","right":"\\end{align*}"},{"display":true,"left":"\\begin{alignat}","right":"\\end{alignat}"},{"display":true,"left":"\\begin{alignat*}","right":"\\end{alignat*}"},{"display":true,"left":"\\begin{gather}","right":"\\end{gather}"},{"display":true,"left":"\\begin{CD}","right":"\\end{CD}"},{"display":false,"left":"$","right":"$"},{"display":false,"left":"\\(","right":"\\)"}],"strict":false},"search":{"highlightTag":"em","lunrIndexURL":"/index.json","maxResultLength":10,"noResultsFound":"No results found","snippetLength":50,"type":"lunr"}};</script><script type="text/javascript" src="/js/theme.min.js"></script></body>
-</html>
+<!doctype html><html lang=zh-CN><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><meta name=robots content="noodp"><title>MCP协议：智能体的标准化工具接口 - 编程心语</title><meta name=Description content="深入解析Anthropic Model Context Protocol架构，从Server开发到Client集成的完整实战指南"><meta property="og:url" content="https://www.ithome.me/post/2026/07/05/ai%E6%99%BA%E8%83%BD%E4%BD%93%E5%BC%80%E5%8F%91-%E7%AC%AC10%E7%AB%A0-mcp%E5%8D%8F%E8%AE%AE/">
+<meta property="og:site_name" content="编程心语"><meta property="og:title" content="MCP协议：智能体的标准化工具接口"><meta property="og:description" content="深入解析Anthropic Model Context Protocol架构，从Server开发到Client集成的完整实战指南"><meta property="og:locale" content="zh_CN"><meta property="og:type" content="article"><meta property="article:section" content="posts"><meta property="article:published_time" content="2026-07-05T08:00:00+08:00"><meta property="article:modified_time" content="2026-07-05T08:00:00+08:00"><meta property="article:tag" content="AI Agent"><meta property="article:tag" content="MCP"><meta property="article:tag" content="Model Context Protocol"><meta property="article:tag" content="Anthropic"><meta property="article:tag" content="工具集成"><meta property="article:tag" content="AI智能体开发实战"><meta name=twitter:card content="summary"><meta name=twitter:title content="MCP协议：智能体的标准化工具接口"><meta name=twitter:description content="深入解析Anthropic Model Context Protocol架构，从Server开发到Client集成的完整实战指南"><meta name=twitter:site content="@ChenCiki"><meta name=application-name content="编程心语"><meta name=apple-mobile-web-app-title content="编程心语"><meta name=theme-color content="#ffffff"><meta name=msapplication-TileColor content="#da532c"><link rel="shortcut icon" type=image/x-icon href=/favicon.ico><link rel=icon type=image/png sizes=32x32 href=/favicon-32x32.png><link rel=icon type=image/png sizes=16x16 href=/favicon-16x16.png><link rel=apple-touch-icon sizes=180x180 href=/apple-touch-icon.png><link rel=mask-icon href=/safari-pinned-tab.svg color=#5bbad5><link rel=manifest href=/site.webmanifest><link rel=canonical href=https://www.ithome.me/post/2026/07/05/ai%E6%99%BA%E8%83%BD%E4%BD%93%E5%BC%80%E5%8F%91-%E7%AC%AC10%E7%AB%A0-mcp%E5%8D%8F%E8%AE%AE/><link rel=prev href=https://www.ithome.me/post/2026/07/05/ai%E6%99%BA%E8%83%BD%E4%BD%93%E5%BC%80%E5%8F%91-%E7%AC%AC8%E7%AB%A0-rag%E5%A2%9E%E5%BC%BA%E6%A3%80%E7%B4%A2/><link rel=next href=https://www.ithome.me/post/2026/07/05/ai%E6%99%BA%E8%83%BD%E4%BD%93%E5%BC%80%E5%8F%91-%E7%AC%AC3%E7%AB%A0-llm%E6%A0%B8%E5%BF%83%E5%BC%95%E6%93%8E/><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/normalize.css@8.0.1/normalize.min.css><link rel=stylesheet href=/css/style.min.css><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css><script type=application/ld+json>{"@context":"http://schema.org","@type":"BlogPosting","headline":"MCP协议：智能体的标准化工具接口","inLanguage":"zh-CN","mainEntityOfPage":{"@type":"WebPage","@id":"https:\/\/www.ithome.me\/post\/2026\/07\/05\/ai%E6%99%BA%E8%83%BD%E4%BD%93%E5%BC%80%E5%8F%91-%E7%AC%AC10%E7%AB%A0-mcp%E5%8D%8F%E8%AE%AE\/"},"image":["https:\/\/www.ithome.me\/cover.png"],"genre":"posts","keywords":"AI Agent, MCP, Model Context Protocol, Anthropic, 工具集成, AI智能体开发实战","wordcount":11870,"url":"https:\/\/www.ithome.me\/post\/2026\/07\/05\/ai%E6%99%BA%E8%83%BD%E4%BD%93%E5%BC%80%E5%8F%91-%E7%AC%AC10%E7%AB%A0-mcp%E5%8D%8F%E8%AE%AE\/","datePublished":"2026-07-05T08:00:00+08:00","dateModified":"2026-07-05T08:00:00+08:00","publisher":{"@type":"Organization","name":"SimonChen","logo":"https:\/\/www.ithome.me\/logo.png"},"author":{"@type":"Person","name":"Simon"},"description":"深入解析Anthropic Model Context Protocol架构，从Server开发到Client集成的完整实战指南"}</script><script async src="https://www.googletagmanager.com/gtag/js?id=G-H1Q5563VR8"></script><script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag("js",new Date),gtag("config","G-H1Q5563VR8",{anonymize_ip:!0})</script></head><body data-header-desktop=fixed data-header-mobile=auto><script type=text/javascript>(window.localStorage&&localStorage.getItem("theme")?localStorage.getItem("theme")==="dark":"auto"==="auto"?window.matchMedia("(prefers-color-scheme: dark)").matches:"auto"==="dark")&&document.body.setAttribute("theme","dark")</script><div id=mask></div><div class=wrapper><header class=desktop id=header-desktop><div class=header-wrapper><div class=header-title><a href=/ title=编程心语>编程心语</a></div><div class=menu><div class=menu-inner><a class=menu-item href=/posts/>文章 </a><a class=menu-item href=/categories/>分类 </a><a class=menu-item href=/tags/>标签 </a><a class=menu-item href=/about-me/>关于 </a><span class="menu-item delimiter"></span><span class="menu-item search" id=search-desktop>
+<input type=text placeholder=搜索文章... id=search-input-desktop>
+<a href=javascript:void(0); class="search-button search-toggle" id=search-toggle-desktop title=Search><i class="fas fa-search fa-fw" aria-hidden=true></i>
+</a><a href=javascript:void(0); class="search-button search-clear" id=search-clear-desktop title=Clear><i class="fas fa-times-circle fa-fw" aria-hidden=true></i>
+</a><span class="search-button search-loading" id=search-loading-desktop><i class="fas fa-spinner fa-fw fa-spin" aria-hidden=true></i>
+</span></span><a href=javascript:void(0); class="menu-item theme-switch" title="Switch Theme"><i class="fas fa-adjust fa-fw" aria-hidden=true></i></a></div></div></div></header><header class=mobile id=header-mobile><div class=header-container><div class=header-wrapper><div class=header-title><a href=/ title=编程心语>编程心语</a></div><div class=menu-toggle id=menu-toggle-mobile><span></span><span></span><span></span></div></div><div class=menu id=menu-mobile><div class=search-wrapper><div class="search mobile" id=search-mobile><input type=text placeholder=搜索文章... id=search-input-mobile>
+<a href=javascript:void(0); class="search-button search-toggle" id=search-toggle-mobile title=Search><i class="fas fa-search fa-fw" aria-hidden=true></i>
+</a><a href=javascript:void(0); class="search-button search-clear" id=search-clear-mobile title=Clear><i class="fas fa-times-circle fa-fw" aria-hidden=true></i>
+</a><span class="search-button search-loading" id=search-loading-mobile><i class="fas fa-spinner fa-fw fa-spin" aria-hidden=true></i></span></div><a href=javascript:void(0); class=search-cancel id=search-cancel-mobile>Cancel</a></div><a class=menu-item href=/posts/ title>文章</a><a class=menu-item href=/categories/ title>分类</a><a class=menu-item href=/tags/ title>标签</a><a class=menu-item href=/about-me/ title>关于</a><a href=javascript:void(0); class="menu-item theme-switch" title="Switch Theme">
+<i class="fas fa-adjust fa-fw" aria-hidden=true></i></a></div></div></header><div class="search-dropdown desktop"><div id=search-dropdown-desktop></div></div><div class="search-dropdown mobile"><div id=search-dropdown-mobile></div></div><main class=main><div class=container><div class=toc id=toc-auto><h2 class=toc-title>Contents</h2><div class=toc-content id=toc-content-auto></div></div><article class="page single"><h1 class="single-title animate__animated animate__flipInX">MCP协议：智能体的标准化工具接口</h1><div class=post-meta><div class=post-meta-line><span class=post-author><a href=https://www.ithome.me/ title=Author target=_blank rel="noopener noreferrer author" class=author><i class="fas fa-user-circle fa-fw" aria-hidden=true></i>Simon</a>
+</span>&nbsp;<span class=post-category>included in <a href=/categories/ai%E6%99%BA%E8%83%BD%E4%BD%93%E5%BC%80%E5%8F%91%E5%AE%9E%E6%88%98/><i class="far fa-folder fa-fw" aria-hidden=true></i>AI智能体开发实战</a></span></div><div class=post-meta-line><i class="far fa-calendar-alt fa-fw" aria-hidden=true></i>&nbsp;<time datetime=2026-07-05>2026-07-05</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden=true></i>&nbsp;11870 words&nbsp;
+<i class="far fa-clock fa-fw" aria-hidden=true></i>&nbsp;24 minutes&nbsp;</div></div><div class="details toc" id=toc-static data-kept=true><div class="details-summary toc-title"><span>Contents</span>
+<span><i class="details-icon fas fa-angle-right" aria-hidden=true></i></span></div><div class="details-content toc-content" id=toc-content-static><nav id=TableOfContents><ul><li><a href=#1-引言mcp解决了什么问题>1. 引言：MCP解决了什么问题</a></li><li><a href=#2-mcp协议概述>2. MCP协议概述</a><ul><li><a href=#21-协议的诞生与定位>2.1 协议的诞生与定位</a></li><li><a href=#22-三大组件host--client--server>2.2 三大组件：Host / Client / Server</a></li><li><a href=#23-与传统function-calling的区别>2.3 与传统Function Calling的区别</a></li><li><a href=#24-2026年生态状态>2.4 2026年生态状态</a></li></ul></li><li><a href=#3-mcp架构详解>3. MCP架构详解</a><ul><li><a href=#31-host宿主应用>3.1 Host：宿主应用</a></li><li><a href=#32-client协议客户端>3.2 Client：协议客户端</a></li><li><a href=#33-server服务提供方>3.3 Server：服务提供方</a></li><li><a href=#34-通信协议json-rpc-over-stdiosse>3.4 通信协议：JSON-RPC over stdio/SSE</a></li><li><a href=#35-生命周期初始化能力交换工具调用关闭>3.5 生命周期：初始化→能力交换→工具调用→关闭</a></li></ul></li><li><a href=#4-开发mcp-server>4. 开发MCP Server</a><ul><li><a href=#41-安装python-sdk>4.1 安装Python SDK</a></li><li><a href=#42-三类原语速览>4.2 三类原语速览</a></li><li><a href=#43-完整示例文件系统mcp-server>4.3 完整示例：文件系统MCP Server</a></li></ul></li><li><a href=#5-开发mcp-client>5. 开发MCP Client</a><ul><li><a href=#51-client的职责>5.1 Client的职责</a></li><li><a href=#52-完整示例mcp-client集成到agent>5.2 完整示例：MCP Client集成到Agent</a></li></ul></li><li><a href=#6-mcp实战构建天气查询agent>6. MCP实战：构建天气查询Agent</a><ul><li><a href=#61-天气mcp-server>6.1 天气MCP Server</a></li><li><a href=#62-agent通过mcp调用天气工具>6.2 Agent通过MCP调用天气工具</a></li></ul></li><li><a href=#7-mcp最佳实践>7. MCP最佳实践</a><ul><li><a href=#71-server设计原则>7.1 Server设计原则</a></li><li><a href=#72-安全与权限>7.2 安全与权限</a></li><li><a href=#73-错误处理>7.3 错误处理</a></li><li><a href=#74-性能优化>7.4 性能优化</a></li></ul></li><li><a href=#8-小结>8. 小结</a></li><li><a href=#9-预告第11章-评估与可观测性>9. 预告：第11章 评估与可观测性</a></li></ul></nav></div></div><div class=content id=content><h2 id=1-引言mcp解决了什么问题>1. 引言：MCP解决了什么问题</h2><p>在前面几章中，我们反复使用了一个关键能力——<strong>Function Calling</strong>（函数调用）。无论是查数据库、调API，还是操作文件系统，智能体都需要通过"函数"这一抽象来触达外部世界。然而，当工具数量膨胀、应用场景复杂化时，一个令人头疼的问题浮现出来：</p><p><strong>工具集成碎片化（Tool Integration Fragmentation）</strong>。</p><p>具体表现为：</p><ul><li><strong>协议不统一</strong>：每家大模型厂商都定义了自己的Function Calling格式。OpenAI、Anthropic、Google、阿里通义各有各的工具描述规范，同一份工具定义要写好几遍。</li><li><strong>上下文割裂</strong>：工具本身没有"资源"概念。Agent要读取一份文件、一段数据库Schema，都得靠开发者手动拼接到Prompt里，缺乏统一的资源访问接口。</li><li><strong>生态重复造轮子</strong>：搜数据库、查天气、读GitHub，每个Agent项目都在重复封装相同的工具。A项目写的工具，B项目无法直接复用。</li><li><strong>运维耦合</strong>：工具进程和Agent进程常常绑死在一起，工具升级、权限管理、多工具编排都很难解耦。</li></ul><p>这就好比每个Agent都自带一个"私有的工具箱"，彼此不通，每次都要从零打造。2024年11月，Anthropic发布了<strong>Model Context Protocol（MCP，模型上下文协议）</strong>，给出了一个令人眼前一亮的解法：</p><blockquote><p>把工具、资源、提示模板从Agent中解耦出来，变成可独立部署、可被任意支持MCP的客户端发现的"Server"，Agent则作为"Client"按需连接，即插即用。</p></blockquote><p>用一个生活比喻来理解：<strong>MCP之于AI工具生态，就像USB-C接口之于数码设备</strong>。在USB-C统一之前，键盘是PS/2口、打印机是并口、老手机是Micro-USB、相机是Mini-USB，出门得带一整包转接头；USB-C一统天下后，一根线就能给笔记本、手机、平板充电传数据，<strong>即插即用、正反都能插</strong>。MCP正是希望成为"AI Agent的USB-C接口"——你写一个MCP工具，任何支持MCP的Agent都能直接用，不用改一行代码。</p><blockquote><p>💡 <strong>小贴士：什么是MCP？</strong>
+MCP（Model Context Protocol，模型上下文协议）是Anthropic开源的一套<strong>通信标准</strong>，规定了"AI模型如何发现并调用外部工具"的统一格式。它不绑定任何一家模型厂商，谁都可以免费使用。你可以把它理解成"工具界的HTTP"——HTTP统一了网页传输，MCP统一了AI调工具。</p></blockquote><p>本章将从协议原理讲到Server/Client开发，最后用一个天气查询Agent串起完整链路。</p><h2 id=2-mcp协议概述>2. MCP协议概述</h2><h3 id=21-协议的诞生与定位>2.1 协议的诞生与定位</h3><p>MCP（Model Context Protocol）由Anthropic于2024年11月开源发布，是一个<strong>开放、基于JSON-RPC 2.0</strong>的应用层协议。其设计目标有四：</p><ol><li><strong>标准化</strong>：任何MCP Server都能被任何兼容MCP的Host（如Claude Desktop、Cursor、各类Agent框架）发现并调用。</li><li><strong>解耦</strong>：Server与Client通过协议而非代码耦合，可独立部署、独立升级。</li><li><strong>可组合</strong>：一个Host可同时连接多个Server，工具数量线性扩展。</li><li><strong>安全</strong>：Server运行在本地或受控环境，Host控制权限边界。</li></ol><blockquote><p>💡 <strong>小贴士：什么是JSON-RPC 2.0？</strong>
+JSON-RPC是一种用JSON格式进行"远程过程调用"的轻量协议。简单说，就是"我用JSON给你发一条消息，告诉你调用哪个方法、传什么参数，你也用JSON回我结果"。2.0版本规定了<code>jsonrpc</code>、<code>id</code>、<code>method</code>、<code>params</code>这几个字段。MCP所有通信都套这个格式，所以任何语言都能轻松实现。</p></blockquote><h3 id=22-三大组件host--client--server>2.2 三大组件：Host / Client / Server</h3><p>MCP架构由三个核心角色构成。再用USB-C的比喻串一下：</p><ul><li><strong>Host（宿主应用）</strong>：最终用户使用的应用，比如Claude Desktop、Cursor IDE，或我们自己开发的Agent程序。Host就像你的笔记本电脑——它有多个USB-C口，负责管理外设、汇总能力、向用户暴露交互入口。</li><li><strong>Client（协议客户端）</strong>：Host内部的一个连接器，每个Client与一个Server保持1:1的会话。Client就像笔记本里那个"USB-C控制器芯片"，负责协议握手、能力协商、消息路由。</li><li><strong>Server（服务提供方）</strong>：独立运行的进程，向Client暴露三类能力：<strong>Tools</strong>（工具）、<strong>Resources</strong>（资源）、<strong>Prompts</strong>（提示模板）。Server就像你插上的U盘、键盘、显示器——各自提供不同功能。</li></ul><p>它们的关系如下：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-fallback data-lang=fallback><span class=line><span class=cl>┌─────────────────────────────┐
+</span></span><span class=line><span class=cl>│           Host (Agent)      │
+</span></span><span class=line><span class=cl>│  ┌────────┐  ┌────────┐     │
+</span></span><span class=line><span class=cl>│  │Client A│  │Client B│ ... │
+</span></span><span class=line><span class=cl>│  └───┬────┘  └───┬────┘     │
+</span></span><span class=line><span class=cl>└──────┼───────────┼──────────┘
+</span></span><span class=line><span class=cl>       │           │
+</span></span><span class=line><span class=cl>   stdio/SSE   stdio/SSE
+</span></span><span class=line><span class=cl>       │           │
+</span></span><span class=line><span class=cl>   ┌───▼────┐  ┌───▼────┐
+</span></span><span class=line><span class=cl>   │Server A│  │Server B│
+</span></span><span class=line><span class=cl>   │ 文件系统 │  │ 数据库  │
+</span></span><span class=line><span class=cl>   └────────┘  └────────┘
+</span></span></code></pre></td></tr></table></div></div><blockquote><p>💡 <strong>小贴士：Server和Client到底谁是谁？</strong>
+记住一条线：<strong>提供能力的是Server，使用能力的是Client</strong>。文件系统Server提供"读文件"能力，Agent端的Client来调用它。Host里可以同时挂很多个Client，每个Client连一个Server，于是Agent就能用上所有Server的工具。</p></blockquote><h3 id=23-与传统function-calling的区别>2.3 与传统Function Calling的区别</h3><table><thead><tr><th>维度</th><th>Function Calling</th><th>MCP</th></tr></thead><tbody><tr><td>工具定义位置</td><td>写死在Agent代码或Prompt中</td><td>独立Server，运行时动态发现</td></tr><tr><td>复用性</td><td>每个项目重写</td><td>一次开发，多方复用</td></tr><tr><td>上下文资源</td><td>无统一抽象，手动拼接</td><td>内置Resources概念，按URI访问</td></tr><tr><td>提示模板</td><td>无</td><td>内置Prompts，可被Host列出并调用</td></tr><tr><td>多模型兼容</td><td>各厂商格式不同</td><td>协议中立，与具体模型解耦</td></tr><tr><td>部署形态</td><td>与Agent同进程</td><td>可独立进程，本地或远程</td></tr></tbody></table><p>一个直观的差异：在Function Calling模式下，你换一个模型厂商，工具描述格式可能就要改一遍；而在MCP下，Server完全不用动，Host换底层模型即可。这就像USB-C口不变，你换什么牌子的电脑都能用同一个U盘。</p><h3 id=24-2026年生态状态>2.4 2026年生态状态</h3><p>截至2026年中，MCP已被主流Agent框架广泛采纳：</p><ul><li><strong>官方/社区MCP Server数量已突破5000+</strong>，覆盖文件系统、Git、数据库（PostgreSQL/MySQL/SQLite）、Slack、GitHub、Notion、Linear、Sentry、Brave Search、Puppeteer等场景。</li><li><strong>主流Host支持</strong>：Claude Desktop、Cursor、Windsurf、Zed、Cline等均原生支持MCP；LangChain、LlamaIndex、AutoGen也提供了MCP适配层。</li><li><strong>多语言SDK</strong>：官方提供了TypeScript、Python SDK，社区贡献了Go、Rust、Java、C#等实现。</li><li><strong>远程MCP</strong>：基于HTTP+SSE的远程Server部署模式逐渐成熟，出现了MCP Gateway、MCP Hub等托管平台。</li></ul><p>可以说，MCP已经从"Anthropic的提案"成长为事实标准。</p><h2 id=3-mcp架构详解>3. MCP架构详解</h2><h3 id=31-host宿主应用>3.1 Host：宿主应用</h3><p>Host是用户视角的"Agent应用"。它的职责：</p><ol><li>创建并管理多个Client实例（一个Server对应一个Client）。</li><li>汇总所有Server暴露的Tools/Resources/Prompts，统一呈现给LLM或用户。</li><li>在LLM决定调用某个工具时，路由请求到对应Client，再把结果回传给LLM。</li><li>控制<strong>权限边界</strong>：是否允许某个Server读取某资源、是否允许某工具执行，由Host把关。</li></ol><p>Claude Desktop就是典型Host：用户可以在配置文件中声明若干MCP Server，应用启动时拉起这些Server进程，并把工具接入对话。</p><h3 id=32-client协议客户端>3.2 Client：协议客户端</h3><p>Client是Host内部维护的"会话管理器"。每个Client对应一个Server，负责：</p><ul><li><strong>初始化握手</strong>：发送<code>initialize</code>请求，交换协议版本与能力声明。</li><li><strong>能力协商</strong>：Server声明自己支持哪些Tools/Resources/Prompts，Client声明自己支持哪些回调（如采样<code>sampling</code>、根目录<code>roots</code>）。</li><li><strong>消息收发</strong>：所有调用基于JSON-RPC 2.0，Client既是请求方，也接收Server发起的通知与反向请求。</li><li><strong>生命周期管理</strong>：维持会话、处理断连、优雅关闭。</li></ul><h3 id=33-server服务提供方>3.3 Server：服务提供方</h3><p>Server是能力提供者，可暴露三类原语（primitive）：</p><table><thead><tr><th>原语</th><th>语义</th><th>谁主导</th><th>典型例子</th></tr></thead><tbody><tr><td>Tools</td><td>可执行的函数，有副作用</td><td>LLM主动调用</td><td>发邮件、查数据库、运行Shell</td></tr><tr><td>Resources</td><td>可读取的数据，无副作用</td><td>应用/用户主动拉取</td><td>文件内容、DB Schema、日志</td></tr><tr><td>Prompts</td><td>预制的提示模板</td><td>用户主动选择</td><td>&ldquo;代码审查"模板、&ldquo;周报"模板</td></tr></tbody></table><p>注意三者的控制权差异：Tools是模型自主决定调用；Resources和Prompts更多是应用层主动获取后注入上下文。这种分工避免了LLM滥用只读资源，也让权限管理更清晰。</p><blockquote><p>💡 <strong>小贴士：为什么要分Tools和Resources？</strong>
+Tools会"动手&rdquo;（可能发邮件、删文件），必须由LLM慎重决策后调用；Resources只"读不动&rdquo;（看一份文档、查一段Schema），由应用层按需取用即可。把"读"和"做"分开，权限审批就能区别对待——读操作可以放行，写操作必须人工确认。</p></blockquote><h3 id=34-通信协议json-rpc-over-stdiosse>3.4 通信协议：JSON-RPC over stdio/SSE</h3><p>MCP传输层支持两种主流模式：</p><ul><li><strong>stdio（标准输入输出）</strong>：本地进程间通信。Host以子进程方式拉起Server，通过stdin/stdout交换JSON-RPC消息。延迟低、部署简单，是本地集成的主流方式。</li><li><strong>HTTP + SSE（Server-Sent Events）</strong>：远程通信。Server作为HTTP服务暴露，Client通过POST发请求、SSE接收推送。适合跨机器、云托管场景。新版本也支持<strong>Streamable HTTP</strong>，简化了SSE的双向通道。</li></ul><blockquote><p>💡 <strong>小贴士：stdio和SSE各是啥？</strong></p><ul><li><strong>stdio</strong> 就是程序的标准输入输出流。你在终端敲<code>python xxx.py</code>，键盘输入走stdin，屏幕打印走stdout。MCP本地模式下，Host和Server就是靠这两个流互发JSON消息，省去了开网络端口的麻烦。</li><li><strong>SSE（Server-Sent Events）</strong> 是一种服务器单向推消息给浏览器的HTTP技术。MCP远程模式下，Client发请求用普通POST，Server推结果用SSE，省去轮询。</li></ul></blockquote><p>消息格式示例（Client调用工具）：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span><span class=lnt>4
+</span><span class=lnt>5
+</span><span class=lnt>6
+</span><span class=lnt>7
+</span><span class=lnt>8
+</span><span class=lnt>9
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-json data-lang=json><span class=line><span class=cl><span class=p>{</span>
+</span></span><span class=line><span class=cl>  <span class=nt>&#34;jsonrpc&#34;</span><span class=p>:</span> <span class=s2>&#34;2.0&#34;</span><span class=p>,</span>
+</span></span><span class=line><span class=cl>  <span class=nt>&#34;id&#34;</span><span class=p>:</span> <span class=mi>42</span><span class=p>,</span>
+</span></span><span class=line><span class=cl>  <span class=nt>&#34;method&#34;</span><span class=p>:</span> <span class=s2>&#34;tools/call&#34;</span><span class=p>,</span>
+</span></span><span class=line><span class=cl>  <span class=nt>&#34;params&#34;</span><span class=p>:</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=nt>&#34;name&#34;</span><span class=p>:</span> <span class=s2>&#34;read_file&#34;</span><span class=p>,</span>
+</span></span><span class=line><span class=cl>    <span class=nt>&#34;arguments&#34;</span><span class=p>:</span> <span class=p>{</span><span class=nt>&#34;path&#34;</span><span class=p>:</span> <span class=s2>&#34;/tmp/note.md&#34;</span><span class=p>}</span>
+</span></span><span class=line><span class=cl>  <span class=p>}</span>
+</span></span><span class=line><span class=cl><span class=p>}</span>
+</span></span></code></pre></td></tr></table></div></div><p>Server响应：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span><span class=lnt>4
+</span><span class=lnt>5
+</span><span class=lnt>6
+</span><span class=lnt>7
+</span><span class=lnt>8
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-json data-lang=json><span class=line><span class=cl><span class=p>{</span>
+</span></span><span class=line><span class=cl>  <span class=nt>&#34;jsonrpc&#34;</span><span class=p>:</span> <span class=s2>&#34;2.0&#34;</span><span class=p>,</span>
+</span></span><span class=line><span class=cl>  <span class=nt>&#34;id&#34;</span><span class=p>:</span> <span class=mi>42</span><span class=p>,</span>
+</span></span><span class=line><span class=cl>  <span class=nt>&#34;result&#34;</span><span class=p>:</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=nt>&#34;content&#34;</span><span class=p>:</span> <span class=p>[{</span><span class=nt>&#34;type&#34;</span><span class=p>:</span> <span class=s2>&#34;text&#34;</span><span class=p>,</span> <span class=nt>&#34;text&#34;</span><span class=p>:</span> <span class=s2>&#34;笔记内容...&#34;</span><span class=p>}],</span>
+</span></span><span class=line><span class=cl>    <span class=nt>&#34;isError&#34;</span><span class=p>:</span> <span class=kc>false</span>
+</span></span><span class=line><span class=cl>  <span class=p>}</span>
+</span></span><span class=line><span class=cl><span class=p>}</span>
+</span></span></code></pre></td></tr></table></div></div><p>可以看到，每条消息都有一个<code>id</code>用于配对请求与响应，<code>method</code>指明调用哪个方法，<code>params</code>携带参数。这就是JSON-RPC的全部精髓。</p><h3 id=35-生命周期初始化能力交换工具调用关闭>3.5 生命周期：初始化→能力交换→工具调用→关闭</h3><p>一次完整的Client-Server会话：</p><ol><li><strong>Initialize</strong>：Client发送<code>initialize</code>，携带本端支持的协议版本和能力。Server回应当前版本及自身能力。</li><li><strong>Initialized 通知</strong>：Client发送<code>notifications/initialized</code>，握手完成。</li><li><strong>能力列举</strong>：Client调用<code>tools/list</code>、<code>resources/list</code>、<code>prompts/list</code>获取清单。</li><li><strong>运行期调用</strong>：Client按需调用<code>tools/call</code>、<code>resources/read</code>、<code>prompts/get</code>；Server也可反向发起<code>sampling/createMessage</code>让Host代为调用LLM。</li><li><strong>关闭</strong>：Client发送关闭信号或直接结束stdio通道，Server清理资源退出。</li></ol><p>理解这一生命周期对调试MCP连接问题非常重要——多数"工具不出现"的故障都源于握手或能力交换阶段出错。</p><h2 id=4-开发mcp-server>4. 开发MCP Server</h2><h3 id=41-安装python-sdk>4.1 安装Python SDK</h3><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl>pip install mcp
+</span></span></code></pre></td></tr></table></div></div><p><code>mcp</code>是官方维护的Python SDK，同时支持stdio与SSE两种传输方式。它提供两层API：</p><ul><li><strong>高层FastMCP</strong>：声明式，用类型注解和装饰器自动生成Schema，代码极简，<strong>推荐日常使用</strong>。</li><li><strong>低层Server</strong>：手动实现每个JSON-RPC方法的handler，控制力强，适合需要精细定制的场景。</li></ul><blockquote><p>💡 <strong>小贴士：本节用哪层API？</strong>
+本章代码采用高层<strong>FastMCP</strong>。它会把你的函数签名自动转成<code>tools/list</code>、<code>tools/call</code>这些JSON-RPC消息，底层细节全被封装。理解原理看第3节，动手写代码看FastMCP即可。</p></blockquote><p>下面我们用它开发一个<strong>文件系统MCP Server</strong>，暴露读取文件、列出目录两个工具，并演示Resources和Prompts。</p><h3 id=42-三类原语速览>4.2 三类原语速览</h3><p>在写代码前，先记住三类原语的FastMCP写法：</p><ul><li><strong>Tool（工具）</strong>：用<code>@mcp.tool()</code>装饰一个函数，函数名即工具名，<strong>类型注解</strong>自动生成参数Schema，<strong>docstring</strong>自动变成给LLM看的描述。</li><li><strong>Resource（资源）</strong>：用<code>@mcp.resource("uri模板")</code>装饰一个函数，按URI暴露只读数据。</li><li><strong>Prompt（提示模板）</strong>：用<code>@mcp.prompt()</code>装饰一个函数，返回一段预制提示词。</li></ul><h3 id=43-完整示例文件系统mcp-server>4.3 完整示例：文件系统MCP Server</h3><p>下面是完整可运行的Server代码。注意看注释——它解释了每一块对应MCP的哪个概念：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span><span class=lnt>17
+</span><span class=lnt>18
+</span><span class=lnt>19
+</span><span class=lnt>20
+</span><span class=lnt>21
+</span><span class=lnt>22
+</span><span class=lnt>23
+</span><span class=lnt>24
+</span><span class=lnt>25
+</span><span class=lnt>26
+</span><span class=lnt>27
+</span><span class=lnt>28
+</span><span class=lnt>29
+</span><span class=lnt>30
+</span><span class=lnt>31
+</span><span class=lnt>32
+</span><span class=lnt>33
+</span><span class=lnt>34
+</span><span class=lnt>35
+</span><span class=lnt>36
+</span><span class=lnt>37
+</span><span class=lnt>38
+</span><span class=lnt>39
+</span><span class=lnt>40
+</span><span class=lnt>41
+</span><span class=lnt>42
+</span><span class=lnt>43
+</span><span class=lnt>44
+</span><span class=lnt>45
+</span><span class=lnt>46
+</span><span class=lnt>47
+</span><span class=lnt>48
+</span><span class=lnt>49
+</span><span class=lnt>50
+</span><span class=lnt>51
+</span><span class=lnt>52
+</span><span class=lnt>53
+</span><span class=lnt>54
+</span><span class=lnt>55
+</span><span class=lnt>56
+</span><span class=lnt>57
+</span><span class=lnt>58
+</span><span class=lnt>59
+</span><span class=lnt>60
+</span><span class=lnt>61
+</span><span class=lnt>62
+</span><span class=lnt>63
+</span><span class=lnt>64
+</span><span class=lnt>65
+</span><span class=lnt>66
+</span><span class=lnt>67
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-python data-lang=python><span class=line><span class=cl><span class=c1># filesystem_mcp_server.py</span>
+</span></span><span class=line><span class=cl><span class=c1># 文件系统 MCP Server：提供「读取文件」「列出目录」两个工具，</span>
+</span></span><span class=line><span class=cl><span class=c1># 另外演示 Resources（资源）和 Prompts（提示模板）两类原语。</span>
+</span></span><span class=line><span class=cl><span class=c1># 运行：python filesystem_mcp_server.py</span>
+</span></span><span class=line><span class=cl><span class=c1># 依赖：pip install mcp</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=kn>import</span> <span class=nn>os</span>
+</span></span><span class=line><span class=cl><span class=kn>from</span> <span class=nn>mcp.server.fastmcp</span> <span class=kn>import</span> <span class=n>FastMCP</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1># 创建 Server 实例，名称会在握手阶段告诉 Client「我是谁」</span>
+</span></span><span class=line><span class=cl><span class=n>mcp</span> <span class=o>=</span> <span class=n>FastMCP</span><span class=p>(</span><span class=s2>&#34;filesystem-mcp&#34;</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1># ---------- Tools：工具（LLM 主动调用）----------</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=nd>@mcp.tool</span><span class=p>()</span>
+</span></span><span class=line><span class=cl><span class=k>async</span> <span class=k>def</span> <span class=nf>read_file</span><span class=p>(</span><span class=n>path</span><span class=p>:</span> <span class=nb>str</span><span class=p>)</span> <span class=o>-&gt;</span> <span class=nb>str</span><span class=p>:</span>
+</span></span><span class=line><span class=cl>    <span class=s2>&#34;&#34;&#34;读取指定路径的文本文件内容。路径必须是绝对路径。&#34;&#34;&#34;</span>
+</span></span><span class=line><span class=cl>    <span class=k>try</span><span class=p>:</span>
+</span></span><span class=line><span class=cl>        <span class=k>with</span> <span class=nb>open</span><span class=p>(</span><span class=n>path</span><span class=p>,</span> <span class=s2>&#34;r&#34;</span><span class=p>,</span> <span class=n>encoding</span><span class=o>=</span><span class=s2>&#34;utf-8&#34;</span><span class=p>)</span> <span class=k>as</span> <span class=n>f</span><span class=p>:</span>
+</span></span><span class=line><span class=cl>            <span class=k>return</span> <span class=n>f</span><span class=o>.</span><span class=n>read</span><span class=p>()</span>
+</span></span><span class=line><span class=cl>    <span class=k>except</span> <span class=ne>FileNotFoundError</span><span class=p>:</span>
+</span></span><span class=line><span class=cl>        <span class=c1># 用「返回文本」承载错误，而不是抛异常——</span>
+</span></span><span class=line><span class=cl>        <span class=c1># 这样 LLM 能看到错误描述，自行决定是否重试或换工具</span>
+</span></span><span class=line><span class=cl>        <span class=k>return</span> <span class=sa>f</span><span class=s2>&#34;错误：文件不存在 </span><span class=si>{</span><span class=n>path</span><span class=si>}</span><span class=s2>&#34;</span>
+</span></span><span class=line><span class=cl>    <span class=k>except</span> <span class=ne>Exception</span> <span class=k>as</span> <span class=n>e</span><span class=p>:</span>
+</span></span><span class=line><span class=cl>        <span class=k>return</span> <span class=sa>f</span><span class=s2>&#34;错误：</span><span class=si>{</span><span class=n>e</span><span class=si>}</span><span class=s2>&#34;</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=nd>@mcp.tool</span><span class=p>()</span>
+</span></span><span class=line><span class=cl><span class=k>async</span> <span class=k>def</span> <span class=nf>list_directory</span><span class=p>(</span><span class=n>path</span><span class=p>:</span> <span class=nb>str</span><span class=p>)</span> <span class=o>-&gt;</span> <span class=nb>str</span><span class=p>:</span>
+</span></span><span class=line><span class=cl>    <span class=s2>&#34;&#34;&#34;列出指定目录下的文件与子目录名称。&#34;&#34;&#34;</span>
+</span></span><span class=line><span class=cl>    <span class=k>try</span><span class=p>:</span>
+</span></span><span class=line><span class=cl>        <span class=n>entries</span> <span class=o>=</span> <span class=n>os</span><span class=o>.</span><span class=n>listdir</span><span class=p>(</span><span class=n>path</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>        <span class=n>lines</span> <span class=o>=</span> <span class=p>[]</span>
+</span></span><span class=line><span class=cl>        <span class=k>for</span> <span class=n>entry</span> <span class=ow>in</span> <span class=n>entries</span><span class=p>:</span>
+</span></span><span class=line><span class=cl>            <span class=n>full</span> <span class=o>=</span> <span class=n>os</span><span class=o>.</span><span class=n>path</span><span class=o>.</span><span class=n>join</span><span class=p>(</span><span class=n>path</span><span class=p>,</span> <span class=n>entry</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>            <span class=n>kind</span> <span class=o>=</span> <span class=s2>&#34;目录&#34;</span> <span class=k>if</span> <span class=n>os</span><span class=o>.</span><span class=n>path</span><span class=o>.</span><span class=n>isdir</span><span class=p>(</span><span class=n>full</span><span class=p>)</span> <span class=k>else</span> <span class=s2>&#34;文件&#34;</span>
+</span></span><span class=line><span class=cl>            <span class=n>lines</span><span class=o>.</span><span class=n>append</span><span class=p>(</span><span class=sa>f</span><span class=s2>&#34;</span><span class=si>{</span><span class=n>entry</span><span class=si>}</span><span class=s2> (</span><span class=si>{</span><span class=n>kind</span><span class=si>}</span><span class=s2>)&#34;</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>        <span class=k>return</span> <span class=s2>&#34;</span><span class=se>\n</span><span class=s2>&#34;</span><span class=o>.</span><span class=n>join</span><span class=p>(</span><span class=n>lines</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>    <span class=k>except</span> <span class=ne>Exception</span> <span class=k>as</span> <span class=n>e</span><span class=p>:</span>
+</span></span><span class=line><span class=cl>        <span class=k>return</span> <span class=sa>f</span><span class=s2>&#34;错误：</span><span class=si>{</span><span class=n>e</span><span class=si>}</span><span class=s2>&#34;</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1># ---------- Resources：资源（应用层按 URI 主动读取）----------</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=nd>@mcp.resource</span><span class=p>(</span><span class=s2>&#34;file://</span><span class=si>{path}</span><span class=s2>&#34;</span><span class=p>)</span>
+</span></span><span class=line><span class=cl><span class=k>async</span> <span class=k>def</span> <span class=nf>read_resource</span><span class=p>(</span><span class=n>path</span><span class=p>:</span> <span class=nb>str</span><span class=p>)</span> <span class=o>-&gt;</span> <span class=nb>str</span><span class=p>:</span>
+</span></span><span class=line><span class=cl>    <span class=s2>&#34;&#34;&#34;按 URI 读取文件内容，作为只读资源暴露给 Client。
+</span></span></span><span class=line><span class=cl><span class=s2>    Client 读取 file:///tmp/note.md 时，path 会被解析为 /tmp/note.md。&#34;&#34;&#34;</span>
+</span></span><span class=line><span class=cl>    <span class=k>with</span> <span class=nb>open</span><span class=p>(</span><span class=n>path</span><span class=p>,</span> <span class=s2>&#34;r&#34;</span><span class=p>,</span> <span class=n>encoding</span><span class=o>=</span><span class=s2>&#34;utf-8&#34;</span><span class=p>)</span> <span class=k>as</span> <span class=n>f</span><span class=p>:</span>
+</span></span><span class=line><span class=cl>        <span class=k>return</span> <span class=n>f</span><span class=o>.</span><span class=n>read</span><span class=p>()</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1># ---------- Prompts：提示模板（用户选择后由 Host 渲染）----------</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=nd>@mcp.prompt</span><span class=p>()</span>
+</span></span><span class=line><span class=cl><span class=k>def</span> <span class=nf>summarize_file</span><span class=p>(</span><span class=n>path</span><span class=p>:</span> <span class=nb>str</span><span class=p>)</span> <span class=o>-&gt;</span> <span class=nb>str</span><span class=p>:</span>
+</span></span><span class=line><span class=cl>    <span class=s2>&#34;&#34;&#34;生成一段提示词，让模型总结指定文件内容。&#34;&#34;&#34;</span>
+</span></span><span class=line><span class=cl>    <span class=k>return</span> <span class=sa>f</span><span class=s2>&#34;请阅读路径 </span><span class=si>{</span><span class=n>path</span><span class=si>}</span><span class=s2> 的文件内容，并用三句话总结要点。&#34;</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1># ---------- 启动 ----------</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=k>if</span> <span class=vm>__name__</span> <span class=o>==</span> <span class=s2>&#34;__main__&#34;</span><span class=p>:</span>
+</span></span><span class=line><span class=cl>    <span class=c1># mcp.run() 默认以 stdio 模式启动，等待 Host 拉起并通信</span>
+</span></span><span class=line><span class=cl>    <span class=n>mcp</span><span class=o>.</span><span class=n>run</span><span class=p>()</span>
+</span></span></code></pre></td></tr></table></div></div><p>几个值得注意的细节：</p><ul><li><strong>类型注解即Schema</strong>：<code>path: str</code>会被FastMCP自动转成<code>{"type": "string"}</code>的JSON Schema，再也不用手写<code>inputSchema</code>字典了。</li><li><strong>docstring即描述</strong>：函数下方的三引号文档字符串，会原样成为工具的<code>description</code>，直接给LLM看。所以<strong>写好docstring等于写好工具说明书</strong>。</li><li><strong>错误处理风格</strong>：MCP推荐"返回文本错误"而非抛异常，这样LLM能看到错误描述并自行决定是否重试或换工具。</li><li><strong>Resource的URI</strong>：必须符合<code>协议://路径</code>形式，<code>file://</code>是最常用的，也可以自定义如<code>db://users/42</code>。</li><li><strong><code>mcp.run()</code>默认stdio</strong>：本地集成时Host以子进程拉起本脚本，通过stdin/stdout收发消息，无需开端口。</li></ul><blockquote><p>💡 <strong>小贴士：FastMCP背后发生了什么？</strong>
+当Client发来<code>tools/list</code>时，FastMCP会扫描所有<code>@mcp.tool()</code>装饰的函数，自动生成工具清单返回；当Client发来<code>tools/call</code>并指定<code>name="read_file"</code>，FastMCP会调用对应函数、把返回值包成<code>TextContent</code>回传。你写的只是普通Python函数，协议细节全自动。</p></blockquote><h2 id=5-开发mcp-client>5. 开发MCP Client</h2><h3 id=51-client的职责>5.1 Client的职责</h3><p>一个完整的MCP Client需要做四件事：</p><ol><li><strong>连接</strong>：通过stdio或SSE与Server建立会话。</li><li><strong>初始化</strong>：发送<code>initialize</code>、接收能力声明、发送<code>initialized</code>通知。</li><li><strong>发现</strong>：调用<code>tools/list</code>等列举能力。</li><li><strong>调用</strong>：按需调用<code>tools/call</code>，解析返回的<code>content</code>数组。</li></ol><h3 id=52-完整示例mcp-client集成到agent>5.2 完整示例：MCP Client集成到Agent</h3><p>下面这段代码启动上一节的文件系统Server，并把它的工具接入一个简易Agent循环。代码分六步，每步都有注释说明在做什么：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span><span class=lnt>17
+</span><span class=lnt>18
+</span><span class=lnt>19
+</span><span class=lnt>20
+</span><span class=lnt>21
+</span><span class=lnt>22
+</span><span class=lnt>23
+</span><span class=lnt>24
+</span><span class=lnt>25
+</span><span class=lnt>26
+</span><span class=lnt>27
+</span><span class=lnt>28
+</span><span class=lnt>29
+</span><span class=lnt>30
+</span><span class=lnt>31
+</span><span class=lnt>32
+</span><span class=lnt>33
+</span><span class=lnt>34
+</span><span class=lnt>35
+</span><span class=lnt>36
+</span><span class=lnt>37
+</span><span class=lnt>38
+</span><span class=lnt>39
+</span><span class=lnt>40
+</span><span class=lnt>41
+</span><span class=lnt>42
+</span><span class=lnt>43
+</span><span class=lnt>44
+</span><span class=lnt>45
+</span><span class=lnt>46
+</span><span class=lnt>47
+</span><span class=lnt>48
+</span><span class=lnt>49
+</span><span class=lnt>50
+</span><span class=lnt>51
+</span><span class=lnt>52
+</span><span class=lnt>53
+</span><span class=lnt>54
+</span><span class=lnt>55
+</span><span class=lnt>56
+</span><span class=lnt>57
+</span><span class=lnt>58
+</span><span class=lnt>59
+</span><span class=lnt>60
+</span><span class=lnt>61
+</span><span class=lnt>62
+</span><span class=lnt>63
+</span><span class=lnt>64
+</span><span class=lnt>65
+</span><span class=lnt>66
+</span><span class=lnt>67
+</span><span class=lnt>68
+</span><span class=lnt>69
+</span><span class=lnt>70
+</span><span class=lnt>71
+</span><span class=lnt>72
+</span><span class=lnt>73
+</span><span class=lnt>74
+</span><span class=lnt>75
+</span><span class=lnt>76
+</span><span class=lnt>77
+</span><span class=lnt>78
+</span><span class=lnt>79
+</span><span class=lnt>80
+</span><span class=lnt>81
+</span><span class=lnt>82
+</span><span class=lnt>83
+</span><span class=lnt>84
+</span><span class=lnt>85
+</span><span class=lnt>86
+</span><span class=lnt>87
+</span><span class=lnt>88
+</span><span class=lnt>89
+</span><span class=lnt>90
+</span><span class=lnt>91
+</span><span class=lnt>92
+</span><span class=lnt>93
+</span><span class=lnt>94
+</span><span class=lnt>95
+</span><span class=lnt>96
+</span><span class=lnt>97
+</span><span class=lnt>98
+</span><span class=lnt>99
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-python data-lang=python><span class=line><span class=cl><span class=c1># mcp_client_agent.py</span>
+</span></span><span class=line><span class=cl><span class=c1># 通过 MCP Client 连接文件系统 Server，并把工具接入一个简易 Agent。</span>
+</span></span><span class=line><span class=cl><span class=c1># 依赖：pip install mcp openai</span>
+</span></span><span class=line><span class=cl><span class=c1># 环境变量：OPENAI_API_KEY、OPENAI_BASE_URL（可选）、MODEL_NAME（可选）</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=kn>import</span> <span class=nn>os</span>
+</span></span><span class=line><span class=cl><span class=kn>import</span> <span class=nn>sys</span>
+</span></span><span class=line><span class=cl><span class=kn>import</span> <span class=nn>asyncio</span>
+</span></span><span class=line><span class=cl><span class=kn>import</span> <span class=nn>json</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=kn>from</span> <span class=nn>mcp</span> <span class=kn>import</span> <span class=n>ClientSession</span><span class=p>,</span> <span class=n>StdioServerParameters</span>
+</span></span><span class=line><span class=cl><span class=kn>from</span> <span class=nn>mcp.client.stdio</span> <span class=kn>import</span> <span class=n>stdio_client</span>
+</span></span><span class=line><span class=cl><span class=kn>from</span> <span class=nn>openai</span> <span class=kn>import</span> <span class=n>OpenAI</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1># LLM 客户端：可替换为任何兼容 OpenAI 接口的模型服务</span>
+</span></span><span class=line><span class=cl><span class=n>llm</span> <span class=o>=</span> <span class=n>OpenAI</span><span class=p>(</span>
+</span></span><span class=line><span class=cl>    <span class=n>api_key</span><span class=o>=</span><span class=n>os</span><span class=o>.</span><span class=n>environ</span><span class=o>.</span><span class=n>get</span><span class=p>(</span><span class=s2>&#34;OPENAI_API_KEY&#34;</span><span class=p>,</span> <span class=s2>&#34;sk-xxx&#34;</span><span class=p>),</span>
+</span></span><span class=line><span class=cl>    <span class=n>base_url</span><span class=o>=</span><span class=n>os</span><span class=o>.</span><span class=n>getenv</span><span class=p>(</span><span class=s2>&#34;OPENAI_BASE_URL&#34;</span><span class=p>,</span> <span class=s2>&#34;https://api.openai.com/v1&#34;</span><span class=p>)</span>
+</span></span><span class=line><span class=cl><span class=p>)</span>
+</span></span><span class=line><span class=cl><span class=n>MODEL</span> <span class=o>=</span> <span class=n>os</span><span class=o>.</span><span class=n>getenv</span><span class=p>(</span><span class=s2>&#34;MODEL_NAME&#34;</span><span class=p>,</span> <span class=s2>&#34;gpt-5.4&#34;</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=k>async</span> <span class=k>def</span> <span class=nf>run_agent</span><span class=p>(</span><span class=n>user_query</span><span class=p>:</span> <span class=nb>str</span><span class=p>):</span>
+</span></span><span class=line><span class=cl>    <span class=s2>&#34;&#34;&#34;启动 MCP Server 子进程，建立会话，运行一轮 Agent 对话&#34;&#34;&#34;</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>    <span class=c1># 第 1 步：配置 stdio 连接参数，以子进程方式拉起 Server</span>
+</span></span><span class=line><span class=cl>    <span class=n>server_params</span> <span class=o>=</span> <span class=n>StdioServerParameters</span><span class=p>(</span>
+</span></span><span class=line><span class=cl>        <span class=n>command</span><span class=o>=</span><span class=n>sys</span><span class=o>.</span><span class=n>executable</span><span class=p>,</span>            <span class=c1># 用当前 Python 解释器</span>
+</span></span><span class=line><span class=cl>        <span class=n>args</span><span class=o>=</span><span class=p>[</span><span class=s2>&#34;filesystem_mcp_server.py&#34;</span><span class=p>],</span> <span class=c1># Server 脚本路径</span>
+</span></span><span class=line><span class=cl>        <span class=n>env</span><span class=o>=</span><span class=n>os</span><span class=o>.</span><span class=n>environ</span><span class=o>.</span><span class=n>copy</span><span class=p>()</span>             <span class=c1># 透传环境变量</span>
+</span></span><span class=line><span class=cl>    <span class=p>)</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>    <span class=c1># 第 2 步：建立 stdio 连接，再创建 Client 会话</span>
+</span></span><span class=line><span class=cl>    <span class=k>async</span> <span class=k>with</span> <span class=n>stdio_client</span><span class=p>(</span><span class=n>server_params</span><span class=p>)</span> <span class=k>as</span> <span class=p>(</span><span class=n>read</span><span class=p>,</span> <span class=n>write</span><span class=p>):</span>
+</span></span><span class=line><span class=cl>        <span class=k>async</span> <span class=k>with</span> <span class=n>ClientSession</span><span class=p>(</span><span class=n>read</span><span class=p>,</span> <span class=n>write</span><span class=p>)</span> <span class=k>as</span> <span class=n>session</span><span class=p>:</span>
+</span></span><span class=line><span class=cl>            <span class=c1># 第 3 步：初始化握手，交换协议版本与能力声明</span>
+</span></span><span class=line><span class=cl>            <span class=k>await</span> <span class=n>session</span><span class=o>.</span><span class=n>initialize</span><span class=p>()</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>            <span class=c1># 第 4 步：发现工具，调用 tools/list 拿到清单</span>
+</span></span><span class=line><span class=cl>            <span class=n>tools_resp</span> <span class=o>=</span> <span class=k>await</span> <span class=n>session</span><span class=o>.</span><span class=n>list_tools</span><span class=p>()</span>
+</span></span><span class=line><span class=cl>            <span class=n>mcp_tools</span> <span class=o>=</span> <span class=n>tools_resp</span><span class=o>.</span><span class=n>tools</span>
+</span></span><span class=line><span class=cl>            <span class=nb>print</span><span class=p>(</span><span class=sa>f</span><span class=s2>&#34;[Client] 发现 </span><span class=si>{</span><span class=nb>len</span><span class=p>(</span><span class=n>mcp_tools</span><span class=p>)</span><span class=si>}</span><span class=s2> 个工具：&#34;</span><span class=p>,</span>
+</span></span><span class=line><span class=cl>                  <span class=p>[</span><span class=n>t</span><span class=o>.</span><span class=n>name</span> <span class=k>for</span> <span class=n>t</span> <span class=ow>in</span> <span class=n>mcp_tools</span><span class=p>])</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>            <span class=c1># 第 5 步：把 MCP 工具转换为 OpenAI Function Calling 格式</span>
+</span></span><span class=line><span class=cl>            <span class=n>oa_tools</span> <span class=o>=</span> <span class=p>[]</span>
+</span></span><span class=line><span class=cl>            <span class=k>for</span> <span class=n>t</span> <span class=ow>in</span> <span class=n>mcp_tools</span><span class=p>:</span>
+</span></span><span class=line><span class=cl>                <span class=n>oa_tools</span><span class=o>.</span><span class=n>append</span><span class=p>({</span>
+</span></span><span class=line><span class=cl>                    <span class=s2>&#34;type&#34;</span><span class=p>:</span> <span class=s2>&#34;function&#34;</span><span class=p>,</span>
+</span></span><span class=line><span class=cl>                    <span class=s2>&#34;function&#34;</span><span class=p>:</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>                        <span class=s2>&#34;name&#34;</span><span class=p>:</span> <span class=n>t</span><span class=o>.</span><span class=n>name</span><span class=p>,</span>
+</span></span><span class=line><span class=cl>                        <span class=s2>&#34;description&#34;</span><span class=p>:</span> <span class=n>t</span><span class=o>.</span><span class=n>description</span><span class=p>,</span>
+</span></span><span class=line><span class=cl>                        <span class=s2>&#34;parameters&#34;</span><span class=p>:</span> <span class=n>t</span><span class=o>.</span><span class=n>inputSchema</span>
+</span></span><span class=line><span class=cl>                    <span class=p>}</span>
+</span></span><span class=line><span class=cl>                <span class=p>})</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>            <span class=c1># 第 6 步：Agent 主循环：对话 → 可能调用工具 → 回填结果 → 继续对话</span>
+</span></span><span class=line><span class=cl>            <span class=n>messages</span> <span class=o>=</span> <span class=p>[</span>
+</span></span><span class=line><span class=cl>                <span class=p>{</span><span class=s2>&#34;role&#34;</span><span class=p>:</span> <span class=s2>&#34;system&#34;</span><span class=p>,</span> <span class=s2>&#34;content&#34;</span><span class=p>:</span> <span class=s2>&#34;你是一个文件助手，可以读写本地文件。&#34;</span><span class=p>},</span>
+</span></span><span class=line><span class=cl>                <span class=p>{</span><span class=s2>&#34;role&#34;</span><span class=p>:</span> <span class=s2>&#34;user&#34;</span><span class=p>,</span> <span class=s2>&#34;content&#34;</span><span class=p>:</span> <span class=n>user_query</span><span class=p>}</span>
+</span></span><span class=line><span class=cl>            <span class=p>]</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>            <span class=k>for</span> <span class=n>_</span> <span class=ow>in</span> <span class=nb>range</span><span class=p>(</span><span class=mi>5</span><span class=p>):</span>  <span class=c1># 最多 5 轮，防止死循环</span>
+</span></span><span class=line><span class=cl>                <span class=n>resp</span> <span class=o>=</span> <span class=n>llm</span><span class=o>.</span><span class=n>chat</span><span class=o>.</span><span class=n>completions</span><span class=o>.</span><span class=n>create</span><span class=p>(</span>
+</span></span><span class=line><span class=cl>                    <span class=n>model</span><span class=o>=</span><span class=n>MODEL</span><span class=p>,</span>
+</span></span><span class=line><span class=cl>                    <span class=n>messages</span><span class=o>=</span><span class=n>messages</span><span class=p>,</span>
+</span></span><span class=line><span class=cl>                    <span class=n>tools</span><span class=o>=</span><span class=n>oa_tools</span>
+</span></span><span class=line><span class=cl>                <span class=p>)</span>
+</span></span><span class=line><span class=cl>                <span class=n>msg</span> <span class=o>=</span> <span class=n>resp</span><span class=o>.</span><span class=n>choices</span><span class=p>[</span><span class=mi>0</span><span class=p>]</span><span class=o>.</span><span class=n>message</span>
+</span></span><span class=line><span class=cl>                <span class=n>messages</span><span class=o>.</span><span class=n>append</span><span class=p>(</span><span class=n>msg</span><span class=o>.</span><span class=n>model_dump</span><span class=p>(</span><span class=n>exclude_none</span><span class=o>=</span><span class=kc>True</span><span class=p>))</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>                <span class=c1># 没有工具调用，说明模型已经给出最终回答</span>
+</span></span><span class=line><span class=cl>                <span class=k>if</span> <span class=ow>not</span> <span class=n>msg</span><span class=o>.</span><span class=n>tool_calls</span><span class=p>:</span>
+</span></span><span class=line><span class=cl>                    <span class=nb>print</span><span class=p>(</span><span class=sa>f</span><span class=s2>&#34;[Agent] 回复：</span><span class=si>{</span><span class=n>msg</span><span class=o>.</span><span class=n>content</span><span class=si>}</span><span class=s2>&#34;</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>                    <span class=k>break</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>                <span class=c1># 执行模型要求的每一个工具调用</span>
+</span></span><span class=line><span class=cl>                <span class=k>for</span> <span class=n>call</span> <span class=ow>in</span> <span class=n>msg</span><span class=o>.</span><span class=n>tool_calls</span><span class=p>:</span>
+</span></span><span class=line><span class=cl>                    <span class=n>fn_name</span> <span class=o>=</span> <span class=n>call</span><span class=o>.</span><span class=n>function</span><span class=o>.</span><span class=n>name</span>
+</span></span><span class=line><span class=cl>                    <span class=n>fn_args</span> <span class=o>=</span> <span class=n>json</span><span class=o>.</span><span class=n>loads</span><span class=p>(</span><span class=n>call</span><span class=o>.</span><span class=n>function</span><span class=o>.</span><span class=n>arguments</span> <span class=ow>or</span> <span class=s2>&#34;</span><span class=si>{}</span><span class=s2>&#34;</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>                    <span class=nb>print</span><span class=p>(</span><span class=sa>f</span><span class=s2>&#34;[Agent] 调用工具 </span><span class=si>{</span><span class=n>fn_name</span><span class=si>}</span><span class=s2>，参数：</span><span class=si>{</span><span class=n>fn_args</span><span class=si>}</span><span class=s2>&#34;</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>                    <span class=c1># 通过 MCP Client 调用 Server 上的工具</span>
+</span></span><span class=line><span class=cl>                    <span class=n>result</span> <span class=o>=</span> <span class=k>await</span> <span class=n>session</span><span class=o>.</span><span class=n>call_tool</span><span class=p>(</span><span class=n>fn_name</span><span class=p>,</span> <span class=n>fn_args</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>                    <span class=c1># 把工具结果回填为 tool 角色消息</span>
+</span></span><span class=line><span class=cl>                    <span class=n>tool_text</span> <span class=o>=</span> <span class=s2>&#34;</span><span class=se>\n</span><span class=s2>&#34;</span><span class=o>.</span><span class=n>join</span><span class=p>(</span>
+</span></span><span class=line><span class=cl>                        <span class=n>c</span><span class=o>.</span><span class=n>text</span> <span class=k>for</span> <span class=n>c</span> <span class=ow>in</span> <span class=n>result</span><span class=o>.</span><span class=n>content</span> <span class=k>if</span> <span class=nb>hasattr</span><span class=p>(</span><span class=n>c</span><span class=p>,</span> <span class=s2>&#34;text&#34;</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>                    <span class=p>)</span>
+</span></span><span class=line><span class=cl>                    <span class=n>messages</span><span class=o>.</span><span class=n>append</span><span class=p>({</span>
+</span></span><span class=line><span class=cl>                        <span class=s2>&#34;role&#34;</span><span class=p>:</span> <span class=s2>&#34;tool&#34;</span><span class=p>,</span>
+</span></span><span class=line><span class=cl>                        <span class=s2>&#34;tool_call_id&#34;</span><span class=p>:</span> <span class=n>call</span><span class=o>.</span><span class=n>id</span><span class=p>,</span>
+</span></span><span class=line><span class=cl>                        <span class=s2>&#34;content&#34;</span><span class=p>:</span> <span class=n>tool_text</span>
+</span></span><span class=line><span class=cl>                    <span class=p>})</span>
+</span></span><span class=line><span class=cl>                    <span class=nb>print</span><span class=p>(</span><span class=sa>f</span><span class=s2>&#34;[Tool] 结果：</span><span class=si>{</span><span class=n>tool_text</span><span class=p>[:</span><span class=mi>200</span><span class=p>]</span><span class=si>}</span><span class=s2>&#34;</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=k>if</span> <span class=vm>__name__</span> <span class=o>==</span> <span class=s2>&#34;__main__&#34;</span><span class=p>:</span>
+</span></span><span class=line><span class=cl>    <span class=c1># 示例：让 Agent 列出 /tmp 目录并读取某个 .md 文件</span>
+</span></span><span class=line><span class=cl>    <span class=n>asyncio</span><span class=o>.</span><span class=n>run</span><span class=p>(</span><span class=n>run_agent</span><span class=p>(</span><span class=s2>&#34;请列出 /tmp 目录下有哪些文件，并读取其中任意一个 .md 文件的内容。&#34;</span><span class=p>))</span>
+</span></span></code></pre></td></tr></table></div></div><p>注意我们做了<strong>协议桥接</strong>：MCP工具的<code>inputSchema</code>正好就是OpenAI Function Calling所需的JSON Schema，所以转换几乎零成本——直接把<code>t.inputSchema</code>塞进<code>parameters</code>字段即可。这也是MCP设计中"协议中立"红利的体现：你可以用任意LLM厂商的API，工具层完全复用。</p><blockquote><p>💡 <strong>小贴士：为什么说MCP是"协议中立"的？</strong>
+MCP Server只懂JSON-RPC，根本不知道调用它的是GPT、Claude还是通义。Client这边把MCP工具格式转成各家API需要的格式（OpenAI用<code>function</code>字段、Anthropic用<code>tools</code>字段），转换层很薄。换模型只动Client，Server一行不改。</p></blockquote><h2 id=6-mcp实战构建天气查询agent>6. MCP实战：构建天气查询Agent</h2><p>理论清楚了，下面用一个更贴近真实场景的例子把全流程串起来。我们将：</p><ol><li>开发一个<strong>天气MCP Server</strong>，封装开放天气API。</li><li>用MCP Client把它接入Agent，让用户用自然语言问天气。</li></ol><h3 id=61-天气mcp-server>6.1 天气MCP Server</h3><p>这个Server只暴露一个<code>get_weather</code>工具，背后调用免费的wttr.in服务（无需API Key，便于演示）。同样用FastMCP，几十行搞定：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span><span class=lnt>17
+</span><span class=lnt>18
+</span><span class=lnt>19
+</span><span class=lnt>20
+</span><span class=lnt>21
+</span><span class=lnt>22
+</span><span class=lnt>23
+</span><span class=lnt>24
+</span><span class=lnt>25
+</span><span class=lnt>26
+</span><span class=lnt>27
+</span><span class=lnt>28
+</span><span class=lnt>29
+</span><span class=lnt>30
+</span><span class=lnt>31
+</span><span class=lnt>32
+</span><span class=lnt>33
+</span><span class=lnt>34
+</span><span class=lnt>35
+</span><span class=lnt>36
+</span><span class=lnt>37
+</span><span class=lnt>38
+</span><span class=lnt>39
+</span><span class=lnt>40
+</span><span class=lnt>41
+</span><span class=lnt>42
+</span><span class=lnt>43
+</span><span class=lnt>44
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-python data-lang=python><span class=line><span class=cl><span class=c1># weather_mcp_server.py</span>
+</span></span><span class=line><span class=cl><span class=c1># 天气查询 MCP Server：暴露 get_weather 工具</span>
+</span></span><span class=line><span class=cl><span class=c1># 依赖：pip install mcp httpx</span>
+</span></span><span class=line><span class=cl><span class=c1># 运行：python weather_mcp_server.py</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=kn>import</span> <span class=nn>httpx</span>
+</span></span><span class=line><span class=cl><span class=kn>from</span> <span class=nn>mcp.server.fastmcp</span> <span class=kn>import</span> <span class=n>FastMCP</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=n>mcp</span> <span class=o>=</span> <span class=n>FastMCP</span><span class=p>(</span><span class=s2>&#34;weather-mcp&#34;</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1># wttr.in 是免费天气服务，?format=j1 返回 JSON</span>
+</span></span><span class=line><span class=cl><span class=n>WEATHER_URL</span> <span class=o>=</span> <span class=s2>&#34;https://wttr.in/</span><span class=si>{city}</span><span class=s2>?format=j1&#34;</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=nd>@mcp.tool</span><span class=p>()</span>
+</span></span><span class=line><span class=cl><span class=k>async</span> <span class=k>def</span> <span class=nf>get_weather</span><span class=p>(</span><span class=n>city</span><span class=p>:</span> <span class=nb>str</span><span class=p>)</span> <span class=o>-&gt;</span> <span class=nb>str</span><span class=p>:</span>
+</span></span><span class=line><span class=cl>    <span class=s2>&#34;&#34;&#34;查询指定城市的当前天气，返回温度、天气状况、湿度、风速等。
+</span></span></span><span class=line><span class=cl><span class=s2>    城市名用英文或拼音，例如 Beijing、shanghai。&#34;&#34;&#34;</span>
+</span></span><span class=line><span class=cl>    <span class=k>try</span><span class=p>:</span>
+</span></span><span class=line><span class=cl>        <span class=k>async</span> <span class=k>with</span> <span class=n>httpx</span><span class=o>.</span><span class=n>AsyncClient</span><span class=p>(</span><span class=n>timeout</span><span class=o>=</span><span class=mi>10</span><span class=p>)</span> <span class=k>as</span> <span class=n>client</span><span class=p>:</span>
+</span></span><span class=line><span class=cl>            <span class=n>resp</span> <span class=o>=</span> <span class=k>await</span> <span class=n>client</span><span class=o>.</span><span class=n>get</span><span class=p>(</span><span class=n>WEATHER_URL</span><span class=o>.</span><span class=n>format</span><span class=p>(</span><span class=n>city</span><span class=o>=</span><span class=n>city</span><span class=p>))</span>
+</span></span><span class=line><span class=cl>            <span class=n>resp</span><span class=o>.</span><span class=n>raise_for_status</span><span class=p>()</span>
+</span></span><span class=line><span class=cl>            <span class=n>data</span> <span class=o>=</span> <span class=n>resp</span><span class=o>.</span><span class=n>json</span><span class=p>()</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>        <span class=c1># 解析当前天气字段</span>
+</span></span><span class=line><span class=cl>        <span class=n>current</span> <span class=o>=</span> <span class=n>data</span><span class=p>[</span><span class=s2>&#34;current_condition&#34;</span><span class=p>][</span><span class=mi>0</span><span class=p>]</span>
+</span></span><span class=line><span class=cl>        <span class=n>temp_c</span> <span class=o>=</span> <span class=n>current</span><span class=p>[</span><span class=s2>&#34;temp_C&#34;</span><span class=p>]</span>
+</span></span><span class=line><span class=cl>        <span class=n>desc</span> <span class=o>=</span> <span class=n>current</span><span class=p>[</span><span class=s2>&#34;weatherDesc&#34;</span><span class=p>][</span><span class=mi>0</span><span class=p>][</span><span class=s2>&#34;value&#34;</span><span class=p>]</span>
+</span></span><span class=line><span class=cl>        <span class=n>humidity</span> <span class=o>=</span> <span class=n>current</span><span class=p>[</span><span class=s2>&#34;humidity&#34;</span><span class=p>]</span>
+</span></span><span class=line><span class=cl>        <span class=n>wind</span> <span class=o>=</span> <span class=n>current</span><span class=p>[</span><span class=s2>&#34;windspeedKmph&#34;</span><span class=p>]</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>        <span class=k>return</span> <span class=p>(</span>
+</span></span><span class=line><span class=cl>            <span class=sa>f</span><span class=s2>&#34;城市：</span><span class=si>{</span><span class=n>city</span><span class=si>}</span><span class=se>\n</span><span class=s2>&#34;</span>
+</span></span><span class=line><span class=cl>            <span class=sa>f</span><span class=s2>&#34;温度：</span><span class=si>{</span><span class=n>temp_c</span><span class=si>}</span><span class=s2>°C</span><span class=se>\n</span><span class=s2>&#34;</span>
+</span></span><span class=line><span class=cl>            <span class=sa>f</span><span class=s2>&#34;天气：</span><span class=si>{</span><span class=n>desc</span><span class=si>}</span><span class=se>\n</span><span class=s2>&#34;</span>
+</span></span><span class=line><span class=cl>            <span class=sa>f</span><span class=s2>&#34;湿度：</span><span class=si>{</span><span class=n>humidity</span><span class=si>}</span><span class=s2>%</span><span class=se>\n</span><span class=s2>&#34;</span>
+</span></span><span class=line><span class=cl>            <span class=sa>f</span><span class=s2>&#34;风速：</span><span class=si>{</span><span class=n>wind</span><span class=si>}</span><span class=s2>km/h&#34;</span>
+</span></span><span class=line><span class=cl>        <span class=p>)</span>
+</span></span><span class=line><span class=cl>    <span class=k>except</span> <span class=ne>Exception</span> <span class=k>as</span> <span class=n>e</span><span class=p>:</span>
+</span></span><span class=line><span class=cl>        <span class=k>return</span> <span class=sa>f</span><span class=s2>&#34;查询失败：</span><span class=si>{</span><span class=n>e</span><span class=si>}</span><span class=s2>&#34;</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=k>if</span> <span class=vm>__name__</span> <span class=o>==</span> <span class=s2>&#34;__main__&#34;</span><span class=p>:</span>
+</span></span><span class=line><span class=cl>    <span class=n>mcp</span><span class=o>.</span><span class=n>run</span><span class=p>()</span>
+</span></span></code></pre></td></tr></table></div></div><blockquote><p>💡 <strong>小贴士：为什么用<code>httpx.AsyncClient</code>而不是<code>requests</code>？</strong>
+MCP的Python SDK基于<code>asyncio</code>异步框架。如果工具内部用同步的<code>requests</code>发请求，会阻塞整个事件循环，导致Server卡住无法响应其他调用。<code>httpx</code>的异步客户端与asyncio天然兼容，不会阻塞。同理，访问数据库应该用<code>aiosqlite</code>、<code>asyncpg</code>等异步驱动。</p></blockquote><h3 id=62-agent通过mcp调用天气工具>6.2 Agent通过MCP调用天气工具</h3><p>我们复用上一节的Client骨架，只换Server脚本与System Prompt。注意<code>StdioServerParameters</code>的<code>args</code>改成了<code>weather_mcp_server.py</code>：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span><span class=lnt>17
+</span><span class=lnt>18
+</span><span class=lnt>19
+</span><span class=lnt>20
+</span><span class=lnt>21
+</span><span class=lnt>22
+</span><span class=lnt>23
+</span><span class=lnt>24
+</span><span class=lnt>25
+</span><span class=lnt>26
+</span><span class=lnt>27
+</span><span class=lnt>28
+</span><span class=lnt>29
+</span><span class=lnt>30
+</span><span class=lnt>31
+</span><span class=lnt>32
+</span><span class=lnt>33
+</span><span class=lnt>34
+</span><span class=lnt>35
+</span><span class=lnt>36
+</span><span class=lnt>37
+</span><span class=lnt>38
+</span><span class=lnt>39
+</span><span class=lnt>40
+</span><span class=lnt>41
+</span><span class=lnt>42
+</span><span class=lnt>43
+</span><span class=lnt>44
+</span><span class=lnt>45
+</span><span class=lnt>46
+</span><span class=lnt>47
+</span><span class=lnt>48
+</span><span class=lnt>49
+</span><span class=lnt>50
+</span><span class=lnt>51
+</span><span class=lnt>52
+</span><span class=lnt>53
+</span><span class=lnt>54
+</span><span class=lnt>55
+</span><span class=lnt>56
+</span><span class=lnt>57
+</span><span class=lnt>58
+</span><span class=lnt>59
+</span><span class=lnt>60
+</span><span class=lnt>61
+</span><span class=lnt>62
+</span><span class=lnt>63
+</span><span class=lnt>64
+</span><span class=lnt>65
+</span><span class=lnt>66
+</span><span class=lnt>67
+</span><span class=lnt>68
+</span><span class=lnt>69
+</span><span class=lnt>70
+</span><span class=lnt>71
+</span><span class=lnt>72
+</span><span class=lnt>73
+</span><span class=lnt>74
+</span><span class=lnt>75
+</span><span class=lnt>76
+</span><span class=lnt>77
+</span><span class=lnt>78
+</span><span class=lnt>79
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-python data-lang=python><span class=line><span class=cl><span class=c1># weather_agent.py</span>
+</span></span><span class=line><span class=cl><span class=c1># 天气查询 Agent：通过 MCP 调用 weather_mcp_server</span>
+</span></span><span class=line><span class=cl><span class=c1># 依赖：pip install mcp openai</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=kn>import</span> <span class=nn>os</span>
+</span></span><span class=line><span class=cl><span class=kn>import</span> <span class=nn>sys</span>
+</span></span><span class=line><span class=cl><span class=kn>import</span> <span class=nn>asyncio</span>
+</span></span><span class=line><span class=cl><span class=kn>import</span> <span class=nn>json</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=kn>from</span> <span class=nn>mcp</span> <span class=kn>import</span> <span class=n>ClientSession</span><span class=p>,</span> <span class=n>StdioServerParameters</span>
+</span></span><span class=line><span class=cl><span class=kn>from</span> <span class=nn>mcp.client.stdio</span> <span class=kn>import</span> <span class=n>stdio_client</span>
+</span></span><span class=line><span class=cl><span class=kn>from</span> <span class=nn>openai</span> <span class=kn>import</span> <span class=n>OpenAI</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=n>llm</span> <span class=o>=</span> <span class=n>OpenAI</span><span class=p>(</span>
+</span></span><span class=line><span class=cl>    <span class=n>api_key</span><span class=o>=</span><span class=n>os</span><span class=o>.</span><span class=n>environ</span><span class=o>.</span><span class=n>get</span><span class=p>(</span><span class=s2>&#34;OPENAI_API_KEY&#34;</span><span class=p>,</span> <span class=s2>&#34;sk-xxx&#34;</span><span class=p>),</span>
+</span></span><span class=line><span class=cl>    <span class=n>base_url</span><span class=o>=</span><span class=n>os</span><span class=o>.</span><span class=n>getenv</span><span class=p>(</span><span class=s2>&#34;OPENAI_BASE_URL&#34;</span><span class=p>,</span> <span class=s2>&#34;https://api.openai.com/v1&#34;</span><span class=p>)</span>
+</span></span><span class=line><span class=cl><span class=p>)</span>
+</span></span><span class=line><span class=cl><span class=n>MODEL</span> <span class=o>=</span> <span class=n>os</span><span class=o>.</span><span class=n>getenv</span><span class=p>(</span><span class=s2>&#34;MODEL_NAME&#34;</span><span class=p>,</span> <span class=s2>&#34;gpt-5.4&#34;</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=k>async</span> <span class=k>def</span> <span class=nf>run_weather_agent</span><span class=p>(</span><span class=n>user_query</span><span class=p>:</span> <span class=nb>str</span><span class=p>):</span>
+</span></span><span class=line><span class=cl>    <span class=c1># 以子进程拉起天气 Server</span>
+</span></span><span class=line><span class=cl>    <span class=n>server_params</span> <span class=o>=</span> <span class=n>StdioServerParameters</span><span class=p>(</span>
+</span></span><span class=line><span class=cl>        <span class=n>command</span><span class=o>=</span><span class=n>sys</span><span class=o>.</span><span class=n>executable</span><span class=p>,</span>
+</span></span><span class=line><span class=cl>        <span class=n>args</span><span class=o>=</span><span class=p>[</span><span class=s2>&#34;weather_mcp_server.py&#34;</span><span class=p>],</span>
+</span></span><span class=line><span class=cl>        <span class=n>env</span><span class=o>=</span><span class=n>os</span><span class=o>.</span><span class=n>environ</span><span class=o>.</span><span class=n>copy</span><span class=p>()</span>
+</span></span><span class=line><span class=cl>    <span class=p>)</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>    <span class=k>async</span> <span class=k>with</span> <span class=n>stdio_client</span><span class=p>(</span><span class=n>server_params</span><span class=p>)</span> <span class=k>as</span> <span class=p>(</span><span class=n>read</span><span class=p>,</span> <span class=n>write</span><span class=p>):</span>
+</span></span><span class=line><span class=cl>        <span class=k>async</span> <span class=k>with</span> <span class=n>ClientSession</span><span class=p>(</span><span class=n>read</span><span class=p>,</span> <span class=n>write</span><span class=p>)</span> <span class=k>as</span> <span class=n>session</span><span class=p>:</span>
+</span></span><span class=line><span class=cl>            <span class=k>await</span> <span class=n>session</span><span class=o>.</span><span class=n>initialize</span><span class=p>()</span>  <span class=c1># 握手</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>            <span class=c1># 发现工具并转成 OpenAI 格式</span>
+</span></span><span class=line><span class=cl>            <span class=n>tools_resp</span> <span class=o>=</span> <span class=k>await</span> <span class=n>session</span><span class=o>.</span><span class=n>list_tools</span><span class=p>()</span>
+</span></span><span class=line><span class=cl>            <span class=n>oa_tools</span> <span class=o>=</span> <span class=p>[{</span>
+</span></span><span class=line><span class=cl>                <span class=s2>&#34;type&#34;</span><span class=p>:</span> <span class=s2>&#34;function&#34;</span><span class=p>,</span>
+</span></span><span class=line><span class=cl>                <span class=s2>&#34;function&#34;</span><span class=p>:</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>                    <span class=s2>&#34;name&#34;</span><span class=p>:</span> <span class=n>t</span><span class=o>.</span><span class=n>name</span><span class=p>,</span>
+</span></span><span class=line><span class=cl>                    <span class=s2>&#34;description&#34;</span><span class=p>:</span> <span class=n>t</span><span class=o>.</span><span class=n>description</span><span class=p>,</span>
+</span></span><span class=line><span class=cl>                    <span class=s2>&#34;parameters&#34;</span><span class=p>:</span> <span class=n>t</span><span class=o>.</span><span class=n>inputSchema</span>
+</span></span><span class=line><span class=cl>                <span class=p>}</span>
+</span></span><span class=line><span class=cl>            <span class=p>}</span> <span class=k>for</span> <span class=n>t</span> <span class=ow>in</span> <span class=n>tools_resp</span><span class=o>.</span><span class=n>tools</span><span class=p>]</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>            <span class=n>messages</span> <span class=o>=</span> <span class=p>[</span>
+</span></span><span class=line><span class=cl>                <span class=p>{</span><span class=s2>&#34;role&#34;</span><span class=p>:</span> <span class=s2>&#34;system&#34;</span><span class=p>,</span> <span class=s2>&#34;content&#34;</span><span class=p>:</span> <span class=s2>&#34;你是天气助手，可以查询全球城市天气。&#34;</span><span class=p>},</span>
+</span></span><span class=line><span class=cl>                <span class=p>{</span><span class=s2>&#34;role&#34;</span><span class=p>:</span> <span class=s2>&#34;user&#34;</span><span class=p>,</span> <span class=s2>&#34;content&#34;</span><span class=p>:</span> <span class=n>user_query</span><span class=p>}</span>
+</span></span><span class=line><span class=cl>            <span class=p>]</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>            <span class=k>for</span> <span class=n>_</span> <span class=ow>in</span> <span class=nb>range</span><span class=p>(</span><span class=mi>4</span><span class=p>):</span>  <span class=c1># 最多 4 轮</span>
+</span></span><span class=line><span class=cl>                <span class=n>resp</span> <span class=o>=</span> <span class=n>llm</span><span class=o>.</span><span class=n>chat</span><span class=o>.</span><span class=n>completions</span><span class=o>.</span><span class=n>create</span><span class=p>(</span>
+</span></span><span class=line><span class=cl>                    <span class=n>model</span><span class=o>=</span><span class=n>MODEL</span><span class=p>,</span> <span class=n>messages</span><span class=o>=</span><span class=n>messages</span><span class=p>,</span> <span class=n>tools</span><span class=o>=</span><span class=n>oa_tools</span>
+</span></span><span class=line><span class=cl>                <span class=p>)</span>
+</span></span><span class=line><span class=cl>                <span class=n>msg</span> <span class=o>=</span> <span class=n>resp</span><span class=o>.</span><span class=n>choices</span><span class=p>[</span><span class=mi>0</span><span class=p>]</span><span class=o>.</span><span class=n>message</span>
+</span></span><span class=line><span class=cl>                <span class=n>messages</span><span class=o>.</span><span class=n>append</span><span class=p>(</span><span class=n>msg</span><span class=o>.</span><span class=n>model_dump</span><span class=p>(</span><span class=n>exclude_none</span><span class=o>=</span><span class=kc>True</span><span class=p>))</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>                <span class=c1># 没有工具调用，输出最终回答并结束</span>
+</span></span><span class=line><span class=cl>                <span class=k>if</span> <span class=ow>not</span> <span class=n>msg</span><span class=o>.</span><span class=n>tool_calls</span><span class=p>:</span>
+</span></span><span class=line><span class=cl>                    <span class=nb>print</span><span class=p>(</span><span class=sa>f</span><span class=s2>&#34;天气助手：</span><span class=si>{</span><span class=n>msg</span><span class=o>.</span><span class=n>content</span><span class=si>}</span><span class=s2>&#34;</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>                    <span class=k>return</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>                <span class=c1># 执行每个工具调用</span>
+</span></span><span class=line><span class=cl>                <span class=k>for</span> <span class=n>call</span> <span class=ow>in</span> <span class=n>msg</span><span class=o>.</span><span class=n>tool_calls</span><span class=p>:</span>
+</span></span><span class=line><span class=cl>                    <span class=n>fn_name</span> <span class=o>=</span> <span class=n>call</span><span class=o>.</span><span class=n>function</span><span class=o>.</span><span class=n>name</span>
+</span></span><span class=line><span class=cl>                    <span class=n>fn_args</span> <span class=o>=</span> <span class=n>json</span><span class=o>.</span><span class=n>loads</span><span class=p>(</span><span class=n>call</span><span class=o>.</span><span class=n>function</span><span class=o>.</span><span class=n>arguments</span> <span class=ow>or</span> <span class=s2>&#34;</span><span class=si>{}</span><span class=s2>&#34;</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>                    <span class=nb>print</span><span class=p>(</span><span class=sa>f</span><span class=s2>&#34;[调用] </span><span class=si>{</span><span class=n>fn_name</span><span class=si>}</span><span class=s2>(</span><span class=si>{</span><span class=n>fn_args</span><span class=si>}</span><span class=s2>)&#34;</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>                    <span class=n>result</span> <span class=o>=</span> <span class=k>await</span> <span class=n>session</span><span class=o>.</span><span class=n>call_tool</span><span class=p>(</span><span class=n>fn_name</span><span class=p>,</span> <span class=n>fn_args</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>                    <span class=n>tool_text</span> <span class=o>=</span> <span class=s2>&#34;</span><span class=se>\n</span><span class=s2>&#34;</span><span class=o>.</span><span class=n>join</span><span class=p>(</span>
+</span></span><span class=line><span class=cl>                        <span class=n>c</span><span class=o>.</span><span class=n>text</span> <span class=k>for</span> <span class=n>c</span> <span class=ow>in</span> <span class=n>result</span><span class=o>.</span><span class=n>content</span> <span class=k>if</span> <span class=nb>hasattr</span><span class=p>(</span><span class=n>c</span><span class=p>,</span> <span class=s2>&#34;text&#34;</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>                    <span class=p>)</span>
+</span></span><span class=line><span class=cl>                    <span class=n>messages</span><span class=o>.</span><span class=n>append</span><span class=p>({</span>
+</span></span><span class=line><span class=cl>                        <span class=s2>&#34;role&#34;</span><span class=p>:</span> <span class=s2>&#34;tool&#34;</span><span class=p>,</span>
+</span></span><span class=line><span class=cl>                        <span class=s2>&#34;tool_call_id&#34;</span><span class=p>:</span> <span class=n>call</span><span class=o>.</span><span class=n>id</span><span class=p>,</span>
+</span></span><span class=line><span class=cl>                        <span class=s2>&#34;content&#34;</span><span class=p>:</span> <span class=n>tool_text</span>
+</span></span><span class=line><span class=cl>                    <span class=p>})</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=k>if</span> <span class=vm>__name__</span> <span class=o>==</span> <span class=s2>&#34;__main__&#34;</span><span class=p>:</span>
+</span></span><span class=line><span class=cl>    <span class=n>asyncio</span><span class=o>.</span><span class=n>run</span><span class=p>(</span><span class=n>run_weather_agent</span><span class=p>(</span><span class=s2>&#34;北京和上海今天分别多少度？需要带伞吗？&#34;</span><span class=p>))</span>
+</span></span></code></pre></td></tr></table></div></div><p>运行效果（示意）：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span><span class=lnt>4
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-fallback data-lang=fallback><span class=line><span class=cl>[调用] get_weather({&#39;city&#39;: &#39;Beijing&#39;})
+</span></span><span class=line><span class=cl>[调用] get_weather({&#39;city&#39;: &#39;Shanghai&#39;})
+</span></span><span class=line><span class=cl>天气助手：北京今天约28°C，晴，湿度40%；上海26°C，小雨，湿度85%。
+</span></span><span class=line><span class=cl>上海有雨，建议带伞；北京晴朗，无需带伞。
+</span></span></code></pre></td></tr></table></div></div><p>可以看到，LLM自主决定调用两次工具（一次问北京、一次问上海），再把结果综合成自然语言回答。整个过程<strong>Server完全不知道用的是哪个模型，模型也不关心Server用什么语言写</strong>——这就是MCP带来的解耦价值，也是它"USB-C即插即用"的真正含义。</p><h2 id=7-mcp最佳实践>7. MCP最佳实践</h2><h3 id=71-server设计原则>7.1 Server设计原则</h3><ul><li><strong>工具粒度适中</strong>：太细（每个SQL一个工具）会让LLM选择困难；太粗（一个"do_anything"工具）又失去可组合性。建议按"一个完整用户意图"为粒度。</li><li><strong>描述写给LLM看</strong>：docstring不仅是文档，更是模型决策依据。写清楚"何时用、不用、输入输出含义"，比堆砌功能列表更有效。</li><li><strong>Schema严格</strong>：尽量用具体的类型注解（<code>int</code>而非<code>str</code>装数字），必要时配合<code>Literal</code>、枚举约束取值，能显著降低模型传错参数的概率。</li><li><strong>幂等优先</strong>：读类工具尽量幂等；写类工具应在描述中明确副作用，便于Host做权限审批。</li></ul><h3 id=72-安全与权限>7.2 安全与权限</h3><ul><li><strong>最小权限</strong>：Server只暴露必要能力。文件系统Server应限制在指定根目录，避免暴露<code>/etc/passwd</code>。</li><li><strong>路径校验</strong>：对路径参数做规范化与越权检查，防止<code>../</code>穿越。</li><li><strong>Host审批</strong>：生产环境Host应实现"工具调用确认"机制，敏感操作需用户点击确认后再下发。</li><li><strong>远程Server鉴权</strong>：基于HTTP的远程MCP应使用Token、mTLS等手段鉴权，避免裸暴露。</li><li><strong>审计日志</strong>：记录每一次<code>tools/call</code>的入参出参，便于事后追溯。</li></ul><h3 id=73-错误处理>7.3 错误处理</h3><ul><li><strong>返回而非抛出</strong>：工具失败时返回文本描述错误，让LLM有机会重试或换策略；只在协议层错误（如序列化失败）才抛异常。</li><li><strong>结构化错误码</strong>：可在文本中嵌入<code>[ERR_TYPE]</code>前缀，便于Host做策略化处理（如配额耗尽自动切换Server）。</li><li><strong>超时与重试</strong>：网络类工具设置合理超时；Client层可对瞬时错误做有限次重试。</li></ul><h3 id=74-性能优化>7.4 性能优化</h3><ul><li><strong>异步IO</strong>：Python SDK基于asyncio，工具内部应使用<code>httpx</code>、<code>aiosqlite</code>等异步库，避免阻塞事件循环。</li><li><strong>批量接口</strong>：若工具常被连续调用多次（如批量查天气），可设计<code>get_weather_batch</code>减少往返。</li><li><strong>缓存</strong>：对慢且少变的资源（如DB Schema）在Server端缓存，减少<code>resources/read</code>延迟。</li><li><strong>连接复用</strong>：远程MCP Client应复用HTTP连接，避免每次调用都重建TLS。</li><li><strong>冷启动</strong>：stdio模式下Server是子进程，启动慢会拖慢Host首屏；可在Server启动时预加载模型/连接池。</li></ul><h2 id=8-小结>8. 小结</h2><p>本章我们从"工具集成碎片化"这一痛点出发，完整走过了MCP协议的理论与实践：</p><ul><li><strong>MCP是什么</strong>：Anthropic提出的开放协议，用Host/Client/Server三段式架构，把工具、资源、提示模板从Agent中解耦。</li><li><strong>为什么重要</strong>：它让工具像USB-C外设一样即插即用，2026年已有5000+ Server、主流框架原生支持，正在成为AI工具生态的事实标准。</li><li><strong>怎么开发</strong>：用Python <code>mcp</code> SDK的FastMCP高层API，函数加个<code>@mcp.tool()</code>装饰器、配好类型注解和docstring，就是一个完整工具；Client侧通过stdio连接，几行代码就能把工具接入任意LLM的Function Calling循环。</li><li><strong>怎么用对</strong>：注意工具粒度、Schema严格性、安全权限与异步性能，才能让MCP真正成为"可生产"的集成层。</li></ul><p>一句话总结：<strong>MCP把"Agent怎么用工具"这件事从代码层升级到了协议层</strong>。掌握MCP，你写的工具就不再属于某一个项目，而属于整个生态。</p><h2 id=9-预告第11章-评估与可观测性>9. 预告：第11章 评估与可观测性</h2><p>当Agent接入了越来越多的工具（无论通过Function Calling还是MCP），一个新的问题随之浮现——<strong>怎么知道它干得好不好？</strong> 一个跑偏的工具调用、一次幻觉的回答、一段静默失败的任务，都可能让整个Agent失去可信度。</p><p>第11章我们将聚焦<strong>评估与可观测性</strong>：</p><ul><li><strong>评估（Evaluation）</strong>：如何用基准任务集、LLM-as-a-Judge、人工评分等手段量化Agent能力，避免"看着像对的"幻觉。</li><li><strong>可观测性（Observability）</strong>：如何用Trace、Span、指标体系把Agent的一次完整运行"切片"展现，定位到底是Prompt、工具还是模型的问题。</li><li><strong>工具链</strong>：介绍LangSmith、Langfuse、Phoenix、OpenTelemetry等在Agent场景的应用。</li></ul><p>从"能跑"到"可信"，评估与可观测性是Agent走向生产不可绕过的一关。我们下一章见。</p></div><div class=post-footer id=post-footer><div class=post-info><div class=post-info-line><div class=post-info-mod><span>Updated on 2026-07-05</span></div></div><div class=post-info-line><div class=post-info-md></div><div class=post-info-share><span><a href=javascript:void(0); title="Share on Twitter" data-sharer=twitter data-url=https://www.ithome.me/post/2026/07/05/ai%E6%99%BA%E8%83%BD%E4%BD%93%E5%BC%80%E5%8F%91-%E7%AC%AC10%E7%AB%A0-mcp%E5%8D%8F%E8%AE%AE/ data-title=MCP协议：智能体的标准化工具接口 data-via=ChenCiki data-hashtags="AI Agent,MCP,Model Context Protocol,Anthropic,工具集成,AI智能体开发实战"><i class="fab fa-twitter fa-fw" aria-hidden=true></i></a><a href=javascript:void(0); title="Share on Linkedin" data-sharer=linkedin data-url=https://www.ithome.me/post/2026/07/05/ai%E6%99%BA%E8%83%BD%E4%BD%93%E5%BC%80%E5%8F%91-%E7%AC%AC10%E7%AB%A0-mcp%E5%8D%8F%E8%AE%AE/><i class="fab fa-linkedin fa-fw" aria-hidden=true></i></a><a href=javascript:void(0); title="Share on 微博" data-sharer=weibo data-url=https://www.ithome.me/post/2026/07/05/ai%E6%99%BA%E8%83%BD%E4%BD%93%E5%BC%80%E5%8F%91-%E7%AC%AC10%E7%AB%A0-mcp%E5%8D%8F%E8%AE%AE/ data-title=MCP协议：智能体的标准化工具接口 data-ralateuid=xxx><i class="fab fa-weibo fa-fw" aria-hidden=true></i></a></span></div></div></div><div class=post-info-more><section class=post-tags><i class="fas fa-tags fa-fw" aria-hidden=true></i>&nbsp;<a href=/tags/ai-agent/>AI Agent</a>,&nbsp;<a href=/tags/mcp/>MCP</a>,&nbsp;<a href=/tags/model-context-protocol/>Model Context Protocol</a>,&nbsp;<a href=/tags/anthropic/>Anthropic</a>,&nbsp;<a href=/tags/%E5%B7%A5%E5%85%B7%E9%9B%86%E6%88%90/>工具集成</a>,&nbsp;<a href=/tags/ai%E6%99%BA%E8%83%BD%E4%BD%93%E5%BC%80%E5%8F%91%E5%AE%9E%E6%88%98/>AI智能体开发实战</a></section><section><span><a href=javascript:void(0); onclick=window.history.back()>Back</a></span>&nbsp;|&nbsp;<span><a href=/>Home</a></span></section></div><div class=post-nav><a href=/post/2026/07/05/ai%E6%99%BA%E8%83%BD%E4%BD%93%E5%BC%80%E5%8F%91-%E7%AC%AC8%E7%AB%A0-rag%E5%A2%9E%E5%BC%BA%E6%A3%80%E7%B4%A2/ class=prev rel=prev title=RAG增强检索：知识库驱动的智能体><i class="fas fa-angle-left fa-fw" aria-hidden=true></i>RAG增强检索：知识库驱动的智能体</a>
+<a href=/post/2026/07/05/ai%E6%99%BA%E8%83%BD%E4%BD%93%E5%BC%80%E5%8F%91-%E7%AC%AC3%E7%AB%A0-llm%E6%A0%B8%E5%BF%83%E5%BC%95%E6%93%8E/ class=next rel=next title=LLM核心引擎：大模型选型与集成>LLM核心引擎：大模型选型与集成<i class="fas fa-angle-right fa-fw" aria-hidden=true></i></a></div></div><div id=comments><div id=gitalk class=comment></div><noscript>Please enable JavaScript to view the comments powered by <a href=https://github.com/gitalk/gitalk></a>Gitalk</a>.</noscript></div></article></div></main><footer class=footer><div class=footer-container><div class=footer-line itemscope itemtype=http://schema.org/CreativeWork><i class="far fa-copyright fa-fw" aria-hidden=true></i><span itemprop=copyrightYear>2011 - 2026</span><span class=author itemprop=copyrightHolder>&nbsp;<a href=https://www.ithome.me/ target=_blank>Simon Chen</a></span>&nbsp;|&nbsp;<span class=license><a rel="license external nofollow noopener noreferrer" href=https://creativecommons.org/licenses/by-nc-nd/4.0/ target=_blank>CC BY-NC-ND 4.0</a></span></div></div></footer></div><div id=fixed-buttons><a href=# id=back-to-top class=fixed-button title="Back to Top"><i class="fas fa-arrow-up fa-fw" aria-hidden=true></i>
+</a><a href=# id=view-comments class=fixed-button title="View Comments"><i class="fas fa-comment fa-fw" aria-hidden=true></i></a></div><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/gitalk@1.8.0/dist/gitalk.min.css><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/css/lightgallery-bundle.min.css><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/katex.min.css><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/copy-tex.min.css><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.css><script type=text/javascript src=https://cdn.jsdelivr.net/npm/gitalk@1.8.0/dist/gitalk.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/autocomplete.js@0.38.1/dist/autocomplete.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/lunr@2.3.9/lunr.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/lazysizes@5.3.1/lazysizes.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/lightgallery.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/plugins/thumbnail/lg-thumbnail.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/plugins/zoom/lg-zoom.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/clipboard@2.0.11/dist/clipboard.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/sharer.js@0.5.1/sharer.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/katex.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/auto-render.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/copy-tex.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/mhchem.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.js></script><script type=text/javascript>window.config={code:{copyTitle:"Copy to clipboard",maxShownLines:50},comment:{gitalk:{admin:["cikichen"],clientID:"be0f52370ed1285b6c7c",clientSecret:"734a7d8d0ded346ca7a3d565d57de3f8eeb2850b",id:"2026-07-05T00:00:00Z",owner:"cikichen",repo:"gitalk",title:"MCP协议：智能体的标准化工具接口"}},cookieconsent:{content:{dismiss:"我知道了",link:"了解更多",message:"本网站使用 Cookies 来改善您的浏览体验."},enable:!0,palette:{button:{background:"#f0f0f0"},popup:{background:"#1aa3ff"}},theme:"edgeless"},lightgallery:!0,math:{delimiters:[{display:!0,left:"$$",right:"$$"},{display:!0,left:"\\[",right:"\\]"},{display:!0,left:"\\begin{equation}",right:"\\end{equation}"},{display:!0,left:"\\begin{equation*}",right:"\\end{equation*}"},{display:!0,left:"\\begin{align}",right:"\\end{align}"},{display:!0,left:"\\begin{align*}",right:"\\end{align*}"},{display:!0,left:"\\begin{alignat}",right:"\\end{alignat}"},{display:!0,left:"\\begin{alignat*}",right:"\\end{alignat*}"},{display:!0,left:"\\begin{gather}",right:"\\end{gather}"},{display:!0,left:"\\begin{CD}",right:"\\end{CD}"},{display:!1,left:"$",right:"$"},{display:!1,left:"\\(",right:"\\)"}],strict:!1},search:{highlightTag:"em",lunrIndexURL:"/index.json",maxResultLength:10,noResultsFound:"No results found",snippetLength:50,type:"lunr"}}</script><script type=text/javascript src=/js/theme.min.js></script></body></html>

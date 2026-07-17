@@ -1,624 +1,372 @@
-<!DOCTYPE html>
-<html lang="zh-CN">
-    <head>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <meta name="robots" content="noodp" />
-        <title>有限状态机实战：用FSM模式管理复杂业务状态流转 - 编程心语</title><meta name="Description" content="用有限状态机（FSM）替代深层 if-else 链管理业务状态流转，附 Go 完整实现：状态定义、转移表、守卫条件、事件驱动，以及FSM库选型建议。"><meta property="og:url" content="https://www.ithome.me/post/2026/07/07/finite-state-machine-in-practice/">
-  <meta property="og:site_name" content="编程心语">
-  <meta property="og:title" content="有限状态机实战：用FSM模式管理复杂业务状态流转">
-  <meta property="og:description" content="用有限状态机（FSM）替代深层 if-else 链管理业务状态流转，附 Go 完整实现：状态定义、转移表、守卫条件、事件驱动，以及FSM库选型建议。">
-  <meta property="og:locale" content="zh_CN">
-  <meta property="og:type" content="article">
-    <meta property="article:section" content="posts">
-    <meta property="article:published_time" content="2026-07-07T08:00:00+08:00">
-    <meta property="article:modified_time" content="2026-07-07T08:33:44+08:00">
-    <meta property="article:tag" content="状态机">
-    <meta property="article:tag" content="FSM">
-    <meta property="article:tag" content="设计模式">
-    <meta property="article:tag" content="Go">
-    <meta property="article:tag" content="架构">
-
-  <meta name="twitter:card" content="summary">
-  <meta name="twitter:title" content="有限状态机实战：用FSM模式管理复杂业务状态流转">
-  <meta name="twitter:description" content="用有限状态机（FSM）替代深层 if-else 链管理业务状态流转，附 Go 完整实现：状态定义、转移表、守卫条件、事件驱动，以及FSM库选型建议。">
-      <meta name="twitter:site" content="@ChenCiki">
-<meta name="application-name" content="编程心语">
-<meta name="apple-mobile-web-app-title" content="编程心语"><meta name="theme-color" content="#ffffff"><meta name="msapplication-TileColor" content="#da532c"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
-        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
-        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5"><link rel="manifest" href="/site.webmanifest"><link rel="canonical" href="https://www.ithome.me/post/2026/07/07/finite-state-machine-in-practice/" /><link rel="prev" href="https://www.ithome.me/post/2026/07/06/code-complexity-metrics/" /><link rel="next" href="https://www.ithome.me/post/2026/07/08/go-context-deep-dive/" /><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/normalize.css@8.0.1/normalize.min.css"><link rel="stylesheet" href="/css/style.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css"><script type="application/ld+json">
-    {
-        "@context": "http://schema.org",
-        "@type": "BlogPosting",
-        "headline": "有限状态机实战：用FSM模式管理复杂业务状态流转",
-        "inLanguage": "zh-CN",
-        "mainEntityOfPage": {
-            "@type": "WebPage",
-            "@id": "https:\/\/www.ithome.me\/post\/2026\/07\/07\/finite-state-machine-in-practice\/"
-        },"image": ["https:\/\/www.ithome.me\/cover.png"],"genre": "posts","keywords": "状态机, FSM, 设计模式, Go, 架构","wordcount":  2213 ,
-        "url": "https:\/\/www.ithome.me\/post\/2026\/07\/07\/finite-state-machine-in-practice\/","datePublished": "2026-07-07T08:00:00+08:00","dateModified": "2026-07-07T08:33:44+08:00","publisher": {
-            "@type": "Organization",
-            "name": "SimonChen","logo": "https:\/\/www.ithome.me\/logo.png"},"author": {
-                "@type": "Person",
-                "name": "Simon"
-            },"description": "用有限状态机（FSM）替代深层 if-else 链管理业务状态流转，附 Go 完整实现：状态定义、转移表、守卫条件、事件驱动，以及FSM库选型建议。"
-    }
-    </script><script async src="https://www.googletagmanager.com/gtag/js?id=G-H1Q5563VR8"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-  gtag('config', 'G-H1Q5563VR8', { 'anonymize_ip': true });
-</script></head>
-    <body data-header-desktop="fixed" data-header-mobile="auto"><script type="text/javascript">(window.localStorage && localStorage.getItem('theme') ? localStorage.getItem('theme') === 'dark' : ('auto' === 'auto' ? window.matchMedia('(prefers-color-scheme: dark)').matches : 'auto' === 'dark')) && document.body.setAttribute('theme', 'dark');</script>
-
-        <div id="mask"></div><div class="wrapper"><header class="desktop" id="header-desktop">
-    <div class="header-wrapper">
-        <div class="header-title">
-            <a href="/" title="编程心语">编程心语</a>
-        </div>
-        <div class="menu">
-            <div class="menu-inner"><a class="menu-item" href="/posts/"> 文章 </a><a class="menu-item" href="/categories/"> 分类 </a><a class="menu-item" href="/tags/"> 标签 </a><a class="menu-item" href="/about-me/"> 关于 </a><span class="menu-item delimiter"></span><span class="menu-item search" id="search-desktop">
-                        <input type="text" placeholder="搜索文章..." id="search-input-desktop">
-                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-desktop" title="Search">
-                            <i class="fas fa-search fa-fw" aria-hidden="true"></i>
-                        </a>
-                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-desktop" title="Clear">
-                            <i class="fas fa-times-circle fa-fw" aria-hidden="true"></i>
-                        </a>
-                        <span class="search-button search-loading" id="search-loading-desktop">
-                            <i class="fas fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
-                        </span>
-                    </span><a href="javascript:void(0);" class="menu-item theme-switch" title="Switch Theme">
-                    <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
-                </a>
-            </div>
-        </div>
-    </div>
-</header><header class="mobile" id="header-mobile">
-    <div class="header-container">
-        <div class="header-wrapper">
-            <div class="header-title">
-                <a href="/" title="编程心语">编程心语</a>
-            </div>
-            <div class="menu-toggle" id="menu-toggle-mobile">
-                <span></span><span></span><span></span>
-            </div>
-        </div>
-        <div class="menu" id="menu-mobile"><div class="search-wrapper">
-                    <div class="search mobile" id="search-mobile">
-                        <input type="text" placeholder="搜索文章..." id="search-input-mobile">
-                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-mobile" title="Search">
-                            <i class="fas fa-search fa-fw" aria-hidden="true"></i>
-                        </a>
-                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-mobile" title="Clear">
-                            <i class="fas fa-times-circle fa-fw" aria-hidden="true"></i>
-                        </a>
-                        <span class="search-button search-loading" id="search-loading-mobile">
-                            <i class="fas fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
-                        </span>
-                    </div>
-                    <a href="javascript:void(0);" class="search-cancel" id="search-cancel-mobile">
-                        Cancel
-                    </a>
-                </div><a class="menu-item" href="/posts/" title="">文章</a><a class="menu-item" href="/categories/" title="">分类</a><a class="menu-item" href="/tags/" title="">标签</a><a class="menu-item" href="/about-me/" title="">关于</a><a href="javascript:void(0);" class="menu-item theme-switch" title="Switch Theme">
-                <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
-            </a></div>
-    </div>
-</header><div class="search-dropdown desktop">
-        <div id="search-dropdown-desktop"></div>
-    </div>
-    <div class="search-dropdown mobile">
-        <div id="search-dropdown-mobile"></div>
-    </div><main class="main">
-                <div class="container"><div class="toc" id="toc-auto">
-            <h2 class="toc-title">Contents</h2>
-            <div class="toc-content" id="toc-content-auto"></div>
-        </div><article class="page single"><h1 class="single-title animate__animated animate__flipInX">有限状态机实战：用FSM模式管理复杂业务状态流转</h1><div class="post-meta">
-            <div class="post-meta-line"><span class="post-author"><a href="https://www.ithome.me/" title="Author" target="_blank" rel="noopener noreferrer author" class="author"><i class="fas fa-user-circle fa-fw" aria-hidden="true"></i>Simon</a>
-</span>&nbsp;<span class="post-category">included in <a href="/categories/essay/"><i class="far fa-folder fa-fw" aria-hidden="true"></i>Essay</a></span></div>
-            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw" aria-hidden="true"></i>&nbsp;<time datetime="2026-07-07">2026-07-07</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden="true"></i>&nbsp;2213 words&nbsp;
-                <i class="far fa-clock fa-fw" aria-hidden="true"></i>&nbsp;5 minutes&nbsp;</div>
-        </div><div class="details toc" id="toc-static"  data-kept="true">
-                <div class="details-summary toc-title">
-                    <span>Contents</span>
-                    <span><i class="details-icon fas fa-angle-right" aria-hidden="true"></i></span>
-                </div>
-                <div class="details-content toc-content" id="toc-content-static"><nav id="TableOfContents">
-  <ul>
-    <li><a href="#你的状态逻辑正在失控">你的状态逻辑正在失控</a></li>
-    <li><a href="#fsm-的三个核心概念">FSM 的三个核心概念</a></li>
-    <li><a href="#手写一个fsm转移表驱动">手写一个FSM：转移表驱动</a></li>
-    <li><a href="#用fsm重写订单状态">用FSM重写订单状态</a></li>
-    <li><a href="#守卫条件一个事件多种结果">守卫条件：一个事件多种结果</a></li>
-    <li><a href="#持久化状态要落库">持久化：状态要落库</a></li>
-    <li><a href="#什么时候该用fsm什么时候别用">什么时候该用FSM，什么时候别用</a></li>
-    <li><a href="#开源库推荐">开源库推荐</a></li>
-    <li><a href="#小结">小结</a></li>
-  </ul>
-</nav></div>
-            </div><div class="content" id="content"><h2 id="你的状态逻辑正在失控">你的状态逻辑正在失控</h2>
-<p>订单系统。用户下单 → 待支付 → 已支付 → 待发货 → 已发货 → 已签收 → 已完成。看起来简单，但加上这些分支呢：支付超时自动取消、已发货可以退货、退款要走到单独的流程、管理员可以强制关闭。</p>
-<p>大多数人的写法：</p>
-<div class="highlight"><div class="chroma">
-<table class="lntable"><tr><td class="lntd">
-<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
-</span><span class="lnt"> 2
-</span><span class="lnt"> 3
-</span><span class="lnt"> 4
-</span><span class="lnt"> 5
-</span><span class="lnt"> 6
-</span><span class="lnt"> 7
-</span><span class="lnt"> 8
-</span><span class="lnt"> 9
-</span><span class="lnt">10
-</span><span class="lnt">11
-</span><span class="lnt">12
-</span><span class="lnt">13
-</span><span class="lnt">14
-</span><span class="lnt">15
-</span><span class="lnt">16
-</span><span class="lnt">17
-</span><span class="lnt">18
-</span><span class="lnt">19
-</span><span class="lnt">20
-</span><span class="lnt">21
-</span><span class="lnt">22
-</span><span class="lnt">23
-</span><span class="lnt">24
-</span><span class="lnt">25
-</span></code></pre></td>
-<td class="lntd">
-<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="kd">func</span> <span class="nf">UpdateOrderStatus</span><span class="p">(</span><span class="nx">order</span> <span class="o">*</span><span class="nx">Order</span><span class="p">,</span> <span class="nx">action</span> <span class="kt">string</span><span class="p">)</span> <span class="kt">error</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="nx">order</span><span class="p">.</span><span class="nx">Status</span> <span class="o">==</span> <span class="s">&#34;pending_payment&#34;</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="nx">action</span> <span class="o">==</span> <span class="s">&#34;pay&#34;</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">            <span class="nx">order</span><span class="p">.</span><span class="nx">Status</span> <span class="p">=</span> <span class="s">&#34;paid&#34;</span>
-</span></span><span class="line"><span class="cl">        <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="nx">action</span> <span class="o">==</span> <span class="s">&#34;cancel&#34;</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">            <span class="nx">order</span><span class="p">.</span><span class="nx">Status</span> <span class="p">=</span> <span class="s">&#34;cancelled&#34;</span>
-</span></span><span class="line"><span class="cl">        <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="nx">action</span> <span class="o">==</span> <span class="s">&#34;timeout&#34;</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">            <span class="nx">order</span><span class="p">.</span><span class="nx">Status</span> <span class="p">=</span> <span class="s">&#34;cancelled&#34;</span>
-</span></span><span class="line"><span class="cl">        <span class="p">}</span>
-</span></span><span class="line"><span class="cl">    <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="nx">order</span><span class="p">.</span><span class="nx">Status</span> <span class="o">==</span> <span class="s">&#34;paid&#34;</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="nx">action</span> <span class="o">==</span> <span class="s">&#34;ship&#34;</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">            <span class="nx">order</span><span class="p">.</span><span class="nx">Status</span> <span class="p">=</span> <span class="s">&#34;shipped&#34;</span>
-</span></span><span class="line"><span class="cl">        <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="nx">action</span> <span class="o">==</span> <span class="s">&#34;refund&#34;</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">            <span class="nx">order</span><span class="p">.</span><span class="nx">Status</span> <span class="p">=</span> <span class="s">&#34;refunding&#34;</span>
-</span></span><span class="line"><span class="cl">        <span class="p">}</span>
-</span></span><span class="line"><span class="cl">    <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="nx">order</span><span class="p">.</span><span class="nx">Status</span> <span class="o">==</span> <span class="s">&#34;shipped&#34;</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="nx">action</span> <span class="o">==</span> <span class="s">&#34;confirm&#34;</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">            <span class="nx">order</span><span class="p">.</span><span class="nx">Status</span> <span class="p">=</span> <span class="s">&#34;completed&#34;</span>
-</span></span><span class="line"><span class="cl">        <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="nx">action</span> <span class="o">==</span> <span class="s">&#34;return&#34;</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">            <span class="nx">order</span><span class="p">.</span><span class="nx">Status</span> <span class="p">=</span> <span class="s">&#34;returning&#34;</span>
-</span></span><span class="line"><span class="cl">        <span class="p">}</span>
-</span></span><span class="line"><span class="cl">    <span class="p">}</span>
-</span></span><span class="line"><span class="cl">    <span class="c1">// ... 还有更多分支
-</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="k">return</span> <span class="kc">nil</span>
-</span></span><span class="line"><span class="cl"><span class="p">}</span>
-</span></span></code></pre></td></tr></table>
-</div>
-</div><p>状态多了之后，这种代码会膨胀成几百行的 if-else 瀑布。每次加新状态，你都得在这座迷宫里找到所有相关分支，小心翼翼地改。漏改一个就是 Bug。</p>
-<p>**有限状态机（FSM）**就是解决这个问题的设计模式：把状态、事件、转移规则显式化，用一张表描述全部流转逻辑。</p>
-<h2 id="fsm-的三个核心概念">FSM 的三个核心概念</h2>
-<ul>
-<li><strong>状态（State）</strong>：对象在生命周期中的某个阶段，如「待支付」「已发货」</li>
-<li><strong>事件（Event）</strong>：触发状态变化的外部动作，如「支付」「发货」「签收」</li>
-<li><strong>转移（Transition）</strong>：从某状态接收某事件后，切换到目标状态的规则</li>
-</ul>
-<p>关键约束：<strong>一个状态收到一个事件，只有一个确定的目标状态</strong>（或者不允许该事件）。这正是 if-else 代码缺少的——if-else 允许同一个状态下对不同事件做任何处理，逻辑分散在各处，而FSM强制你集中声明所有规则。</p>
-<h2 id="手写一个fsm转移表驱动">手写一个FSM：转移表驱动</h2>
-<p>核心思路是用一张二维表描述「当前状态 + 事件 → 目标状态」的映射：</p>
-<div class="highlight"><div class="chroma">
-<table class="lntable"><tr><td class="lntd">
-<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
-</span><span class="lnt"> 2
-</span><span class="lnt"> 3
-</span><span class="lnt"> 4
-</span><span class="lnt"> 5
-</span><span class="lnt"> 6
-</span><span class="lnt"> 7
-</span><span class="lnt"> 8
-</span><span class="lnt"> 9
-</span><span class="lnt">10
-</span><span class="lnt">11
-</span><span class="lnt">12
-</span><span class="lnt">13
-</span><span class="lnt">14
-</span><span class="lnt">15
-</span><span class="lnt">16
-</span><span class="lnt">17
-</span><span class="lnt">18
-</span><span class="lnt">19
-</span><span class="lnt">20
-</span><span class="lnt">21
-</span><span class="lnt">22
-</span><span class="lnt">23
-</span><span class="lnt">24
-</span><span class="lnt">25
-</span><span class="lnt">26
-</span><span class="lnt">27
-</span><span class="lnt">28
-</span><span class="lnt">29
-</span><span class="lnt">30
-</span><span class="lnt">31
-</span><span class="lnt">32
-</span><span class="lnt">33
-</span><span class="lnt">34
-</span><span class="lnt">35
-</span><span class="lnt">36
-</span><span class="lnt">37
-</span><span class="lnt">38
-</span><span class="lnt">39
-</span><span class="lnt">40
-</span><span class="lnt">41
-</span><span class="lnt">42
-</span><span class="lnt">43
-</span><span class="lnt">44
-</span><span class="lnt">45
-</span><span class="lnt">46
-</span><span class="lnt">47
-</span><span class="lnt">48
-</span><span class="lnt">49
-</span><span class="lnt">50
-</span><span class="lnt">51
-</span><span class="lnt">52
-</span><span class="lnt">53
-</span><span class="lnt">54
-</span><span class="lnt">55
-</span><span class="lnt">56
-</span><span class="lnt">57
-</span><span class="lnt">58
-</span><span class="lnt">59
-</span><span class="lnt">60
-</span><span class="lnt">61
-</span><span class="lnt">62
-</span><span class="lnt">63
-</span></code></pre></td>
-<td class="lntd">
-<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="kn">package</span> <span class="nx">fsm</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="c1">// State 表示一个状态
-</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kd">type</span> <span class="nx">State</span> <span class="kt">string</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="c1">// Event 表示一个触发事件
-</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kd">type</span> <span class="nx">Event</span> <span class="kt">string</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="c1">// Transition 描述一条转移规则
-</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kd">type</span> <span class="nx">Transition</span> <span class="kd">struct</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">    <span class="nx">From</span>     <span class="nx">State</span>
-</span></span><span class="line"><span class="cl">    <span class="nx">Event</span>    <span class="nx">Event</span>
-</span></span><span class="line"><span class="cl">    <span class="nx">To</span>       <span class="nx">State</span>
-</span></span><span class="line"><span class="cl">    <span class="nx">Action</span>   <span class="kd">func</span><span class="p">(</span><span class="nx">ctx</span> <span class="kd">interface</span><span class="p">{})</span> <span class="kt">error</span> <span class="c1">// 可选：转移时执行的副作用
-</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="p">}</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="c1">// Machine 状态机本体
-</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kd">type</span> <span class="nx">Machine</span> <span class="kd">struct</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">    <span class="nx">current</span>     <span class="nx">State</span>
-</span></span><span class="line"><span class="cl">    <span class="nx">transitions</span> <span class="kd">map</span><span class="p">[</span><span class="nx">transitionKey</span><span class="p">]</span><span class="nx">Transition</span>
-</span></span><span class="line"><span class="cl"><span class="p">}</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="kd">type</span> <span class="nx">transitionKey</span> <span class="kd">struct</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">    <span class="nx">from</span>  <span class="nx">State</span>
-</span></span><span class="line"><span class="cl">    <span class="nx">event</span> <span class="nx">Event</span>
-</span></span><span class="line"><span class="cl"><span class="p">}</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="kd">func</span> <span class="nf">New</span><span class="p">(</span><span class="nx">initial</span> <span class="nx">State</span><span class="p">,</span> <span class="nx">rules</span> <span class="p">[]</span><span class="nx">Transition</span><span class="p">)</span> <span class="o">*</span><span class="nx">Machine</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">    <span class="nx">m</span> <span class="o">:=</span> <span class="o">&amp;</span><span class="nx">Machine</span><span class="p">{</span>
-</span></span><span class="line"><span class="cl">        <span class="nx">current</span><span class="p">:</span>     <span class="nx">initial</span><span class="p">,</span>
-</span></span><span class="line"><span class="cl">        <span class="nx">transitions</span><span class="p">:</span> <span class="nb">make</span><span class="p">(</span><span class="kd">map</span><span class="p">[</span><span class="nx">transitionKey</span><span class="p">]</span><span class="nx">Transition</span><span class="p">),</span>
-</span></span><span class="line"><span class="cl">    <span class="p">}</span>
-</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="nx">_</span><span class="p">,</span> <span class="nx">t</span> <span class="o">:=</span> <span class="k">range</span> <span class="nx">rules</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">        <span class="nx">m</span><span class="p">.</span><span class="nx">transitions</span><span class="p">[</span><span class="nx">transitionKey</span><span class="p">{</span><span class="nx">t</span><span class="p">.</span><span class="nx">From</span><span class="p">,</span> <span class="nx">t</span><span class="p">.</span><span class="nx">Event</span><span class="p">}]</span> <span class="p">=</span> <span class="nx">t</span>
-</span></span><span class="line"><span class="cl">    <span class="p">}</span>
-</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="nx">m</span>
-</span></span><span class="line"><span class="cl"><span class="p">}</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="c1">// Current 返回当前状态
-</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kd">func</span> <span class="p">(</span><span class="nx">m</span> <span class="o">*</span><span class="nx">Machine</span><span class="p">)</span> <span class="nf">Current</span><span class="p">()</span> <span class="nx">State</span> <span class="p">{</span> <span class="k">return</span> <span class="nx">m</span><span class="p">.</span><span class="nx">current</span> <span class="p">}</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="c1">// Fire 触发一个事件
-</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kd">func</span> <span class="p">(</span><span class="nx">m</span> <span class="o">*</span><span class="nx">Machine</span><span class="p">)</span> <span class="nf">Fire</span><span class="p">(</span><span class="nx">event</span> <span class="nx">Event</span><span class="p">,</span> <span class="nx">ctx</span> <span class="kd">interface</span><span class="p">{})</span> <span class="kt">error</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">    <span class="nx">key</span> <span class="o">:=</span> <span class="nx">transitionKey</span><span class="p">{</span><span class="nx">m</span><span class="p">.</span><span class="nx">current</span><span class="p">,</span> <span class="nx">event</span><span class="p">}</span>
-</span></span><span class="line"><span class="cl">    <span class="nx">t</span><span class="p">,</span> <span class="nx">ok</span> <span class="o">:=</span> <span class="nx">m</span><span class="p">.</span><span class="nx">transitions</span><span class="p">[</span><span class="nx">key</span><span class="p">]</span>
-</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="p">!</span><span class="nx">ok</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="nx">fmt</span><span class="p">.</span><span class="nf">Errorf</span><span class="p">(</span><span class="s">&#34;非法转移：状态 %s 不允许事件 %s&#34;</span><span class="p">,</span> <span class="nx">m</span><span class="p">.</span><span class="nx">current</span><span class="p">,</span> <span class="nx">event</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">    <span class="p">}</span>
-</span></span><span class="line"><span class="cl">    <span class="c1">// 执行副作用（如果有）
-</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="k">if</span> <span class="nx">t</span><span class="p">.</span><span class="nx">Action</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">t</span><span class="p">.</span><span class="nf">Action</span><span class="p">(</span><span class="nx">ctx</span><span class="p">);</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">            <span class="k">return</span> <span class="nx">fmt</span><span class="p">.</span><span class="nf">Errorf</span><span class="p">(</span><span class="s">&#34;转移副作用失败: %w&#34;</span><span class="p">,</span> <span class="nx">err</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">        <span class="p">}</span>
-</span></span><span class="line"><span class="cl">    <span class="p">}</span>
-</span></span><span class="line"><span class="cl">    <span class="nx">m</span><span class="p">.</span><span class="nx">current</span> <span class="p">=</span> <span class="nx">t</span><span class="p">.</span><span class="nx">To</span>
-</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="kc">nil</span>
-</span></span><span class="line"><span class="cl"><span class="p">}</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="c1">// CanTransit 检查当前状态是否允许某事件
-</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kd">func</span> <span class="p">(</span><span class="nx">m</span> <span class="o">*</span><span class="nx">Machine</span><span class="p">)</span> <span class="nf">CanTransit</span><span class="p">(</span><span class="nx">event</span> <span class="nx">Event</span><span class="p">)</span> <span class="kt">bool</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">    <span class="nx">_</span><span class="p">,</span> <span class="nx">ok</span> <span class="o">:=</span> <span class="nx">m</span><span class="p">.</span><span class="nx">transitions</span><span class="p">[</span><span class="nx">transitionKey</span><span class="p">{</span><span class="nx">m</span><span class="p">.</span><span class="nx">current</span><span class="p">,</span> <span class="nx">event</span><span class="p">}]</span>
-</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="nx">ok</span>
-</span></span><span class="line"><span class="cl"><span class="p">}</span>
-</span></span></code></pre></td></tr></table>
-</div>
-</div><h2 id="用fsm重写订单状态">用FSM重写订单状态</h2>
-<p>把分散的 if-else 变成一张声明式规则表：</p>
-<div class="highlight"><div class="chroma">
-<table class="lntable"><tr><td class="lntd">
-<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
-</span><span class="lnt"> 2
-</span><span class="lnt"> 3
-</span><span class="lnt"> 4
-</span><span class="lnt"> 5
-</span><span class="lnt"> 6
-</span><span class="lnt"> 7
-</span><span class="lnt"> 8
-</span><span class="lnt"> 9
-</span><span class="lnt">10
-</span><span class="lnt">11
-</span><span class="lnt">12
-</span><span class="lnt">13
-</span><span class="lnt">14
-</span><span class="lnt">15
-</span><span class="lnt">16
-</span><span class="lnt">17
-</span><span class="lnt">18
-</span><span class="lnt">19
-</span><span class="lnt">20
-</span><span class="lnt">21
-</span><span class="lnt">22
-</span><span class="lnt">23
-</span><span class="lnt">24
-</span><span class="lnt">25
-</span><span class="lnt">26
-</span><span class="lnt">27
-</span><span class="lnt">28
-</span><span class="lnt">29
-</span><span class="lnt">30
-</span><span class="lnt">31
-</span><span class="lnt">32
-</span><span class="lnt">33
-</span><span class="lnt">34
-</span><span class="lnt">35
-</span><span class="lnt">36
-</span><span class="lnt">37
-</span><span class="lnt">38
-</span><span class="lnt">39
-</span><span class="lnt">40
-</span><span class="lnt">41
-</span><span class="lnt">42
-</span><span class="lnt">43
-</span><span class="lnt">44
-</span><span class="lnt">45
-</span><span class="lnt">46
-</span></code></pre></td>
-<td class="lntd">
-<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="kd">const</span> <span class="p">(</span>
-</span></span><span class="line"><span class="cl">    <span class="nx">StatePendingPayment</span> <span class="nx">State</span> <span class="p">=</span> <span class="s">&#34;pending_payment&#34;</span>
-</span></span><span class="line"><span class="cl">    <span class="nx">StatePaid</span>           <span class="nx">State</span> <span class="p">=</span> <span class="s">&#34;paid&#34;</span>
-</span></span><span class="line"><span class="cl">    <span class="nx">StateShipped</span>        <span class="nx">State</span> <span class="p">=</span> <span class="s">&#34;shipped&#34;</span>
-</span></span><span class="line"><span class="cl">    <span class="nx">StateCompleted</span>      <span class="nx">State</span> <span class="p">=</span> <span class="s">&#34;completed&#34;</span>
-</span></span><span class="line"><span class="cl">    <span class="nx">StateCancelled</span>      <span class="nx">State</span> <span class="p">=</span> <span class="s">&#34;cancelled&#34;</span>
-</span></span><span class="line"><span class="cl">    <span class="nx">StateReturning</span>      <span class="nx">State</span> <span class="p">=</span> <span class="s">&#34;returning&#34;</span>
-</span></span><span class="line"><span class="cl">    <span class="nx">StateRefunded</span>       <span class="nx">State</span> <span class="p">=</span> <span class="s">&#34;refunded&#34;</span>
-</span></span><span class="line"><span class="cl"><span class="p">)</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="kd">const</span> <span class="p">(</span>
-</span></span><span class="line"><span class="cl">    <span class="nx">EventPay</span>     <span class="nx">Event</span> <span class="p">=</span> <span class="s">&#34;pay&#34;</span>
-</span></span><span class="line"><span class="cl">    <span class="nx">EventShip</span>    <span class="nx">Event</span> <span class="p">=</span> <span class="s">&#34;ship&#34;</span>
-</span></span><span class="line"><span class="cl">    <span class="nx">EventConfirm</span> <span class="nx">Event</span> <span class="p">=</span> <span class="s">&#34;confirm&#34;</span>
-</span></span><span class="line"><span class="cl">    <span class="nx">EventCancel</span>  <span class="nx">Event</span> <span class="p">=</span> <span class="s">&#34;cancel&#34;</span>
-</span></span><span class="line"><span class="cl">    <span class="nx">EventTimeout</span> <span class="nx">Event</span> <span class="p">=</span> <span class="s">&#34;timeout&#34;</span>
-</span></span><span class="line"><span class="cl">    <span class="nx">EventRefund</span>  <span class="nx">Event</span> <span class="p">=</span> <span class="s">&#34;refund&#34;</span>
-</span></span><span class="line"><span class="cl">    <span class="nx">EventReturn</span>  <span class="nx">Event</span> <span class="p">=</span> <span class="s">&#34;return&#34;</span>
-</span></span><span class="line"><span class="cl"><span class="p">)</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="kd">func</span> <span class="nf">NewOrderFSM</span><span class="p">()</span> <span class="o">*</span><span class="nx">Machine</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">    <span class="nx">rules</span> <span class="o">:=</span> <span class="p">[]</span><span class="nx">Transition</span><span class="p">{</span>
-</span></span><span class="line"><span class="cl">        <span class="p">{</span><span class="nx">From</span><span class="p">:</span> <span class="nx">StatePendingPayment</span><span class="p">,</span> <span class="nx">Event</span><span class="p">:</span> <span class="nx">EventPay</span><span class="p">,</span> <span class="nx">To</span><span class="p">:</span> <span class="nx">StatePaid</span><span class="p">,</span>
-</span></span><span class="line"><span class="cl">            <span class="nx">Action</span><span class="p">:</span> <span class="kd">func</span><span class="p">(</span><span class="nx">ctx</span> <span class="kd">interface</span><span class="p">{})</span> <span class="kt">error</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">                <span class="nx">o</span> <span class="o">:=</span> <span class="nx">ctx</span><span class="p">.(</span><span class="o">*</span><span class="nx">Order</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">                <span class="k">return</span> <span class="nf">chargePayment</span><span class="p">(</span><span class="nx">o</span><span class="p">)</span> <span class="c1">// 实际扣款逻辑
-</span></span></span><span class="line"><span class="cl"><span class="c1"></span>            <span class="p">}},</span>
-</span></span><span class="line"><span class="cl">        <span class="p">{</span><span class="nx">From</span><span class="p">:</span> <span class="nx">StatePendingPayment</span><span class="p">,</span> <span class="nx">Event</span><span class="p">:</span> <span class="nx">EventCancel</span><span class="p">,</span> <span class="nx">To</span><span class="p">:</span> <span class="nx">StateCancelled</span><span class="p">},</span>
-</span></span><span class="line"><span class="cl">        <span class="p">{</span><span class="nx">From</span><span class="p">:</span> <span class="nx">StatePendingPayment</span><span class="p">,</span> <span class="nx">Event</span><span class="p">:</span> <span class="nx">EventTimeout</span><span class="p">,</span> <span class="nx">To</span><span class="p">:</span> <span class="nx">StateCancelled</span><span class="p">},</span>
-</span></span><span class="line"><span class="cl">        <span class="p">{</span><span class="nx">From</span><span class="p">:</span> <span class="nx">StatePaid</span><span class="p">,</span> <span class="nx">Event</span><span class="p">:</span> <span class="nx">EventShip</span><span class="p">,</span> <span class="nx">To</span><span class="p">:</span> <span class="nx">StateShipped</span><span class="p">},</span>
-</span></span><span class="line"><span class="cl">        <span class="p">{</span><span class="nx">From</span><span class="p">:</span> <span class="nx">StatePaid</span><span class="p">,</span> <span class="nx">Event</span><span class="p">:</span> <span class="nx">EventRefund</span><span class="p">,</span> <span class="nx">To</span><span class="p">:</span> <span class="nx">StateRefunded</span><span class="p">},</span>
-</span></span><span class="line"><span class="cl">        <span class="p">{</span><span class="nx">From</span><span class="p">:</span> <span class="nx">StateShipped</span><span class="p">,</span> <span class="nx">Event</span><span class="p">:</span> <span class="nx">EventConfirm</span><span class="p">,</span> <span class="nx">To</span><span class="p">:</span> <span class="nx">StateCompleted</span><span class="p">},</span>
-</span></span><span class="line"><span class="cl">        <span class="p">{</span><span class="nx">From</span><span class="p">:</span> <span class="nx">StateShipped</span><span class="p">,</span> <span class="nx">Event</span><span class="p">:</span> <span class="nx">EventReturn</span><span class="p">,</span> <span class="nx">To</span><span class="p">:</span> <span class="nx">StateReturning</span><span class="p">},</span>
-</span></span><span class="line"><span class="cl">        <span class="p">{</span><span class="nx">From</span><span class="p">:</span> <span class="nx">StateReturning</span><span class="p">,</span> <span class="nx">Event</span><span class="p">:</span> <span class="nx">EventRefund</span><span class="p">,</span> <span class="nx">To</span><span class="p">:</span> <span class="nx">StateRefunded</span><span class="p">},</span>
-</span></span><span class="line"><span class="cl">    <span class="p">}</span>
-</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="nf">New</span><span class="p">(</span><span class="nx">StatePendingPayment</span><span class="p">,</span> <span class="nx">rules</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl"><span class="p">}</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="c1">// 业务调用：只需一行
-</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kd">func</span> <span class="p">(</span><span class="nx">o</span> <span class="o">*</span><span class="nx">Order</span><span class="p">)</span> <span class="nf">Pay</span><span class="p">()</span> <span class="kt">error</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="nx">o</span><span class="p">.</span><span class="nx">fsm</span><span class="p">.</span><span class="nf">Fire</span><span class="p">(</span><span class="nx">EventPay</span><span class="p">,</span> <span class="nx">o</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl"><span class="p">}</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="kd">func</span> <span class="p">(</span><span class="nx">o</span> <span class="o">*</span><span class="nx">Order</span><span class="p">)</span> <span class="nf">Ship</span><span class="p">()</span> <span class="kt">error</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="nx">o</span><span class="p">.</span><span class="nx">fsm</span><span class="p">.</span><span class="nf">Fire</span><span class="p">(</span><span class="nx">EventShip</span><span class="p">,</span> <span class="nx">o</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl"><span class="p">}</span>
-</span></span></code></pre></td></tr></table>
-</div>
-</div><p>对比之前的 if-else 代码：</p>
-<ul>
-<li><strong>新增状态</strong>：在 rules 切片里加几行，不碰现有代码</li>
-<li><strong>查规则</strong>：看 rules 这张表，一目了然</li>
-<li><strong>非法操作防护</strong>：Fire 不匹配时自动报错，不会误执行</li>
-<li><strong>副作用内聚</strong>：扣款、通知等逻辑跟转移规则绑定，不会遗漏</li>
-</ul>
-<h2 id="守卫条件一个事件多种结果">守卫条件：一个事件多种结果</h2>
-<p>实际场景中，同一事件在不同条件下可能转到不同状态。比如「退货」在已签收7天内允许，超过7天拒绝。加一个守卫函数：</p>
-<div class="highlight"><div class="chroma">
-<table class="lntable"><tr><td class="lntd">
-<pre tabindex="0" class="chroma"><code><span class="lnt">1
-</span><span class="lnt">2
-</span><span class="lnt">3
-</span><span class="lnt">4
-</span><span class="lnt">5
-</span><span class="lnt">6
-</span><span class="lnt">7
-</span></code></pre></td>
-<td class="lntd">
-<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="kd">type</span> <span class="nx">Transition</span> <span class="kd">struct</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">    <span class="nx">From</span>   <span class="nx">State</span>
-</span></span><span class="line"><span class="cl">    <span class="nx">Event</span>  <span class="nx">Event</span>
-</span></span><span class="line"><span class="cl">    <span class="nx">To</span>     <span class="nx">State</span>
-</span></span><span class="line"><span class="cl">    <span class="nx">Guard</span>  <span class="kd">func</span><span class="p">(</span><span class="nx">ctx</span> <span class="kd">interface</span><span class="p">{})</span> <span class="kt">bool</span> <span class="c1">// 守卫：返回false则跳过此规则
-</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="nx">Action</span> <span class="kd">func</span><span class="p">(</span><span class="nx">ctx</span> <span class="kd">interface</span><span class="p">{})</span> <span class="kt">error</span>
-</span></span><span class="line"><span class="cl"><span class="p">}</span>
-</span></span></code></pre></td></tr></table>
-</div>
-</div><p>Fire 方法改为按优先级遍历匹配列表，第一个通过 Guard 的规则生效：</p>
-<div class="highlight"><div class="chroma">
-<table class="lntable"><tr><td class="lntd">
-<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
-</span><span class="lnt"> 2
-</span><span class="lnt"> 3
-</span><span class="lnt"> 4
-</span><span class="lnt"> 5
-</span><span class="lnt"> 6
-</span><span class="lnt"> 7
-</span><span class="lnt"> 8
-</span><span class="lnt"> 9
-</span><span class="lnt">10
-</span><span class="lnt">11
-</span><span class="lnt">12
-</span><span class="lnt">13
-</span><span class="lnt">14
-</span><span class="lnt">15
-</span><span class="lnt">16
-</span><span class="lnt">17
-</span><span class="lnt">18
-</span><span class="lnt">19
-</span><span class="lnt">20
-</span><span class="lnt">21
-</span><span class="lnt">22
-</span><span class="lnt">23
-</span><span class="lnt">24
-</span><span class="lnt">25
-</span></code></pre></td>
-<td class="lntd">
-<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="kd">func</span> <span class="p">(</span><span class="nx">m</span> <span class="o">*</span><span class="nx">Machine</span><span class="p">)</span> <span class="nf">Fire</span><span class="p">(</span><span class="nx">event</span> <span class="nx">Event</span><span class="p">,</span> <span class="nx">ctx</span> <span class="kd">interface</span><span class="p">{})</span> <span class="kt">error</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">    <span class="nx">candidates</span> <span class="o">:=</span> <span class="nx">m</span><span class="p">.</span><span class="nx">transitions</span><span class="p">[</span><span class="nx">transitionKey</span><span class="p">{</span><span class="nx">m</span><span class="p">.</span><span class="nx">current</span><span class="p">,</span> <span class="nx">event</span><span class="p">}]</span>
-</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="nx">_</span><span class="p">,</span> <span class="nx">t</span> <span class="o">:=</span> <span class="k">range</span> <span class="nx">candidates</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="nx">t</span><span class="p">.</span><span class="nx">Guard</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="o">&amp;&amp;</span> <span class="p">!</span><span class="nx">t</span><span class="p">.</span><span class="nf">Guard</span><span class="p">(</span><span class="nx">ctx</span><span class="p">)</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">            <span class="k">continue</span>
-</span></span><span class="line"><span class="cl">        <span class="p">}</span>
-</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="nx">t</span><span class="p">.</span><span class="nx">Action</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">            <span class="k">if</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">t</span><span class="p">.</span><span class="nf">Action</span><span class="p">(</span><span class="nx">ctx</span><span class="p">);</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">                <span class="k">return</span> <span class="nx">err</span>
-</span></span><span class="line"><span class="cl">            <span class="p">}</span>
-</span></span><span class="line"><span class="cl">        <span class="p">}</span>
-</span></span><span class="line"><span class="cl">        <span class="nx">m</span><span class="p">.</span><span class="nx">current</span> <span class="p">=</span> <span class="nx">t</span><span class="p">.</span><span class="nx">To</span>
-</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="kc">nil</span>
-</span></span><span class="line"><span class="cl">    <span class="p">}</span>
-</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="nx">fmt</span><span class="p">.</span><span class="nf">Errorf</span><span class="p">(</span><span class="s">&#34;无匹配转移：状态 %s + 事件 %s&#34;</span><span class="p">,</span> <span class="nx">m</span><span class="p">.</span><span class="nx">current</span><span class="p">,</span> <span class="nx">event</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl"><span class="p">}</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="c1">// 注册带守卫的规则
-</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="nx">rules</span> <span class="o">:=</span> <span class="p">[]</span><span class="nx">Transition</span><span class="p">{</span>
-</span></span><span class="line"><span class="cl">    <span class="p">{</span><span class="nx">From</span><span class="p">:</span> <span class="nx">StateCompleted</span><span class="p">,</span> <span class="nx">Event</span><span class="p">:</span> <span class="nx">EventReturn</span><span class="p">,</span> <span class="nx">To</span><span class="p">:</span> <span class="nx">StateReturning</span><span class="p">,</span>
-</span></span><span class="line"><span class="cl">        <span class="nx">Guard</span><span class="p">:</span> <span class="kd">func</span><span class="p">(</span><span class="nx">ctx</span> <span class="kd">interface</span><span class="p">{})</span> <span class="kt">bool</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">            <span class="nx">o</span> <span class="o">:=</span> <span class="nx">ctx</span><span class="p">.(</span><span class="o">*</span><span class="nx">Order</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">            <span class="k">return</span> <span class="nx">time</span><span class="p">.</span><span class="nf">Since</span><span class="p">(</span><span class="nx">o</span><span class="p">.</span><span class="nx">CompletedAt</span><span class="p">)</span> <span class="p">&lt;</span> <span class="mi">7</span><span class="o">*</span><span class="mi">24</span><span class="o">*</span><span class="nx">time</span><span class="p">.</span><span class="nx">Hour</span>
-</span></span><span class="line"><span class="cl">        <span class="p">}},</span>
-</span></span><span class="line"><span class="cl"><span class="p">}</span>
-</span></span></code></pre></td></tr></table>
-</div>
-</div><p>transitions 改为 <code>map[transitionKey][]Transition</code> 即可支持同一 key 多条规则。</p>
-<h2 id="持久化状态要落库">持久化：状态要落库</h2>
-<p>FSM 运行在内存里，但订单状态得存数据库。做法很简单：<strong>只持久化当前状态值</strong>，下次加载时用 <code>New(savedState, rules)</code> 重建状态机：</p>
-<div class="highlight"><div class="chroma">
-<table class="lntable"><tr><td class="lntd">
-<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
-</span><span class="lnt"> 2
-</span><span class="lnt"> 3
-</span><span class="lnt"> 4
-</span><span class="lnt"> 5
-</span><span class="lnt"> 6
-</span><span class="lnt"> 7
-</span><span class="lnt"> 8
-</span><span class="lnt"> 9
-</span><span class="lnt">10
-</span><span class="lnt">11
-</span><span class="lnt">12
-</span></code></pre></td>
-<td class="lntd">
-<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="c1">// 从数据库加载
-</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="nx">order</span> <span class="o">:=</span> <span class="nx">db</span><span class="p">.</span><span class="nf">GetOrder</span><span class="p">(</span><span class="nx">id</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl"><span class="nx">order</span><span class="p">.</span><span class="nx">fsm</span> <span class="p">=</span> <span class="nf">New</span><span class="p">(</span><span class="nf">State</span><span class="p">(</span><span class="nx">order</span><span class="p">.</span><span class="nx">DBStatus</span><span class="p">),</span> <span class="nx">rules</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="c1">// 触发事件后，把新状态写回数据库
-</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kd">func</span> <span class="p">(</span><span class="nx">o</span> <span class="o">*</span><span class="nx">Order</span><span class="p">)</span> <span class="nf">Pay</span><span class="p">()</span> <span class="kt">error</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">o</span><span class="p">.</span><span class="nx">fsm</span><span class="p">.</span><span class="nf">Fire</span><span class="p">(</span><span class="nx">EventPay</span><span class="p">,</span> <span class="nx">o</span><span class="p">);</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="nx">err</span>
-</span></span><span class="line"><span class="cl">    <span class="p">}</span>
-</span></span><span class="line"><span class="cl">    <span class="nx">o</span><span class="p">.</span><span class="nx">DBStatus</span> <span class="p">=</span> <span class="nb">string</span><span class="p">(</span><span class="nx">o</span><span class="p">.</span><span class="nx">fsm</span><span class="p">.</span><span class="nf">Current</span><span class="p">())</span>
-</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="nx">db</span><span class="p">.</span><span class="nf">SaveOrder</span><span class="p">(</span><span class="nx">o</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl"><span class="p">}</span>
-</span></span></code></pre></td></tr></table>
-</div>
-</div><p>规则是声明式的、无状态的，每次从代码重建即可，不需要序列化。</p>
-<h2 id="什么时候该用fsm什么时候别用">什么时候该用FSM，什么时候别用</h2>
-<p><strong>该用</strong>：</p>
-<ul>
-<li>对象有明确的生命周期阶段（订单、工单、审批流、游戏角色）</li>
-<li>状态数 ≥ 4，且事件会触发状态切换</li>
-<li>非法状态转移需要被拦截</li>
-</ul>
-<p><strong>别用</strong>：</p>
-<ul>
-<li>状态只有「开/关」两个——直接布尔值就够了</li>
-<li>状态流转极度自由（任意状态可转任意状态）——FSM 的约束反而碍事</li>
-<li>状态本身是数据驱动的连续值（如温度、进度百分比）——这不是状态机的场景</li>
-</ul>
-<h2 id="开源库推荐">开源库推荐</h2>
-<p>不想自己造轮子的话：</p>
-<ul>
-<li><strong>Go</strong>：<code>github.com/looplab/fsm</code> — 轻量，支持回调、守卫，社区活跃</li>
-<li><strong>Python</strong>：<code>transitions</code> 库 — 功能丰富，支持嵌套状态、定时器</li>
-<li><strong>Java</strong>：Spring StateMachine — 与 Spring 生态深度集成，适合企业级流程</li>
-</ul>
-<p>自造 FSM 的好处是完全可控、零依赖，核心代码不超过 100 行。如果你的状态逻辑确实复杂到需要嵌套状态、并行区域等高级特性，再引入库不迟。</p>
-<h2 id="小结">小结</h2>
-<p>if-else 瀑布不是起点烂，是长大了之后不可维护。FSM 的价值不在于复杂，而在于<strong>把隐式逻辑显式化</strong>：状态、事件、转移规则集中声明，改一个分支不需要搜索整个代码库。当你发现自己在写第四层 <code>else if</code> 来判断同一个对象的状态时，就是引入状态机的信号。</p>
-</div><div class="post-footer" id="post-footer">
-    <div class="post-info">
-        <div class="post-info-line">
-            <div class="post-info-mod">
-                <span>Updated on 2026-07-07&nbsp;<a class="git-hash" href="https://github.com/cikichen/hugo-sync/commit/f756a7331c319e9c153abc669533d2d6cf84c766" target="_blank" title="commit by cikichen(cikichen@github.com) f756a7331c319e9c153abc669533d2d6cf84c766: 备份博客">
-                                    <i class="fas fa-hashtag fa-fw" aria-hidden="true"></i>f756a733</a></span>
-            </div></div>
-        <div class="post-info-line">
-            <div class="post-info-md"></div>
-            <div class="post-info-share">
-                <span><a href="javascript:void(0);" title="Share on Twitter" data-sharer="twitter" data-url="https://www.ithome.me/post/2026/07/07/finite-state-machine-in-practice/" data-title="有限状态机实战：用FSM模式管理复杂业务状态流转" data-via="ChenCiki" data-hashtags="状态机,FSM,设计模式,Go,架构"><i class="fab fa-twitter fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on Linkedin" data-sharer="linkedin" data-url="https://www.ithome.me/post/2026/07/07/finite-state-machine-in-practice/"><i class="fab fa-linkedin fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on 微博" data-sharer="weibo" data-url="https://www.ithome.me/post/2026/07/07/finite-state-machine-in-practice/" data-title="有限状态机实战：用FSM模式管理复杂业务状态流转" data-ralateuid="xxx"><i class="fab fa-weibo fa-fw" aria-hidden="true"></i></a></span>
-            </div>
-        </div>
-    </div>
-
-    <div class="post-info-more">
-        <section class="post-tags"><i class="fas fa-tags fa-fw" aria-hidden="true"></i>&nbsp;<a href="/tags/%E7%8A%B6%E6%80%81%E6%9C%BA/">状态机</a>,&nbsp;<a href="/tags/fsm/">FSM</a>,&nbsp;<a href="/tags/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/">设计模式</a>,&nbsp;<a href="/tags/go/">Go</a>,&nbsp;<a href="/tags/%E6%9E%B6%E6%9E%84/">架构</a></section>
-        <section>
-            <span><a href="javascript:void(0);" onclick="window.history.back();">Back</a></span>&nbsp;|&nbsp;<span><a href="/">Home</a></span>
-        </section>
-    </div>
-
-    <div class="post-nav"><a href="/post/2026/07/06/code-complexity-metrics/" class="prev" rel="prev" title="代码复杂度度量实战：从圈复杂度到认知复杂度"><i class="fas fa-angle-left fa-fw" aria-hidden="true"></i>代码复杂度度量实战：从圈复杂度到认知复杂度</a>
-            <a href="/post/2026/07/08/go-context-deep-dive/" class="next" rel="next" title="Go Context 机制详解：超时控制、取消传播与避坑指南">Go Context 机制详解：超时控制、取消传播与避坑指南<i class="fas fa-angle-right fa-fw" aria-hidden="true"></i></a></div>
-</div>
-<div id="comments"><div id="gitalk" class="comment"></div><noscript>
-                Please enable JavaScript to view the comments powered by <a href="https://github.com/gitalk/gitalk"></a>Gitalk</a>.
-            </noscript></div></article></div>
-            </main><footer class="footer">
-        <div class="footer-container"><div class="footer-line" itemscope itemtype="http://schema.org/CreativeWork"><i class="far fa-copyright fa-fw" aria-hidden="true"></i><span itemprop="copyrightYear">2011 - 2026</span><span class="author" itemprop="copyrightHolder">&nbsp;<a href="https://www.ithome.me/" target="_blank">Simon Chen</a></span>&nbsp;|&nbsp;<span class="license"><a rel="license external nofollow noopener noreferrer" href="https://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank">CC BY-NC-ND 4.0</a></span></div>
-        </div>
-    </footer></div>
-
-        <div id="fixed-buttons"><a href="#" id="back-to-top" class="fixed-button" title="Back to Top">
-                <i class="fas fa-arrow-up fa-fw" aria-hidden="true"></i>
-            </a><a href="#" id="view-comments" class="fixed-button" title="View Comments">
-                <i class="fas fa-comment fa-fw" aria-hidden="true"></i>
-            </a>
-        </div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1.8.0/dist/gitalk.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/css/lightgallery-bundle.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/katex.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/copy-tex.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.css"><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/gitalk@1.8.0/dist/gitalk.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/autocomplete.js@0.38.1/dist/autocomplete.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lunr@2.3.9/lunr.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lazysizes@5.3.1/lazysizes.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/lightgallery.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/plugins/thumbnail/lg-thumbnail.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/plugins/zoom/lg-zoom.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/clipboard@2.0.11/dist/clipboard.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/sharer.js@0.5.1/sharer.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/katex.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/auto-render.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/copy-tex.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/mhchem.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.js"></script><script type="text/javascript">window.config={"code":{"copyTitle":"Copy to clipboard","maxShownLines":50},"comment":{"gitalk":{"admin":["cikichen"],"clientID":"be0f52370ed1285b6c7c","clientSecret":"734a7d8d0ded346ca7a3d565d57de3f8eeb2850b","id":"2026-07-07T00:00:00Z","owner":"cikichen","repo":"gitalk","title":"有限状态机实战：用FSM模式管理复杂业务状态流转"}},"cookieconsent":{"content":{"dismiss":"我知道了","link":"了解更多","message":"本网站使用 Cookies 来改善您的浏览体验."},"enable":true,"palette":{"button":{"background":"#f0f0f0"},"popup":{"background":"#1aa3ff"}},"theme":"edgeless"},"lightgallery":true,"math":{"delimiters":[{"display":true,"left":"$$","right":"$$"},{"display":true,"left":"\\[","right":"\\]"},{"display":true,"left":"\\begin{equation}","right":"\\end{equation}"},{"display":true,"left":"\\begin{equation*}","right":"\\end{equation*}"},{"display":true,"left":"\\begin{align}","right":"\\end{align}"},{"display":true,"left":"\\begin{align*}","right":"\\end{align*}"},{"display":true,"left":"\\begin{alignat}","right":"\\end{alignat}"},{"display":true,"left":"\\begin{alignat*}","right":"\\end{alignat*}"},{"display":true,"left":"\\begin{gather}","right":"\\end{gather}"},{"display":true,"left":"\\begin{CD}","right":"\\end{CD}"},{"display":false,"left":"$","right":"$"},{"display":false,"left":"\\(","right":"\\)"}],"strict":false},"search":{"highlightTag":"em","lunrIndexURL":"/index.json","maxResultLength":10,"noResultsFound":"No results found","snippetLength":50,"type":"lunr"}};</script><script type="text/javascript" src="/js/theme.min.js"></script></body>
-</html>
+<!doctype html><html lang=zh-CN><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><meta name=robots content="noodp"><title>有限状态机实战：用FSM模式管理复杂业务状态流转 - 编程心语</title><meta name=Description content="用有限状态机（FSM）替代深层 if-else 链管理业务状态流转，附 Go 完整实现：状态定义、转移表、守卫条件、事件驱动，以及FSM库选型建议。"><meta property="og:url" content="https://www.ithome.me/post/2026/07/07/finite-state-machine-in-practice/">
+<meta property="og:site_name" content="编程心语"><meta property="og:title" content="有限状态机实战：用FSM模式管理复杂业务状态流转"><meta property="og:description" content="用有限状态机（FSM）替代深层 if-else 链管理业务状态流转，附 Go 完整实现：状态定义、转移表、守卫条件、事件驱动，以及FSM库选型建议。"><meta property="og:locale" content="zh_CN"><meta property="og:type" content="article"><meta property="article:section" content="posts"><meta property="article:published_time" content="2026-07-07T08:00:00+08:00"><meta property="article:modified_time" content="2026-07-07T08:00:00+08:00"><meta property="article:tag" content="状态机"><meta property="article:tag" content="FSM"><meta property="article:tag" content="设计模式"><meta property="article:tag" content="Go"><meta property="article:tag" content="架构"><meta name=twitter:card content="summary"><meta name=twitter:title content="有限状态机实战：用FSM模式管理复杂业务状态流转"><meta name=twitter:description content="用有限状态机（FSM）替代深层 if-else 链管理业务状态流转，附 Go 完整实现：状态定义、转移表、守卫条件、事件驱动，以及FSM库选型建议。"><meta name=twitter:site content="@ChenCiki"><meta name=application-name content="编程心语"><meta name=apple-mobile-web-app-title content="编程心语"><meta name=theme-color content="#ffffff"><meta name=msapplication-TileColor content="#da532c"><link rel="shortcut icon" type=image/x-icon href=/favicon.ico><link rel=icon type=image/png sizes=32x32 href=/favicon-32x32.png><link rel=icon type=image/png sizes=16x16 href=/favicon-16x16.png><link rel=apple-touch-icon sizes=180x180 href=/apple-touch-icon.png><link rel=mask-icon href=/safari-pinned-tab.svg color=#5bbad5><link rel=manifest href=/site.webmanifest><link rel=canonical href=https://www.ithome.me/post/2026/07/07/finite-state-machine-in-practice/><link rel=prev href=https://www.ithome.me/post/2026/07/06/code-complexity-metrics/><link rel=next href=https://www.ithome.me/post/2026/07/08/go-context-deep-dive/><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/normalize.css@8.0.1/normalize.min.css><link rel=stylesheet href=/css/style.min.css><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css><script type=application/ld+json>{"@context":"http://schema.org","@type":"BlogPosting","headline":"有限状态机实战：用FSM模式管理复杂业务状态流转","inLanguage":"zh-CN","mainEntityOfPage":{"@type":"WebPage","@id":"https:\/\/www.ithome.me\/post\/2026\/07\/07\/finite-state-machine-in-practice\/"},"image":["https:\/\/www.ithome.me\/cover.png"],"genre":"posts","keywords":"状态机, FSM, 设计模式, Go, 架构","wordcount":2213,"url":"https:\/\/www.ithome.me\/post\/2026\/07\/07\/finite-state-machine-in-practice\/","datePublished":"2026-07-07T08:00:00+08:00","dateModified":"2026-07-07T08:00:00+08:00","publisher":{"@type":"Organization","name":"SimonChen","logo":"https:\/\/www.ithome.me\/logo.png"},"author":{"@type":"Person","name":"Simon"},"description":"用有限状态机（FSM）替代深层 if-else 链管理业务状态流转，附 Go 完整实现：状态定义、转移表、守卫条件、事件驱动，以及FSM库选型建议。"}</script><script async src="https://www.googletagmanager.com/gtag/js?id=G-H1Q5563VR8"></script><script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag("js",new Date),gtag("config","G-H1Q5563VR8",{anonymize_ip:!0})</script></head><body data-header-desktop=fixed data-header-mobile=auto><script type=text/javascript>(window.localStorage&&localStorage.getItem("theme")?localStorage.getItem("theme")==="dark":"auto"==="auto"?window.matchMedia("(prefers-color-scheme: dark)").matches:"auto"==="dark")&&document.body.setAttribute("theme","dark")</script><div id=mask></div><div class=wrapper><header class=desktop id=header-desktop><div class=header-wrapper><div class=header-title><a href=/ title=编程心语>编程心语</a></div><div class=menu><div class=menu-inner><a class=menu-item href=/posts/>文章 </a><a class=menu-item href=/categories/>分类 </a><a class=menu-item href=/tags/>标签 </a><a class=menu-item href=/about-me/>关于 </a><span class="menu-item delimiter"></span><span class="menu-item search" id=search-desktop>
+<input type=text placeholder=搜索文章... id=search-input-desktop>
+<a href=javascript:void(0); class="search-button search-toggle" id=search-toggle-desktop title=Search><i class="fas fa-search fa-fw" aria-hidden=true></i>
+</a><a href=javascript:void(0); class="search-button search-clear" id=search-clear-desktop title=Clear><i class="fas fa-times-circle fa-fw" aria-hidden=true></i>
+</a><span class="search-button search-loading" id=search-loading-desktop><i class="fas fa-spinner fa-fw fa-spin" aria-hidden=true></i>
+</span></span><a href=javascript:void(0); class="menu-item theme-switch" title="Switch Theme"><i class="fas fa-adjust fa-fw" aria-hidden=true></i></a></div></div></div></header><header class=mobile id=header-mobile><div class=header-container><div class=header-wrapper><div class=header-title><a href=/ title=编程心语>编程心语</a></div><div class=menu-toggle id=menu-toggle-mobile><span></span><span></span><span></span></div></div><div class=menu id=menu-mobile><div class=search-wrapper><div class="search mobile" id=search-mobile><input type=text placeholder=搜索文章... id=search-input-mobile>
+<a href=javascript:void(0); class="search-button search-toggle" id=search-toggle-mobile title=Search><i class="fas fa-search fa-fw" aria-hidden=true></i>
+</a><a href=javascript:void(0); class="search-button search-clear" id=search-clear-mobile title=Clear><i class="fas fa-times-circle fa-fw" aria-hidden=true></i>
+</a><span class="search-button search-loading" id=search-loading-mobile><i class="fas fa-spinner fa-fw fa-spin" aria-hidden=true></i></span></div><a href=javascript:void(0); class=search-cancel id=search-cancel-mobile>Cancel</a></div><a class=menu-item href=/posts/ title>文章</a><a class=menu-item href=/categories/ title>分类</a><a class=menu-item href=/tags/ title>标签</a><a class=menu-item href=/about-me/ title>关于</a><a href=javascript:void(0); class="menu-item theme-switch" title="Switch Theme">
+<i class="fas fa-adjust fa-fw" aria-hidden=true></i></a></div></div></header><div class="search-dropdown desktop"><div id=search-dropdown-desktop></div></div><div class="search-dropdown mobile"><div id=search-dropdown-mobile></div></div><main class=main><div class=container><div class=toc id=toc-auto><h2 class=toc-title>Contents</h2><div class=toc-content id=toc-content-auto></div></div><article class="page single"><h1 class="single-title animate__animated animate__flipInX">有限状态机实战：用FSM模式管理复杂业务状态流转</h1><div class=post-meta><div class=post-meta-line><span class=post-author><a href=https://www.ithome.me/ title=Author target=_blank rel="noopener noreferrer author" class=author><i class="fas fa-user-circle fa-fw" aria-hidden=true></i>Simon</a>
+</span>&nbsp;<span class=post-category>included in <a href=/categories/backend/><i class="far fa-folder fa-fw" aria-hidden=true></i>Backend</a></span></div><div class=post-meta-line><i class="far fa-calendar-alt fa-fw" aria-hidden=true></i>&nbsp;<time datetime=2026-07-07>2026-07-07</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden=true></i>&nbsp;2213 words&nbsp;
+<i class="far fa-clock fa-fw" aria-hidden=true></i>&nbsp;5 minutes&nbsp;</div></div><div class="details toc" id=toc-static data-kept=true><div class="details-summary toc-title"><span>Contents</span>
+<span><i class="details-icon fas fa-angle-right" aria-hidden=true></i></span></div><div class="details-content toc-content" id=toc-content-static><nav id=TableOfContents><ul><li><a href=#你的状态逻辑正在失控>你的状态逻辑正在失控</a></li><li><a href=#fsm-的三个核心概念>FSM 的三个核心概念</a></li><li><a href=#手写一个fsm转移表驱动>手写一个FSM：转移表驱动</a></li><li><a href=#用fsm重写订单状态>用FSM重写订单状态</a></li><li><a href=#守卫条件一个事件多种结果>守卫条件：一个事件多种结果</a></li><li><a href=#持久化状态要落库>持久化：状态要落库</a></li><li><a href=#什么时候该用fsm什么时候别用>什么时候该用FSM，什么时候别用</a></li><li><a href=#开源库推荐>开源库推荐</a></li><li><a href=#小结>小结</a></li></ul></nav></div></div><div class=content id=content><h2 id=你的状态逻辑正在失控>你的状态逻辑正在失控</h2><p>订单系统。用户下单 → 待支付 → 已支付 → 待发货 → 已发货 → 已签收 → 已完成。看起来简单，但加上这些分支呢：支付超时自动取消、已发货可以退货、退款要走到单独的流程、管理员可以强制关闭。</p><p>大多数人的写法：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span><span class=lnt>17
+</span><span class=lnt>18
+</span><span class=lnt>19
+</span><span class=lnt>20
+</span><span class=lnt>21
+</span><span class=lnt>22
+</span><span class=lnt>23
+</span><span class=lnt>24
+</span><span class=lnt>25
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-go data-lang=go><span class=line><span class=cl><span class=kd>func</span> <span class=nf>UpdateOrderStatus</span><span class=p>(</span><span class=nx>order</span> <span class=o>*</span><span class=nx>Order</span><span class=p>,</span> <span class=nx>action</span> <span class=kt>string</span><span class=p>)</span> <span class=kt>error</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=k>if</span> <span class=nx>order</span><span class=p>.</span><span class=nx>Status</span> <span class=o>==</span> <span class=s>&#34;pending_payment&#34;</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>        <span class=k>if</span> <span class=nx>action</span> <span class=o>==</span> <span class=s>&#34;pay&#34;</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>            <span class=nx>order</span><span class=p>.</span><span class=nx>Status</span> <span class=p>=</span> <span class=s>&#34;paid&#34;</span>
+</span></span><span class=line><span class=cl>        <span class=p>}</span> <span class=k>else</span> <span class=k>if</span> <span class=nx>action</span> <span class=o>==</span> <span class=s>&#34;cancel&#34;</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>            <span class=nx>order</span><span class=p>.</span><span class=nx>Status</span> <span class=p>=</span> <span class=s>&#34;cancelled&#34;</span>
+</span></span><span class=line><span class=cl>        <span class=p>}</span> <span class=k>else</span> <span class=k>if</span> <span class=nx>action</span> <span class=o>==</span> <span class=s>&#34;timeout&#34;</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>            <span class=nx>order</span><span class=p>.</span><span class=nx>Status</span> <span class=p>=</span> <span class=s>&#34;cancelled&#34;</span>
+</span></span><span class=line><span class=cl>        <span class=p>}</span>
+</span></span><span class=line><span class=cl>    <span class=p>}</span> <span class=k>else</span> <span class=k>if</span> <span class=nx>order</span><span class=p>.</span><span class=nx>Status</span> <span class=o>==</span> <span class=s>&#34;paid&#34;</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>        <span class=k>if</span> <span class=nx>action</span> <span class=o>==</span> <span class=s>&#34;ship&#34;</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>            <span class=nx>order</span><span class=p>.</span><span class=nx>Status</span> <span class=p>=</span> <span class=s>&#34;shipped&#34;</span>
+</span></span><span class=line><span class=cl>        <span class=p>}</span> <span class=k>else</span> <span class=k>if</span> <span class=nx>action</span> <span class=o>==</span> <span class=s>&#34;refund&#34;</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>            <span class=nx>order</span><span class=p>.</span><span class=nx>Status</span> <span class=p>=</span> <span class=s>&#34;refunding&#34;</span>
+</span></span><span class=line><span class=cl>        <span class=p>}</span>
+</span></span><span class=line><span class=cl>    <span class=p>}</span> <span class=k>else</span> <span class=k>if</span> <span class=nx>order</span><span class=p>.</span><span class=nx>Status</span> <span class=o>==</span> <span class=s>&#34;shipped&#34;</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>        <span class=k>if</span> <span class=nx>action</span> <span class=o>==</span> <span class=s>&#34;confirm&#34;</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>            <span class=nx>order</span><span class=p>.</span><span class=nx>Status</span> <span class=p>=</span> <span class=s>&#34;completed&#34;</span>
+</span></span><span class=line><span class=cl>        <span class=p>}</span> <span class=k>else</span> <span class=k>if</span> <span class=nx>action</span> <span class=o>==</span> <span class=s>&#34;return&#34;</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>            <span class=nx>order</span><span class=p>.</span><span class=nx>Status</span> <span class=p>=</span> <span class=s>&#34;returning&#34;</span>
+</span></span><span class=line><span class=cl>        <span class=p>}</span>
+</span></span><span class=line><span class=cl>    <span class=p>}</span>
+</span></span><span class=line><span class=cl>    <span class=c1>// ... 还有更多分支
+</span></span></span><span class=line><span class=cl><span class=c1></span>    <span class=k>return</span> <span class=kc>nil</span>
+</span></span><span class=line><span class=cl><span class=p>}</span>
+</span></span></code></pre></td></tr></table></div></div><p>状态多了之后，这种代码会膨胀成几百行的 if-else 瀑布。每次加新状态，你都得在这座迷宫里找到所有相关分支，小心翼翼地改。漏改一个就是 Bug。</p><p>**有限状态机（FSM）**就是解决这个问题的设计模式：把状态、事件、转移规则显式化，用一张表描述全部流转逻辑。</p><h2 id=fsm-的三个核心概念>FSM 的三个核心概念</h2><ul><li><strong>状态（State）</strong>：对象在生命周期中的某个阶段，如「待支付」「已发货」</li><li><strong>事件（Event）</strong>：触发状态变化的外部动作，如「支付」「发货」「签收」</li><li><strong>转移（Transition）</strong>：从某状态接收某事件后，切换到目标状态的规则</li></ul><p>关键约束：<strong>一个状态收到一个事件，只有一个确定的目标状态</strong>（或者不允许该事件）。这正是 if-else 代码缺少的——if-else 允许同一个状态下对不同事件做任何处理，逻辑分散在各处，而FSM强制你集中声明所有规则。</p><h2 id=手写一个fsm转移表驱动>手写一个FSM：转移表驱动</h2><p>核心思路是用一张二维表描述「当前状态 + 事件 → 目标状态」的映射：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span><span class=lnt>17
+</span><span class=lnt>18
+</span><span class=lnt>19
+</span><span class=lnt>20
+</span><span class=lnt>21
+</span><span class=lnt>22
+</span><span class=lnt>23
+</span><span class=lnt>24
+</span><span class=lnt>25
+</span><span class=lnt>26
+</span><span class=lnt>27
+</span><span class=lnt>28
+</span><span class=lnt>29
+</span><span class=lnt>30
+</span><span class=lnt>31
+</span><span class=lnt>32
+</span><span class=lnt>33
+</span><span class=lnt>34
+</span><span class=lnt>35
+</span><span class=lnt>36
+</span><span class=lnt>37
+</span><span class=lnt>38
+</span><span class=lnt>39
+</span><span class=lnt>40
+</span><span class=lnt>41
+</span><span class=lnt>42
+</span><span class=lnt>43
+</span><span class=lnt>44
+</span><span class=lnt>45
+</span><span class=lnt>46
+</span><span class=lnt>47
+</span><span class=lnt>48
+</span><span class=lnt>49
+</span><span class=lnt>50
+</span><span class=lnt>51
+</span><span class=lnt>52
+</span><span class=lnt>53
+</span><span class=lnt>54
+</span><span class=lnt>55
+</span><span class=lnt>56
+</span><span class=lnt>57
+</span><span class=lnt>58
+</span><span class=lnt>59
+</span><span class=lnt>60
+</span><span class=lnt>61
+</span><span class=lnt>62
+</span><span class=lnt>63
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-go data-lang=go><span class=line><span class=cl><span class=kn>package</span> <span class=nx>fsm</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1>// State 表示一个状态
+</span></span></span><span class=line><span class=cl><span class=c1></span><span class=kd>type</span> <span class=nx>State</span> <span class=kt>string</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1>// Event 表示一个触发事件
+</span></span></span><span class=line><span class=cl><span class=c1></span><span class=kd>type</span> <span class=nx>Event</span> <span class=kt>string</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1>// Transition 描述一条转移规则
+</span></span></span><span class=line><span class=cl><span class=c1></span><span class=kd>type</span> <span class=nx>Transition</span> <span class=kd>struct</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=nx>From</span>     <span class=nx>State</span>
+</span></span><span class=line><span class=cl>    <span class=nx>Event</span>    <span class=nx>Event</span>
+</span></span><span class=line><span class=cl>    <span class=nx>To</span>       <span class=nx>State</span>
+</span></span><span class=line><span class=cl>    <span class=nx>Action</span>   <span class=kd>func</span><span class=p>(</span><span class=nx>ctx</span> <span class=kd>interface</span><span class=p>{})</span> <span class=kt>error</span> <span class=c1>// 可选：转移时执行的副作用
+</span></span></span><span class=line><span class=cl><span class=c1></span><span class=p>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1>// Machine 状态机本体
+</span></span></span><span class=line><span class=cl><span class=c1></span><span class=kd>type</span> <span class=nx>Machine</span> <span class=kd>struct</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=nx>current</span>     <span class=nx>State</span>
+</span></span><span class=line><span class=cl>    <span class=nx>transitions</span> <span class=kd>map</span><span class=p>[</span><span class=nx>transitionKey</span><span class=p>]</span><span class=nx>Transition</span>
+</span></span><span class=line><span class=cl><span class=p>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=kd>type</span> <span class=nx>transitionKey</span> <span class=kd>struct</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=nx>from</span>  <span class=nx>State</span>
+</span></span><span class=line><span class=cl>    <span class=nx>event</span> <span class=nx>Event</span>
+</span></span><span class=line><span class=cl><span class=p>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=kd>func</span> <span class=nf>New</span><span class=p>(</span><span class=nx>initial</span> <span class=nx>State</span><span class=p>,</span> <span class=nx>rules</span> <span class=p>[]</span><span class=nx>Transition</span><span class=p>)</span> <span class=o>*</span><span class=nx>Machine</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=nx>m</span> <span class=o>:=</span> <span class=o>&amp;</span><span class=nx>Machine</span><span class=p>{</span>
+</span></span><span class=line><span class=cl>        <span class=nx>current</span><span class=p>:</span>     <span class=nx>initial</span><span class=p>,</span>
+</span></span><span class=line><span class=cl>        <span class=nx>transitions</span><span class=p>:</span> <span class=nb>make</span><span class=p>(</span><span class=kd>map</span><span class=p>[</span><span class=nx>transitionKey</span><span class=p>]</span><span class=nx>Transition</span><span class=p>),</span>
+</span></span><span class=line><span class=cl>    <span class=p>}</span>
+</span></span><span class=line><span class=cl>    <span class=k>for</span> <span class=nx>_</span><span class=p>,</span> <span class=nx>t</span> <span class=o>:=</span> <span class=k>range</span> <span class=nx>rules</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>        <span class=nx>m</span><span class=p>.</span><span class=nx>transitions</span><span class=p>[</span><span class=nx>transitionKey</span><span class=p>{</span><span class=nx>t</span><span class=p>.</span><span class=nx>From</span><span class=p>,</span> <span class=nx>t</span><span class=p>.</span><span class=nx>Event</span><span class=p>}]</span> <span class=p>=</span> <span class=nx>t</span>
+</span></span><span class=line><span class=cl>    <span class=p>}</span>
+</span></span><span class=line><span class=cl>    <span class=k>return</span> <span class=nx>m</span>
+</span></span><span class=line><span class=cl><span class=p>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1>// Current 返回当前状态
+</span></span></span><span class=line><span class=cl><span class=c1></span><span class=kd>func</span> <span class=p>(</span><span class=nx>m</span> <span class=o>*</span><span class=nx>Machine</span><span class=p>)</span> <span class=nf>Current</span><span class=p>()</span> <span class=nx>State</span> <span class=p>{</span> <span class=k>return</span> <span class=nx>m</span><span class=p>.</span><span class=nx>current</span> <span class=p>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1>// Fire 触发一个事件
+</span></span></span><span class=line><span class=cl><span class=c1></span><span class=kd>func</span> <span class=p>(</span><span class=nx>m</span> <span class=o>*</span><span class=nx>Machine</span><span class=p>)</span> <span class=nf>Fire</span><span class=p>(</span><span class=nx>event</span> <span class=nx>Event</span><span class=p>,</span> <span class=nx>ctx</span> <span class=kd>interface</span><span class=p>{})</span> <span class=kt>error</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=nx>key</span> <span class=o>:=</span> <span class=nx>transitionKey</span><span class=p>{</span><span class=nx>m</span><span class=p>.</span><span class=nx>current</span><span class=p>,</span> <span class=nx>event</span><span class=p>}</span>
+</span></span><span class=line><span class=cl>    <span class=nx>t</span><span class=p>,</span> <span class=nx>ok</span> <span class=o>:=</span> <span class=nx>m</span><span class=p>.</span><span class=nx>transitions</span><span class=p>[</span><span class=nx>key</span><span class=p>]</span>
+</span></span><span class=line><span class=cl>    <span class=k>if</span> <span class=p>!</span><span class=nx>ok</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>        <span class=k>return</span> <span class=nx>fmt</span><span class=p>.</span><span class=nf>Errorf</span><span class=p>(</span><span class=s>&#34;非法转移：状态 %s 不允许事件 %s&#34;</span><span class=p>,</span> <span class=nx>m</span><span class=p>.</span><span class=nx>current</span><span class=p>,</span> <span class=nx>event</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>    <span class=p>}</span>
+</span></span><span class=line><span class=cl>    <span class=c1>// 执行副作用（如果有）
+</span></span></span><span class=line><span class=cl><span class=c1></span>    <span class=k>if</span> <span class=nx>t</span><span class=p>.</span><span class=nx>Action</span> <span class=o>!=</span> <span class=kc>nil</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>        <span class=k>if</span> <span class=nx>err</span> <span class=o>:=</span> <span class=nx>t</span><span class=p>.</span><span class=nf>Action</span><span class=p>(</span><span class=nx>ctx</span><span class=p>);</span> <span class=nx>err</span> <span class=o>!=</span> <span class=kc>nil</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>            <span class=k>return</span> <span class=nx>fmt</span><span class=p>.</span><span class=nf>Errorf</span><span class=p>(</span><span class=s>&#34;转移副作用失败: %w&#34;</span><span class=p>,</span> <span class=nx>err</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>        <span class=p>}</span>
+</span></span><span class=line><span class=cl>    <span class=p>}</span>
+</span></span><span class=line><span class=cl>    <span class=nx>m</span><span class=p>.</span><span class=nx>current</span> <span class=p>=</span> <span class=nx>t</span><span class=p>.</span><span class=nx>To</span>
+</span></span><span class=line><span class=cl>    <span class=k>return</span> <span class=kc>nil</span>
+</span></span><span class=line><span class=cl><span class=p>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1>// CanTransit 检查当前状态是否允许某事件
+</span></span></span><span class=line><span class=cl><span class=c1></span><span class=kd>func</span> <span class=p>(</span><span class=nx>m</span> <span class=o>*</span><span class=nx>Machine</span><span class=p>)</span> <span class=nf>CanTransit</span><span class=p>(</span><span class=nx>event</span> <span class=nx>Event</span><span class=p>)</span> <span class=kt>bool</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=nx>_</span><span class=p>,</span> <span class=nx>ok</span> <span class=o>:=</span> <span class=nx>m</span><span class=p>.</span><span class=nx>transitions</span><span class=p>[</span><span class=nx>transitionKey</span><span class=p>{</span><span class=nx>m</span><span class=p>.</span><span class=nx>current</span><span class=p>,</span> <span class=nx>event</span><span class=p>}]</span>
+</span></span><span class=line><span class=cl>    <span class=k>return</span> <span class=nx>ok</span>
+</span></span><span class=line><span class=cl><span class=p>}</span>
+</span></span></code></pre></td></tr></table></div></div><h2 id=用fsm重写订单状态>用FSM重写订单状态</h2><p>把分散的 if-else 变成一张声明式规则表：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span><span class=lnt>17
+</span><span class=lnt>18
+</span><span class=lnt>19
+</span><span class=lnt>20
+</span><span class=lnt>21
+</span><span class=lnt>22
+</span><span class=lnt>23
+</span><span class=lnt>24
+</span><span class=lnt>25
+</span><span class=lnt>26
+</span><span class=lnt>27
+</span><span class=lnt>28
+</span><span class=lnt>29
+</span><span class=lnt>30
+</span><span class=lnt>31
+</span><span class=lnt>32
+</span><span class=lnt>33
+</span><span class=lnt>34
+</span><span class=lnt>35
+</span><span class=lnt>36
+</span><span class=lnt>37
+</span><span class=lnt>38
+</span><span class=lnt>39
+</span><span class=lnt>40
+</span><span class=lnt>41
+</span><span class=lnt>42
+</span><span class=lnt>43
+</span><span class=lnt>44
+</span><span class=lnt>45
+</span><span class=lnt>46
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-go data-lang=go><span class=line><span class=cl><span class=kd>const</span> <span class=p>(</span>
+</span></span><span class=line><span class=cl>    <span class=nx>StatePendingPayment</span> <span class=nx>State</span> <span class=p>=</span> <span class=s>&#34;pending_payment&#34;</span>
+</span></span><span class=line><span class=cl>    <span class=nx>StatePaid</span>           <span class=nx>State</span> <span class=p>=</span> <span class=s>&#34;paid&#34;</span>
+</span></span><span class=line><span class=cl>    <span class=nx>StateShipped</span>        <span class=nx>State</span> <span class=p>=</span> <span class=s>&#34;shipped&#34;</span>
+</span></span><span class=line><span class=cl>    <span class=nx>StateCompleted</span>      <span class=nx>State</span> <span class=p>=</span> <span class=s>&#34;completed&#34;</span>
+</span></span><span class=line><span class=cl>    <span class=nx>StateCancelled</span>      <span class=nx>State</span> <span class=p>=</span> <span class=s>&#34;cancelled&#34;</span>
+</span></span><span class=line><span class=cl>    <span class=nx>StateReturning</span>      <span class=nx>State</span> <span class=p>=</span> <span class=s>&#34;returning&#34;</span>
+</span></span><span class=line><span class=cl>    <span class=nx>StateRefunded</span>       <span class=nx>State</span> <span class=p>=</span> <span class=s>&#34;refunded&#34;</span>
+</span></span><span class=line><span class=cl><span class=p>)</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=kd>const</span> <span class=p>(</span>
+</span></span><span class=line><span class=cl>    <span class=nx>EventPay</span>     <span class=nx>Event</span> <span class=p>=</span> <span class=s>&#34;pay&#34;</span>
+</span></span><span class=line><span class=cl>    <span class=nx>EventShip</span>    <span class=nx>Event</span> <span class=p>=</span> <span class=s>&#34;ship&#34;</span>
+</span></span><span class=line><span class=cl>    <span class=nx>EventConfirm</span> <span class=nx>Event</span> <span class=p>=</span> <span class=s>&#34;confirm&#34;</span>
+</span></span><span class=line><span class=cl>    <span class=nx>EventCancel</span>  <span class=nx>Event</span> <span class=p>=</span> <span class=s>&#34;cancel&#34;</span>
+</span></span><span class=line><span class=cl>    <span class=nx>EventTimeout</span> <span class=nx>Event</span> <span class=p>=</span> <span class=s>&#34;timeout&#34;</span>
+</span></span><span class=line><span class=cl>    <span class=nx>EventRefund</span>  <span class=nx>Event</span> <span class=p>=</span> <span class=s>&#34;refund&#34;</span>
+</span></span><span class=line><span class=cl>    <span class=nx>EventReturn</span>  <span class=nx>Event</span> <span class=p>=</span> <span class=s>&#34;return&#34;</span>
+</span></span><span class=line><span class=cl><span class=p>)</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=kd>func</span> <span class=nf>NewOrderFSM</span><span class=p>()</span> <span class=o>*</span><span class=nx>Machine</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=nx>rules</span> <span class=o>:=</span> <span class=p>[]</span><span class=nx>Transition</span><span class=p>{</span>
+</span></span><span class=line><span class=cl>        <span class=p>{</span><span class=nx>From</span><span class=p>:</span> <span class=nx>StatePendingPayment</span><span class=p>,</span> <span class=nx>Event</span><span class=p>:</span> <span class=nx>EventPay</span><span class=p>,</span> <span class=nx>To</span><span class=p>:</span> <span class=nx>StatePaid</span><span class=p>,</span>
+</span></span><span class=line><span class=cl>            <span class=nx>Action</span><span class=p>:</span> <span class=kd>func</span><span class=p>(</span><span class=nx>ctx</span> <span class=kd>interface</span><span class=p>{})</span> <span class=kt>error</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>                <span class=nx>o</span> <span class=o>:=</span> <span class=nx>ctx</span><span class=p>.(</span><span class=o>*</span><span class=nx>Order</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>                <span class=k>return</span> <span class=nf>chargePayment</span><span class=p>(</span><span class=nx>o</span><span class=p>)</span> <span class=c1>// 实际扣款逻辑
+</span></span></span><span class=line><span class=cl><span class=c1></span>            <span class=p>}},</span>
+</span></span><span class=line><span class=cl>        <span class=p>{</span><span class=nx>From</span><span class=p>:</span> <span class=nx>StatePendingPayment</span><span class=p>,</span> <span class=nx>Event</span><span class=p>:</span> <span class=nx>EventCancel</span><span class=p>,</span> <span class=nx>To</span><span class=p>:</span> <span class=nx>StateCancelled</span><span class=p>},</span>
+</span></span><span class=line><span class=cl>        <span class=p>{</span><span class=nx>From</span><span class=p>:</span> <span class=nx>StatePendingPayment</span><span class=p>,</span> <span class=nx>Event</span><span class=p>:</span> <span class=nx>EventTimeout</span><span class=p>,</span> <span class=nx>To</span><span class=p>:</span> <span class=nx>StateCancelled</span><span class=p>},</span>
+</span></span><span class=line><span class=cl>        <span class=p>{</span><span class=nx>From</span><span class=p>:</span> <span class=nx>StatePaid</span><span class=p>,</span> <span class=nx>Event</span><span class=p>:</span> <span class=nx>EventShip</span><span class=p>,</span> <span class=nx>To</span><span class=p>:</span> <span class=nx>StateShipped</span><span class=p>},</span>
+</span></span><span class=line><span class=cl>        <span class=p>{</span><span class=nx>From</span><span class=p>:</span> <span class=nx>StatePaid</span><span class=p>,</span> <span class=nx>Event</span><span class=p>:</span> <span class=nx>EventRefund</span><span class=p>,</span> <span class=nx>To</span><span class=p>:</span> <span class=nx>StateRefunded</span><span class=p>},</span>
+</span></span><span class=line><span class=cl>        <span class=p>{</span><span class=nx>From</span><span class=p>:</span> <span class=nx>StateShipped</span><span class=p>,</span> <span class=nx>Event</span><span class=p>:</span> <span class=nx>EventConfirm</span><span class=p>,</span> <span class=nx>To</span><span class=p>:</span> <span class=nx>StateCompleted</span><span class=p>},</span>
+</span></span><span class=line><span class=cl>        <span class=p>{</span><span class=nx>From</span><span class=p>:</span> <span class=nx>StateShipped</span><span class=p>,</span> <span class=nx>Event</span><span class=p>:</span> <span class=nx>EventReturn</span><span class=p>,</span> <span class=nx>To</span><span class=p>:</span> <span class=nx>StateReturning</span><span class=p>},</span>
+</span></span><span class=line><span class=cl>        <span class=p>{</span><span class=nx>From</span><span class=p>:</span> <span class=nx>StateReturning</span><span class=p>,</span> <span class=nx>Event</span><span class=p>:</span> <span class=nx>EventRefund</span><span class=p>,</span> <span class=nx>To</span><span class=p>:</span> <span class=nx>StateRefunded</span><span class=p>},</span>
+</span></span><span class=line><span class=cl>    <span class=p>}</span>
+</span></span><span class=line><span class=cl>    <span class=k>return</span> <span class=nf>New</span><span class=p>(</span><span class=nx>StatePendingPayment</span><span class=p>,</span> <span class=nx>rules</span><span class=p>)</span>
+</span></span><span class=line><span class=cl><span class=p>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1>// 业务调用：只需一行
+</span></span></span><span class=line><span class=cl><span class=c1></span><span class=kd>func</span> <span class=p>(</span><span class=nx>o</span> <span class=o>*</span><span class=nx>Order</span><span class=p>)</span> <span class=nf>Pay</span><span class=p>()</span> <span class=kt>error</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=k>return</span> <span class=nx>o</span><span class=p>.</span><span class=nx>fsm</span><span class=p>.</span><span class=nf>Fire</span><span class=p>(</span><span class=nx>EventPay</span><span class=p>,</span> <span class=nx>o</span><span class=p>)</span>
+</span></span><span class=line><span class=cl><span class=p>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=kd>func</span> <span class=p>(</span><span class=nx>o</span> <span class=o>*</span><span class=nx>Order</span><span class=p>)</span> <span class=nf>Ship</span><span class=p>()</span> <span class=kt>error</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=k>return</span> <span class=nx>o</span><span class=p>.</span><span class=nx>fsm</span><span class=p>.</span><span class=nf>Fire</span><span class=p>(</span><span class=nx>EventShip</span><span class=p>,</span> <span class=nx>o</span><span class=p>)</span>
+</span></span><span class=line><span class=cl><span class=p>}</span>
+</span></span></code></pre></td></tr></table></div></div><p>对比之前的 if-else 代码：</p><ul><li><strong>新增状态</strong>：在 rules 切片里加几行，不碰现有代码</li><li><strong>查规则</strong>：看 rules 这张表，一目了然</li><li><strong>非法操作防护</strong>：Fire 不匹配时自动报错，不会误执行</li><li><strong>副作用内聚</strong>：扣款、通知等逻辑跟转移规则绑定，不会遗漏</li></ul><h2 id=守卫条件一个事件多种结果>守卫条件：一个事件多种结果</h2><p>实际场景中，同一事件在不同条件下可能转到不同状态。比如「退货」在已签收7天内允许，超过7天拒绝。加一个守卫函数：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span><span class=lnt>4
+</span><span class=lnt>5
+</span><span class=lnt>6
+</span><span class=lnt>7
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-go data-lang=go><span class=line><span class=cl><span class=kd>type</span> <span class=nx>Transition</span> <span class=kd>struct</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=nx>From</span>   <span class=nx>State</span>
+</span></span><span class=line><span class=cl>    <span class=nx>Event</span>  <span class=nx>Event</span>
+</span></span><span class=line><span class=cl>    <span class=nx>To</span>     <span class=nx>State</span>
+</span></span><span class=line><span class=cl>    <span class=nx>Guard</span>  <span class=kd>func</span><span class=p>(</span><span class=nx>ctx</span> <span class=kd>interface</span><span class=p>{})</span> <span class=kt>bool</span> <span class=c1>// 守卫：返回false则跳过此规则
+</span></span></span><span class=line><span class=cl><span class=c1></span>    <span class=nx>Action</span> <span class=kd>func</span><span class=p>(</span><span class=nx>ctx</span> <span class=kd>interface</span><span class=p>{})</span> <span class=kt>error</span>
+</span></span><span class=line><span class=cl><span class=p>}</span>
+</span></span></code></pre></td></tr></table></div></div><p>Fire 方法改为按优先级遍历匹配列表，第一个通过 Guard 的规则生效：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span><span class=lnt>17
+</span><span class=lnt>18
+</span><span class=lnt>19
+</span><span class=lnt>20
+</span><span class=lnt>21
+</span><span class=lnt>22
+</span><span class=lnt>23
+</span><span class=lnt>24
+</span><span class=lnt>25
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-go data-lang=go><span class=line><span class=cl><span class=kd>func</span> <span class=p>(</span><span class=nx>m</span> <span class=o>*</span><span class=nx>Machine</span><span class=p>)</span> <span class=nf>Fire</span><span class=p>(</span><span class=nx>event</span> <span class=nx>Event</span><span class=p>,</span> <span class=nx>ctx</span> <span class=kd>interface</span><span class=p>{})</span> <span class=kt>error</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=nx>candidates</span> <span class=o>:=</span> <span class=nx>m</span><span class=p>.</span><span class=nx>transitions</span><span class=p>[</span><span class=nx>transitionKey</span><span class=p>{</span><span class=nx>m</span><span class=p>.</span><span class=nx>current</span><span class=p>,</span> <span class=nx>event</span><span class=p>}]</span>
+</span></span><span class=line><span class=cl>    <span class=k>for</span> <span class=nx>_</span><span class=p>,</span> <span class=nx>t</span> <span class=o>:=</span> <span class=k>range</span> <span class=nx>candidates</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>        <span class=k>if</span> <span class=nx>t</span><span class=p>.</span><span class=nx>Guard</span> <span class=o>!=</span> <span class=kc>nil</span> <span class=o>&amp;&amp;</span> <span class=p>!</span><span class=nx>t</span><span class=p>.</span><span class=nf>Guard</span><span class=p>(</span><span class=nx>ctx</span><span class=p>)</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>            <span class=k>continue</span>
+</span></span><span class=line><span class=cl>        <span class=p>}</span>
+</span></span><span class=line><span class=cl>        <span class=k>if</span> <span class=nx>t</span><span class=p>.</span><span class=nx>Action</span> <span class=o>!=</span> <span class=kc>nil</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>            <span class=k>if</span> <span class=nx>err</span> <span class=o>:=</span> <span class=nx>t</span><span class=p>.</span><span class=nf>Action</span><span class=p>(</span><span class=nx>ctx</span><span class=p>);</span> <span class=nx>err</span> <span class=o>!=</span> <span class=kc>nil</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>                <span class=k>return</span> <span class=nx>err</span>
+</span></span><span class=line><span class=cl>            <span class=p>}</span>
+</span></span><span class=line><span class=cl>        <span class=p>}</span>
+</span></span><span class=line><span class=cl>        <span class=nx>m</span><span class=p>.</span><span class=nx>current</span> <span class=p>=</span> <span class=nx>t</span><span class=p>.</span><span class=nx>To</span>
+</span></span><span class=line><span class=cl>        <span class=k>return</span> <span class=kc>nil</span>
+</span></span><span class=line><span class=cl>    <span class=p>}</span>
+</span></span><span class=line><span class=cl>    <span class=k>return</span> <span class=nx>fmt</span><span class=p>.</span><span class=nf>Errorf</span><span class=p>(</span><span class=s>&#34;无匹配转移：状态 %s + 事件 %s&#34;</span><span class=p>,</span> <span class=nx>m</span><span class=p>.</span><span class=nx>current</span><span class=p>,</span> <span class=nx>event</span><span class=p>)</span>
+</span></span><span class=line><span class=cl><span class=p>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1>// 注册带守卫的规则
+</span></span></span><span class=line><span class=cl><span class=c1></span><span class=nx>rules</span> <span class=o>:=</span> <span class=p>[]</span><span class=nx>Transition</span><span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=p>{</span><span class=nx>From</span><span class=p>:</span> <span class=nx>StateCompleted</span><span class=p>,</span> <span class=nx>Event</span><span class=p>:</span> <span class=nx>EventReturn</span><span class=p>,</span> <span class=nx>To</span><span class=p>:</span> <span class=nx>StateReturning</span><span class=p>,</span>
+</span></span><span class=line><span class=cl>        <span class=nx>Guard</span><span class=p>:</span> <span class=kd>func</span><span class=p>(</span><span class=nx>ctx</span> <span class=kd>interface</span><span class=p>{})</span> <span class=kt>bool</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>            <span class=nx>o</span> <span class=o>:=</span> <span class=nx>ctx</span><span class=p>.(</span><span class=o>*</span><span class=nx>Order</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>            <span class=k>return</span> <span class=nx>time</span><span class=p>.</span><span class=nf>Since</span><span class=p>(</span><span class=nx>o</span><span class=p>.</span><span class=nx>CompletedAt</span><span class=p>)</span> <span class=p>&lt;</span> <span class=mi>7</span><span class=o>*</span><span class=mi>24</span><span class=o>*</span><span class=nx>time</span><span class=p>.</span><span class=nx>Hour</span>
+</span></span><span class=line><span class=cl>        <span class=p>}},</span>
+</span></span><span class=line><span class=cl><span class=p>}</span>
+</span></span></code></pre></td></tr></table></div></div><p>transitions 改为 <code>map[transitionKey][]Transition</code> 即可支持同一 key 多条规则。</p><h2 id=持久化状态要落库>持久化：状态要落库</h2><p>FSM 运行在内存里，但订单状态得存数据库。做法很简单：<strong>只持久化当前状态值</strong>，下次加载时用 <code>New(savedState, rules)</code> 重建状态机：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-go data-lang=go><span class=line><span class=cl><span class=c1>// 从数据库加载
+</span></span></span><span class=line><span class=cl><span class=c1></span><span class=nx>order</span> <span class=o>:=</span> <span class=nx>db</span><span class=p>.</span><span class=nf>GetOrder</span><span class=p>(</span><span class=nx>id</span><span class=p>)</span>
+</span></span><span class=line><span class=cl><span class=nx>order</span><span class=p>.</span><span class=nx>fsm</span> <span class=p>=</span> <span class=nf>New</span><span class=p>(</span><span class=nf>State</span><span class=p>(</span><span class=nx>order</span><span class=p>.</span><span class=nx>DBStatus</span><span class=p>),</span> <span class=nx>rules</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1>// 触发事件后，把新状态写回数据库
+</span></span></span><span class=line><span class=cl><span class=c1></span><span class=kd>func</span> <span class=p>(</span><span class=nx>o</span> <span class=o>*</span><span class=nx>Order</span><span class=p>)</span> <span class=nf>Pay</span><span class=p>()</span> <span class=kt>error</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=k>if</span> <span class=nx>err</span> <span class=o>:=</span> <span class=nx>o</span><span class=p>.</span><span class=nx>fsm</span><span class=p>.</span><span class=nf>Fire</span><span class=p>(</span><span class=nx>EventPay</span><span class=p>,</span> <span class=nx>o</span><span class=p>);</span> <span class=nx>err</span> <span class=o>!=</span> <span class=kc>nil</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>        <span class=k>return</span> <span class=nx>err</span>
+</span></span><span class=line><span class=cl>    <span class=p>}</span>
+</span></span><span class=line><span class=cl>    <span class=nx>o</span><span class=p>.</span><span class=nx>DBStatus</span> <span class=p>=</span> <span class=nb>string</span><span class=p>(</span><span class=nx>o</span><span class=p>.</span><span class=nx>fsm</span><span class=p>.</span><span class=nf>Current</span><span class=p>())</span>
+</span></span><span class=line><span class=cl>    <span class=k>return</span> <span class=nx>db</span><span class=p>.</span><span class=nf>SaveOrder</span><span class=p>(</span><span class=nx>o</span><span class=p>)</span>
+</span></span><span class=line><span class=cl><span class=p>}</span>
+</span></span></code></pre></td></tr></table></div></div><p>规则是声明式的、无状态的，每次从代码重建即可，不需要序列化。</p><h2 id=什么时候该用fsm什么时候别用>什么时候该用FSM，什么时候别用</h2><p><strong>该用</strong>：</p><ul><li>对象有明确的生命周期阶段（订单、工单、审批流、游戏角色）</li><li>状态数 ≥ 4，且事件会触发状态切换</li><li>非法状态转移需要被拦截</li></ul><p><strong>别用</strong>：</p><ul><li>状态只有「开/关」两个——直接布尔值就够了</li><li>状态流转极度自由（任意状态可转任意状态）——FSM 的约束反而碍事</li><li>状态本身是数据驱动的连续值（如温度、进度百分比）——这不是状态机的场景</li></ul><h2 id=开源库推荐>开源库推荐</h2><p>不想自己造轮子的话：</p><ul><li><strong>Go</strong>：<code>github.com/looplab/fsm</code> — 轻量，支持回调、守卫，社区活跃</li><li><strong>Python</strong>：<code>transitions</code> 库 — 功能丰富，支持嵌套状态、定时器</li><li><strong>Java</strong>：Spring StateMachine — 与 Spring 生态深度集成，适合企业级流程</li></ul><p>自造 FSM 的好处是完全可控、零依赖，核心代码不超过 100 行。如果你的状态逻辑确实复杂到需要嵌套状态、并行区域等高级特性，再引入库不迟。</p><h2 id=小结>小结</h2><p>if-else 瀑布不是起点烂，是长大了之后不可维护。FSM 的价值不在于复杂，而在于<strong>把隐式逻辑显式化</strong>：状态、事件、转移规则集中声明，改一个分支不需要搜索整个代码库。当你发现自己在写第四层 <code>else if</code> 来判断同一个对象的状态时，就是引入状态机的信号。</p></div><div class=post-footer id=post-footer><div class=post-info><div class=post-info-line><div class=post-info-mod><span>Updated on 2026-07-07</span></div></div><div class=post-info-line><div class=post-info-md></div><div class=post-info-share><span><a href=javascript:void(0); title="Share on Twitter" data-sharer=twitter data-url=https://www.ithome.me/post/2026/07/07/finite-state-machine-in-practice/ data-title=有限状态机实战：用FSM模式管理复杂业务状态流转 data-via=ChenCiki data-hashtags=状态机,FSM,设计模式,Go,架构><i class="fab fa-twitter fa-fw" aria-hidden=true></i></a><a href=javascript:void(0); title="Share on Linkedin" data-sharer=linkedin data-url=https://www.ithome.me/post/2026/07/07/finite-state-machine-in-practice/><i class="fab fa-linkedin fa-fw" aria-hidden=true></i></a><a href=javascript:void(0); title="Share on 微博" data-sharer=weibo data-url=https://www.ithome.me/post/2026/07/07/finite-state-machine-in-practice/ data-title=有限状态机实战：用FSM模式管理复杂业务状态流转 data-ralateuid=xxx><i class="fab fa-weibo fa-fw" aria-hidden=true></i></a></span></div></div></div><div class=post-info-more><section class=post-tags><i class="fas fa-tags fa-fw" aria-hidden=true></i>&nbsp;<a href=/tags/%E7%8A%B6%E6%80%81%E6%9C%BA/>状态机</a>,&nbsp;<a href=/tags/fsm/>FSM</a>,&nbsp;<a href=/tags/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/>设计模式</a>,&nbsp;<a href=/tags/go/>Go</a>,&nbsp;<a href=/tags/%E6%9E%B6%E6%9E%84/>架构</a></section><section><span><a href=javascript:void(0); onclick=window.history.back()>Back</a></span>&nbsp;|&nbsp;<span><a href=/>Home</a></span></section></div><div class=post-nav><a href=/post/2026/07/06/code-complexity-metrics/ class=prev rel=prev title=代码复杂度度量实战：从圈复杂度到认知复杂度><i class="fas fa-angle-left fa-fw" aria-hidden=true></i>代码复杂度度量实战：从圈复杂度到认知复杂度</a>
+<a href=/post/2026/07/08/go-context-deep-dive/ class=next rel=next title="Go Context 机制详解：超时控制、取消传播与避坑指南">Go Context 机制详解：超时控制、取消传播与避坑指南<i class="fas fa-angle-right fa-fw" aria-hidden=true></i></a></div></div><div id=comments><div id=gitalk class=comment></div><noscript>Please enable JavaScript to view the comments powered by <a href=https://github.com/gitalk/gitalk></a>Gitalk</a>.</noscript></div></article></div></main><footer class=footer><div class=footer-container><div class=footer-line itemscope itemtype=http://schema.org/CreativeWork><i class="far fa-copyright fa-fw" aria-hidden=true></i><span itemprop=copyrightYear>2011 - 2026</span><span class=author itemprop=copyrightHolder>&nbsp;<a href=https://www.ithome.me/ target=_blank>Simon Chen</a></span>&nbsp;|&nbsp;<span class=license><a rel="license external nofollow noopener noreferrer" href=https://creativecommons.org/licenses/by-nc-nd/4.0/ target=_blank>CC BY-NC-ND 4.0</a></span></div></div></footer></div><div id=fixed-buttons><a href=# id=back-to-top class=fixed-button title="Back to Top"><i class="fas fa-arrow-up fa-fw" aria-hidden=true></i>
+</a><a href=# id=view-comments class=fixed-button title="View Comments"><i class="fas fa-comment fa-fw" aria-hidden=true></i></a></div><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/gitalk@1.8.0/dist/gitalk.min.css><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/css/lightgallery-bundle.min.css><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/katex.min.css><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/copy-tex.min.css><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.css><script type=text/javascript src=https://cdn.jsdelivr.net/npm/gitalk@1.8.0/dist/gitalk.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/autocomplete.js@0.38.1/dist/autocomplete.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/lunr@2.3.9/lunr.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/lazysizes@5.3.1/lazysizes.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/lightgallery.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/plugins/thumbnail/lg-thumbnail.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/plugins/zoom/lg-zoom.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/clipboard@2.0.11/dist/clipboard.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/sharer.js@0.5.1/sharer.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/katex.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/auto-render.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/copy-tex.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/mhchem.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.js></script><script type=text/javascript>window.config={code:{copyTitle:"Copy to clipboard",maxShownLines:50},comment:{gitalk:{admin:["cikichen"],clientID:"be0f52370ed1285b6c7c",clientSecret:"734a7d8d0ded346ca7a3d565d57de3f8eeb2850b",id:"2026-07-07T00:00:00Z",owner:"cikichen",repo:"gitalk",title:"有限状态机实战：用FSM模式管理复杂业务状态流转"}},cookieconsent:{content:{dismiss:"我知道了",link:"了解更多",message:"本网站使用 Cookies 来改善您的浏览体验."},enable:!0,palette:{button:{background:"#f0f0f0"},popup:{background:"#1aa3ff"}},theme:"edgeless"},lightgallery:!0,math:{delimiters:[{display:!0,left:"$$",right:"$$"},{display:!0,left:"\\[",right:"\\]"},{display:!0,left:"\\begin{equation}",right:"\\end{equation}"},{display:!0,left:"\\begin{equation*}",right:"\\end{equation*}"},{display:!0,left:"\\begin{align}",right:"\\end{align}"},{display:!0,left:"\\begin{align*}",right:"\\end{align*}"},{display:!0,left:"\\begin{alignat}",right:"\\end{alignat}"},{display:!0,left:"\\begin{alignat*}",right:"\\end{alignat*}"},{display:!0,left:"\\begin{gather}",right:"\\end{gather}"},{display:!0,left:"\\begin{CD}",right:"\\end{CD}"},{display:!1,left:"$",right:"$"},{display:!1,left:"\\(",right:"\\)"}],strict:!1},search:{highlightTag:"em",lunrIndexURL:"/index.json",maxResultLength:10,noResultsFound:"No results found",snippetLength:50,type:"lunr"}}</script><script type=text/javascript src=/js/theme.min.js></script></body></html>

@@ -1,648 +1,350 @@
-<!DOCTYPE html>
-<html lang="zh-CN">
-    <head>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <meta name="robots" content="noodp" />
-        <title>延迟队列的四种实现方案：从数据库轮询到 Redis 时间轮 - 编程心语</title><meta name="Description" content="订单超时关闭、优惠券到期提醒、定时消息推送——延迟任务无处不在。本文从最简单的数据库轮询开始，逐步演进到 Redis ZSet、Lua 脚本原子操作和分层时间轮，对比四种方案的优缺点与适用场景。"><meta property="og:url" content="https://www.ithome.me/post/2026/07/12/delay-queue-four-approaches/">
-  <meta property="og:site_name" content="编程心语">
-  <meta property="og:title" content="延迟队列的四种实现方案：从数据库轮询到 Redis 时间轮">
-  <meta property="og:description" content="订单超时关闭、优惠券到期提醒、定时消息推送——延迟任务无处不在。本文从最简单的数据库轮询开始，逐步演进到 Redis ZSet、Lua 脚本原子操作和分层时间轮，对比四种方案的优缺点与适用场景。">
-  <meta property="og:locale" content="zh_CN">
-  <meta property="og:type" content="article">
-    <meta property="article:section" content="posts">
-    <meta property="article:published_time" content="2026-07-12T08:00:00+08:00">
-    <meta property="article:modified_time" content="2026-07-12T08:33:13+08:00">
-    <meta property="article:tag" content="延迟队列">
-    <meta property="article:tag" content="Redis">
-    <meta property="article:tag" content="架构设计">
-    <meta property="article:tag" content="Go">
-    <meta property="article:tag" content="后端">
-
-  <meta name="twitter:card" content="summary">
-  <meta name="twitter:title" content="延迟队列的四种实现方案：从数据库轮询到 Redis 时间轮">
-  <meta name="twitter:description" content="订单超时关闭、优惠券到期提醒、定时消息推送——延迟任务无处不在。本文从最简单的数据库轮询开始，逐步演进到 Redis ZSet、Lua 脚本原子操作和分层时间轮，对比四种方案的优缺点与适用场景。">
-      <meta name="twitter:site" content="@ChenCiki">
-<meta name="application-name" content="编程心语">
-<meta name="apple-mobile-web-app-title" content="编程心语"><meta name="theme-color" content="#ffffff"><meta name="msapplication-TileColor" content="#da532c"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
-        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
-        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5"><link rel="manifest" href="/site.webmanifest"><link rel="canonical" href="https://www.ithome.me/post/2026/07/12/delay-queue-four-approaches/" /><link rel="prev" href="https://www.ithome.me/post/2026/07/11/rate-limiting-algorithms/" /><link rel="next" href="https://www.ithome.me/post/2026/07/13/tech-selection-no-silver-bullet/" /><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/normalize.css@8.0.1/normalize.min.css"><link rel="stylesheet" href="/css/style.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css"><script type="application/ld+json">
-    {
-        "@context": "http://schema.org",
-        "@type": "BlogPosting",
-        "headline": "延迟队列的四种实现方案：从数据库轮询到 Redis 时间轮",
-        "inLanguage": "zh-CN",
-        "mainEntityOfPage": {
-            "@type": "WebPage",
-            "@id": "https:\/\/www.ithome.me\/post\/2026\/07\/12\/delay-queue-four-approaches\/"
-        },"image": ["https:\/\/www.ithome.me\/cover.png"],"genre": "posts","keywords": "延迟队列, Redis, 架构设计, Go, 后端","wordcount":  2214 ,
-        "url": "https:\/\/www.ithome.me\/post\/2026\/07\/12\/delay-queue-four-approaches\/","datePublished": "2026-07-12T08:00:00+08:00","dateModified": "2026-07-12T08:33:13+08:00","publisher": {
-            "@type": "Organization",
-            "name": "SimonChen","logo": "https:\/\/www.ithome.me\/logo.png"},"author": {
-                "@type": "Person",
-                "name": "Simon"
-            },"description": "订单超时关闭、优惠券到期提醒、定时消息推送——延迟任务无处不在。本文从最简单的数据库轮询开始，逐步演进到 Redis ZSet、Lua 脚本原子操作和分层时间轮，对比四种方案的优缺点与适用场景。"
-    }
-    </script><script async src="https://www.googletagmanager.com/gtag/js?id=G-H1Q5563VR8"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-  gtag('config', 'G-H1Q5563VR8', { 'anonymize_ip': true });
-</script></head>
-    <body data-header-desktop="fixed" data-header-mobile="auto"><script type="text/javascript">(window.localStorage && localStorage.getItem('theme') ? localStorage.getItem('theme') === 'dark' : ('auto' === 'auto' ? window.matchMedia('(prefers-color-scheme: dark)').matches : 'auto' === 'dark')) && document.body.setAttribute('theme', 'dark');</script>
-
-        <div id="mask"></div><div class="wrapper"><header class="desktop" id="header-desktop">
-    <div class="header-wrapper">
-        <div class="header-title">
-            <a href="/" title="编程心语">编程心语</a>
-        </div>
-        <div class="menu">
-            <div class="menu-inner"><a class="menu-item" href="/posts/"> 文章 </a><a class="menu-item" href="/categories/"> 分类 </a><a class="menu-item" href="/tags/"> 标签 </a><a class="menu-item" href="/about-me/"> 关于 </a><span class="menu-item delimiter"></span><span class="menu-item search" id="search-desktop">
-                        <input type="text" placeholder="搜索文章..." id="search-input-desktop">
-                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-desktop" title="Search">
-                            <i class="fas fa-search fa-fw" aria-hidden="true"></i>
-                        </a>
-                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-desktop" title="Clear">
-                            <i class="fas fa-times-circle fa-fw" aria-hidden="true"></i>
-                        </a>
-                        <span class="search-button search-loading" id="search-loading-desktop">
-                            <i class="fas fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
-                        </span>
-                    </span><a href="javascript:void(0);" class="menu-item theme-switch" title="Switch Theme">
-                    <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
-                </a>
-            </div>
-        </div>
-    </div>
-</header><header class="mobile" id="header-mobile">
-    <div class="header-container">
-        <div class="header-wrapper">
-            <div class="header-title">
-                <a href="/" title="编程心语">编程心语</a>
-            </div>
-            <div class="menu-toggle" id="menu-toggle-mobile">
-                <span></span><span></span><span></span>
-            </div>
-        </div>
-        <div class="menu" id="menu-mobile"><div class="search-wrapper">
-                    <div class="search mobile" id="search-mobile">
-                        <input type="text" placeholder="搜索文章..." id="search-input-mobile">
-                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-mobile" title="Search">
-                            <i class="fas fa-search fa-fw" aria-hidden="true"></i>
-                        </a>
-                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-mobile" title="Clear">
-                            <i class="fas fa-times-circle fa-fw" aria-hidden="true"></i>
-                        </a>
-                        <span class="search-button search-loading" id="search-loading-mobile">
-                            <i class="fas fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
-                        </span>
-                    </div>
-                    <a href="javascript:void(0);" class="search-cancel" id="search-cancel-mobile">
-                        Cancel
-                    </a>
-                </div><a class="menu-item" href="/posts/" title="">文章</a><a class="menu-item" href="/categories/" title="">分类</a><a class="menu-item" href="/tags/" title="">标签</a><a class="menu-item" href="/about-me/" title="">关于</a><a href="javascript:void(0);" class="menu-item theme-switch" title="Switch Theme">
-                <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
-            </a></div>
-    </div>
-</header><div class="search-dropdown desktop">
-        <div id="search-dropdown-desktop"></div>
-    </div>
-    <div class="search-dropdown mobile">
-        <div id="search-dropdown-mobile"></div>
-    </div><main class="main">
-                <div class="container"><div class="toc" id="toc-auto">
-            <h2 class="toc-title">Contents</h2>
-            <div class="toc-content" id="toc-content-auto"></div>
-        </div><article class="page single"><h1 class="single-title animate__animated animate__flipInX">延迟队列的四种实现方案：从数据库轮询到 Redis 时间轮</h1><div class="post-meta">
-            <div class="post-meta-line"><span class="post-author"><a href="https://www.ithome.me/" title="Author" target="_blank" rel="noopener noreferrer author" class="author"><i class="fas fa-user-circle fa-fw" aria-hidden="true"></i>Simon</a>
-</span>&nbsp;<span class="post-category">included in <a href="/categories/essay/"><i class="far fa-folder fa-fw" aria-hidden="true"></i>Essay</a></span></div>
-            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw" aria-hidden="true"></i>&nbsp;<time datetime="2026-07-12">2026-07-12</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden="true"></i>&nbsp;2214 words&nbsp;
-                <i class="far fa-clock fa-fw" aria-hidden="true"></i>&nbsp;5 minutes&nbsp;</div>
-        </div><div class="details toc" id="toc-static"  data-kept="true">
-                <div class="details-summary toc-title">
-                    <span>Contents</span>
-                    <span><i class="details-icon fas fa-angle-right" aria-hidden="true"></i></span>
-                </div>
-                <div class="details-content toc-content" id="toc-content-static"><nav id="TableOfContents">
-  <ul>
-    <li><a href="#延迟任务无处不在">延迟任务无处不在</a></li>
-    <li><a href="#方案一数据库轮询">方案一：数据库轮询</a></li>
-    <li><a href="#方案二redis-zset-有序集合">方案二：Redis ZSet 有序集合</a></li>
-    <li><a href="#方案三redis--lua-脚本解决并发竞争">方案三：Redis + Lua 脚本（解决并发竞争）</a></li>
-    <li><a href="#方案四分层时间轮">方案四：分层时间轮</a></li>
-    <li><a href="#选型对比">选型对比</a></li>
-    <li><a href="#实践建议">实践建议</a></li>
-  </ul>
-</nav></div>
-            </div><div class="content" id="content"><h2 id="延迟任务无处不在">延迟任务无处不在</h2>
-<p>下完订单 30 分钟未支付，自动关闭。优惠券到期前 1 小时，推送提醒。注册后 3 天未登录，发送召回邮件。这些场景的本质是同一个问题：<strong>在某个未来时间点执行一个任务</strong>。</p>
-<p>延迟队列的难点不在于&quot;能不能实现&quot;，而在于在高并发下既不丢任务、又不重复执行，同时保持可接受的资源开销。下面从最简单的方案讲起，逐步演进。</p>
-<h2 id="方案一数据库轮询">方案一：数据库轮询</h2>
-<p>最直觉的做法——把延迟任务存到数据库表里，起一个定时任务每秒扫一遍。</p>
-<div class="highlight"><div class="chroma">
-<table class="lntable"><tr><td class="lntd">
-<pre tabindex="0" class="chroma"><code><span class="lnt">1
-</span><span class="lnt">2
-</span><span class="lnt">3
-</span><span class="lnt">4
-</span><span class="lnt">5
-</span><span class="lnt">6
-</span><span class="lnt">7
-</span><span class="lnt">8
-</span><span class="lnt">9
-</span></code></pre></td>
-<td class="lntd">
-<pre tabindex="0" class="chroma"><code class="language-sql" data-lang="sql"><span class="line"><span class="cl"><span class="k">CREATE</span><span class="w"> </span><span class="k">TABLE</span><span class="w"> </span><span class="n">delay_tasks</span><span class="w"> </span><span class="p">(</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="n">id</span><span class="w">          </span><span class="nb">BIGINT</span><span class="w"> </span><span class="k">PRIMARY</span><span class="w"> </span><span class="k">KEY</span><span class="w"> </span><span class="n">AUTO_INCREMENT</span><span class="p">,</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="n">task_type</span><span class="w">   </span><span class="nb">VARCHAR</span><span class="p">(</span><span class="mi">64</span><span class="p">)</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="p">,</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="n">payload</span><span class="w">     </span><span class="nb">TEXT</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="p">,</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="n">execute_at</span><span class="w">  </span><span class="n">DATETIME</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="p">,</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="n">status</span><span class="w">      </span><span class="n">TINYINT</span><span class="w"> </span><span class="k">DEFAULT</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w">  </span><span class="c1">-- 0=待执行 1=执行中 2=已完成
-</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="w">    </span><span class="n">created_at</span><span class="w">  </span><span class="n">DATETIME</span><span class="w"> </span><span class="k">DEFAULT</span><span class="w"> </span><span class="n">NOW</span><span class="p">(),</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="k">INDEX</span><span class="w"> </span><span class="n">idx_execute_at</span><span class="w"> </span><span class="p">(</span><span class="n">execute_at</span><span class="p">,</span><span class="w"> </span><span class="n">status</span><span class="p">)</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="p">);</span><span class="w">
-</span></span></span></code></pre></td></tr></table>
-</div>
-</div><p>消费逻辑用 Go 实现如下：</p>
-<div class="highlight"><div class="chroma">
-<table class="lntable"><tr><td class="lntd">
-<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
-</span><span class="lnt"> 2
-</span><span class="lnt"> 3
-</span><span class="lnt"> 4
-</span><span class="lnt"> 5
-</span><span class="lnt"> 6
-</span><span class="lnt"> 7
-</span><span class="lnt"> 8
-</span><span class="lnt"> 9
-</span><span class="lnt">10
-</span><span class="lnt">11
-</span><span class="lnt">12
-</span><span class="lnt">13
-</span><span class="lnt">14
-</span><span class="lnt">15
-</span><span class="lnt">16
-</span><span class="lnt">17
-</span><span class="lnt">18
-</span><span class="lnt">19
-</span><span class="lnt">20
-</span><span class="lnt">21
-</span><span class="lnt">22
-</span><span class="lnt">23
-</span><span class="lnt">24
-</span><span class="lnt">25
-</span><span class="lnt">26
-</span><span class="lnt">27
-</span><span class="lnt">28
-</span><span class="lnt">29
-</span><span class="lnt">30
-</span><span class="lnt">31
-</span></code></pre></td>
-<td class="lntd">
-<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="kd">func</span> <span class="nf">PollTasks</span><span class="p">(</span><span class="nx">db</span> <span class="o">*</span><span class="nx">sql</span><span class="p">.</span><span class="nx">DB</span><span class="p">)</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">    <span class="nx">ticker</span> <span class="o">:=</span> <span class="nx">time</span><span class="p">.</span><span class="nf">NewTicker</span><span class="p">(</span><span class="mi">1</span> <span class="o">*</span> <span class="nx">time</span><span class="p">.</span><span class="nx">Second</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">    <span class="k">defer</span> <span class="nx">ticker</span><span class="p">.</span><span class="nf">Stop</span><span class="p">()</span>
-</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="k">range</span> <span class="nx">ticker</span><span class="p">.</span><span class="nx">C</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">        <span class="nx">rows</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">db</span><span class="p">.</span><span class="nf">Query</span><span class="p">(</span><span class="s">`
-</span></span></span><span class="line"><span class="cl"><span class="s">            SELECT id, task_type, payload 
-</span></span></span><span class="line"><span class="cl"><span class="s">            FROM delay_tasks 
-</span></span></span><span class="line"><span class="cl"><span class="s">            WHERE execute_at &lt;= NOW() AND status = 0 
-</span></span></span><span class="line"><span class="cl"><span class="s">            LIMIT 50`</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">            <span class="nx">log</span><span class="p">.</span><span class="nf">Printf</span><span class="p">(</span><span class="s">&#34;query error: %v&#34;</span><span class="p">,</span> <span class="nx">err</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">            <span class="k">continue</span>
-</span></span><span class="line"><span class="cl">        <span class="p">}</span>
-</span></span><span class="line"><span class="cl">        <span class="kd">var</span> <span class="nx">tasks</span> <span class="p">[]</span><span class="nx">Task</span>
-</span></span><span class="line"><span class="cl">        <span class="k">for</span> <span class="nx">rows</span><span class="p">.</span><span class="nf">Next</span><span class="p">()</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">            <span class="kd">var</span> <span class="nx">t</span> <span class="nx">Task</span>
-</span></span><span class="line"><span class="cl">            <span class="nx">rows</span><span class="p">.</span><span class="nf">Scan</span><span class="p">(</span><span class="o">&amp;</span><span class="nx">t</span><span class="p">.</span><span class="nx">ID</span><span class="p">,</span> <span class="o">&amp;</span><span class="nx">t</span><span class="p">.</span><span class="nx">Type</span><span class="p">,</span> <span class="o">&amp;</span><span class="nx">t</span><span class="p">.</span><span class="nx">Payload</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">            <span class="nx">tasks</span> <span class="p">=</span> <span class="nb">append</span><span class="p">(</span><span class="nx">tasks</span><span class="p">,</span> <span class="nx">t</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">        <span class="p">}</span>
-</span></span><span class="line"><span class="cl">        <span class="nx">rows</span><span class="p">.</span><span class="nf">Close</span><span class="p">()</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">        <span class="k">for</span> <span class="nx">_</span><span class="p">,</span> <span class="nx">t</span> <span class="o">:=</span> <span class="k">range</span> <span class="nx">tasks</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">            <span class="c1">// 用 UPDATE 抢占任务，防止多实例重复执行
-</span></span></span><span class="line"><span class="cl"><span class="c1"></span>            <span class="nx">res</span><span class="p">,</span> <span class="nx">_</span> <span class="o">:=</span> <span class="nx">db</span><span class="p">.</span><span class="nf">Exec</span><span class="p">(</span>
-</span></span><span class="line"><span class="cl">                <span class="s">`UPDATE delay_tasks SET status = 1 WHERE id = ? AND status = 0`</span><span class="p">,</span> <span class="nx">t</span><span class="p">.</span><span class="nx">ID</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">            <span class="k">if</span> <span class="nx">n</span><span class="p">,</span> <span class="nx">_</span> <span class="o">:=</span> <span class="nx">res</span><span class="p">.</span><span class="nf">RowsAffected</span><span class="p">();</span> <span class="nx">n</span> <span class="p">&gt;</span> <span class="mi">0</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">                <span class="k">go</span> <span class="nf">executeTask</span><span class="p">(</span><span class="nx">t</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">            <span class="p">}</span>
-</span></span><span class="line"><span class="cl">        <span class="p">}</span>
-</span></span><span class="line"><span class="cl">    <span class="p">}</span>
-</span></span><span class="line"><span class="cl"><span class="p">}</span>
-</span></span></code></pre></td></tr></table>
-</div>
-</div><p><strong>优点</strong>：实现简单，事务保证强，不丢数据。</p>
-<p><strong>缺点</strong>：轮询空转浪费资源，数据库压力大；精度受轮询间隔限制；扩展性差。</p>
-<p><strong>适用场景</strong>：任务量小（&lt;1000/秒），精度要求秒级，团队不想引入额外中间件。</p>
-<h2 id="方案二redis-zset-有序集合">方案二：Redis ZSet 有序集合</h2>
-<p>用 Redis 的 ZSet，把任务执行时间作为 score，消费端不断拉取 score &lt;= 当前时间的任务。</p>
-<div class="highlight"><div class="chroma">
-<table class="lntable"><tr><td class="lntd">
-<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
-</span><span class="lnt"> 2
-</span><span class="lnt"> 3
-</span><span class="lnt"> 4
-</span><span class="lnt"> 5
-</span><span class="lnt"> 6
-</span><span class="lnt"> 7
-</span><span class="lnt"> 8
-</span><span class="lnt"> 9
-</span><span class="lnt">10
-</span><span class="lnt">11
-</span><span class="lnt">12
-</span><span class="lnt">13
-</span><span class="lnt">14
-</span><span class="lnt">15
-</span><span class="lnt">16
-</span><span class="lnt">17
-</span><span class="lnt">18
-</span><span class="lnt">19
-</span><span class="lnt">20
-</span><span class="lnt">21
-</span><span class="lnt">22
-</span><span class="lnt">23
-</span><span class="lnt">24
-</span><span class="lnt">25
-</span><span class="lnt">26
-</span><span class="lnt">27
-</span><span class="lnt">28
-</span><span class="lnt">29
-</span><span class="lnt">30
-</span><span class="lnt">31
-</span><span class="lnt">32
-</span><span class="lnt">33
-</span><span class="lnt">34
-</span></code></pre></td>
-<td class="lntd">
-<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="kd">type</span> <span class="nx">RedisDelayQueue</span> <span class="kd">struct</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">    <span class="nx">client</span> <span class="o">*</span><span class="nx">redis</span><span class="p">.</span><span class="nx">Client</span>
-</span></span><span class="line"><span class="cl">    <span class="nx">key</span>    <span class="kt">string</span>
-</span></span><span class="line"><span class="cl"><span class="p">}</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="kd">func</span> <span class="p">(</span><span class="nx">q</span> <span class="o">*</span><span class="nx">RedisDelayQueue</span><span class="p">)</span> <span class="nf">Push</span><span class="p">(</span><span class="nx">taskID</span> <span class="kt">string</span><span class="p">,</span> <span class="nx">executeAt</span> <span class="nx">time</span><span class="p">.</span><span class="nx">Time</span><span class="p">)</span> <span class="kt">error</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="nx">q</span><span class="p">.</span><span class="nx">client</span><span class="p">.</span><span class="nf">ZAdd</span><span class="p">(</span><span class="nx">q</span><span class="p">.</span><span class="nx">key</span><span class="p">,</span> <span class="nx">redis</span><span class="p">.</span><span class="nx">Z</span><span class="p">{</span>
-</span></span><span class="line"><span class="cl">        <span class="nx">Score</span><span class="p">:</span>  <span class="nb">float64</span><span class="p">(</span><span class="nx">executeAt</span><span class="p">.</span><span class="nf">Unix</span><span class="p">()),</span>
-</span></span><span class="line"><span class="cl">        <span class="nx">Member</span><span class="p">:</span> <span class="nx">taskID</span><span class="p">,</span>
-</span></span><span class="line"><span class="cl">    <span class="p">}).</span><span class="nf">Err</span><span class="p">()</span>
-</span></span><span class="line"><span class="cl"><span class="p">}</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="kd">func</span> <span class="p">(</span><span class="nx">q</span> <span class="o">*</span><span class="nx">RedisDelayQueue</span><span class="p">)</span> <span class="nf">Consume</span><span class="p">()</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">        <span class="nx">now</span> <span class="o">:=</span> <span class="nx">time</span><span class="p">.</span><span class="nf">Now</span><span class="p">().</span><span class="nf">Unix</span><span class="p">()</span>
-</span></span><span class="line"><span class="cl">        <span class="c1">// 取出所有到期的任务
-</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="nx">members</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">q</span><span class="p">.</span><span class="nx">client</span><span class="p">.</span><span class="nf">ZRangeByScore</span><span class="p">(</span><span class="nx">q</span><span class="p">.</span><span class="nx">key</span><span class="p">,</span> <span class="o">&amp;</span><span class="nx">redis</span><span class="p">.</span><span class="nx">ZRangeBy</span><span class="p">{</span>
-</span></span><span class="line"><span class="cl">            <span class="nx">Min</span><span class="p">:</span>   <span class="s">&#34;0&#34;</span><span class="p">,</span>
-</span></span><span class="line"><span class="cl">            <span class="nx">Max</span><span class="p">:</span>   <span class="nx">strconv</span><span class="p">.</span><span class="nf">FormatInt</span><span class="p">(</span><span class="nx">now</span><span class="p">,</span> <span class="mi">10</span><span class="p">),</span>
-</span></span><span class="line"><span class="cl">            <span class="nx">Count</span><span class="p">:</span> <span class="mi">50</span><span class="p">,</span>
-</span></span><span class="line"><span class="cl">        <span class="p">}).</span><span class="nf">Result</span><span class="p">()</span>
-</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="o">||</span> <span class="nb">len</span><span class="p">(</span><span class="nx">members</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">            <span class="nx">time</span><span class="p">.</span><span class="nf">Sleep</span><span class="p">(</span><span class="mi">500</span> <span class="o">*</span> <span class="nx">time</span><span class="p">.</span><span class="nx">Millisecond</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">            <span class="k">continue</span>
-</span></span><span class="line"><span class="cl">        <span class="p">}</span>
-</span></span><span class="line"><span class="cl">        <span class="k">for</span> <span class="nx">_</span><span class="p">,</span> <span class="nx">member</span> <span class="o">:=</span> <span class="k">range</span> <span class="nx">members</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">            <span class="c1">// 原子删除：只有第一个删成功的才会执行
-</span></span></span><span class="line"><span class="cl"><span class="c1"></span>            <span class="nx">n</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">q</span><span class="p">.</span><span class="nx">client</span><span class="p">.</span><span class="nf">ZRem</span><span class="p">(</span><span class="nx">q</span><span class="p">.</span><span class="nx">key</span><span class="p">,</span> <span class="nx">member</span><span class="p">).</span><span class="nf">Result</span><span class="p">()</span>
-</span></span><span class="line"><span class="cl">            <span class="k">if</span> <span class="nx">err</span> <span class="o">==</span> <span class="kc">nil</span> <span class="o">&amp;&amp;</span> <span class="nx">n</span> <span class="p">&gt;</span> <span class="mi">0</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">                <span class="k">go</span> <span class="nf">executeTask</span><span class="p">(</span><span class="nx">member</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">            <span class="p">}</span>
-</span></span><span class="line"><span class="cl">        <span class="p">}</span>
-</span></span><span class="line"><span class="cl">    <span class="p">}</span>
-</span></span><span class="line"><span class="cl"><span class="p">}</span>
-</span></span></code></pre></td></tr></table>
-</div>
-</div><p>关键在于 <code>ZRem</code> 的原子性——多个消费者同时抢同一个任务，只有 <code>ZRem</code> 返回 1 的那个才会真正执行，天然防重复。</p>
-<p><strong>优点</strong>：内存操作极快，单机支撑 10 万+ QPS；<code>ZRem</code> 原子保证不重复执行。</p>
-<p><strong>缺点</strong>：断电丢数据（可通过 AOF 持久化缓解但无法完全避免）；任务执行失败需要手动重试机制。</p>
-<p><strong>适用场景</strong>：任务量大、允许极小概率丢失、已有 Redis 基础设施。</p>
-<h2 id="方案三redis--lua-脚本解决并发竞争">方案三：Redis + Lua 脚本（解决并发竞争）</h2>
-<p>方案二在超高并发下，<code>ZRangeByScore</code> 和 <code>ZRem</code> 之间存在一个窗口——多个消费者可能同时拿到同一个任务，然后都尝试 <code>ZRem</code>。虽然最终只有一个成功，但无效的竞争白白浪费资源。</p>
-<p>用 Lua 脚本将&quot;查询 + 删除&quot;合为一个原子操作：</p>
-<div class="highlight"><div class="chroma">
-<table class="lntable"><tr><td class="lntd">
-<pre tabindex="0" class="chroma"><code><span class="lnt">1
-</span><span class="lnt">2
-</span><span class="lnt">3
-</span><span class="lnt">4
-</span><span class="lnt">5
-</span><span class="lnt">6
-</span><span class="lnt">7
-</span><span class="lnt">8
-</span></code></pre></td>
-<td class="lntd">
-<pre tabindex="0" class="chroma"><code class="language-lua" data-lang="lua"><span class="line"><span class="cl"><span class="c1">-- KEYS[1] = 延迟队列的 ZSet key</span>
-</span></span><span class="line"><span class="cl"><span class="c1">-- ARGV[1] = 当前时间戳</span>
-</span></span><span class="line"><span class="cl"><span class="c1">-- ARGV[2] = 一次取多少个</span>
-</span></span><span class="line"><span class="cl"><span class="kd">local</span> <span class="n">tasks</span> <span class="o">=</span> <span class="n">redis.call</span><span class="p">(</span><span class="s1">&#39;ZRANGEBYSCORE&#39;</span><span class="p">,</span> <span class="n">KEYS</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="s1">&#39;0&#39;</span><span class="p">,</span> <span class="n">ARGV</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="s1">&#39;LIMIT&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">ARGV</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
-</span></span><span class="line"><span class="cl"><span class="kr">if</span> <span class="o">#</span><span class="n">tasks</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="kr">then</span>
-</span></span><span class="line"><span class="cl">    <span class="n">redis.call</span><span class="p">(</span><span class="s1">&#39;ZREM&#39;</span><span class="p">,</span> <span class="n">KEYS</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">unpack</span><span class="p">(</span><span class="n">tasks</span><span class="p">))</span>
-</span></span><span class="line"><span class="cl"><span class="kr">end</span>
-</span></span><span class="line"><span class="cl"><span class="kr">return</span> <span class="n">tasks</span>
-</span></span></code></pre></td></tr></table>
-</div>
-</div><p>Go 调用代码：</p>
-<div class="highlight"><div class="chroma">
-<table class="lntable"><tr><td class="lntd">
-<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
-</span><span class="lnt"> 2
-</span><span class="lnt"> 3
-</span><span class="lnt"> 4
-</span><span class="lnt"> 5
-</span><span class="lnt"> 6
-</span><span class="lnt"> 7
-</span><span class="lnt"> 8
-</span><span class="lnt"> 9
-</span><span class="lnt">10
-</span><span class="lnt">11
-</span><span class="lnt">12
-</span><span class="lnt">13
-</span><span class="lnt">14
-</span><span class="lnt">15
-</span><span class="lnt">16
-</span><span class="lnt">17
-</span><span class="lnt">18
-</span><span class="lnt">19
-</span><span class="lnt">20
-</span><span class="lnt">21
-</span><span class="lnt">22
-</span><span class="lnt">23
-</span><span class="lnt">24
-</span><span class="lnt">25
-</span><span class="lnt">26
-</span><span class="lnt">27
-</span></code></pre></td>
-<td class="lntd">
-<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="kd">var</span> <span class="nx">consumeScript</span> <span class="p">=</span> <span class="nx">redis</span><span class="p">.</span><span class="nf">NewScript</span><span class="p">(</span><span class="s">`
-</span></span></span><span class="line"><span class="cl"><span class="s">    local tasks = redis.call(&#39;ZRANGEBYSCORE&#39;, KEYS[1], &#39;0&#39;, ARGV[1], &#39;LIMIT&#39;, 0, ARGV[2])
-</span></span></span><span class="line"><span class="cl"><span class="s">    if #tasks &gt; 0 then
-</span></span></span><span class="line"><span class="cl"><span class="s">        redis.call(&#39;ZREM&#39;, KEYS[1], unpack(tasks))
-</span></span></span><span class="line"><span class="cl"><span class="s">    end
-</span></span></span><span class="line"><span class="cl"><span class="s">    return tasks
-</span></span></span><span class="line"><span class="cl"><span class="s">`</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="kd">func</span> <span class="p">(</span><span class="nx">q</span> <span class="o">*</span><span class="nx">RedisDelayQueue</span><span class="p">)</span> <span class="nf">ConsumeWithLua</span><span class="p">()</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">        <span class="nx">now</span> <span class="o">:=</span> <span class="nx">strconv</span><span class="p">.</span><span class="nf">FormatInt</span><span class="p">(</span><span class="nx">time</span><span class="p">.</span><span class="nf">Now</span><span class="p">().</span><span class="nf">Unix</span><span class="p">(),</span> <span class="mi">10</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">        <span class="nx">result</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">consumeScript</span><span class="p">.</span><span class="nf">Do</span><span class="p">(</span><span class="nx">q</span><span class="p">.</span><span class="nx">client</span><span class="p">,</span> <span class="nx">q</span><span class="p">.</span><span class="nx">key</span><span class="p">,</span> <span class="nx">now</span><span class="p">,</span> <span class="mi">50</span><span class="p">).</span><span class="nf">Result</span><span class="p">()</span>
-</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">            <span class="nx">log</span><span class="p">.</span><span class="nf">Printf</span><span class="p">(</span><span class="s">&#34;lua error: %v&#34;</span><span class="p">,</span> <span class="nx">err</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">            <span class="nx">time</span><span class="p">.</span><span class="nf">Sleep</span><span class="p">(</span><span class="mi">500</span> <span class="o">*</span> <span class="nx">time</span><span class="p">.</span><span class="nx">Millisecond</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">            <span class="k">continue</span>
-</span></span><span class="line"><span class="cl">        <span class="p">}</span>
-</span></span><span class="line"><span class="cl">        <span class="nx">tasks</span> <span class="o">:=</span> <span class="nx">result</span><span class="p">.([]</span><span class="kd">interface</span><span class="p">{})</span>
-</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="nx">tasks</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">            <span class="nx">time</span><span class="p">.</span><span class="nf">Sleep</span><span class="p">(</span><span class="mi">500</span> <span class="o">*</span> <span class="nx">time</span><span class="p">.</span><span class="nx">Millisecond</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">            <span class="k">continue</span>
-</span></span><span class="line"><span class="cl">        <span class="p">}</span>
-</span></span><span class="line"><span class="cl">        <span class="k">for</span> <span class="nx">_</span><span class="p">,</span> <span class="nx">t</span> <span class="o">:=</span> <span class="k">range</span> <span class="nx">tasks</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">            <span class="k">go</span> <span class="nf">executeTask</span><span class="p">(</span><span class="nx">t</span><span class="p">.(</span><span class="kt">string</span><span class="p">))</span>
-</span></span><span class="line"><span class="cl">        <span class="p">}</span>
-</span></span><span class="line"><span class="cl">    <span class="p">}</span>
-</span></span><span class="line"><span class="cl"><span class="p">}</span>
-</span></span></code></pre></td></tr></table>
-</div>
-</div><p>Lua 脚本在 Redis 单线程内执行，天然原子，彻底消除竞争窗口。</p>
-<p><strong>优点</strong>：无竞争开销，吞吐更高。</p>
-<p><strong>缺点</strong>：Lua 脚本会阻塞 Redis 线程，如果单次取太多任务会影响其他命令；Redis Cluster 下需要按 hash tag 路由到同一分片。</p>
-<h2 id="方案四分层时间轮">方案四：分层时间轮</h2>
-<p>对于海量延迟任务（百万级），无论数据库还是 Redis ZSet 都会遇到瓶颈。时间轮是一种 O(1) 复杂度的经典数据结构，Kafka 和 Netty 内部都在用。</p>
-<p><strong>核心思路</strong>：想象一个时钟，有 N 个格子。任务按延迟时间的取模放入对应格子，指针每 tick（如 100ms）前进一格，执行格子里的所有任务。</p>
-<div class="highlight"><div class="chroma">
-<table class="lntable"><tr><td class="lntd">
-<pre tabindex="0" class="chroma"><code><span class="lnt">1
-</span><span class="lnt">2
-</span><span class="lnt">3
-</span><span class="lnt">4
-</span><span class="lnt">5
-</span><span class="lnt">6
-</span><span class="lnt">7
-</span><span class="lnt">8
-</span></code></pre></td>
-<td class="lntd">
-<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">分层时间轮结构：
-</span></span><span class="line"><span class="cl">  [0] [1] [2] [3] [4] [5] [6] [7] ... [59]   ← 秒级轮（60格）
-</span></span><span class="line"><span class="cl">   |
-</span></span><span class="line"><span class="cl">   +-- 超过60秒的任务，升级到分钟轮
-</span></span><span class="line"><span class="cl">  [0] [1] [2] ... [59]                        ← 分钟轮（60格）
-</span></span><span class="line"><span class="cl">   |
-</span></span><span class="line"><span class="cl">   +-- 超过60分钟的任务，升级到小时轮
-</span></span><span class="line"><span class="cl">  [0] [1] ... [23]                            ← 小时轮（24格）
-</span></span></code></pre></td></tr></table>
-</div>
-</div><p>简化版 Go 实现：</p>
-<div class="highlight"><div class="chroma">
-<table class="lntable"><tr><td class="lntd">
-<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
-</span><span class="lnt"> 2
-</span><span class="lnt"> 3
-</span><span class="lnt"> 4
-</span><span class="lnt"> 5
-</span><span class="lnt"> 6
-</span><span class="lnt"> 7
-</span><span class="lnt"> 8
-</span><span class="lnt"> 9
-</span><span class="lnt">10
-</span><span class="lnt">11
-</span><span class="lnt">12
-</span><span class="lnt">13
-</span><span class="lnt">14
-</span><span class="lnt">15
-</span><span class="lnt">16
-</span><span class="lnt">17
-</span><span class="lnt">18
-</span><span class="lnt">19
-</span><span class="lnt">20
-</span><span class="lnt">21
-</span><span class="lnt">22
-</span><span class="lnt">23
-</span><span class="lnt">24
-</span><span class="lnt">25
-</span><span class="lnt">26
-</span><span class="lnt">27
-</span><span class="lnt">28
-</span><span class="lnt">29
-</span><span class="lnt">30
-</span><span class="lnt">31
-</span><span class="lnt">32
-</span><span class="lnt">33
-</span><span class="lnt">34
-</span><span class="lnt">35
-</span><span class="lnt">36
-</span><span class="lnt">37
-</span><span class="lnt">38
-</span><span class="lnt">39
-</span><span class="lnt">40
-</span><span class="lnt">41
-</span><span class="lnt">42
-</span><span class="lnt">43
-</span><span class="lnt">44
-</span><span class="lnt">45
-</span><span class="lnt">46
-</span><span class="lnt">47
-</span><span class="lnt">48
-</span><span class="lnt">49
-</span><span class="lnt">50
-</span></code></pre></td>
-<td class="lntd">
-<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="kd">type</span> <span class="nx">TimerTask</span> <span class="kd">struct</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">    <span class="nx">executeAt</span> <span class="kt">int64</span>
-</span></span><span class="line"><span class="cl">    <span class="nx">fn</span>       <span class="kd">func</span><span class="p">()</span>
-</span></span><span class="line"><span class="cl"><span class="p">}</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="kd">type</span> <span class="nx">TimeWheel</span> <span class="kd">struct</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">    <span class="nx">slots</span>    <span class="p">[][]</span><span class="o">*</span><span class="nx">TimerTask</span>
-</span></span><span class="line"><span class="cl">    <span class="nx">curSlot</span>  <span class="kt">int</span>
-</span></span><span class="line"><span class="cl">    <span class="nx">tickDur</span>  <span class="nx">time</span><span class="p">.</span><span class="nx">Duration</span>
-</span></span><span class="line"><span class="cl">    <span class="nx">slotNum</span>  <span class="kt">int</span>
-</span></span><span class="line"><span class="cl">    <span class="nx">mu</span>       <span class="nx">sync</span><span class="p">.</span><span class="nx">Mutex</span>
-</span></span><span class="line"><span class="cl"><span class="p">}</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="kd">func</span> <span class="nf">NewTimeWheel</span><span class="p">(</span><span class="nx">tick</span> <span class="nx">time</span><span class="p">.</span><span class="nx">Duration</span><span class="p">,</span> <span class="nx">slots</span> <span class="kt">int</span><span class="p">)</span> <span class="o">*</span><span class="nx">TimeWheel</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">    <span class="nx">tw</span> <span class="o">:=</span> <span class="o">&amp;</span><span class="nx">TimeWheel</span><span class="p">{</span>
-</span></span><span class="line"><span class="cl">        <span class="nx">slots</span><span class="p">:</span>   <span class="nb">make</span><span class="p">([][]</span><span class="o">*</span><span class="nx">TimerTask</span><span class="p">,</span> <span class="nx">slots</span><span class="p">),</span>
-</span></span><span class="line"><span class="cl">        <span class="nx">tickDur</span><span class="p">:</span> <span class="nx">tick</span><span class="p">,</span>
-</span></span><span class="line"><span class="cl">        <span class="nx">slotNum</span><span class="p">:</span> <span class="nx">slots</span><span class="p">,</span>
-</span></span><span class="line"><span class="cl">    <span class="p">}</span>
-</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="nx">tw</span>
-</span></span><span class="line"><span class="cl"><span class="p">}</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="kd">func</span> <span class="p">(</span><span class="nx">tw</span> <span class="o">*</span><span class="nx">TimeWheel</span><span class="p">)</span> <span class="nf">Add</span><span class="p">(</span><span class="nx">delay</span> <span class="nx">time</span><span class="p">.</span><span class="nx">Duration</span><span class="p">,</span> <span class="nx">fn</span> <span class="kd">func</span><span class="p">())</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">    <span class="nx">tw</span><span class="p">.</span><span class="nx">mu</span><span class="p">.</span><span class="nf">Lock</span><span class="p">()</span>
-</span></span><span class="line"><span class="cl">    <span class="k">defer</span> <span class="nx">tw</span><span class="p">.</span><span class="nx">mu</span><span class="p">.</span><span class="nf">Unlock</span><span class="p">()</span>
-</span></span><span class="line"><span class="cl">    <span class="nx">ticks</span> <span class="o">:=</span> <span class="nb">int</span><span class="p">(</span><span class="nx">delay</span> <span class="o">/</span> <span class="nx">tw</span><span class="p">.</span><span class="nx">tickDur</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">    <span class="nx">slot</span> <span class="o">:=</span> <span class="p">(</span><span class="nx">tw</span><span class="p">.</span><span class="nx">curSlot</span> <span class="o">+</span> <span class="nx">ticks</span><span class="p">)</span> <span class="o">%</span> <span class="nx">tw</span><span class="p">.</span><span class="nx">slotNum</span>
-</span></span><span class="line"><span class="cl">    <span class="nx">tw</span><span class="p">.</span><span class="nx">slots</span><span class="p">[</span><span class="nx">slot</span><span class="p">]</span> <span class="p">=</span> <span class="nb">append</span><span class="p">(</span><span class="nx">tw</span><span class="p">.</span><span class="nx">slots</span><span class="p">[</span><span class="nx">slot</span><span class="p">],</span> <span class="o">&amp;</span><span class="nx">TimerTask</span><span class="p">{</span>
-</span></span><span class="line"><span class="cl">        <span class="nx">executeAt</span><span class="p">:</span> <span class="nx">time</span><span class="p">.</span><span class="nf">Now</span><span class="p">().</span><span class="nf">Add</span><span class="p">(</span><span class="nx">delay</span><span class="p">).</span><span class="nf">Unix</span><span class="p">(),</span>
-</span></span><span class="line"><span class="cl">        <span class="nx">fn</span><span class="p">:</span>        <span class="nx">fn</span><span class="p">,</span>
-</span></span><span class="line"><span class="cl">    <span class="p">})</span>
-</span></span><span class="line"><span class="cl"><span class="p">}</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="kd">func</span> <span class="p">(</span><span class="nx">tw</span> <span class="o">*</span><span class="nx">TimeWheel</span><span class="p">)</span> <span class="nf">Start</span><span class="p">()</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">    <span class="nx">ticker</span> <span class="o">:=</span> <span class="nx">time</span><span class="p">.</span><span class="nf">NewTicker</span><span class="p">(</span><span class="nx">tw</span><span class="p">.</span><span class="nx">tickDur</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">    <span class="k">defer</span> <span class="nx">ticker</span><span class="p">.</span><span class="nf">Stop</span><span class="p">()</span>
-</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="k">range</span> <span class="nx">ticker</span><span class="p">.</span><span class="nx">C</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">        <span class="nx">tw</span><span class="p">.</span><span class="nx">mu</span><span class="p">.</span><span class="nf">Lock</span><span class="p">()</span>
-</span></span><span class="line"><span class="cl">        <span class="nx">tw</span><span class="p">.</span><span class="nx">curSlot</span> <span class="p">=</span> <span class="p">(</span><span class="nx">tw</span><span class="p">.</span><span class="nx">curSlot</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">%</span> <span class="nx">tw</span><span class="p">.</span><span class="nx">slotNum</span>
-</span></span><span class="line"><span class="cl">        <span class="nx">tasks</span> <span class="o">:=</span> <span class="nx">tw</span><span class="p">.</span><span class="nx">slots</span><span class="p">[</span><span class="nx">tw</span><span class="p">.</span><span class="nx">curSlot</span><span class="p">]</span>
-</span></span><span class="line"><span class="cl">        <span class="nx">tw</span><span class="p">.</span><span class="nx">slots</span><span class="p">[</span><span class="nx">tw</span><span class="p">.</span><span class="nx">curSlot</span><span class="p">]</span> <span class="p">=</span> <span class="kc">nil</span>
-</span></span><span class="line"><span class="cl">        <span class="nx">tw</span><span class="p">.</span><span class="nx">mu</span><span class="p">.</span><span class="nf">Unlock</span><span class="p">()</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">        <span class="k">for</span> <span class="nx">_</span><span class="p">,</span> <span class="nx">t</span> <span class="o">:=</span> <span class="k">range</span> <span class="nx">tasks</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">            <span class="k">if</span> <span class="nx">time</span><span class="p">.</span><span class="nf">Now</span><span class="p">().</span><span class="nf">Unix</span><span class="p">()</span> <span class="o">&gt;=</span> <span class="nx">t</span><span class="p">.</span><span class="nx">executeAt</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">                <span class="k">go</span> <span class="nx">t</span><span class="p">.</span><span class="nf">fn</span><span class="p">()</span>
-</span></span><span class="line"><span class="cl">            <span class="p">}</span>
-</span></span><span class="line"><span class="cl">        <span class="p">}</span>
-</span></span><span class="line"><span class="cl">    <span class="p">}</span>
-</span></span><span class="line"><span class="cl"><span class="p">}</span>
-</span></span></code></pre></td></tr></table>
-</div>
-</div><p><strong>优点</strong>：O(1) 入队和出队，内存开销小，适合百万级任务。</p>
-<p><strong>缺点</strong>：单机内存方案，宕机丢数据；实现复杂度高（完整分层时间轮涉及任务降级逻辑）；精度受 tick 粒度限制。</p>
-<p><strong>适用场景</strong>：超大规模延迟任务、内存可接受丢失、追求极致性能。</p>
-<h2 id="选型对比">选型对比</h2>
-<table>
-<thead>
-<tr>
-<th>方案</th>
-<th>精度</th>
-<th>吞吐量</th>
-<th>可靠性</th>
-<th>实现复杂度</th>
-<th>适用场景</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>数据库轮询</td>
-<td>秒级</td>
-<td>低</td>
-<td>高</td>
-<td>低</td>
-<td>任务少、强一致</td>
-</tr>
-<tr>
-<td>Redis ZSet</td>
-<td>毫秒级</td>
-<td>高</td>
-<td>中</td>
-<td>中</td>
-<td>通用首选</td>
-</tr>
-<tr>
-<td>Redis + Lua</td>
-<td>毫秒级</td>
-<td>很高</td>
-<td>中</td>
-<td>中高</td>
-<td>超高并发</td>
-</tr>
-<tr>
-<td>时间轮</td>
-<td>tick级</td>
-<td>极高</td>
-<td>低</td>
-<td>高</td>
-<td>海量任务、内存态</td>
-</tr>
-</tbody>
-</table>
-<h2 id="实践建议">实践建议</h2>
-<ol>
-<li>
-<p><strong>大多数场景选 Redis ZSet 方案</strong>：在性能和可靠性之间取得了最佳平衡，社区成熟，踩坑少。</p>
-</li>
-<li>
-<p><strong>务必实现失败重试</strong>：任务从队列取出后如果执行失败，需要写回队列或转入死信队列。可以用独立的 retry ZSet，score 为下次重试时间。</p>
-</li>
-<li>
-<p><strong>监控队列积压</strong>：用 <code>ZCARD</code> 检查队列长度，设置告警阈值。积压说明消费者处理不过来或任务执行时间过长。</p>
-</li>
-<li>
-<p><strong>幂等设计</strong>：无论哪种方案，任务都可能被重复投递（比如服务重启后重新加载），消费者必须做幂等处理——用唯一 ID + 去重表或 Redis SETNX。</p>
-</li>
-<li>
-<p><strong>优雅关闭</strong>：消费协程要响应 <code>context.Done()</code>，关闭前处理完已拉取的任务，避免丢弃。</p>
-</li>
-</ol>
-<p>延迟队列没有银弹，选型时先看可靠性和吞吐量要求，再看团队技术栈，最后看运维成本。简单的数据库轮询在 80% 的场景下就够用了，别过度设计。</p>
-</div><div class="post-footer" id="post-footer">
-    <div class="post-info">
-        <div class="post-info-line">
-            <div class="post-info-mod">
-                <span>Updated on 2026-07-12&nbsp;<a class="git-hash" href="https://github.com/cikichen/hugo-sync/commit/fa33a51f295cfcf73aa5c38e8401a292a0998c72" target="_blank" title="commit by cikichen(cikichen@github.com) fa33a51f295cfcf73aa5c38e8401a292a0998c72: Auto: 2026-07-12 - 延迟队列的四种实现方案">
-                                    <i class="fas fa-hashtag fa-fw" aria-hidden="true"></i>fa33a51f</a></span>
-            </div></div>
-        <div class="post-info-line">
-            <div class="post-info-md"></div>
-            <div class="post-info-share">
-                <span><a href="javascript:void(0);" title="Share on Twitter" data-sharer="twitter" data-url="https://www.ithome.me/post/2026/07/12/delay-queue-four-approaches/" data-title="延迟队列的四种实现方案：从数据库轮询到 Redis 时间轮" data-via="ChenCiki" data-hashtags="延迟队列,Redis,架构设计,Go,后端"><i class="fab fa-twitter fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on Linkedin" data-sharer="linkedin" data-url="https://www.ithome.me/post/2026/07/12/delay-queue-four-approaches/"><i class="fab fa-linkedin fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on 微博" data-sharer="weibo" data-url="https://www.ithome.me/post/2026/07/12/delay-queue-four-approaches/" data-title="延迟队列的四种实现方案：从数据库轮询到 Redis 时间轮" data-ralateuid="xxx"><i class="fab fa-weibo fa-fw" aria-hidden="true"></i></a></span>
-            </div>
-        </div>
-    </div>
-
-    <div class="post-info-more">
-        <section class="post-tags"><i class="fas fa-tags fa-fw" aria-hidden="true"></i>&nbsp;<a href="/tags/%E5%BB%B6%E8%BF%9F%E9%98%9F%E5%88%97/">延迟队列</a>,&nbsp;<a href="/tags/redis/">Redis</a>,&nbsp;<a href="/tags/%E6%9E%B6%E6%9E%84%E8%AE%BE%E8%AE%A1/">架构设计</a>,&nbsp;<a href="/tags/go/">Go</a>,&nbsp;<a href="/tags/%E5%90%8E%E7%AB%AF/">后端</a></section>
-        <section>
-            <span><a href="javascript:void(0);" onclick="window.history.back();">Back</a></span>&nbsp;|&nbsp;<span><a href="/">Home</a></span>
-        </section>
-    </div>
-
-    <div class="post-nav"><a href="/post/2026/07/11/rate-limiting-algorithms/" class="prev" rel="prev" title="限流算法实战：三种经典算法的Go实现与选型指南"><i class="fas fa-angle-left fa-fw" aria-hidden="true"></i>限流算法实战：三种经典算法的Go实现与选型指南</a>
-            <a href="/post/2026/07/13/tech-selection-no-silver-bullet/" class="next" rel="next" title="技术选型的残酷真相：没有银弹，只有取舍">技术选型的残酷真相：没有银弹，只有取舍<i class="fas fa-angle-right fa-fw" aria-hidden="true"></i></a></div>
-</div>
-<div id="comments"><div id="gitalk" class="comment"></div><noscript>
-                Please enable JavaScript to view the comments powered by <a href="https://github.com/gitalk/gitalk"></a>Gitalk</a>.
-            </noscript></div></article></div>
-            </main><footer class="footer">
-        <div class="footer-container"><div class="footer-line" itemscope itemtype="http://schema.org/CreativeWork"><i class="far fa-copyright fa-fw" aria-hidden="true"></i><span itemprop="copyrightYear">2011 - 2026</span><span class="author" itemprop="copyrightHolder">&nbsp;<a href="https://www.ithome.me/" target="_blank">Simon Chen</a></span>&nbsp;|&nbsp;<span class="license"><a rel="license external nofollow noopener noreferrer" href="https://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank">CC BY-NC-ND 4.0</a></span></div>
-        </div>
-    </footer></div>
-
-        <div id="fixed-buttons"><a href="#" id="back-to-top" class="fixed-button" title="Back to Top">
-                <i class="fas fa-arrow-up fa-fw" aria-hidden="true"></i>
-            </a><a href="#" id="view-comments" class="fixed-button" title="View Comments">
-                <i class="fas fa-comment fa-fw" aria-hidden="true"></i>
-            </a>
-        </div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1.8.0/dist/gitalk.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/css/lightgallery-bundle.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/katex.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/copy-tex.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.css"><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/gitalk@1.8.0/dist/gitalk.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/autocomplete.js@0.38.1/dist/autocomplete.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lunr@2.3.9/lunr.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lazysizes@5.3.1/lazysizes.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/lightgallery.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/plugins/thumbnail/lg-thumbnail.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/plugins/zoom/lg-zoom.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/clipboard@2.0.11/dist/clipboard.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/sharer.js@0.5.1/sharer.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/katex.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/auto-render.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/copy-tex.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/mhchem.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.js"></script><script type="text/javascript">window.config={"code":{"copyTitle":"Copy to clipboard","maxShownLines":50},"comment":{"gitalk":{"admin":["cikichen"],"clientID":"be0f52370ed1285b6c7c","clientSecret":"734a7d8d0ded346ca7a3d565d57de3f8eeb2850b","id":"2026-07-12T00:00:00Z","owner":"cikichen","repo":"gitalk","title":"延迟队列的四种实现方案：从数据库轮询到 Redis 时间轮"}},"cookieconsent":{"content":{"dismiss":"我知道了","link":"了解更多","message":"本网站使用 Cookies 来改善您的浏览体验."},"enable":true,"palette":{"button":{"background":"#f0f0f0"},"popup":{"background":"#1aa3ff"}},"theme":"edgeless"},"lightgallery":true,"math":{"delimiters":[{"display":true,"left":"$$","right":"$$"},{"display":true,"left":"\\[","right":"\\]"},{"display":true,"left":"\\begin{equation}","right":"\\end{equation}"},{"display":true,"left":"\\begin{equation*}","right":"\\end{equation*}"},{"display":true,"left":"\\begin{align}","right":"\\end{align}"},{"display":true,"left":"\\begin{align*}","right":"\\end{align*}"},{"display":true,"left":"\\begin{alignat}","right":"\\end{alignat}"},{"display":true,"left":"\\begin{alignat*}","right":"\\end{alignat*}"},{"display":true,"left":"\\begin{gather}","right":"\\end{gather}"},{"display":true,"left":"\\begin{CD}","right":"\\end{CD}"},{"display":false,"left":"$","right":"$"},{"display":false,"left":"\\(","right":"\\)"}],"strict":false},"search":{"highlightTag":"em","lunrIndexURL":"/index.json","maxResultLength":10,"noResultsFound":"No results found","snippetLength":50,"type":"lunr"}};</script><script type="text/javascript" src="/js/theme.min.js"></script></body>
-</html>
+<!doctype html><html lang=zh-CN><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><meta name=robots content="noodp"><title>延迟队列的四种实现方案：从数据库轮询到 Redis 时间轮 - 编程心语</title><meta name=Description content="订单超时关闭、优惠券到期提醒、定时消息推送——延迟任务无处不在。本文从最简单的数据库轮询开始，逐步演进到 Redis ZSet、Lua 脚本原子操作和分层时间轮，对比四种方案的优缺点与适用场景。"><meta property="og:url" content="https://www.ithome.me/post/2026/07/12/delay-queue-four-approaches/">
+<meta property="og:site_name" content="编程心语"><meta property="og:title" content="延迟队列的四种实现方案：从数据库轮询到 Redis 时间轮"><meta property="og:description" content="订单超时关闭、优惠券到期提醒、定时消息推送——延迟任务无处不在。本文从最简单的数据库轮询开始，逐步演进到 Redis ZSet、Lua 脚本原子操作和分层时间轮，对比四种方案的优缺点与适用场景。"><meta property="og:locale" content="zh_CN"><meta property="og:type" content="article"><meta property="article:section" content="posts"><meta property="article:published_time" content="2026-07-12T08:00:00+08:00"><meta property="article:modified_time" content="2026-07-12T08:00:00+08:00"><meta property="article:tag" content="延迟队列"><meta property="article:tag" content="Redis"><meta property="article:tag" content="架构设计"><meta property="article:tag" content="Go"><meta property="article:tag" content="后端"><meta name=twitter:card content="summary"><meta name=twitter:title content="延迟队列的四种实现方案：从数据库轮询到 Redis 时间轮"><meta name=twitter:description content="订单超时关闭、优惠券到期提醒、定时消息推送——延迟任务无处不在。本文从最简单的数据库轮询开始，逐步演进到 Redis ZSet、Lua 脚本原子操作和分层时间轮，对比四种方案的优缺点与适用场景。"><meta name=twitter:site content="@ChenCiki"><meta name=application-name content="编程心语"><meta name=apple-mobile-web-app-title content="编程心语"><meta name=theme-color content="#ffffff"><meta name=msapplication-TileColor content="#da532c"><link rel="shortcut icon" type=image/x-icon href=/favicon.ico><link rel=icon type=image/png sizes=32x32 href=/favicon-32x32.png><link rel=icon type=image/png sizes=16x16 href=/favicon-16x16.png><link rel=apple-touch-icon sizes=180x180 href=/apple-touch-icon.png><link rel=mask-icon href=/safari-pinned-tab.svg color=#5bbad5><link rel=manifest href=/site.webmanifest><link rel=canonical href=https://www.ithome.me/post/2026/07/12/delay-queue-four-approaches/><link rel=prev href=https://www.ithome.me/post/2026/07/11/rate-limiting-algorithms/><link rel=next href=https://www.ithome.me/post/2026/07/13/tech-selection-no-silver-bullet/><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/normalize.css@8.0.1/normalize.min.css><link rel=stylesheet href=/css/style.min.css><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css><script type=application/ld+json>{"@context":"http://schema.org","@type":"BlogPosting","headline":"延迟队列的四种实现方案：从数据库轮询到 Redis 时间轮","inLanguage":"zh-CN","mainEntityOfPage":{"@type":"WebPage","@id":"https:\/\/www.ithome.me\/post\/2026\/07\/12\/delay-queue-four-approaches\/"},"image":["https:\/\/www.ithome.me\/cover.png"],"genre":"posts","keywords":"延迟队列, Redis, 架构设计, Go, 后端","wordcount":2214,"url":"https:\/\/www.ithome.me\/post\/2026\/07\/12\/delay-queue-four-approaches\/","datePublished":"2026-07-12T08:00:00+08:00","dateModified":"2026-07-12T08:00:00+08:00","publisher":{"@type":"Organization","name":"SimonChen","logo":"https:\/\/www.ithome.me\/logo.png"},"author":{"@type":"Person","name":"Simon"},"description":"订单超时关闭、优惠券到期提醒、定时消息推送——延迟任务无处不在。本文从最简单的数据库轮询开始，逐步演进到 Redis ZSet、Lua 脚本原子操作和分层时间轮，对比四种方案的优缺点与适用场景。"}</script><script async src="https://www.googletagmanager.com/gtag/js?id=G-H1Q5563VR8"></script><script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag("js",new Date),gtag("config","G-H1Q5563VR8",{anonymize_ip:!0})</script></head><body data-header-desktop=fixed data-header-mobile=auto><script type=text/javascript>(window.localStorage&&localStorage.getItem("theme")?localStorage.getItem("theme")==="dark":"auto"==="auto"?window.matchMedia("(prefers-color-scheme: dark)").matches:"auto"==="dark")&&document.body.setAttribute("theme","dark")</script><div id=mask></div><div class=wrapper><header class=desktop id=header-desktop><div class=header-wrapper><div class=header-title><a href=/ title=编程心语>编程心语</a></div><div class=menu><div class=menu-inner><a class=menu-item href=/posts/>文章 </a><a class=menu-item href=/categories/>分类 </a><a class=menu-item href=/tags/>标签 </a><a class=menu-item href=/about-me/>关于 </a><span class="menu-item delimiter"></span><span class="menu-item search" id=search-desktop>
+<input type=text placeholder=搜索文章... id=search-input-desktop>
+<a href=javascript:void(0); class="search-button search-toggle" id=search-toggle-desktop title=Search><i class="fas fa-search fa-fw" aria-hidden=true></i>
+</a><a href=javascript:void(0); class="search-button search-clear" id=search-clear-desktop title=Clear><i class="fas fa-times-circle fa-fw" aria-hidden=true></i>
+</a><span class="search-button search-loading" id=search-loading-desktop><i class="fas fa-spinner fa-fw fa-spin" aria-hidden=true></i>
+</span></span><a href=javascript:void(0); class="menu-item theme-switch" title="Switch Theme"><i class="fas fa-adjust fa-fw" aria-hidden=true></i></a></div></div></div></header><header class=mobile id=header-mobile><div class=header-container><div class=header-wrapper><div class=header-title><a href=/ title=编程心语>编程心语</a></div><div class=menu-toggle id=menu-toggle-mobile><span></span><span></span><span></span></div></div><div class=menu id=menu-mobile><div class=search-wrapper><div class="search mobile" id=search-mobile><input type=text placeholder=搜索文章... id=search-input-mobile>
+<a href=javascript:void(0); class="search-button search-toggle" id=search-toggle-mobile title=Search><i class="fas fa-search fa-fw" aria-hidden=true></i>
+</a><a href=javascript:void(0); class="search-button search-clear" id=search-clear-mobile title=Clear><i class="fas fa-times-circle fa-fw" aria-hidden=true></i>
+</a><span class="search-button search-loading" id=search-loading-mobile><i class="fas fa-spinner fa-fw fa-spin" aria-hidden=true></i></span></div><a href=javascript:void(0); class=search-cancel id=search-cancel-mobile>Cancel</a></div><a class=menu-item href=/posts/ title>文章</a><a class=menu-item href=/categories/ title>分类</a><a class=menu-item href=/tags/ title>标签</a><a class=menu-item href=/about-me/ title>关于</a><a href=javascript:void(0); class="menu-item theme-switch" title="Switch Theme">
+<i class="fas fa-adjust fa-fw" aria-hidden=true></i></a></div></div></header><div class="search-dropdown desktop"><div id=search-dropdown-desktop></div></div><div class="search-dropdown mobile"><div id=search-dropdown-mobile></div></div><main class=main><div class=container><div class=toc id=toc-auto><h2 class=toc-title>Contents</h2><div class=toc-content id=toc-content-auto></div></div><article class="page single"><h1 class="single-title animate__animated animate__flipInX">延迟队列的四种实现方案：从数据库轮询到 Redis 时间轮</h1><div class=post-meta><div class=post-meta-line><span class=post-author><a href=https://www.ithome.me/ title=Author target=_blank rel="noopener noreferrer author" class=author><i class="fas fa-user-circle fa-fw" aria-hidden=true></i>Simon</a>
+</span>&nbsp;<span class=post-category>included in <a href=/categories/backend/><i class="far fa-folder fa-fw" aria-hidden=true></i>Backend</a></span></div><div class=post-meta-line><i class="far fa-calendar-alt fa-fw" aria-hidden=true></i>&nbsp;<time datetime=2026-07-12>2026-07-12</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden=true></i>&nbsp;2214 words&nbsp;
+<i class="far fa-clock fa-fw" aria-hidden=true></i>&nbsp;5 minutes&nbsp;</div></div><div class="details toc" id=toc-static data-kept=true><div class="details-summary toc-title"><span>Contents</span>
+<span><i class="details-icon fas fa-angle-right" aria-hidden=true></i></span></div><div class="details-content toc-content" id=toc-content-static><nav id=TableOfContents><ul><li><a href=#延迟任务无处不在>延迟任务无处不在</a></li><li><a href=#方案一数据库轮询>方案一：数据库轮询</a></li><li><a href=#方案二redis-zset-有序集合>方案二：Redis ZSet 有序集合</a></li><li><a href=#方案三redis--lua-脚本解决并发竞争>方案三：Redis + Lua 脚本（解决并发竞争）</a></li><li><a href=#方案四分层时间轮>方案四：分层时间轮</a></li><li><a href=#选型对比>选型对比</a></li><li><a href=#实践建议>实践建议</a></li></ul></nav></div></div><div class=content id=content><h2 id=延迟任务无处不在>延迟任务无处不在</h2><p>下完订单 30 分钟未支付，自动关闭。优惠券到期前 1 小时，推送提醒。注册后 3 天未登录，发送召回邮件。这些场景的本质是同一个问题：<strong>在某个未来时间点执行一个任务</strong>。</p><p>延迟队列的难点不在于"能不能实现"，而在于在高并发下既不丢任务、又不重复执行，同时保持可接受的资源开销。下面从最简单的方案讲起，逐步演进。</p><h2 id=方案一数据库轮询>方案一：数据库轮询</h2><p>最直觉的做法——把延迟任务存到数据库表里，起一个定时任务每秒扫一遍。</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span><span class=lnt>4
+</span><span class=lnt>5
+</span><span class=lnt>6
+</span><span class=lnt>7
+</span><span class=lnt>8
+</span><span class=lnt>9
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-sql data-lang=sql><span class=line><span class=cl><span class=k>CREATE</span><span class=w> </span><span class=k>TABLE</span><span class=w> </span><span class=n>delay_tasks</span><span class=w> </span><span class=p>(</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=n>id</span><span class=w>          </span><span class=nb>BIGINT</span><span class=w> </span><span class=k>PRIMARY</span><span class=w> </span><span class=k>KEY</span><span class=w> </span><span class=n>AUTO_INCREMENT</span><span class=p>,</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=n>task_type</span><span class=w>   </span><span class=nb>VARCHAR</span><span class=p>(</span><span class=mi>64</span><span class=p>)</span><span class=w> </span><span class=k>NOT</span><span class=w> </span><span class=k>NULL</span><span class=p>,</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=n>payload</span><span class=w>     </span><span class=nb>TEXT</span><span class=w> </span><span class=k>NOT</span><span class=w> </span><span class=k>NULL</span><span class=p>,</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=n>execute_at</span><span class=w>  </span><span class=n>DATETIME</span><span class=w> </span><span class=k>NOT</span><span class=w> </span><span class=k>NULL</span><span class=p>,</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=n>status</span><span class=w>      </span><span class=n>TINYINT</span><span class=w> </span><span class=k>DEFAULT</span><span class=w> </span><span class=mi>0</span><span class=p>,</span><span class=w>  </span><span class=c1>-- 0=待执行 1=执行中 2=已完成
+</span></span></span><span class=line><span class=cl><span class=c1></span><span class=w>    </span><span class=n>created_at</span><span class=w>  </span><span class=n>DATETIME</span><span class=w> </span><span class=k>DEFAULT</span><span class=w> </span><span class=n>NOW</span><span class=p>(),</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=k>INDEX</span><span class=w> </span><span class=n>idx_execute_at</span><span class=w> </span><span class=p>(</span><span class=n>execute_at</span><span class=p>,</span><span class=w> </span><span class=n>status</span><span class=p>)</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=p>);</span><span class=w>
+</span></span></span></code></pre></td></tr></table></div></div><p>消费逻辑用 Go 实现如下：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span><span class=lnt>17
+</span><span class=lnt>18
+</span><span class=lnt>19
+</span><span class=lnt>20
+</span><span class=lnt>21
+</span><span class=lnt>22
+</span><span class=lnt>23
+</span><span class=lnt>24
+</span><span class=lnt>25
+</span><span class=lnt>26
+</span><span class=lnt>27
+</span><span class=lnt>28
+</span><span class=lnt>29
+</span><span class=lnt>30
+</span><span class=lnt>31
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-go data-lang=go><span class=line><span class=cl><span class=kd>func</span> <span class=nf>PollTasks</span><span class=p>(</span><span class=nx>db</span> <span class=o>*</span><span class=nx>sql</span><span class=p>.</span><span class=nx>DB</span><span class=p>)</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=nx>ticker</span> <span class=o>:=</span> <span class=nx>time</span><span class=p>.</span><span class=nf>NewTicker</span><span class=p>(</span><span class=mi>1</span> <span class=o>*</span> <span class=nx>time</span><span class=p>.</span><span class=nx>Second</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>    <span class=k>defer</span> <span class=nx>ticker</span><span class=p>.</span><span class=nf>Stop</span><span class=p>()</span>
+</span></span><span class=line><span class=cl>    <span class=k>for</span> <span class=k>range</span> <span class=nx>ticker</span><span class=p>.</span><span class=nx>C</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>        <span class=nx>rows</span><span class=p>,</span> <span class=nx>err</span> <span class=o>:=</span> <span class=nx>db</span><span class=p>.</span><span class=nf>Query</span><span class=p>(</span><span class=s>`
+</span></span></span><span class=line><span class=cl><span class=s>            SELECT id, task_type, payload 
+</span></span></span><span class=line><span class=cl><span class=s>            FROM delay_tasks 
+</span></span></span><span class=line><span class=cl><span class=s>            WHERE execute_at &lt;= NOW() AND status = 0 
+</span></span></span><span class=line><span class=cl><span class=s>            LIMIT 50`</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>        <span class=k>if</span> <span class=nx>err</span> <span class=o>!=</span> <span class=kc>nil</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>            <span class=nx>log</span><span class=p>.</span><span class=nf>Printf</span><span class=p>(</span><span class=s>&#34;query error: %v&#34;</span><span class=p>,</span> <span class=nx>err</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>            <span class=k>continue</span>
+</span></span><span class=line><span class=cl>        <span class=p>}</span>
+</span></span><span class=line><span class=cl>        <span class=kd>var</span> <span class=nx>tasks</span> <span class=p>[]</span><span class=nx>Task</span>
+</span></span><span class=line><span class=cl>        <span class=k>for</span> <span class=nx>rows</span><span class=p>.</span><span class=nf>Next</span><span class=p>()</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>            <span class=kd>var</span> <span class=nx>t</span> <span class=nx>Task</span>
+</span></span><span class=line><span class=cl>            <span class=nx>rows</span><span class=p>.</span><span class=nf>Scan</span><span class=p>(</span><span class=o>&amp;</span><span class=nx>t</span><span class=p>.</span><span class=nx>ID</span><span class=p>,</span> <span class=o>&amp;</span><span class=nx>t</span><span class=p>.</span><span class=nx>Type</span><span class=p>,</span> <span class=o>&amp;</span><span class=nx>t</span><span class=p>.</span><span class=nx>Payload</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>            <span class=nx>tasks</span> <span class=p>=</span> <span class=nb>append</span><span class=p>(</span><span class=nx>tasks</span><span class=p>,</span> <span class=nx>t</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>        <span class=p>}</span>
+</span></span><span class=line><span class=cl>        <span class=nx>rows</span><span class=p>.</span><span class=nf>Close</span><span class=p>()</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>        <span class=k>for</span> <span class=nx>_</span><span class=p>,</span> <span class=nx>t</span> <span class=o>:=</span> <span class=k>range</span> <span class=nx>tasks</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>            <span class=c1>// 用 UPDATE 抢占任务，防止多实例重复执行
+</span></span></span><span class=line><span class=cl><span class=c1></span>            <span class=nx>res</span><span class=p>,</span> <span class=nx>_</span> <span class=o>:=</span> <span class=nx>db</span><span class=p>.</span><span class=nf>Exec</span><span class=p>(</span>
+</span></span><span class=line><span class=cl>                <span class=s>`UPDATE delay_tasks SET status = 1 WHERE id = ? AND status = 0`</span><span class=p>,</span> <span class=nx>t</span><span class=p>.</span><span class=nx>ID</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>            <span class=k>if</span> <span class=nx>n</span><span class=p>,</span> <span class=nx>_</span> <span class=o>:=</span> <span class=nx>res</span><span class=p>.</span><span class=nf>RowsAffected</span><span class=p>();</span> <span class=nx>n</span> <span class=p>&gt;</span> <span class=mi>0</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>                <span class=k>go</span> <span class=nf>executeTask</span><span class=p>(</span><span class=nx>t</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>            <span class=p>}</span>
+</span></span><span class=line><span class=cl>        <span class=p>}</span>
+</span></span><span class=line><span class=cl>    <span class=p>}</span>
+</span></span><span class=line><span class=cl><span class=p>}</span>
+</span></span></code></pre></td></tr></table></div></div><p><strong>优点</strong>：实现简单，事务保证强，不丢数据。</p><p><strong>缺点</strong>：轮询空转浪费资源，数据库压力大；精度受轮询间隔限制；扩展性差。</p><p><strong>适用场景</strong>：任务量小（&lt;1000/秒），精度要求秒级，团队不想引入额外中间件。</p><h2 id=方案二redis-zset-有序集合>方案二：Redis ZSet 有序集合</h2><p>用 Redis 的 ZSet，把任务执行时间作为 score，消费端不断拉取 score &lt;= 当前时间的任务。</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span><span class=lnt>17
+</span><span class=lnt>18
+</span><span class=lnt>19
+</span><span class=lnt>20
+</span><span class=lnt>21
+</span><span class=lnt>22
+</span><span class=lnt>23
+</span><span class=lnt>24
+</span><span class=lnt>25
+</span><span class=lnt>26
+</span><span class=lnt>27
+</span><span class=lnt>28
+</span><span class=lnt>29
+</span><span class=lnt>30
+</span><span class=lnt>31
+</span><span class=lnt>32
+</span><span class=lnt>33
+</span><span class=lnt>34
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-go data-lang=go><span class=line><span class=cl><span class=kd>type</span> <span class=nx>RedisDelayQueue</span> <span class=kd>struct</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=nx>client</span> <span class=o>*</span><span class=nx>redis</span><span class=p>.</span><span class=nx>Client</span>
+</span></span><span class=line><span class=cl>    <span class=nx>key</span>    <span class=kt>string</span>
+</span></span><span class=line><span class=cl><span class=p>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=kd>func</span> <span class=p>(</span><span class=nx>q</span> <span class=o>*</span><span class=nx>RedisDelayQueue</span><span class=p>)</span> <span class=nf>Push</span><span class=p>(</span><span class=nx>taskID</span> <span class=kt>string</span><span class=p>,</span> <span class=nx>executeAt</span> <span class=nx>time</span><span class=p>.</span><span class=nx>Time</span><span class=p>)</span> <span class=kt>error</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=k>return</span> <span class=nx>q</span><span class=p>.</span><span class=nx>client</span><span class=p>.</span><span class=nf>ZAdd</span><span class=p>(</span><span class=nx>q</span><span class=p>.</span><span class=nx>key</span><span class=p>,</span> <span class=nx>redis</span><span class=p>.</span><span class=nx>Z</span><span class=p>{</span>
+</span></span><span class=line><span class=cl>        <span class=nx>Score</span><span class=p>:</span>  <span class=nb>float64</span><span class=p>(</span><span class=nx>executeAt</span><span class=p>.</span><span class=nf>Unix</span><span class=p>()),</span>
+</span></span><span class=line><span class=cl>        <span class=nx>Member</span><span class=p>:</span> <span class=nx>taskID</span><span class=p>,</span>
+</span></span><span class=line><span class=cl>    <span class=p>}).</span><span class=nf>Err</span><span class=p>()</span>
+</span></span><span class=line><span class=cl><span class=p>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=kd>func</span> <span class=p>(</span><span class=nx>q</span> <span class=o>*</span><span class=nx>RedisDelayQueue</span><span class=p>)</span> <span class=nf>Consume</span><span class=p>()</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=k>for</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>        <span class=nx>now</span> <span class=o>:=</span> <span class=nx>time</span><span class=p>.</span><span class=nf>Now</span><span class=p>().</span><span class=nf>Unix</span><span class=p>()</span>
+</span></span><span class=line><span class=cl>        <span class=c1>// 取出所有到期的任务
+</span></span></span><span class=line><span class=cl><span class=c1></span>        <span class=nx>members</span><span class=p>,</span> <span class=nx>err</span> <span class=o>:=</span> <span class=nx>q</span><span class=p>.</span><span class=nx>client</span><span class=p>.</span><span class=nf>ZRangeByScore</span><span class=p>(</span><span class=nx>q</span><span class=p>.</span><span class=nx>key</span><span class=p>,</span> <span class=o>&amp;</span><span class=nx>redis</span><span class=p>.</span><span class=nx>ZRangeBy</span><span class=p>{</span>
+</span></span><span class=line><span class=cl>            <span class=nx>Min</span><span class=p>:</span>   <span class=s>&#34;0&#34;</span><span class=p>,</span>
+</span></span><span class=line><span class=cl>            <span class=nx>Max</span><span class=p>:</span>   <span class=nx>strconv</span><span class=p>.</span><span class=nf>FormatInt</span><span class=p>(</span><span class=nx>now</span><span class=p>,</span> <span class=mi>10</span><span class=p>),</span>
+</span></span><span class=line><span class=cl>            <span class=nx>Count</span><span class=p>:</span> <span class=mi>50</span><span class=p>,</span>
+</span></span><span class=line><span class=cl>        <span class=p>}).</span><span class=nf>Result</span><span class=p>()</span>
+</span></span><span class=line><span class=cl>        <span class=k>if</span> <span class=nx>err</span> <span class=o>!=</span> <span class=kc>nil</span> <span class=o>||</span> <span class=nb>len</span><span class=p>(</span><span class=nx>members</span><span class=p>)</span> <span class=o>==</span> <span class=mi>0</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>            <span class=nx>time</span><span class=p>.</span><span class=nf>Sleep</span><span class=p>(</span><span class=mi>500</span> <span class=o>*</span> <span class=nx>time</span><span class=p>.</span><span class=nx>Millisecond</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>            <span class=k>continue</span>
+</span></span><span class=line><span class=cl>        <span class=p>}</span>
+</span></span><span class=line><span class=cl>        <span class=k>for</span> <span class=nx>_</span><span class=p>,</span> <span class=nx>member</span> <span class=o>:=</span> <span class=k>range</span> <span class=nx>members</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>            <span class=c1>// 原子删除：只有第一个删成功的才会执行
+</span></span></span><span class=line><span class=cl><span class=c1></span>            <span class=nx>n</span><span class=p>,</span> <span class=nx>err</span> <span class=o>:=</span> <span class=nx>q</span><span class=p>.</span><span class=nx>client</span><span class=p>.</span><span class=nf>ZRem</span><span class=p>(</span><span class=nx>q</span><span class=p>.</span><span class=nx>key</span><span class=p>,</span> <span class=nx>member</span><span class=p>).</span><span class=nf>Result</span><span class=p>()</span>
+</span></span><span class=line><span class=cl>            <span class=k>if</span> <span class=nx>err</span> <span class=o>==</span> <span class=kc>nil</span> <span class=o>&amp;&amp;</span> <span class=nx>n</span> <span class=p>&gt;</span> <span class=mi>0</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>                <span class=k>go</span> <span class=nf>executeTask</span><span class=p>(</span><span class=nx>member</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>            <span class=p>}</span>
+</span></span><span class=line><span class=cl>        <span class=p>}</span>
+</span></span><span class=line><span class=cl>    <span class=p>}</span>
+</span></span><span class=line><span class=cl><span class=p>}</span>
+</span></span></code></pre></td></tr></table></div></div><p>关键在于 <code>ZRem</code> 的原子性——多个消费者同时抢同一个任务，只有 <code>ZRem</code> 返回 1 的那个才会真正执行，天然防重复。</p><p><strong>优点</strong>：内存操作极快，单机支撑 10 万+ QPS；<code>ZRem</code> 原子保证不重复执行。</p><p><strong>缺点</strong>：断电丢数据（可通过 AOF 持久化缓解但无法完全避免）；任务执行失败需要手动重试机制。</p><p><strong>适用场景</strong>：任务量大、允许极小概率丢失、已有 Redis 基础设施。</p><h2 id=方案三redis--lua-脚本解决并发竞争>方案三：Redis + Lua 脚本（解决并发竞争）</h2><p>方案二在超高并发下，<code>ZRangeByScore</code> 和 <code>ZRem</code> 之间存在一个窗口——多个消费者可能同时拿到同一个任务，然后都尝试 <code>ZRem</code>。虽然最终只有一个成功，但无效的竞争白白浪费资源。</p><p>用 Lua 脚本将"查询 + 删除"合为一个原子操作：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span><span class=lnt>4
+</span><span class=lnt>5
+</span><span class=lnt>6
+</span><span class=lnt>7
+</span><span class=lnt>8
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-lua data-lang=lua><span class=line><span class=cl><span class=c1>-- KEYS[1] = 延迟队列的 ZSet key</span>
+</span></span><span class=line><span class=cl><span class=c1>-- ARGV[1] = 当前时间戳</span>
+</span></span><span class=line><span class=cl><span class=c1>-- ARGV[2] = 一次取多少个</span>
+</span></span><span class=line><span class=cl><span class=kd>local</span> <span class=n>tasks</span> <span class=o>=</span> <span class=n>redis.call</span><span class=p>(</span><span class=s1>&#39;ZRANGEBYSCORE&#39;</span><span class=p>,</span> <span class=n>KEYS</span><span class=p>[</span><span class=mi>1</span><span class=p>],</span> <span class=s1>&#39;0&#39;</span><span class=p>,</span> <span class=n>ARGV</span><span class=p>[</span><span class=mi>1</span><span class=p>],</span> <span class=s1>&#39;LIMIT&#39;</span><span class=p>,</span> <span class=mi>0</span><span class=p>,</span> <span class=n>ARGV</span><span class=p>[</span><span class=mi>2</span><span class=p>])</span>
+</span></span><span class=line><span class=cl><span class=kr>if</span> <span class=o>#</span><span class=n>tasks</span> <span class=o>&gt;</span> <span class=mi>0</span> <span class=kr>then</span>
+</span></span><span class=line><span class=cl>    <span class=n>redis.call</span><span class=p>(</span><span class=s1>&#39;ZREM&#39;</span><span class=p>,</span> <span class=n>KEYS</span><span class=p>[</span><span class=mi>1</span><span class=p>],</span> <span class=n>unpack</span><span class=p>(</span><span class=n>tasks</span><span class=p>))</span>
+</span></span><span class=line><span class=cl><span class=kr>end</span>
+</span></span><span class=line><span class=cl><span class=kr>return</span> <span class=n>tasks</span>
+</span></span></code></pre></td></tr></table></div></div><p>Go 调用代码：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span><span class=lnt>17
+</span><span class=lnt>18
+</span><span class=lnt>19
+</span><span class=lnt>20
+</span><span class=lnt>21
+</span><span class=lnt>22
+</span><span class=lnt>23
+</span><span class=lnt>24
+</span><span class=lnt>25
+</span><span class=lnt>26
+</span><span class=lnt>27
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-go data-lang=go><span class=line><span class=cl><span class=kd>var</span> <span class=nx>consumeScript</span> <span class=p>=</span> <span class=nx>redis</span><span class=p>.</span><span class=nf>NewScript</span><span class=p>(</span><span class=s>`
+</span></span></span><span class=line><span class=cl><span class=s>    local tasks = redis.call(&#39;ZRANGEBYSCORE&#39;, KEYS[1], &#39;0&#39;, ARGV[1], &#39;LIMIT&#39;, 0, ARGV[2])
+</span></span></span><span class=line><span class=cl><span class=s>    if #tasks &gt; 0 then
+</span></span></span><span class=line><span class=cl><span class=s>        redis.call(&#39;ZREM&#39;, KEYS[1], unpack(tasks))
+</span></span></span><span class=line><span class=cl><span class=s>    end
+</span></span></span><span class=line><span class=cl><span class=s>    return tasks
+</span></span></span><span class=line><span class=cl><span class=s>`</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=kd>func</span> <span class=p>(</span><span class=nx>q</span> <span class=o>*</span><span class=nx>RedisDelayQueue</span><span class=p>)</span> <span class=nf>ConsumeWithLua</span><span class=p>()</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=k>for</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>        <span class=nx>now</span> <span class=o>:=</span> <span class=nx>strconv</span><span class=p>.</span><span class=nf>FormatInt</span><span class=p>(</span><span class=nx>time</span><span class=p>.</span><span class=nf>Now</span><span class=p>().</span><span class=nf>Unix</span><span class=p>(),</span> <span class=mi>10</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>        <span class=nx>result</span><span class=p>,</span> <span class=nx>err</span> <span class=o>:=</span> <span class=nx>consumeScript</span><span class=p>.</span><span class=nf>Do</span><span class=p>(</span><span class=nx>q</span><span class=p>.</span><span class=nx>client</span><span class=p>,</span> <span class=nx>q</span><span class=p>.</span><span class=nx>key</span><span class=p>,</span> <span class=nx>now</span><span class=p>,</span> <span class=mi>50</span><span class=p>).</span><span class=nf>Result</span><span class=p>()</span>
+</span></span><span class=line><span class=cl>        <span class=k>if</span> <span class=nx>err</span> <span class=o>!=</span> <span class=kc>nil</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>            <span class=nx>log</span><span class=p>.</span><span class=nf>Printf</span><span class=p>(</span><span class=s>&#34;lua error: %v&#34;</span><span class=p>,</span> <span class=nx>err</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>            <span class=nx>time</span><span class=p>.</span><span class=nf>Sleep</span><span class=p>(</span><span class=mi>500</span> <span class=o>*</span> <span class=nx>time</span><span class=p>.</span><span class=nx>Millisecond</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>            <span class=k>continue</span>
+</span></span><span class=line><span class=cl>        <span class=p>}</span>
+</span></span><span class=line><span class=cl>        <span class=nx>tasks</span> <span class=o>:=</span> <span class=nx>result</span><span class=p>.([]</span><span class=kd>interface</span><span class=p>{})</span>
+</span></span><span class=line><span class=cl>        <span class=k>if</span> <span class=nb>len</span><span class=p>(</span><span class=nx>tasks</span><span class=p>)</span> <span class=o>==</span> <span class=mi>0</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>            <span class=nx>time</span><span class=p>.</span><span class=nf>Sleep</span><span class=p>(</span><span class=mi>500</span> <span class=o>*</span> <span class=nx>time</span><span class=p>.</span><span class=nx>Millisecond</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>            <span class=k>continue</span>
+</span></span><span class=line><span class=cl>        <span class=p>}</span>
+</span></span><span class=line><span class=cl>        <span class=k>for</span> <span class=nx>_</span><span class=p>,</span> <span class=nx>t</span> <span class=o>:=</span> <span class=k>range</span> <span class=nx>tasks</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>            <span class=k>go</span> <span class=nf>executeTask</span><span class=p>(</span><span class=nx>t</span><span class=p>.(</span><span class=kt>string</span><span class=p>))</span>
+</span></span><span class=line><span class=cl>        <span class=p>}</span>
+</span></span><span class=line><span class=cl>    <span class=p>}</span>
+</span></span><span class=line><span class=cl><span class=p>}</span>
+</span></span></code></pre></td></tr></table></div></div><p>Lua 脚本在 Redis 单线程内执行，天然原子，彻底消除竞争窗口。</p><p><strong>优点</strong>：无竞争开销，吞吐更高。</p><p><strong>缺点</strong>：Lua 脚本会阻塞 Redis 线程，如果单次取太多任务会影响其他命令；Redis Cluster 下需要按 hash tag 路由到同一分片。</p><h2 id=方案四分层时间轮>方案四：分层时间轮</h2><p>对于海量延迟任务（百万级），无论数据库还是 Redis ZSet 都会遇到瓶颈。时间轮是一种 O(1) 复杂度的经典数据结构，Kafka 和 Netty 内部都在用。</p><p><strong>核心思路</strong>：想象一个时钟，有 N 个格子。任务按延迟时间的取模放入对应格子，指针每 tick（如 100ms）前进一格，执行格子里的所有任务。</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span><span class=lnt>4
+</span><span class=lnt>5
+</span><span class=lnt>6
+</span><span class=lnt>7
+</span><span class=lnt>8
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-fallback data-lang=fallback><span class=line><span class=cl>分层时间轮结构：
+</span></span><span class=line><span class=cl>  [0] [1] [2] [3] [4] [5] [6] [7] ... [59]   ← 秒级轮（60格）
+</span></span><span class=line><span class=cl>   |
+</span></span><span class=line><span class=cl>   +-- 超过60秒的任务，升级到分钟轮
+</span></span><span class=line><span class=cl>  [0] [1] [2] ... [59]                        ← 分钟轮（60格）
+</span></span><span class=line><span class=cl>   |
+</span></span><span class=line><span class=cl>   +-- 超过60分钟的任务，升级到小时轮
+</span></span><span class=line><span class=cl>  [0] [1] ... [23]                            ← 小时轮（24格）
+</span></span></code></pre></td></tr></table></div></div><p>简化版 Go 实现：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span><span class=lnt>17
+</span><span class=lnt>18
+</span><span class=lnt>19
+</span><span class=lnt>20
+</span><span class=lnt>21
+</span><span class=lnt>22
+</span><span class=lnt>23
+</span><span class=lnt>24
+</span><span class=lnt>25
+</span><span class=lnt>26
+</span><span class=lnt>27
+</span><span class=lnt>28
+</span><span class=lnt>29
+</span><span class=lnt>30
+</span><span class=lnt>31
+</span><span class=lnt>32
+</span><span class=lnt>33
+</span><span class=lnt>34
+</span><span class=lnt>35
+</span><span class=lnt>36
+</span><span class=lnt>37
+</span><span class=lnt>38
+</span><span class=lnt>39
+</span><span class=lnt>40
+</span><span class=lnt>41
+</span><span class=lnt>42
+</span><span class=lnt>43
+</span><span class=lnt>44
+</span><span class=lnt>45
+</span><span class=lnt>46
+</span><span class=lnt>47
+</span><span class=lnt>48
+</span><span class=lnt>49
+</span><span class=lnt>50
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-go data-lang=go><span class=line><span class=cl><span class=kd>type</span> <span class=nx>TimerTask</span> <span class=kd>struct</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=nx>executeAt</span> <span class=kt>int64</span>
+</span></span><span class=line><span class=cl>    <span class=nx>fn</span>       <span class=kd>func</span><span class=p>()</span>
+</span></span><span class=line><span class=cl><span class=p>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=kd>type</span> <span class=nx>TimeWheel</span> <span class=kd>struct</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=nx>slots</span>    <span class=p>[][]</span><span class=o>*</span><span class=nx>TimerTask</span>
+</span></span><span class=line><span class=cl>    <span class=nx>curSlot</span>  <span class=kt>int</span>
+</span></span><span class=line><span class=cl>    <span class=nx>tickDur</span>  <span class=nx>time</span><span class=p>.</span><span class=nx>Duration</span>
+</span></span><span class=line><span class=cl>    <span class=nx>slotNum</span>  <span class=kt>int</span>
+</span></span><span class=line><span class=cl>    <span class=nx>mu</span>       <span class=nx>sync</span><span class=p>.</span><span class=nx>Mutex</span>
+</span></span><span class=line><span class=cl><span class=p>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=kd>func</span> <span class=nf>NewTimeWheel</span><span class=p>(</span><span class=nx>tick</span> <span class=nx>time</span><span class=p>.</span><span class=nx>Duration</span><span class=p>,</span> <span class=nx>slots</span> <span class=kt>int</span><span class=p>)</span> <span class=o>*</span><span class=nx>TimeWheel</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=nx>tw</span> <span class=o>:=</span> <span class=o>&amp;</span><span class=nx>TimeWheel</span><span class=p>{</span>
+</span></span><span class=line><span class=cl>        <span class=nx>slots</span><span class=p>:</span>   <span class=nb>make</span><span class=p>([][]</span><span class=o>*</span><span class=nx>TimerTask</span><span class=p>,</span> <span class=nx>slots</span><span class=p>),</span>
+</span></span><span class=line><span class=cl>        <span class=nx>tickDur</span><span class=p>:</span> <span class=nx>tick</span><span class=p>,</span>
+</span></span><span class=line><span class=cl>        <span class=nx>slotNum</span><span class=p>:</span> <span class=nx>slots</span><span class=p>,</span>
+</span></span><span class=line><span class=cl>    <span class=p>}</span>
+</span></span><span class=line><span class=cl>    <span class=k>return</span> <span class=nx>tw</span>
+</span></span><span class=line><span class=cl><span class=p>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=kd>func</span> <span class=p>(</span><span class=nx>tw</span> <span class=o>*</span><span class=nx>TimeWheel</span><span class=p>)</span> <span class=nf>Add</span><span class=p>(</span><span class=nx>delay</span> <span class=nx>time</span><span class=p>.</span><span class=nx>Duration</span><span class=p>,</span> <span class=nx>fn</span> <span class=kd>func</span><span class=p>())</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=nx>tw</span><span class=p>.</span><span class=nx>mu</span><span class=p>.</span><span class=nf>Lock</span><span class=p>()</span>
+</span></span><span class=line><span class=cl>    <span class=k>defer</span> <span class=nx>tw</span><span class=p>.</span><span class=nx>mu</span><span class=p>.</span><span class=nf>Unlock</span><span class=p>()</span>
+</span></span><span class=line><span class=cl>    <span class=nx>ticks</span> <span class=o>:=</span> <span class=nb>int</span><span class=p>(</span><span class=nx>delay</span> <span class=o>/</span> <span class=nx>tw</span><span class=p>.</span><span class=nx>tickDur</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>    <span class=nx>slot</span> <span class=o>:=</span> <span class=p>(</span><span class=nx>tw</span><span class=p>.</span><span class=nx>curSlot</span> <span class=o>+</span> <span class=nx>ticks</span><span class=p>)</span> <span class=o>%</span> <span class=nx>tw</span><span class=p>.</span><span class=nx>slotNum</span>
+</span></span><span class=line><span class=cl>    <span class=nx>tw</span><span class=p>.</span><span class=nx>slots</span><span class=p>[</span><span class=nx>slot</span><span class=p>]</span> <span class=p>=</span> <span class=nb>append</span><span class=p>(</span><span class=nx>tw</span><span class=p>.</span><span class=nx>slots</span><span class=p>[</span><span class=nx>slot</span><span class=p>],</span> <span class=o>&amp;</span><span class=nx>TimerTask</span><span class=p>{</span>
+</span></span><span class=line><span class=cl>        <span class=nx>executeAt</span><span class=p>:</span> <span class=nx>time</span><span class=p>.</span><span class=nf>Now</span><span class=p>().</span><span class=nf>Add</span><span class=p>(</span><span class=nx>delay</span><span class=p>).</span><span class=nf>Unix</span><span class=p>(),</span>
+</span></span><span class=line><span class=cl>        <span class=nx>fn</span><span class=p>:</span>        <span class=nx>fn</span><span class=p>,</span>
+</span></span><span class=line><span class=cl>    <span class=p>})</span>
+</span></span><span class=line><span class=cl><span class=p>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=kd>func</span> <span class=p>(</span><span class=nx>tw</span> <span class=o>*</span><span class=nx>TimeWheel</span><span class=p>)</span> <span class=nf>Start</span><span class=p>()</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=nx>ticker</span> <span class=o>:=</span> <span class=nx>time</span><span class=p>.</span><span class=nf>NewTicker</span><span class=p>(</span><span class=nx>tw</span><span class=p>.</span><span class=nx>tickDur</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>    <span class=k>defer</span> <span class=nx>ticker</span><span class=p>.</span><span class=nf>Stop</span><span class=p>()</span>
+</span></span><span class=line><span class=cl>    <span class=k>for</span> <span class=k>range</span> <span class=nx>ticker</span><span class=p>.</span><span class=nx>C</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>        <span class=nx>tw</span><span class=p>.</span><span class=nx>mu</span><span class=p>.</span><span class=nf>Lock</span><span class=p>()</span>
+</span></span><span class=line><span class=cl>        <span class=nx>tw</span><span class=p>.</span><span class=nx>curSlot</span> <span class=p>=</span> <span class=p>(</span><span class=nx>tw</span><span class=p>.</span><span class=nx>curSlot</span> <span class=o>+</span> <span class=mi>1</span><span class=p>)</span> <span class=o>%</span> <span class=nx>tw</span><span class=p>.</span><span class=nx>slotNum</span>
+</span></span><span class=line><span class=cl>        <span class=nx>tasks</span> <span class=o>:=</span> <span class=nx>tw</span><span class=p>.</span><span class=nx>slots</span><span class=p>[</span><span class=nx>tw</span><span class=p>.</span><span class=nx>curSlot</span><span class=p>]</span>
+</span></span><span class=line><span class=cl>        <span class=nx>tw</span><span class=p>.</span><span class=nx>slots</span><span class=p>[</span><span class=nx>tw</span><span class=p>.</span><span class=nx>curSlot</span><span class=p>]</span> <span class=p>=</span> <span class=kc>nil</span>
+</span></span><span class=line><span class=cl>        <span class=nx>tw</span><span class=p>.</span><span class=nx>mu</span><span class=p>.</span><span class=nf>Unlock</span><span class=p>()</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>        <span class=k>for</span> <span class=nx>_</span><span class=p>,</span> <span class=nx>t</span> <span class=o>:=</span> <span class=k>range</span> <span class=nx>tasks</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>            <span class=k>if</span> <span class=nx>time</span><span class=p>.</span><span class=nf>Now</span><span class=p>().</span><span class=nf>Unix</span><span class=p>()</span> <span class=o>&gt;=</span> <span class=nx>t</span><span class=p>.</span><span class=nx>executeAt</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>                <span class=k>go</span> <span class=nx>t</span><span class=p>.</span><span class=nf>fn</span><span class=p>()</span>
+</span></span><span class=line><span class=cl>            <span class=p>}</span>
+</span></span><span class=line><span class=cl>        <span class=p>}</span>
+</span></span><span class=line><span class=cl>    <span class=p>}</span>
+</span></span><span class=line><span class=cl><span class=p>}</span>
+</span></span></code></pre></td></tr></table></div></div><p><strong>优点</strong>：O(1) 入队和出队，内存开销小，适合百万级任务。</p><p><strong>缺点</strong>：单机内存方案，宕机丢数据；实现复杂度高（完整分层时间轮涉及任务降级逻辑）；精度受 tick 粒度限制。</p><p><strong>适用场景</strong>：超大规模延迟任务、内存可接受丢失、追求极致性能。</p><h2 id=选型对比>选型对比</h2><table><thead><tr><th>方案</th><th>精度</th><th>吞吐量</th><th>可靠性</th><th>实现复杂度</th><th>适用场景</th></tr></thead><tbody><tr><td>数据库轮询</td><td>秒级</td><td>低</td><td>高</td><td>低</td><td>任务少、强一致</td></tr><tr><td>Redis ZSet</td><td>毫秒级</td><td>高</td><td>中</td><td>中</td><td>通用首选</td></tr><tr><td>Redis + Lua</td><td>毫秒级</td><td>很高</td><td>中</td><td>中高</td><td>超高并发</td></tr><tr><td>时间轮</td><td>tick级</td><td>极高</td><td>低</td><td>高</td><td>海量任务、内存态</td></tr></tbody></table><h2 id=实践建议>实践建议</h2><ol><li><p><strong>大多数场景选 Redis ZSet 方案</strong>：在性能和可靠性之间取得了最佳平衡，社区成熟，踩坑少。</p></li><li><p><strong>务必实现失败重试</strong>：任务从队列取出后如果执行失败，需要写回队列或转入死信队列。可以用独立的 retry ZSet，score 为下次重试时间。</p></li><li><p><strong>监控队列积压</strong>：用 <code>ZCARD</code> 检查队列长度，设置告警阈值。积压说明消费者处理不过来或任务执行时间过长。</p></li><li><p><strong>幂等设计</strong>：无论哪种方案，任务都可能被重复投递（比如服务重启后重新加载），消费者必须做幂等处理——用唯一 ID + 去重表或 Redis SETNX。</p></li><li><p><strong>优雅关闭</strong>：消费协程要响应 <code>context.Done()</code>，关闭前处理完已拉取的任务，避免丢弃。</p></li></ol><p>延迟队列没有银弹，选型时先看可靠性和吞吐量要求，再看团队技术栈，最后看运维成本。简单的数据库轮询在 80% 的场景下就够用了，别过度设计。</p></div><div class=post-footer id=post-footer><div class=post-info><div class=post-info-line><div class=post-info-mod><span>Updated on 2026-07-12</span></div></div><div class=post-info-line><div class=post-info-md></div><div class=post-info-share><span><a href=javascript:void(0); title="Share on Twitter" data-sharer=twitter data-url=https://www.ithome.me/post/2026/07/12/delay-queue-four-approaches/ data-title="延迟队列的四种实现方案：从数据库轮询到 Redis 时间轮" data-via=ChenCiki data-hashtags=延迟队列,Redis,架构设计,Go,后端><i class="fab fa-twitter fa-fw" aria-hidden=true></i></a><a href=javascript:void(0); title="Share on Linkedin" data-sharer=linkedin data-url=https://www.ithome.me/post/2026/07/12/delay-queue-four-approaches/><i class="fab fa-linkedin fa-fw" aria-hidden=true></i></a><a href=javascript:void(0); title="Share on 微博" data-sharer=weibo data-url=https://www.ithome.me/post/2026/07/12/delay-queue-four-approaches/ data-title="延迟队列的四种实现方案：从数据库轮询到 Redis 时间轮" data-ralateuid=xxx><i class="fab fa-weibo fa-fw" aria-hidden=true></i></a></span></div></div></div><div class=post-info-more><section class=post-tags><i class="fas fa-tags fa-fw" aria-hidden=true></i>&nbsp;<a href=/tags/%E5%BB%B6%E8%BF%9F%E9%98%9F%E5%88%97/>延迟队列</a>,&nbsp;<a href=/tags/redis/>Redis</a>,&nbsp;<a href=/tags/%E6%9E%B6%E6%9E%84%E8%AE%BE%E8%AE%A1/>架构设计</a>,&nbsp;<a href=/tags/go/>Go</a>,&nbsp;<a href=/tags/%E5%90%8E%E7%AB%AF/>后端</a></section><section><span><a href=javascript:void(0); onclick=window.history.back()>Back</a></span>&nbsp;|&nbsp;<span><a href=/>Home</a></span></section></div><div class=post-nav><a href=/post/2026/07/11/rate-limiting-algorithms/ class=prev rel=prev title=限流算法实战：三种经典算法的Go实现与选型指南><i class="fas fa-angle-left fa-fw" aria-hidden=true></i>限流算法实战：三种经典算法的Go实现与选型指南</a>
+<a href=/post/2026/07/13/tech-selection-no-silver-bullet/ class=next rel=next title=技术选型的残酷真相：没有银弹，只有取舍>技术选型的残酷真相：没有银弹，只有取舍<i class="fas fa-angle-right fa-fw" aria-hidden=true></i></a></div></div><div id=comments><div id=gitalk class=comment></div><noscript>Please enable JavaScript to view the comments powered by <a href=https://github.com/gitalk/gitalk></a>Gitalk</a>.</noscript></div></article></div></main><footer class=footer><div class=footer-container><div class=footer-line itemscope itemtype=http://schema.org/CreativeWork><i class="far fa-copyright fa-fw" aria-hidden=true></i><span itemprop=copyrightYear>2011 - 2026</span><span class=author itemprop=copyrightHolder>&nbsp;<a href=https://www.ithome.me/ target=_blank>Simon Chen</a></span>&nbsp;|&nbsp;<span class=license><a rel="license external nofollow noopener noreferrer" href=https://creativecommons.org/licenses/by-nc-nd/4.0/ target=_blank>CC BY-NC-ND 4.0</a></span></div></div></footer></div><div id=fixed-buttons><a href=# id=back-to-top class=fixed-button title="Back to Top"><i class="fas fa-arrow-up fa-fw" aria-hidden=true></i>
+</a><a href=# id=view-comments class=fixed-button title="View Comments"><i class="fas fa-comment fa-fw" aria-hidden=true></i></a></div><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/gitalk@1.8.0/dist/gitalk.min.css><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/css/lightgallery-bundle.min.css><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/katex.min.css><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/copy-tex.min.css><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.css><script type=text/javascript src=https://cdn.jsdelivr.net/npm/gitalk@1.8.0/dist/gitalk.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/autocomplete.js@0.38.1/dist/autocomplete.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/lunr@2.3.9/lunr.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/lazysizes@5.3.1/lazysizes.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/lightgallery.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/plugins/thumbnail/lg-thumbnail.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/plugins/zoom/lg-zoom.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/clipboard@2.0.11/dist/clipboard.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/sharer.js@0.5.1/sharer.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/katex.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/auto-render.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/copy-tex.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/mhchem.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.js></script><script type=text/javascript>window.config={code:{copyTitle:"Copy to clipboard",maxShownLines:50},comment:{gitalk:{admin:["cikichen"],clientID:"be0f52370ed1285b6c7c",clientSecret:"734a7d8d0ded346ca7a3d565d57de3f8eeb2850b",id:"2026-07-12T00:00:00Z",owner:"cikichen",repo:"gitalk",title:"延迟队列的四种实现方案：从数据库轮询到 Redis 时间轮"}},cookieconsent:{content:{dismiss:"我知道了",link:"了解更多",message:"本网站使用 Cookies 来改善您的浏览体验."},enable:!0,palette:{button:{background:"#f0f0f0"},popup:{background:"#1aa3ff"}},theme:"edgeless"},lightgallery:!0,math:{delimiters:[{display:!0,left:"$$",right:"$$"},{display:!0,left:"\\[",right:"\\]"},{display:!0,left:"\\begin{equation}",right:"\\end{equation}"},{display:!0,left:"\\begin{equation*}",right:"\\end{equation*}"},{display:!0,left:"\\begin{align}",right:"\\end{align}"},{display:!0,left:"\\begin{align*}",right:"\\end{align*}"},{display:!0,left:"\\begin{alignat}",right:"\\end{alignat}"},{display:!0,left:"\\begin{alignat*}",right:"\\end{alignat*}"},{display:!0,left:"\\begin{gather}",right:"\\end{gather}"},{display:!0,left:"\\begin{CD}",right:"\\end{CD}"},{display:!1,left:"$",right:"$"},{display:!1,left:"\\(",right:"\\)"}],strict:!1},search:{highlightTag:"em",lunrIndexURL:"/index.json",maxResultLength:10,noResultsFound:"No results found",snippetLength:50,type:"lunr"}}</script><script type=text/javascript src=/js/theme.min.js></script></body></html>

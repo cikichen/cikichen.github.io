@@ -1,515 +1,258 @@
-<!DOCTYPE html>
-<html lang="zh-CN">
-    <head>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <meta name="robots" content="noodp" />
-        <title>类型驱动设计：让非法状态在编译期无处藏身 - 编程心语</title><meta name="Description" content="探讨类型驱动设计思想，通过类型系统在编译期消灭非法状态，从根源上减少运行时错误"><meta property="og:url" content="https://www.ithome.me/post/2026/07/09/type-driven-design-illegal-states/">
-  <meta property="og:site_name" content="编程心语">
-  <meta property="og:title" content="类型驱动设计：让非法状态在编译期无处藏身">
-  <meta property="og:description" content="探讨类型驱动设计思想，通过类型系统在编译期消灭非法状态，从根源上减少运行时错误">
-  <meta property="og:locale" content="zh_CN">
-  <meta property="og:type" content="article">
-    <meta property="article:section" content="posts">
-    <meta property="article:published_time" content="2026-07-09T08:00:00+08:00">
-    <meta property="article:modified_time" content="2026-07-09T08:33:00+08:00">
-    <meta property="article:tag" content="类型系统">
-    <meta property="article:tag" content="类型安全">
-    <meta property="article:tag" content="TypeScript">
-    <meta property="article:tag" content="Rust">
-    <meta property="article:tag" content="编程实践">
-
-  <meta name="twitter:card" content="summary">
-  <meta name="twitter:title" content="类型驱动设计：让非法状态在编译期无处藏身">
-  <meta name="twitter:description" content="探讨类型驱动设计思想，通过类型系统在编译期消灭非法状态，从根源上减少运行时错误">
-      <meta name="twitter:site" content="@ChenCiki">
-<meta name="application-name" content="编程心语">
-<meta name="apple-mobile-web-app-title" content="编程心语"><meta name="theme-color" content="#ffffff"><meta name="msapplication-TileColor" content="#da532c"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
-        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
-        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5"><link rel="manifest" href="/site.webmanifest"><link rel="canonical" href="https://www.ithome.me/post/2026/07/09/type-driven-design-illegal-states/" /><link rel="prev" href="https://www.ithome.me/post/2026/07/08/go-context-deep-dive/" /><link rel="next" href="https://www.ithome.me/post/2026/07/09/app-upgrade-system-design/" /><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/normalize.css@8.0.1/normalize.min.css"><link rel="stylesheet" href="/css/style.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css"><script type="application/ld+json">
-    {
-        "@context": "http://schema.org",
-        "@type": "BlogPosting",
-        "headline": "类型驱动设计：让非法状态在编译期无处藏身",
-        "inLanguage": "zh-CN",
-        "mainEntityOfPage": {
-            "@type": "WebPage",
-            "@id": "https:\/\/www.ithome.me\/post\/2026\/07\/09\/type-driven-design-illegal-states\/"
-        },"image": ["https:\/\/www.ithome.me\/cover.png"],"genre": "posts","keywords": "类型系统, 类型安全, TypeScript, Rust, 编程实践","wordcount":  1928 ,
-        "url": "https:\/\/www.ithome.me\/post\/2026\/07\/09\/type-driven-design-illegal-states\/","datePublished": "2026-07-09T08:00:00+08:00","dateModified": "2026-07-09T08:33:00+08:00","publisher": {
-            "@type": "Organization",
-            "name": "SimonChen","logo": "https:\/\/www.ithome.me\/logo.png"},"author": {
-                "@type": "Person",
-                "name": "Simon"
-            },"description": "探讨类型驱动设计思想，通过类型系统在编译期消灭非法状态，从根源上减少运行时错误"
-    }
-    </script><script async src="https://www.googletagmanager.com/gtag/js?id=G-H1Q5563VR8"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-  gtag('config', 'G-H1Q5563VR8', { 'anonymize_ip': true });
-</script></head>
-    <body data-header-desktop="fixed" data-header-mobile="auto"><script type="text/javascript">(window.localStorage && localStorage.getItem('theme') ? localStorage.getItem('theme') === 'dark' : ('auto' === 'auto' ? window.matchMedia('(prefers-color-scheme: dark)').matches : 'auto' === 'dark')) && document.body.setAttribute('theme', 'dark');</script>
-
-        <div id="mask"></div><div class="wrapper"><header class="desktop" id="header-desktop">
-    <div class="header-wrapper">
-        <div class="header-title">
-            <a href="/" title="编程心语">编程心语</a>
-        </div>
-        <div class="menu">
-            <div class="menu-inner"><a class="menu-item" href="/posts/"> 文章 </a><a class="menu-item" href="/categories/"> 分类 </a><a class="menu-item" href="/tags/"> 标签 </a><a class="menu-item" href="/about-me/"> 关于 </a><span class="menu-item delimiter"></span><span class="menu-item search" id="search-desktop">
-                        <input type="text" placeholder="搜索文章..." id="search-input-desktop">
-                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-desktop" title="Search">
-                            <i class="fas fa-search fa-fw" aria-hidden="true"></i>
-                        </a>
-                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-desktop" title="Clear">
-                            <i class="fas fa-times-circle fa-fw" aria-hidden="true"></i>
-                        </a>
-                        <span class="search-button search-loading" id="search-loading-desktop">
-                            <i class="fas fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
-                        </span>
-                    </span><a href="javascript:void(0);" class="menu-item theme-switch" title="Switch Theme">
-                    <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
-                </a>
-            </div>
-        </div>
-    </div>
-</header><header class="mobile" id="header-mobile">
-    <div class="header-container">
-        <div class="header-wrapper">
-            <div class="header-title">
-                <a href="/" title="编程心语">编程心语</a>
-            </div>
-            <div class="menu-toggle" id="menu-toggle-mobile">
-                <span></span><span></span><span></span>
-            </div>
-        </div>
-        <div class="menu" id="menu-mobile"><div class="search-wrapper">
-                    <div class="search mobile" id="search-mobile">
-                        <input type="text" placeholder="搜索文章..." id="search-input-mobile">
-                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-mobile" title="Search">
-                            <i class="fas fa-search fa-fw" aria-hidden="true"></i>
-                        </a>
-                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-mobile" title="Clear">
-                            <i class="fas fa-times-circle fa-fw" aria-hidden="true"></i>
-                        </a>
-                        <span class="search-button search-loading" id="search-loading-mobile">
-                            <i class="fas fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
-                        </span>
-                    </div>
-                    <a href="javascript:void(0);" class="search-cancel" id="search-cancel-mobile">
-                        Cancel
-                    </a>
-                </div><a class="menu-item" href="/posts/" title="">文章</a><a class="menu-item" href="/categories/" title="">分类</a><a class="menu-item" href="/tags/" title="">标签</a><a class="menu-item" href="/about-me/" title="">关于</a><a href="javascript:void(0);" class="menu-item theme-switch" title="Switch Theme">
-                <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
-            </a></div>
-    </div>
-</header><div class="search-dropdown desktop">
-        <div id="search-dropdown-desktop"></div>
-    </div>
-    <div class="search-dropdown mobile">
-        <div id="search-dropdown-mobile"></div>
-    </div><main class="main">
-                <div class="container"><div class="toc" id="toc-auto">
-            <h2 class="toc-title">Contents</h2>
-            <div class="toc-content" id="toc-content-auto"></div>
-        </div><article class="page single"><h1 class="single-title animate__animated animate__flipInX">类型驱动设计：让非法状态在编译期无处藏身</h1><div class="post-meta">
-            <div class="post-meta-line"><span class="post-author"><a href="https://www.ithome.me/" title="Author" target="_blank" rel="noopener noreferrer author" class="author"><i class="fas fa-user-circle fa-fw" aria-hidden="true"></i>Simon</a>
-</span>&nbsp;<span class="post-category">included in <a href="/categories/essay/"><i class="far fa-folder fa-fw" aria-hidden="true"></i>Essay</a></span></div>
-            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw" aria-hidden="true"></i>&nbsp;<time datetime="2026-07-09">2026-07-09</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden="true"></i>&nbsp;1928 words&nbsp;
-                <i class="far fa-clock fa-fw" aria-hidden="true"></i>&nbsp;4 minutes&nbsp;</div>
-        </div><div class="details toc" id="toc-static"  data-kept="true">
-                <div class="details-summary toc-title">
-                    <span>Contents</span>
-                    <span><i class="details-icon fas fa-angle-right" aria-hidden="true"></i></span>
-                </div>
-                <div class="details-content toc-content" id="toc-content-static"><nav id="TableOfContents">
-  <ul>
-    <li><a href="#从一个-bug-说起">从一个 Bug 说起</a></li>
-    <li><a href="#原则让非法状态不可表达">原则：让非法状态不可表达</a></li>
-    <li><a href="#实战一typescript-中的用户状态机">实战一：TypeScript 中的用户状态机</a>
-      <ul>
-        <li><a href="#改造前">改造前</a></li>
-        <li><a href="#改造后">改造后</a></li>
-      </ul>
-    </li>
-    <li><a href="#实战二rust-的-option-与-result">实战二：Rust 的 Option 与 Result</a></li>
-    <li><a href="#实战三python-中的类型守卫">实战三：Python 中的类型守卫</a></li>
-    <li><a href="#落地策略">落地策略</a></li>
-    <li><a href="#成本与收益">成本与收益</a></li>
-  </ul>
-</nav></div>
-            </div><div class="content" id="content"><h2 id="从一个-bug-说起">从一个 Bug 说起</h2>
-<p>你一定见过这样的代码：</p>
-<div class="highlight"><div class="chroma">
-<table class="lntable"><tr><td class="lntd">
-<pre tabindex="0" class="chroma"><code><span class="lnt">1
-</span><span class="lnt">2
-</span><span class="lnt">3
-</span><span class="lnt">4
-</span><span class="lnt">5
-</span></code></pre></td>
-<td class="lntd">
-<pre tabindex="0" class="chroma"><code class="language-typescript" data-lang="typescript"><span class="line"><span class="cl"><span class="kr">interface</span> <span class="nx">User</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">  <span class="nx">id</span>: <span class="kt">string</span>
-</span></span><span class="line"><span class="cl">  <span class="nx">email</span>: <span class="kt">string</span> <span class="o">|</span> <span class="kc">null</span>
-</span></span><span class="line"><span class="cl">  <span class="nx">verified</span>: <span class="kt">boolean</span>
-</span></span><span class="line"><span class="cl"><span class="p">}</span>
-</span></span></code></pre></td></tr></table>
-</div>
-</div><p>看似合理，但仔细想想——一个 <code>email</code> 为 <code>null</code> 的用户，<code>verified</code> 能是 <code>true</code> 吗？显然不能。但在当前类型定义下，<code>{ email: null, verified: true }</code> 是完全合法的值。这就是<strong>非法状态可以表达</strong>的典型问题：类型系统允许存在逻辑上不可能的数据组合。</p>
-<p>这类问题的危害在于：你不会在编译期发现它，它会在运行时变成一个隐蔽的 Bug——也许是用户收到一封发到 <code>null</code> 地址的验证邮件，也许是某个下游服务因为意外组合而抛出空指针异常。</p>
-<p><strong>类型驱动设计的核心思想</strong>：如果某种状态在业务上不可能存在，那么它在类型层面就不应该能被构造出来。</p>
-<h2 id="原则让非法状态不可表达">原则：让非法状态不可表达</h2>
-<p>这句话出自 TypeScript 设计师 Anders Hejlsberg，但它适用于所有静态类型语言。具体做法是：<strong>用类型编码业务约束，把运行时校验提前到编译期</strong>。</p>
-<p>来看一个实际重构。</p>
-<h2 id="实战一typescript-中的用户状态机">实战一：TypeScript 中的用户状态机</h2>
-<h3 id="改造前">改造前</h3>
-<div class="highlight"><div class="chroma">
-<table class="lntable"><tr><td class="lntd">
-<pre tabindex="0" class="chroma"><code><span class="lnt">1
-</span><span class="lnt">2
-</span><span class="lnt">3
-</span><span class="lnt">4
-</span><span class="lnt">5
-</span><span class="lnt">6
-</span><span class="lnt">7
-</span></code></pre></td>
-<td class="lntd">
-<pre tabindex="0" class="chroma"><code class="language-typescript" data-lang="typescript"><span class="line"><span class="cl"><span class="c1">// ❌ 非法状态可以表达
-</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kr">interface</span> <span class="nx">User</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">  <span class="nx">email</span>: <span class="kt">string</span> <span class="o">|</span> <span class="kc">null</span>
-</span></span><span class="line"><span class="cl">  <span class="nx">emailVerified</span>: <span class="kt">boolean</span>
-</span></span><span class="line"><span class="cl">  <span class="nx">plan</span><span class="o">:</span> <span class="s1">&#39;free&#39;</span> <span class="o">|</span> <span class="s1">&#39;pro&#39;</span> <span class="o">|</span> <span class="s1">&#39;enterprise&#39;</span>
-</span></span><span class="line"><span class="cl">  <span class="nx">trialEndsAt</span>: <span class="kt">Date</span> <span class="o">|</span> <span class="kc">null</span>
-</span></span><span class="line"><span class="cl"><span class="p">}</span>
-</span></span></code></pre></td></tr></table>
-</div>
-</div><p>这段代码允许 <code>email: null, emailVerified: true</code>，也允许 <code>plan: 'free', trialEndsAt: null</code>（免费用户不该有试用到期时间）。每个非法组合都是一个潜在 Bug。</p>
-<h3 id="改造后">改造后</h3>
-<div class="highlight"><div class="chroma">
-<table class="lntable"><tr><td class="lntd">
-<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
-</span><span class="lnt"> 2
-</span><span class="lnt"> 3
-</span><span class="lnt"> 4
-</span><span class="lnt"> 5
-</span><span class="lnt"> 6
-</span><span class="lnt"> 7
-</span><span class="lnt"> 8
-</span><span class="lnt"> 9
-</span><span class="lnt">10
-</span><span class="lnt">11
-</span><span class="lnt">12
-</span><span class="lnt">13
-</span><span class="lnt">14
-</span><span class="lnt">15
-</span><span class="lnt">16
-</span><span class="lnt">17
-</span><span class="lnt">18
-</span><span class="lnt">19
-</span><span class="lnt">20
-</span><span class="lnt">21
-</span><span class="lnt">22
-</span></code></pre></td>
-<td class="lntd">
-<pre tabindex="0" class="chroma"><code class="language-typescript" data-lang="typescript"><span class="line"><span class="cl"><span class="c1">// ✅ 用联合类型编码状态
-</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kr">type</span> <span class="nx">UnregisteredUser</span> <span class="o">=</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">  <span class="nx">status</span><span class="o">:</span> <span class="s1">&#39;unregistered&#39;</span>
-</span></span><span class="line"><span class="cl">  <span class="nx">email</span>: <span class="kt">null</span>
-</span></span><span class="line"><span class="cl">  <span class="nx">emailVerified</span>: <span class="kt">false</span>
-</span></span><span class="line"><span class="cl"><span class="p">}</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="kr">type</span> <span class="nx">PendingVerificationUser</span> <span class="o">=</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">  <span class="nx">status</span><span class="o">:</span> <span class="s1">&#39;pending_verification&#39;</span>
-</span></span><span class="line"><span class="cl">  <span class="nx">email</span>: <span class="kt">string</span>
-</span></span><span class="line"><span class="cl">  <span class="nx">emailVerified</span>: <span class="kt">false</span>
-</span></span><span class="line"><span class="cl"><span class="p">}</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="kr">type</span> <span class="nx">ActiveUser</span> <span class="o">=</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">  <span class="nx">status</span><span class="o">:</span> <span class="s1">&#39;active&#39;</span>
-</span></span><span class="line"><span class="cl">  <span class="nx">email</span>: <span class="kt">string</span>
-</span></span><span class="line"><span class="cl">  <span class="nx">emailVerified</span>: <span class="kt">true</span>
-</span></span><span class="line"><span class="cl">  <span class="nx">plan</span><span class="o">:</span> <span class="s1">&#39;free&#39;</span> <span class="o">|</span> <span class="s1">&#39;pro&#39;</span> <span class="o">|</span> <span class="s1">&#39;enterprise&#39;</span>
-</span></span><span class="line"><span class="cl">  <span class="nx">trialEndsAt</span>: <span class="kt">Date</span> <span class="o">|</span> <span class="kc">null</span>  <span class="c1">// 仅 pro/enterprise 可试用
-</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="p">}</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="kr">type</span> <span class="nx">User</span> <span class="o">=</span> <span class="nx">UnregisteredUser</span> <span class="o">|</span> <span class="nx">PendingVerificationUser</span> <span class="o">|</span> <span class="nx">ActiveUser</span>
-</span></span></code></pre></td></tr></table>
-</div>
-</div><p>现在编译器会帮你拦截非法状态。例如：</p>
-<div class="highlight"><div class="chroma">
-<table class="lntable"><tr><td class="lntd">
-<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
-</span><span class="lnt"> 2
-</span><span class="lnt"> 3
-</span><span class="lnt"> 4
-</span><span class="lnt"> 5
-</span><span class="lnt"> 6
-</span><span class="lnt"> 7
-</span><span class="lnt"> 8
-</span><span class="lnt"> 9
-</span><span class="lnt">10
-</span><span class="lnt">11
-</span><span class="lnt">12
-</span><span class="lnt">13
-</span><span class="lnt">14
-</span><span class="lnt">15
-</span><span class="lnt">16
-</span><span class="lnt">17
-</span></code></pre></td>
-<td class="lntd">
-<pre tabindex="0" class="chroma"><code class="language-typescript" data-lang="typescript"><span class="line"><span class="cl"><span class="kd">function</span> <span class="nx">sendVerificationEmail</span><span class="p">(</span><span class="nx">user</span>: <span class="kt">User</span><span class="p">)</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">  <span class="k">switch</span> <span class="p">(</span><span class="nx">user</span><span class="p">.</span><span class="nx">status</span><span class="p">)</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">    <span class="k">case</span> <span class="s1">&#39;unregistered&#39;</span><span class="o">:</span>
-</span></span><span class="line"><span class="cl">      <span class="c1">// 编译错误：user.email 是 null，不能发邮件
-</span></span></span><span class="line"><span class="cl"><span class="c1"></span>      <span class="c1">// ❌ Type &#39;null&#39; is not assignable to parameter of type &#39;string&#39;
-</span></span></span><span class="line"><span class="cl"><span class="c1"></span>      <span class="nx">sendEmail</span><span class="p">(</span><span class="nx">user</span><span class="p">.</span><span class="nx">email</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">      <span class="k">break</span>
-</span></span><span class="line"><span class="cl">    <span class="k">case</span> <span class="s1">&#39;pending_verification&#39;</span><span class="o">:</span>
-</span></span><span class="line"><span class="cl">      <span class="c1">// ✅ 编译器知道 email 是 string，verified 是 false
-</span></span></span><span class="line"><span class="cl"><span class="c1"></span>      <span class="nx">sendEmail</span><span class="p">(</span><span class="nx">user</span><span class="p">.</span><span class="nx">email</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">      <span class="k">break</span>
-</span></span><span class="line"><span class="cl">    <span class="k">case</span> <span class="s1">&#39;active&#39;</span><span class="o">:</span>
-</span></span><span class="line"><span class="cl">      <span class="c1">// 已验证用户不需要再发验证邮件
-</span></span></span><span class="line"><span class="cl"><span class="c1"></span>      <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">&#39;User already verified&#39;</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">      <span class="k">break</span>
-</span></span><span class="line"><span class="cl">  <span class="p">}</span>
-</span></span><span class="line"><span class="cl"><span class="p">}</span>
-</span></span></code></pre></td></tr></table>
-</div>
-</div><p>关键收益：<strong>所有分支都被编译器强制处理，遗漏一个 case 会报错；每个分支内的字段类型是精确的，不需要运行时断言</strong>。</p>
-<h2 id="实战二rust-的-option-与-result">实战二：Rust 的 Option 与 Result</h2>
-<p>Rust 把类型驱动设计做到了极致。<code>Option&lt;T&gt;</code> 和 <code>Result&lt;T, E&gt;</code> 不是语法糖，而是标准库里的普通枚举，但它们从根本上消灭了空指针和未处理错误。</p>
-<div class="highlight"><div class="chroma">
-<table class="lntable"><tr><td class="lntd">
-<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
-</span><span class="lnt"> 2
-</span><span class="lnt"> 3
-</span><span class="lnt"> 4
-</span><span class="lnt"> 5
-</span><span class="lnt"> 6
-</span><span class="lnt"> 7
-</span><span class="lnt"> 8
-</span><span class="lnt"> 9
-</span><span class="lnt">10
-</span><span class="lnt">11
-</span><span class="lnt">12
-</span><span class="lnt">13
-</span><span class="lnt">14
-</span><span class="lnt">15
-</span><span class="lnt">16
-</span><span class="lnt">17
-</span></code></pre></td>
-<td class="lntd">
-<pre tabindex="0" class="chroma"><code class="language-rust" data-lang="rust"><span class="line"><span class="cl"><span class="c1">// Rust 从语言层面拒绝 null
-</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="k">fn</span> <span class="nf">find_user</span><span class="p">(</span><span class="n">id</span>: <span class="kp">&amp;</span><span class="kt">str</span><span class="p">)</span><span class="w"> </span>-&gt; <span class="nb">Option</span><span class="o">&lt;</span><span class="n">User</span><span class="o">&gt;</span><span class="w"> </span><span class="p">{</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="c1">// 返回 Some(user) 或 None，不存在 null
-</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="p">}</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="k">fn</span> <span class="nf">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="n">user</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">find_user</span><span class="p">(</span><span class="s">&#34;abc123&#34;</span><span class="p">);</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">    
-</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="c1">// 不能直接用 user.name，编译器要求你处理 None
-</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="w">    </span><span class="k">match</span><span class="w"> </span><span class="n">user</span><span class="w"> </span><span class="p">{</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="nb">Some</span><span class="p">(</span><span class="n">u</span><span class="p">)</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="fm">println!</span><span class="p">(</span><span class="s">&#34;Found: </span><span class="si">{}</span><span class="s">&#34;</span><span class="p">,</span><span class="w"> </span><span class="n">u</span><span class="p">.</span><span class="n">name</span><span class="p">),</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="nb">None</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="fm">println!</span><span class="p">(</span><span class="s">&#34;Not found&#34;</span><span class="p">),</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">    
-</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="c1">// 或者用 ? 操作符短路传播
-</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="n">u</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">find_user</span><span class="p">(</span><span class="s">&#34;abc123&#34;</span><span class="p">)</span><span class="o">?</span><span class="p">;</span><span class="w"> </span><span class="c1">// 若 None 则函数提前返回
-</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="p">}</span><span class="w">
-</span></span></span></code></pre></td></tr></table>
-</div>
-</div><p>对比 Java/C# 的 null 陷阱：在那些语言里，任何对象引用都可能是 null，你只能靠人为约定或 <code>@Nullable</code> 注解来提醒。Rust 的做法是——<strong>如果你没处理 None，代码就编译不过去</strong>。</p>
-<h2 id="实战三python-中的类型守卫">实战三：Python 中的类型守卫</h2>
-<p>Python 虽然是动态语言，但配合类型提示和运行时校验库，也能实践类型驱动设计：</p>
-<div class="highlight"><div class="chroma">
-<table class="lntable"><tr><td class="lntd">
-<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
-</span><span class="lnt"> 2
-</span><span class="lnt"> 3
-</span><span class="lnt"> 4
-</span><span class="lnt"> 5
-</span><span class="lnt"> 6
-</span><span class="lnt"> 7
-</span><span class="lnt"> 8
-</span><span class="lnt"> 9
-</span><span class="lnt">10
-</span><span class="lnt">11
-</span><span class="lnt">12
-</span><span class="lnt">13
-</span><span class="lnt">14
-</span><span class="lnt">15
-</span><span class="lnt">16
-</span><span class="lnt">17
-</span><span class="lnt">18
-</span><span class="lnt">19
-</span><span class="lnt">20
-</span><span class="lnt">21
-</span><span class="lnt">22
-</span><span class="lnt">23
-</span></code></pre></td>
-<td class="lntd">
-<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Literal</span><span class="p">,</span> <span class="n">Union</span>
-</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">pydantic</span> <span class="kn">import</span> <span class="n">BaseModel</span><span class="p">,</span> <span class="n">Field</span><span class="p">,</span> <span class="n">model_validator</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="k">class</span> <span class="nc">UnregisteredUser</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
-</span></span><span class="line"><span class="cl">    <span class="n">status</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s1">&#39;unregistered&#39;</span><span class="p">]</span>
-</span></span><span class="line"><span class="cl">    <span class="n">email</span><span class="p">:</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
-</span></span><span class="line"><span class="cl">    <span class="n">email_verified</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="kc">False</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="k">class</span> <span class="nc">ActiveUser</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
-</span></span><span class="line"><span class="cl">    <span class="n">status</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s1">&#39;active&#39;</span><span class="p">]</span>
-</span></span><span class="line"><span class="cl">    <span class="n">email</span><span class="p">:</span> <span class="nb">str</span>
-</span></span><span class="line"><span class="cl">    <span class="n">email_verified</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="kc">True</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
-</span></span><span class="line"><span class="cl">    <span class="n">plan</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s1">&#39;free&#39;</span><span class="p">,</span> <span class="s1">&#39;pro&#39;</span><span class="p">,</span> <span class="s1">&#39;enterprise&#39;</span><span class="p">]</span>
-</span></span><span class="line"><span class="cl">    <span class="n">trial_ends_at</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">    <span class="nd">@model_validator</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s1">&#39;after&#39;</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">    <span class="k">def</span> <span class="nf">validate_trial</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-</span></span><span class="line"><span class="cl">        <span class="c1"># 免费用户不能有试用期</span>
-</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">plan</span> <span class="o">==</span> <span class="s1">&#39;free&#39;</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">trial_ends_at</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-</span></span><span class="line"><span class="cl">            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Free plan cannot have trial period&#39;</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="bp">self</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="n">User</span> <span class="o">=</span> <span class="n">Union</span><span class="p">[</span><span class="n">UnregisteredUser</span><span class="p">,</span> <span class="n">ActiveUser</span><span class="p">]</span>
-</span></span></code></pre></td></tr></table>
-</div>
-</div><p>Pydantic 在运行时帮你校验，mypy/pyright 在编译期帮你做类型检查。虽然不如 Rust 那样在编译期严格拦截，但比纯动态类型安全得多。</p>
-<h2 id="落地策略">落地策略</h2>
-<p>把类型驱动设计应用到项目中，不需要一步到位。以下是务实的渐进路线：</p>
-<p><strong>第一步：消灭 null 滥用</strong></p>
-<p>把 <code>string | null</code> 改成 <code>Option&lt;string&gt;</code> 或拆成联合类型。问自己：这个字段什么时候会是 null？null 和空字符串的区别是什么？如果 null 有业务含义，就把它编码进类型。</p>
-<p><strong>第二步：用联合类型替代布尔标记</strong></p>
-<div class="highlight"><div class="chroma">
-<table class="lntable"><tr><td class="lntd">
-<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
-</span><span class="lnt"> 2
-</span><span class="lnt"> 3
-</span><span class="lnt"> 4
-</span><span class="lnt"> 5
-</span><span class="lnt"> 6
-</span><span class="lnt"> 7
-</span><span class="lnt"> 8
-</span><span class="lnt"> 9
-</span><span class="lnt">10
-</span><span class="lnt">11
-</span></code></pre></td>
-<td class="lntd">
-<pre tabindex="0" class="chroma"><code class="language-typescript" data-lang="typescript"><span class="line"><span class="cl"><span class="c1">// ❌ 布尔标记容易组合出非法状态
-</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kr">interface</span> <span class="nx">Payment</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">  <span class="nx">method</span><span class="o">:</span> <span class="s1">&#39;card&#39;</span> <span class="o">|</span> <span class="s1">&#39;bank&#39;</span>
-</span></span><span class="line"><span class="cl">  <span class="nx">cardNumber</span>: <span class="kt">string</span> <span class="o">|</span> <span class="kc">null</span>
-</span></span><span class="line"><span class="cl">  <span class="nx">bankAccount</span>: <span class="kt">string</span> <span class="o">|</span> <span class="kc">null</span>
-</span></span><span class="line"><span class="cl"><span class="p">}</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="c1">// ✅ 每种支付方式只带自己需要的字段
-</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kr">type</span> <span class="nx">CardPayment</span> <span class="o">=</span> <span class="p">{</span> <span class="nx">method</span><span class="o">:</span> <span class="s1">&#39;card&#39;</span><span class="p">;</span> <span class="nx">cardNumber</span>: <span class="kt">string</span> <span class="p">}</span>
-</span></span><span class="line"><span class="cl"><span class="kr">type</span> <span class="nx">BankPayment</span> <span class="o">=</span> <span class="p">{</span> <span class="nx">method</span><span class="o">:</span> <span class="s1">&#39;bank&#39;</span><span class="p">;</span> <span class="nx">bankAccount</span>: <span class="kt">string</span> <span class="p">}</span>
-</span></span><span class="line"><span class="cl"><span class="kr">type</span> <span class="nx">Payment</span> <span class="o">=</span> <span class="nx">CardPayment</span> <span class="o">|</span> <span class="nx">BankPayment</span>
-</span></span></code></pre></td></tr></table>
-</div>
-</div><p><strong>第三步：newtype 模式防止混淆</strong></p>
-<div class="highlight"><div class="chroma">
-<table class="lntable"><tr><td class="lntd">
-<pre tabindex="0" class="chroma"><code><span class="lnt">1
-</span><span class="lnt">2
-</span><span class="lnt">3
-</span><span class="lnt">4
-</span><span class="lnt">5
-</span><span class="lnt">6
-</span><span class="lnt">7
-</span><span class="lnt">8
-</span></code></pre></td>
-<td class="lntd">
-<pre tabindex="0" class="chroma"><code class="language-typescript" data-lang="typescript"><span class="line"><span class="cl"><span class="c1">// ❌ UserId 和 OrderId 都是 string，容易混用
-</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kd">function</span> <span class="nx">transferOrder</span><span class="p">(</span><span class="nx">userId</span>: <span class="kt">string</span><span class="p">,</span> <span class="nx">orderId</span>: <span class="kt">string</span><span class="p">)</span> <span class="p">{</span> <span class="p">...</span> <span class="p">}</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="c1">// ✅ 用 brand 类型区分
-</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kr">type</span> <span class="nx">UserId</span> <span class="o">=</span> <span class="kt">string</span> <span class="o">&amp;</span> <span class="p">{</span> <span class="kr">readonly</span> <span class="nx">_brand</span><span class="o">:</span> <span class="s1">&#39;UserId&#39;</span> <span class="p">}</span>
-</span></span><span class="line"><span class="cl"><span class="kr">type</span> <span class="nx">OrderId</span> <span class="o">=</span> <span class="kt">string</span> <span class="o">&amp;</span> <span class="p">{</span> <span class="kr">readonly</span> <span class="nx">_brand</span><span class="o">:</span> <span class="s1">&#39;OrderId&#39;</span> <span class="p">}</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="c1">// 现在传错参数编译器会报错
-</span></span></span></code></pre></td></tr></table>
-</div>
-</div><p><strong>第四步：让构造函数校验不变量</strong></p>
-<div class="highlight"><div class="chroma">
-<table class="lntable"><tr><td class="lntd">
-<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
-</span><span class="lnt"> 2
-</span><span class="lnt"> 3
-</span><span class="lnt"> 4
-</span><span class="lnt"> 5
-</span><span class="lnt"> 6
-</span><span class="lnt"> 7
-</span><span class="lnt"> 8
-</span><span class="lnt"> 9
-</span><span class="lnt">10
-</span><span class="lnt">11
-</span></code></pre></td>
-<td class="lntd">
-<pre tabindex="0" class="chroma"><code class="language-typescript" data-lang="typescript"><span class="line"><span class="cl"><span class="kr">class</span> <span class="nx">Email</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">  <span class="kr">private</span> <span class="kr">constructor</span><span class="p">(</span><span class="kr">public</span> <span class="kr">readonly</span> <span class="nx">value</span>: <span class="kt">string</span><span class="p">)</span> <span class="p">{}</span>
-</span></span><span class="line"><span class="cl">  
-</span></span><span class="line"><span class="cl">  <span class="kr">static</span> <span class="nx">create</span><span class="p">(</span><span class="nx">value</span>: <span class="kt">string</span><span class="p">)</span><span class="o">:</span> <span class="nx">Email</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">value</span><span class="p">.</span><span class="nx">includes</span><span class="p">(</span><span class="s1">&#39;@&#39;</span><span class="p">))</span> <span class="k">throw</span> <span class="k">new</span> <span class="nb">Error</span><span class="p">(</span><span class="s1">&#39;Invalid email&#39;</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="k">new</span> <span class="nx">Email</span><span class="p">(</span><span class="nx">value</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">  <span class="p">}</span>
-</span></span><span class="line"><span class="cl"><span class="p">}</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="c1">// Email 类型不能直接 new，只能通过 create 构造
-</span></span></span><span class="line"><span class="cl"><span class="c1">// 拿到 Email 实例 = 保证格式合法
-</span></span></span></code></pre></td></tr></table>
-</div>
-</div><h2 id="成本与收益">成本与收益</h2>
-<p>类型驱动设计不是银弹。它的成本在于：类型定义更复杂、前期设计时间增加、对团队类型系统功底有要求。但收益是实实在在的：</p>
-<ul>
-<li><strong>Bug 左移</strong>：编译期发现的 Bug 修复成本是运行时的 1/10</li>
-<li><strong>重构安全</strong>：改一个类型，编译器告诉你所有受影响的地方</li>
-<li><strong>文档即代码</strong>：类型定义本身就是最精确的业务规则文档</li>
-<li><strong>消除防御性代码</strong>：不需要到处写 <code>if (user.email != null)</code>，类型已经保证了</li>
-</ul>
-<p>正如 Rust 社区常说的那句话：<strong>&ldquo;如果它能编译，它通常就是对的。&rdquo;</strong> 这不是夸张——当你把业务约束编码进类型系统后，编译器就成了你最可靠的代码审查者。</p>
-<p>下次写接口定义时，先问自己一个问题：<strong>这个类型是否允许表达非法状态？</strong> 如果答案是&quot;是&quot;，那就重构它。</p>
-</div><div class="post-footer" id="post-footer">
-    <div class="post-info">
-        <div class="post-info-line">
-            <div class="post-info-mod">
-                <span>Updated on 2026-07-09&nbsp;<a class="git-hash" href="https://github.com/cikichen/hugo-sync/commit/67e6e721ad5eaf9711dfbee70529b4f89ca3d5bd" target="_blank" title="commit by cikichen(cikichen@github.com) 67e6e721ad5eaf9711dfbee70529b4f89ca3d5bd: Auto: 2026-07-09 - 类型驱动设计：让非法状态在编译期无处藏身">
-                                    <i class="fas fa-hashtag fa-fw" aria-hidden="true"></i>67e6e721</a></span>
-            </div></div>
-        <div class="post-info-line">
-            <div class="post-info-md"></div>
-            <div class="post-info-share">
-                <span><a href="javascript:void(0);" title="Share on Twitter" data-sharer="twitter" data-url="https://www.ithome.me/post/2026/07/09/type-driven-design-illegal-states/" data-title="类型驱动设计：让非法状态在编译期无处藏身" data-via="ChenCiki" data-hashtags="类型系统,类型安全,TypeScript,Rust,编程实践"><i class="fab fa-twitter fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on Linkedin" data-sharer="linkedin" data-url="https://www.ithome.me/post/2026/07/09/type-driven-design-illegal-states/"><i class="fab fa-linkedin fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on 微博" data-sharer="weibo" data-url="https://www.ithome.me/post/2026/07/09/type-driven-design-illegal-states/" data-title="类型驱动设计：让非法状态在编译期无处藏身" data-ralateuid="xxx"><i class="fab fa-weibo fa-fw" aria-hidden="true"></i></a></span>
-            </div>
-        </div>
-    </div>
-
-    <div class="post-info-more">
-        <section class="post-tags"><i class="fas fa-tags fa-fw" aria-hidden="true"></i>&nbsp;<a href="/tags/%E7%B1%BB%E5%9E%8B%E7%B3%BB%E7%BB%9F/">类型系统</a>,&nbsp;<a href="/tags/%E7%B1%BB%E5%9E%8B%E5%AE%89%E5%85%A8/">类型安全</a>,&nbsp;<a href="/tags/typescript/">TypeScript</a>,&nbsp;<a href="/tags/rust/">Rust</a>,&nbsp;<a href="/tags/%E7%BC%96%E7%A8%8B%E5%AE%9E%E8%B7%B5/">编程实践</a></section>
-        <section>
-            <span><a href="javascript:void(0);" onclick="window.history.back();">Back</a></span>&nbsp;|&nbsp;<span><a href="/">Home</a></span>
-        </section>
-    </div>
-
-    <div class="post-nav"><a href="/post/2026/07/08/go-context-deep-dive/" class="prev" rel="prev" title="Go Context 机制详解：超时控制、取消传播与避坑指南"><i class="fas fa-angle-left fa-fw" aria-hidden="true"></i>Go Context 机制详解：超时控制、取消传播与避坑指南</a>
-            <a href="/post/2026/07/09/app-upgrade-system-design/" class="next" rel="next" title="App 升级系统设计实战：从版本管理到增量更新与热修复">App 升级系统设计实战：从版本管理到增量更新与热修复<i class="fas fa-angle-right fa-fw" aria-hidden="true"></i></a></div>
-</div>
-<div id="comments"><div id="gitalk" class="comment"></div><noscript>
-                Please enable JavaScript to view the comments powered by <a href="https://github.com/gitalk/gitalk"></a>Gitalk</a>.
-            </noscript></div></article></div>
-            </main><footer class="footer">
-        <div class="footer-container"><div class="footer-line" itemscope itemtype="http://schema.org/CreativeWork"><i class="far fa-copyright fa-fw" aria-hidden="true"></i><span itemprop="copyrightYear">2011 - 2026</span><span class="author" itemprop="copyrightHolder">&nbsp;<a href="https://www.ithome.me/" target="_blank">Simon Chen</a></span>&nbsp;|&nbsp;<span class="license"><a rel="license external nofollow noopener noreferrer" href="https://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank">CC BY-NC-ND 4.0</a></span></div>
-        </div>
-    </footer></div>
-
-        <div id="fixed-buttons"><a href="#" id="back-to-top" class="fixed-button" title="Back to Top">
-                <i class="fas fa-arrow-up fa-fw" aria-hidden="true"></i>
-            </a><a href="#" id="view-comments" class="fixed-button" title="View Comments">
-                <i class="fas fa-comment fa-fw" aria-hidden="true"></i>
-            </a>
-        </div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1.8.0/dist/gitalk.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/css/lightgallery-bundle.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/katex.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/copy-tex.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.css"><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/gitalk@1.8.0/dist/gitalk.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/autocomplete.js@0.38.1/dist/autocomplete.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lunr@2.3.9/lunr.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lazysizes@5.3.1/lazysizes.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/lightgallery.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/plugins/thumbnail/lg-thumbnail.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/plugins/zoom/lg-zoom.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/clipboard@2.0.11/dist/clipboard.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/sharer.js@0.5.1/sharer.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/katex.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/auto-render.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/copy-tex.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/mhchem.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.js"></script><script type="text/javascript">window.config={"code":{"copyTitle":"Copy to clipboard","maxShownLines":50},"comment":{"gitalk":{"admin":["cikichen"],"clientID":"be0f52370ed1285b6c7c","clientSecret":"734a7d8d0ded346ca7a3d565d57de3f8eeb2850b","id":"2026-07-09T00:00:00Z","owner":"cikichen","repo":"gitalk","title":"类型驱动设计：让非法状态在编译期无处藏身"}},"cookieconsent":{"content":{"dismiss":"我知道了","link":"了解更多","message":"本网站使用 Cookies 来改善您的浏览体验."},"enable":true,"palette":{"button":{"background":"#f0f0f0"},"popup":{"background":"#1aa3ff"}},"theme":"edgeless"},"lightgallery":true,"math":{"delimiters":[{"display":true,"left":"$$","right":"$$"},{"display":true,"left":"\\[","right":"\\]"},{"display":true,"left":"\\begin{equation}","right":"\\end{equation}"},{"display":true,"left":"\\begin{equation*}","right":"\\end{equation*}"},{"display":true,"left":"\\begin{align}","right":"\\end{align}"},{"display":true,"left":"\\begin{align*}","right":"\\end{align*}"},{"display":true,"left":"\\begin{alignat}","right":"\\end{alignat}"},{"display":true,"left":"\\begin{alignat*}","right":"\\end{alignat*}"},{"display":true,"left":"\\begin{gather}","right":"\\end{gather}"},{"display":true,"left":"\\begin{CD}","right":"\\end{CD}"},{"display":false,"left":"$","right":"$"},{"display":false,"left":"\\(","right":"\\)"}],"strict":false},"search":{"highlightTag":"em","lunrIndexURL":"/index.json","maxResultLength":10,"noResultsFound":"No results found","snippetLength":50,"type":"lunr"}};</script><script type="text/javascript" src="/js/theme.min.js"></script></body>
-</html>
+<!doctype html><html lang=zh-CN><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><meta name=robots content="noodp"><title>类型驱动设计：让非法状态在编译期无处藏身 - 编程心语</title><meta name=Description content="探讨类型驱动设计思想，通过类型系统在编译期消灭非法状态，从根源上减少运行时错误"><meta property="og:url" content="https://www.ithome.me/post/2026/07/09/type-driven-design-illegal-states/">
+<meta property="og:site_name" content="编程心语"><meta property="og:title" content="类型驱动设计：让非法状态在编译期无处藏身"><meta property="og:description" content="探讨类型驱动设计思想，通过类型系统在编译期消灭非法状态，从根源上减少运行时错误"><meta property="og:locale" content="zh_CN"><meta property="og:type" content="article"><meta property="article:section" content="posts"><meta property="article:published_time" content="2026-07-09T08:00:00+08:00"><meta property="article:modified_time" content="2026-07-09T08:00:00+08:00"><meta property="article:tag" content="类型系统"><meta property="article:tag" content="类型安全"><meta property="article:tag" content="TypeScript"><meta property="article:tag" content="Rust"><meta property="article:tag" content="编程实践"><meta name=twitter:card content="summary"><meta name=twitter:title content="类型驱动设计：让非法状态在编译期无处藏身"><meta name=twitter:description content="探讨类型驱动设计思想，通过类型系统在编译期消灭非法状态，从根源上减少运行时错误"><meta name=twitter:site content="@ChenCiki"><meta name=application-name content="编程心语"><meta name=apple-mobile-web-app-title content="编程心语"><meta name=theme-color content="#ffffff"><meta name=msapplication-TileColor content="#da532c"><link rel="shortcut icon" type=image/x-icon href=/favicon.ico><link rel=icon type=image/png sizes=32x32 href=/favicon-32x32.png><link rel=icon type=image/png sizes=16x16 href=/favicon-16x16.png><link rel=apple-touch-icon sizes=180x180 href=/apple-touch-icon.png><link rel=mask-icon href=/safari-pinned-tab.svg color=#5bbad5><link rel=manifest href=/site.webmanifest><link rel=canonical href=https://www.ithome.me/post/2026/07/09/type-driven-design-illegal-states/><link rel=prev href=https://www.ithome.me/post/2026/07/08/go-context-deep-dive/><link rel=next href=https://www.ithome.me/post/2026/07/09/app-upgrade-system-design/><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/normalize.css@8.0.1/normalize.min.css><link rel=stylesheet href=/css/style.min.css><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css><script type=application/ld+json>{"@context":"http://schema.org","@type":"BlogPosting","headline":"类型驱动设计：让非法状态在编译期无处藏身","inLanguage":"zh-CN","mainEntityOfPage":{"@type":"WebPage","@id":"https:\/\/www.ithome.me\/post\/2026\/07\/09\/type-driven-design-illegal-states\/"},"image":["https:\/\/www.ithome.me\/cover.png"],"genre":"posts","keywords":"类型系统, 类型安全, TypeScript, Rust, 编程实践","wordcount":1928,"url":"https:\/\/www.ithome.me\/post\/2026\/07\/09\/type-driven-design-illegal-states\/","datePublished":"2026-07-09T08:00:00+08:00","dateModified":"2026-07-09T08:00:00+08:00","publisher":{"@type":"Organization","name":"SimonChen","logo":"https:\/\/www.ithome.me\/logo.png"},"author":{"@type":"Person","name":"Simon"},"description":"探讨类型驱动设计思想，通过类型系统在编译期消灭非法状态，从根源上减少运行时错误"}</script><script async src="https://www.googletagmanager.com/gtag/js?id=G-H1Q5563VR8"></script><script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag("js",new Date),gtag("config","G-H1Q5563VR8",{anonymize_ip:!0})</script></head><body data-header-desktop=fixed data-header-mobile=auto><script type=text/javascript>(window.localStorage&&localStorage.getItem("theme")?localStorage.getItem("theme")==="dark":"auto"==="auto"?window.matchMedia("(prefers-color-scheme: dark)").matches:"auto"==="dark")&&document.body.setAttribute("theme","dark")</script><div id=mask></div><div class=wrapper><header class=desktop id=header-desktop><div class=header-wrapper><div class=header-title><a href=/ title=编程心语>编程心语</a></div><div class=menu><div class=menu-inner><a class=menu-item href=/posts/>文章 </a><a class=menu-item href=/categories/>分类 </a><a class=menu-item href=/tags/>标签 </a><a class=menu-item href=/about-me/>关于 </a><span class="menu-item delimiter"></span><span class="menu-item search" id=search-desktop>
+<input type=text placeholder=搜索文章... id=search-input-desktop>
+<a href=javascript:void(0); class="search-button search-toggle" id=search-toggle-desktop title=Search><i class="fas fa-search fa-fw" aria-hidden=true></i>
+</a><a href=javascript:void(0); class="search-button search-clear" id=search-clear-desktop title=Clear><i class="fas fa-times-circle fa-fw" aria-hidden=true></i>
+</a><span class="search-button search-loading" id=search-loading-desktop><i class="fas fa-spinner fa-fw fa-spin" aria-hidden=true></i>
+</span></span><a href=javascript:void(0); class="menu-item theme-switch" title="Switch Theme"><i class="fas fa-adjust fa-fw" aria-hidden=true></i></a></div></div></div></header><header class=mobile id=header-mobile><div class=header-container><div class=header-wrapper><div class=header-title><a href=/ title=编程心语>编程心语</a></div><div class=menu-toggle id=menu-toggle-mobile><span></span><span></span><span></span></div></div><div class=menu id=menu-mobile><div class=search-wrapper><div class="search mobile" id=search-mobile><input type=text placeholder=搜索文章... id=search-input-mobile>
+<a href=javascript:void(0); class="search-button search-toggle" id=search-toggle-mobile title=Search><i class="fas fa-search fa-fw" aria-hidden=true></i>
+</a><a href=javascript:void(0); class="search-button search-clear" id=search-clear-mobile title=Clear><i class="fas fa-times-circle fa-fw" aria-hidden=true></i>
+</a><span class="search-button search-loading" id=search-loading-mobile><i class="fas fa-spinner fa-fw fa-spin" aria-hidden=true></i></span></div><a href=javascript:void(0); class=search-cancel id=search-cancel-mobile>Cancel</a></div><a class=menu-item href=/posts/ title>文章</a><a class=menu-item href=/categories/ title>分类</a><a class=menu-item href=/tags/ title>标签</a><a class=menu-item href=/about-me/ title>关于</a><a href=javascript:void(0); class="menu-item theme-switch" title="Switch Theme">
+<i class="fas fa-adjust fa-fw" aria-hidden=true></i></a></div></div></header><div class="search-dropdown desktop"><div id=search-dropdown-desktop></div></div><div class="search-dropdown mobile"><div id=search-dropdown-mobile></div></div><main class=main><div class=container><div class=toc id=toc-auto><h2 class=toc-title>Contents</h2><div class=toc-content id=toc-content-auto></div></div><article class="page single"><h1 class="single-title animate__animated animate__flipInX">类型驱动设计：让非法状态在编译期无处藏身</h1><div class=post-meta><div class=post-meta-line><span class=post-author><a href=https://www.ithome.me/ title=Author target=_blank rel="noopener noreferrer author" class=author><i class="fas fa-user-circle fa-fw" aria-hidden=true></i>Simon</a>
+</span>&nbsp;<span class=post-category>included in <a href=/categories/backend/><i class="far fa-folder fa-fw" aria-hidden=true></i>Backend</a></span></div><div class=post-meta-line><i class="far fa-calendar-alt fa-fw" aria-hidden=true></i>&nbsp;<time datetime=2026-07-09>2026-07-09</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden=true></i>&nbsp;1928 words&nbsp;
+<i class="far fa-clock fa-fw" aria-hidden=true></i>&nbsp;4 minutes&nbsp;</div></div><div class="details toc" id=toc-static data-kept=true><div class="details-summary toc-title"><span>Contents</span>
+<span><i class="details-icon fas fa-angle-right" aria-hidden=true></i></span></div><div class="details-content toc-content" id=toc-content-static><nav id=TableOfContents><ul><li><a href=#从一个-bug-说起>从一个 Bug 说起</a></li><li><a href=#原则让非法状态不可表达>原则：让非法状态不可表达</a></li><li><a href=#实战一typescript-中的用户状态机>实战一：TypeScript 中的用户状态机</a><ul><li><a href=#改造前>改造前</a></li><li><a href=#改造后>改造后</a></li></ul></li><li><a href=#实战二rust-的-option-与-result>实战二：Rust 的 Option 与 Result</a></li><li><a href=#实战三python-中的类型守卫>实战三：Python 中的类型守卫</a></li><li><a href=#落地策略>落地策略</a></li><li><a href=#成本与收益>成本与收益</a></li></ul></nav></div></div><div class=content id=content><h2 id=从一个-bug-说起>从一个 Bug 说起</h2><p>你一定见过这样的代码：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span><span class=lnt>4
+</span><span class=lnt>5
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-typescript data-lang=typescript><span class=line><span class=cl><span class=kr>interface</span> <span class=nx>User</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>  <span class=nx>id</span>: <span class=kt>string</span>
+</span></span><span class=line><span class=cl>  <span class=nx>email</span>: <span class=kt>string</span> <span class=o>|</span> <span class=kc>null</span>
+</span></span><span class=line><span class=cl>  <span class=nx>verified</span>: <span class=kt>boolean</span>
+</span></span><span class=line><span class=cl><span class=p>}</span>
+</span></span></code></pre></td></tr></table></div></div><p>看似合理，但仔细想想——一个 <code>email</code> 为 <code>null</code> 的用户，<code>verified</code> 能是 <code>true</code> 吗？显然不能。但在当前类型定义下，<code>{ email: null, verified: true }</code> 是完全合法的值。这就是<strong>非法状态可以表达</strong>的典型问题：类型系统允许存在逻辑上不可能的数据组合。</p><p>这类问题的危害在于：你不会在编译期发现它，它会在运行时变成一个隐蔽的 Bug——也许是用户收到一封发到 <code>null</code> 地址的验证邮件，也许是某个下游服务因为意外组合而抛出空指针异常。</p><p><strong>类型驱动设计的核心思想</strong>：如果某种状态在业务上不可能存在，那么它在类型层面就不应该能被构造出来。</p><h2 id=原则让非法状态不可表达>原则：让非法状态不可表达</h2><p>这句话出自 TypeScript 设计师 Anders Hejlsberg，但它适用于所有静态类型语言。具体做法是：<strong>用类型编码业务约束，把运行时校验提前到编译期</strong>。</p><p>来看一个实际重构。</p><h2 id=实战一typescript-中的用户状态机>实战一：TypeScript 中的用户状态机</h2><h3 id=改造前>改造前</h3><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span><span class=lnt>4
+</span><span class=lnt>5
+</span><span class=lnt>6
+</span><span class=lnt>7
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-typescript data-lang=typescript><span class=line><span class=cl><span class=c1>// ❌ 非法状态可以表达
+</span></span></span><span class=line><span class=cl><span class=c1></span><span class=kr>interface</span> <span class=nx>User</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>  <span class=nx>email</span>: <span class=kt>string</span> <span class=o>|</span> <span class=kc>null</span>
+</span></span><span class=line><span class=cl>  <span class=nx>emailVerified</span>: <span class=kt>boolean</span>
+</span></span><span class=line><span class=cl>  <span class=nx>plan</span><span class=o>:</span> <span class=s1>&#39;free&#39;</span> <span class=o>|</span> <span class=s1>&#39;pro&#39;</span> <span class=o>|</span> <span class=s1>&#39;enterprise&#39;</span>
+</span></span><span class=line><span class=cl>  <span class=nx>trialEndsAt</span>: <span class=kt>Date</span> <span class=o>|</span> <span class=kc>null</span>
+</span></span><span class=line><span class=cl><span class=p>}</span>
+</span></span></code></pre></td></tr></table></div></div><p>这段代码允许 <code>email: null, emailVerified: true</code>，也允许 <code>plan: 'free', trialEndsAt: null</code>（免费用户不该有试用到期时间）。每个非法组合都是一个潜在 Bug。</p><h3 id=改造后>改造后</h3><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span><span class=lnt>17
+</span><span class=lnt>18
+</span><span class=lnt>19
+</span><span class=lnt>20
+</span><span class=lnt>21
+</span><span class=lnt>22
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-typescript data-lang=typescript><span class=line><span class=cl><span class=c1>// ✅ 用联合类型编码状态
+</span></span></span><span class=line><span class=cl><span class=c1></span><span class=kr>type</span> <span class=nx>UnregisteredUser</span> <span class=o>=</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>  <span class=nx>status</span><span class=o>:</span> <span class=s1>&#39;unregistered&#39;</span>
+</span></span><span class=line><span class=cl>  <span class=nx>email</span>: <span class=kt>null</span>
+</span></span><span class=line><span class=cl>  <span class=nx>emailVerified</span>: <span class=kt>false</span>
+</span></span><span class=line><span class=cl><span class=p>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=kr>type</span> <span class=nx>PendingVerificationUser</span> <span class=o>=</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>  <span class=nx>status</span><span class=o>:</span> <span class=s1>&#39;pending_verification&#39;</span>
+</span></span><span class=line><span class=cl>  <span class=nx>email</span>: <span class=kt>string</span>
+</span></span><span class=line><span class=cl>  <span class=nx>emailVerified</span>: <span class=kt>false</span>
+</span></span><span class=line><span class=cl><span class=p>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=kr>type</span> <span class=nx>ActiveUser</span> <span class=o>=</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>  <span class=nx>status</span><span class=o>:</span> <span class=s1>&#39;active&#39;</span>
+</span></span><span class=line><span class=cl>  <span class=nx>email</span>: <span class=kt>string</span>
+</span></span><span class=line><span class=cl>  <span class=nx>emailVerified</span>: <span class=kt>true</span>
+</span></span><span class=line><span class=cl>  <span class=nx>plan</span><span class=o>:</span> <span class=s1>&#39;free&#39;</span> <span class=o>|</span> <span class=s1>&#39;pro&#39;</span> <span class=o>|</span> <span class=s1>&#39;enterprise&#39;</span>
+</span></span><span class=line><span class=cl>  <span class=nx>trialEndsAt</span>: <span class=kt>Date</span> <span class=o>|</span> <span class=kc>null</span>  <span class=c1>// 仅 pro/enterprise 可试用
+</span></span></span><span class=line><span class=cl><span class=c1></span><span class=p>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=kr>type</span> <span class=nx>User</span> <span class=o>=</span> <span class=nx>UnregisteredUser</span> <span class=o>|</span> <span class=nx>PendingVerificationUser</span> <span class=o>|</span> <span class=nx>ActiveUser</span>
+</span></span></code></pre></td></tr></table></div></div><p>现在编译器会帮你拦截非法状态。例如：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span><span class=lnt>17
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-typescript data-lang=typescript><span class=line><span class=cl><span class=kd>function</span> <span class=nx>sendVerificationEmail</span><span class=p>(</span><span class=nx>user</span>: <span class=kt>User</span><span class=p>)</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>  <span class=k>switch</span> <span class=p>(</span><span class=nx>user</span><span class=p>.</span><span class=nx>status</span><span class=p>)</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=k>case</span> <span class=s1>&#39;unregistered&#39;</span><span class=o>:</span>
+</span></span><span class=line><span class=cl>      <span class=c1>// 编译错误：user.email 是 null，不能发邮件
+</span></span></span><span class=line><span class=cl><span class=c1></span>      <span class=c1>// ❌ Type &#39;null&#39; is not assignable to parameter of type &#39;string&#39;
+</span></span></span><span class=line><span class=cl><span class=c1></span>      <span class=nx>sendEmail</span><span class=p>(</span><span class=nx>user</span><span class=p>.</span><span class=nx>email</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>      <span class=k>break</span>
+</span></span><span class=line><span class=cl>    <span class=k>case</span> <span class=s1>&#39;pending_verification&#39;</span><span class=o>:</span>
+</span></span><span class=line><span class=cl>      <span class=c1>// ✅ 编译器知道 email 是 string，verified 是 false
+</span></span></span><span class=line><span class=cl><span class=c1></span>      <span class=nx>sendEmail</span><span class=p>(</span><span class=nx>user</span><span class=p>.</span><span class=nx>email</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>      <span class=k>break</span>
+</span></span><span class=line><span class=cl>    <span class=k>case</span> <span class=s1>&#39;active&#39;</span><span class=o>:</span>
+</span></span><span class=line><span class=cl>      <span class=c1>// 已验证用户不需要再发验证邮件
+</span></span></span><span class=line><span class=cl><span class=c1></span>      <span class=nx>console</span><span class=p>.</span><span class=nx>log</span><span class=p>(</span><span class=s1>&#39;User already verified&#39;</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>      <span class=k>break</span>
+</span></span><span class=line><span class=cl>  <span class=p>}</span>
+</span></span><span class=line><span class=cl><span class=p>}</span>
+</span></span></code></pre></td></tr></table></div></div><p>关键收益：<strong>所有分支都被编译器强制处理，遗漏一个 case 会报错；每个分支内的字段类型是精确的，不需要运行时断言</strong>。</p><h2 id=实战二rust-的-option-与-result>实战二：Rust 的 Option 与 Result</h2><p>Rust 把类型驱动设计做到了极致。<code>Option&lt;T></code> 和 <code>Result&lt;T, E></code> 不是语法糖，而是标准库里的普通枚举，但它们从根本上消灭了空指针和未处理错误。</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span><span class=lnt>17
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-rust data-lang=rust><span class=line><span class=cl><span class=c1>// Rust 从语言层面拒绝 null
+</span></span></span><span class=line><span class=cl><span class=c1></span><span class=k>fn</span> <span class=nf>find_user</span><span class=p>(</span><span class=n>id</span>: <span class=kp>&amp;</span><span class=kt>str</span><span class=p>)</span><span class=w> </span>-&gt; <span class=nb>Option</span><span class=o>&lt;</span><span class=n>User</span><span class=o>&gt;</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=c1>// 返回 Some(user) 或 None，不存在 null
+</span></span></span><span class=line><span class=cl><span class=c1></span><span class=p>}</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=k>fn</span> <span class=nf>main</span><span class=p>()</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=kd>let</span><span class=w> </span><span class=n>user</span><span class=w> </span><span class=o>=</span><span class=w> </span><span class=n>find_user</span><span class=p>(</span><span class=s>&#34;abc123&#34;</span><span class=p>);</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=c1>// 不能直接用 user.name，编译器要求你处理 None
+</span></span></span><span class=line><span class=cl><span class=c1></span><span class=w>    </span><span class=k>match</span><span class=w> </span><span class=n>user</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=nb>Some</span><span class=p>(</span><span class=n>u</span><span class=p>)</span><span class=w> </span><span class=o>=&gt;</span><span class=w> </span><span class=fm>println!</span><span class=p>(</span><span class=s>&#34;Found: </span><span class=si>{}</span><span class=s>&#34;</span><span class=p>,</span><span class=w> </span><span class=n>u</span><span class=p>.</span><span class=n>name</span><span class=p>),</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=nb>None</span><span class=w> </span><span class=o>=&gt;</span><span class=w> </span><span class=fm>println!</span><span class=p>(</span><span class=s>&#34;Not found&#34;</span><span class=p>),</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=p>}</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=c1>// 或者用 ? 操作符短路传播
+</span></span></span><span class=line><span class=cl><span class=c1></span><span class=w>    </span><span class=kd>let</span><span class=w> </span><span class=n>u</span><span class=w> </span><span class=o>=</span><span class=w> </span><span class=n>find_user</span><span class=p>(</span><span class=s>&#34;abc123&#34;</span><span class=p>)</span><span class=o>?</span><span class=p>;</span><span class=w> </span><span class=c1>// 若 None 则函数提前返回
+</span></span></span><span class=line><span class=cl><span class=c1></span><span class=p>}</span><span class=w>
+</span></span></span></code></pre></td></tr></table></div></div><p>对比 Java/C# 的 null 陷阱：在那些语言里，任何对象引用都可能是 null，你只能靠人为约定或 <code>@Nullable</code> 注解来提醒。Rust 的做法是——<strong>如果你没处理 None，代码就编译不过去</strong>。</p><h2 id=实战三python-中的类型守卫>实战三：Python 中的类型守卫</h2><p>Python 虽然是动态语言，但配合类型提示和运行时校验库，也能实践类型驱动设计：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span><span class=lnt>17
+</span><span class=lnt>18
+</span><span class=lnt>19
+</span><span class=lnt>20
+</span><span class=lnt>21
+</span><span class=lnt>22
+</span><span class=lnt>23
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-python data-lang=python><span class=line><span class=cl><span class=kn>from</span> <span class=nn>typing</span> <span class=kn>import</span> <span class=n>Literal</span><span class=p>,</span> <span class=n>Union</span>
+</span></span><span class=line><span class=cl><span class=kn>from</span> <span class=nn>pydantic</span> <span class=kn>import</span> <span class=n>BaseModel</span><span class=p>,</span> <span class=n>Field</span><span class=p>,</span> <span class=n>model_validator</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=k>class</span> <span class=nc>UnregisteredUser</span><span class=p>(</span><span class=n>BaseModel</span><span class=p>):</span>
+</span></span><span class=line><span class=cl>    <span class=n>status</span><span class=p>:</span> <span class=n>Literal</span><span class=p>[</span><span class=s1>&#39;unregistered&#39;</span><span class=p>]</span>
+</span></span><span class=line><span class=cl>    <span class=n>email</span><span class=p>:</span> <span class=kc>None</span> <span class=o>=</span> <span class=kc>None</span>
+</span></span><span class=line><span class=cl>    <span class=n>email_verified</span><span class=p>:</span> <span class=n>Literal</span><span class=p>[</span><span class=kc>False</span><span class=p>]</span> <span class=o>=</span> <span class=kc>False</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=k>class</span> <span class=nc>ActiveUser</span><span class=p>(</span><span class=n>BaseModel</span><span class=p>):</span>
+</span></span><span class=line><span class=cl>    <span class=n>status</span><span class=p>:</span> <span class=n>Literal</span><span class=p>[</span><span class=s1>&#39;active&#39;</span><span class=p>]</span>
+</span></span><span class=line><span class=cl>    <span class=n>email</span><span class=p>:</span> <span class=nb>str</span>
+</span></span><span class=line><span class=cl>    <span class=n>email_verified</span><span class=p>:</span> <span class=n>Literal</span><span class=p>[</span><span class=kc>True</span><span class=p>]</span> <span class=o>=</span> <span class=kc>True</span>
+</span></span><span class=line><span class=cl>    <span class=n>plan</span><span class=p>:</span> <span class=n>Literal</span><span class=p>[</span><span class=s1>&#39;free&#39;</span><span class=p>,</span> <span class=s1>&#39;pro&#39;</span><span class=p>,</span> <span class=s1>&#39;enterprise&#39;</span><span class=p>]</span>
+</span></span><span class=line><span class=cl>    <span class=n>trial_ends_at</span><span class=p>:</span> <span class=n>Union</span><span class=p>[</span><span class=nb>str</span><span class=p>,</span> <span class=kc>None</span><span class=p>]</span> <span class=o>=</span> <span class=kc>None</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>    <span class=nd>@model_validator</span><span class=p>(</span><span class=n>mode</span><span class=o>=</span><span class=s1>&#39;after&#39;</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>    <span class=k>def</span> <span class=nf>validate_trial</span><span class=p>(</span><span class=bp>self</span><span class=p>):</span>
+</span></span><span class=line><span class=cl>        <span class=c1># 免费用户不能有试用期</span>
+</span></span><span class=line><span class=cl>        <span class=k>if</span> <span class=bp>self</span><span class=o>.</span><span class=n>plan</span> <span class=o>==</span> <span class=s1>&#39;free&#39;</span> <span class=ow>and</span> <span class=bp>self</span><span class=o>.</span><span class=n>trial_ends_at</span> <span class=ow>is</span> <span class=ow>not</span> <span class=kc>None</span><span class=p>:</span>
+</span></span><span class=line><span class=cl>            <span class=k>raise</span> <span class=ne>ValueError</span><span class=p>(</span><span class=s1>&#39;Free plan cannot have trial period&#39;</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>        <span class=k>return</span> <span class=bp>self</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=n>User</span> <span class=o>=</span> <span class=n>Union</span><span class=p>[</span><span class=n>UnregisteredUser</span><span class=p>,</span> <span class=n>ActiveUser</span><span class=p>]</span>
+</span></span></code></pre></td></tr></table></div></div><p>Pydantic 在运行时帮你校验，mypy/pyright 在编译期帮你做类型检查。虽然不如 Rust 那样在编译期严格拦截，但比纯动态类型安全得多。</p><h2 id=落地策略>落地策略</h2><p>把类型驱动设计应用到项目中，不需要一步到位。以下是务实的渐进路线：</p><p><strong>第一步：消灭 null 滥用</strong></p><p>把 <code>string | null</code> 改成 <code>Option&lt;string></code> 或拆成联合类型。问自己：这个字段什么时候会是 null？null 和空字符串的区别是什么？如果 null 有业务含义，就把它编码进类型。</p><p><strong>第二步：用联合类型替代布尔标记</strong></p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-typescript data-lang=typescript><span class=line><span class=cl><span class=c1>// ❌ 布尔标记容易组合出非法状态
+</span></span></span><span class=line><span class=cl><span class=c1></span><span class=kr>interface</span> <span class=nx>Payment</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>  <span class=nx>method</span><span class=o>:</span> <span class=s1>&#39;card&#39;</span> <span class=o>|</span> <span class=s1>&#39;bank&#39;</span>
+</span></span><span class=line><span class=cl>  <span class=nx>cardNumber</span>: <span class=kt>string</span> <span class=o>|</span> <span class=kc>null</span>
+</span></span><span class=line><span class=cl>  <span class=nx>bankAccount</span>: <span class=kt>string</span> <span class=o>|</span> <span class=kc>null</span>
+</span></span><span class=line><span class=cl><span class=p>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1>// ✅ 每种支付方式只带自己需要的字段
+</span></span></span><span class=line><span class=cl><span class=c1></span><span class=kr>type</span> <span class=nx>CardPayment</span> <span class=o>=</span> <span class=p>{</span> <span class=nx>method</span><span class=o>:</span> <span class=s1>&#39;card&#39;</span><span class=p>;</span> <span class=nx>cardNumber</span>: <span class=kt>string</span> <span class=p>}</span>
+</span></span><span class=line><span class=cl><span class=kr>type</span> <span class=nx>BankPayment</span> <span class=o>=</span> <span class=p>{</span> <span class=nx>method</span><span class=o>:</span> <span class=s1>&#39;bank&#39;</span><span class=p>;</span> <span class=nx>bankAccount</span>: <span class=kt>string</span> <span class=p>}</span>
+</span></span><span class=line><span class=cl><span class=kr>type</span> <span class=nx>Payment</span> <span class=o>=</span> <span class=nx>CardPayment</span> <span class=o>|</span> <span class=nx>BankPayment</span>
+</span></span></code></pre></td></tr></table></div></div><p><strong>第三步：newtype 模式防止混淆</strong></p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span><span class=lnt>4
+</span><span class=lnt>5
+</span><span class=lnt>6
+</span><span class=lnt>7
+</span><span class=lnt>8
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-typescript data-lang=typescript><span class=line><span class=cl><span class=c1>// ❌ UserId 和 OrderId 都是 string，容易混用
+</span></span></span><span class=line><span class=cl><span class=c1></span><span class=kd>function</span> <span class=nx>transferOrder</span><span class=p>(</span><span class=nx>userId</span>: <span class=kt>string</span><span class=p>,</span> <span class=nx>orderId</span>: <span class=kt>string</span><span class=p>)</span> <span class=p>{</span> <span class=p>...</span> <span class=p>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1>// ✅ 用 brand 类型区分
+</span></span></span><span class=line><span class=cl><span class=c1></span><span class=kr>type</span> <span class=nx>UserId</span> <span class=o>=</span> <span class=kt>string</span> <span class=o>&amp;</span> <span class=p>{</span> <span class=kr>readonly</span> <span class=nx>_brand</span><span class=o>:</span> <span class=s1>&#39;UserId&#39;</span> <span class=p>}</span>
+</span></span><span class=line><span class=cl><span class=kr>type</span> <span class=nx>OrderId</span> <span class=o>=</span> <span class=kt>string</span> <span class=o>&amp;</span> <span class=p>{</span> <span class=kr>readonly</span> <span class=nx>_brand</span><span class=o>:</span> <span class=s1>&#39;OrderId&#39;</span> <span class=p>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1>// 现在传错参数编译器会报错
+</span></span></span></code></pre></td></tr></table></div></div><p><strong>第四步：让构造函数校验不变量</strong></p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-typescript data-lang=typescript><span class=line><span class=cl><span class=kr>class</span> <span class=nx>Email</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>  <span class=kr>private</span> <span class=kr>constructor</span><span class=p>(</span><span class=kr>public</span> <span class=kr>readonly</span> <span class=nx>value</span>: <span class=kt>string</span><span class=p>)</span> <span class=p>{}</span>
+</span></span><span class=line><span class=cl>  
+</span></span><span class=line><span class=cl>  <span class=kr>static</span> <span class=nx>create</span><span class=p>(</span><span class=nx>value</span>: <span class=kt>string</span><span class=p>)</span><span class=o>:</span> <span class=nx>Email</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=k>if</span> <span class=p>(</span><span class=o>!</span><span class=nx>value</span><span class=p>.</span><span class=nx>includes</span><span class=p>(</span><span class=s1>&#39;@&#39;</span><span class=p>))</span> <span class=k>throw</span> <span class=k>new</span> <span class=nb>Error</span><span class=p>(</span><span class=s1>&#39;Invalid email&#39;</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>    <span class=k>return</span> <span class=k>new</span> <span class=nx>Email</span><span class=p>(</span><span class=nx>value</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>  <span class=p>}</span>
+</span></span><span class=line><span class=cl><span class=p>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1>// Email 类型不能直接 new，只能通过 create 构造
+</span></span></span><span class=line><span class=cl><span class=c1>// 拿到 Email 实例 = 保证格式合法
+</span></span></span></code></pre></td></tr></table></div></div><h2 id=成本与收益>成本与收益</h2><p>类型驱动设计不是银弹。它的成本在于：类型定义更复杂、前期设计时间增加、对团队类型系统功底有要求。但收益是实实在在的：</p><ul><li><strong>Bug 左移</strong>：编译期发现的 Bug 修复成本是运行时的 1/10</li><li><strong>重构安全</strong>：改一个类型，编译器告诉你所有受影响的地方</li><li><strong>文档即代码</strong>：类型定义本身就是最精确的业务规则文档</li><li><strong>消除防御性代码</strong>：不需要到处写 <code>if (user.email != null)</code>，类型已经保证了</li></ul><p>正如 Rust 社区常说的那句话：<strong>&ldquo;如果它能编译，它通常就是对的。&rdquo;</strong> 这不是夸张——当你把业务约束编码进类型系统后，编译器就成了你最可靠的代码审查者。</p><p>下次写接口定义时，先问自己一个问题：<strong>这个类型是否允许表达非法状态？</strong> 如果答案是"是"，那就重构它。</p></div><div class=post-footer id=post-footer><div class=post-info><div class=post-info-line><div class=post-info-mod><span>Updated on 2026-07-09</span></div></div><div class=post-info-line><div class=post-info-md></div><div class=post-info-share><span><a href=javascript:void(0); title="Share on Twitter" data-sharer=twitter data-url=https://www.ithome.me/post/2026/07/09/type-driven-design-illegal-states/ data-title=类型驱动设计：让非法状态在编译期无处藏身 data-via=ChenCiki data-hashtags=类型系统,类型安全,TypeScript,Rust,编程实践><i class="fab fa-twitter fa-fw" aria-hidden=true></i></a><a href=javascript:void(0); title="Share on Linkedin" data-sharer=linkedin data-url=https://www.ithome.me/post/2026/07/09/type-driven-design-illegal-states/><i class="fab fa-linkedin fa-fw" aria-hidden=true></i></a><a href=javascript:void(0); title="Share on 微博" data-sharer=weibo data-url=https://www.ithome.me/post/2026/07/09/type-driven-design-illegal-states/ data-title=类型驱动设计：让非法状态在编译期无处藏身 data-ralateuid=xxx><i class="fab fa-weibo fa-fw" aria-hidden=true></i></a></span></div></div></div><div class=post-info-more><section class=post-tags><i class="fas fa-tags fa-fw" aria-hidden=true></i>&nbsp;<a href=/tags/%E7%B1%BB%E5%9E%8B%E7%B3%BB%E7%BB%9F/>类型系统</a>,&nbsp;<a href=/tags/%E7%B1%BB%E5%9E%8B%E5%AE%89%E5%85%A8/>类型安全</a>,&nbsp;<a href=/tags/typescript/>TypeScript</a>,&nbsp;<a href=/tags/rust/>Rust</a>,&nbsp;<a href=/tags/%E7%BC%96%E7%A8%8B%E5%AE%9E%E8%B7%B5/>编程实践</a></section><section><span><a href=javascript:void(0); onclick=window.history.back()>Back</a></span>&nbsp;|&nbsp;<span><a href=/>Home</a></span></section></div><div class=post-nav><a href=/post/2026/07/08/go-context-deep-dive/ class=prev rel=prev title="Go Context 机制详解：超时控制、取消传播与避坑指南"><i class="fas fa-angle-left fa-fw" aria-hidden=true></i>Go Context 机制详解：超时控制、取消传播与避坑指南</a>
+<a href=/post/2026/07/09/app-upgrade-system-design/ class=next rel=next title="App 升级系统设计实战：从版本管理到增量更新与热修复">App 升级系统设计实战：从版本管理到增量更新与热修复<i class="fas fa-angle-right fa-fw" aria-hidden=true></i></a></div></div><div id=comments><div id=gitalk class=comment></div><noscript>Please enable JavaScript to view the comments powered by <a href=https://github.com/gitalk/gitalk></a>Gitalk</a>.</noscript></div></article></div></main><footer class=footer><div class=footer-container><div class=footer-line itemscope itemtype=http://schema.org/CreativeWork><i class="far fa-copyright fa-fw" aria-hidden=true></i><span itemprop=copyrightYear>2011 - 2026</span><span class=author itemprop=copyrightHolder>&nbsp;<a href=https://www.ithome.me/ target=_blank>Simon Chen</a></span>&nbsp;|&nbsp;<span class=license><a rel="license external nofollow noopener noreferrer" href=https://creativecommons.org/licenses/by-nc-nd/4.0/ target=_blank>CC BY-NC-ND 4.0</a></span></div></div></footer></div><div id=fixed-buttons><a href=# id=back-to-top class=fixed-button title="Back to Top"><i class="fas fa-arrow-up fa-fw" aria-hidden=true></i>
+</a><a href=# id=view-comments class=fixed-button title="View Comments"><i class="fas fa-comment fa-fw" aria-hidden=true></i></a></div><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/gitalk@1.8.0/dist/gitalk.min.css><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/css/lightgallery-bundle.min.css><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/katex.min.css><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/copy-tex.min.css><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.css><script type=text/javascript src=https://cdn.jsdelivr.net/npm/gitalk@1.8.0/dist/gitalk.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/autocomplete.js@0.38.1/dist/autocomplete.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/lunr@2.3.9/lunr.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/lazysizes@5.3.1/lazysizes.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/lightgallery.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/plugins/thumbnail/lg-thumbnail.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/plugins/zoom/lg-zoom.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/clipboard@2.0.11/dist/clipboard.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/sharer.js@0.5.1/sharer.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/katex.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/auto-render.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/copy-tex.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/mhchem.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.js></script><script type=text/javascript>window.config={code:{copyTitle:"Copy to clipboard",maxShownLines:50},comment:{gitalk:{admin:["cikichen"],clientID:"be0f52370ed1285b6c7c",clientSecret:"734a7d8d0ded346ca7a3d565d57de3f8eeb2850b",id:"2026-07-09T00:00:00Z",owner:"cikichen",repo:"gitalk",title:"类型驱动设计：让非法状态在编译期无处藏身"}},cookieconsent:{content:{dismiss:"我知道了",link:"了解更多",message:"本网站使用 Cookies 来改善您的浏览体验."},enable:!0,palette:{button:{background:"#f0f0f0"},popup:{background:"#1aa3ff"}},theme:"edgeless"},lightgallery:!0,math:{delimiters:[{display:!0,left:"$$",right:"$$"},{display:!0,left:"\\[",right:"\\]"},{display:!0,left:"\\begin{equation}",right:"\\end{equation}"},{display:!0,left:"\\begin{equation*}",right:"\\end{equation*}"},{display:!0,left:"\\begin{align}",right:"\\end{align}"},{display:!0,left:"\\begin{align*}",right:"\\end{align*}"},{display:!0,left:"\\begin{alignat}",right:"\\end{alignat}"},{display:!0,left:"\\begin{alignat*}",right:"\\end{alignat*}"},{display:!0,left:"\\begin{gather}",right:"\\end{gather}"},{display:!0,left:"\\begin{CD}",right:"\\end{CD}"},{display:!1,left:"$",right:"$"},{display:!1,left:"\\(",right:"\\)"}],strict:!1},search:{highlightTag:"em",lunrIndexURL:"/index.json",maxResultLength:10,noResultsFound:"No results found",snippetLength:50,type:"lunr"}}</script><script type=text/javascript src=/js/theme.min.js></script></body></html>

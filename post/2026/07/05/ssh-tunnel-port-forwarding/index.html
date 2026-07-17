@@ -1,476 +1,198 @@
-<!DOCTYPE html>
-<html lang="zh-CN">
-    <head>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <meta name="robots" content="noodp" />
-        <title>SSH 隧道实战：端口转发、跳板机与反向代理的完整指南 - 编程心语</title><meta name="Description" content="详解 SSH 端口转发的三种模式——本地转发、远程转发、动态转发，以及 ProxyJump 跳板机配置，附实际场景与完整命令示例。"><meta property="og:url" content="https://www.ithome.me/post/2026/07/05/ssh-tunnel-port-forwarding/">
-  <meta property="og:site_name" content="编程心语">
-  <meta property="og:title" content="SSH 隧道实战：端口转发、跳板机与反向代理的完整指南">
-  <meta property="og:description" content="详解 SSH 端口转发的三种模式——本地转发、远程转发、动态转发，以及 ProxyJump 跳板机配置，附实际场景与完整命令示例。">
-  <meta property="og:locale" content="zh_CN">
-  <meta property="og:type" content="article">
-    <meta property="article:section" content="posts">
-    <meta property="article:published_time" content="2026-07-05T08:00:00+08:00">
-    <meta property="article:modified_time" content="2026-07-05T08:33:36+08:00">
-    <meta property="article:tag" content="SSH">
-    <meta property="article:tag" content="Linux">
-    <meta property="article:tag" content="网络">
-    <meta property="article:tag" content="运维">
-
-  <meta name="twitter:card" content="summary">
-  <meta name="twitter:title" content="SSH 隧道实战：端口转发、跳板机与反向代理的完整指南">
-  <meta name="twitter:description" content="详解 SSH 端口转发的三种模式——本地转发、远程转发、动态转发，以及 ProxyJump 跳板机配置，附实际场景与完整命令示例。">
-      <meta name="twitter:site" content="@ChenCiki">
-<meta name="application-name" content="编程心语">
-<meta name="apple-mobile-web-app-title" content="编程心语"><meta name="theme-color" content="#ffffff"><meta name="msapplication-TileColor" content="#da532c"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
-        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
-        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5"><link rel="manifest" href="/site.webmanifest"><link rel="canonical" href="https://www.ithome.me/post/2026/07/05/ssh-tunnel-port-forwarding/" /><link rel="prev" href="https://www.ithome.me/post/2026/07/05/ai%E6%99%BA%E8%83%BD%E4%BD%93%E5%BC%80%E5%8F%91-%E7%AC%AC9%E7%AB%A0-%E5%A4%9A%E6%99%BA%E8%83%BD%E4%BD%93%E5%8D%8F%E4%BD%9C/" /><link rel="next" href="https://www.ithome.me/post/2026/07/05/ai%E6%99%BA%E8%83%BD%E4%BD%93%E5%BC%80%E5%8F%91-%E7%AC%AC8%E7%AB%A0-rag%E5%A2%9E%E5%BC%BA%E6%A3%80%E7%B4%A2/" /><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/normalize.css@8.0.1/normalize.min.css"><link rel="stylesheet" href="/css/style.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css"><script type="application/ld+json">
-    {
-        "@context": "http://schema.org",
-        "@type": "BlogPosting",
-        "headline": "SSH 隧道实战：端口转发、跳板机与反向代理的完整指南",
-        "inLanguage": "zh-CN",
-        "mainEntityOfPage": {
-            "@type": "WebPage",
-            "@id": "https:\/\/www.ithome.me\/post\/2026\/07\/05\/ssh-tunnel-port-forwarding\/"
-        },"image": ["https:\/\/www.ithome.me\/cover.png"],"genre": "posts","keywords": "SSH, Linux, 网络, 运维","wordcount":  1621 ,
-        "url": "https:\/\/www.ithome.me\/post\/2026\/07\/05\/ssh-tunnel-port-forwarding\/","datePublished": "2026-07-05T08:00:00+08:00","dateModified": "2026-07-05T08:33:36+08:00","publisher": {
-            "@type": "Organization",
-            "name": "SimonChen","logo": "https:\/\/www.ithome.me\/logo.png"},"author": {
-                "@type": "Person",
-                "name": "Simon"
-            },"description": "详解 SSH 端口转发的三种模式——本地转发、远程转发、动态转发，以及 ProxyJump 跳板机配置，附实际场景与完整命令示例。"
-    }
-    </script><script async src="https://www.googletagmanager.com/gtag/js?id=G-H1Q5563VR8"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-  gtag('config', 'G-H1Q5563VR8', { 'anonymize_ip': true });
-</script></head>
-    <body data-header-desktop="fixed" data-header-mobile="auto"><script type="text/javascript">(window.localStorage && localStorage.getItem('theme') ? localStorage.getItem('theme') === 'dark' : ('auto' === 'auto' ? window.matchMedia('(prefers-color-scheme: dark)').matches : 'auto' === 'dark')) && document.body.setAttribute('theme', 'dark');</script>
-
-        <div id="mask"></div><div class="wrapper"><header class="desktop" id="header-desktop">
-    <div class="header-wrapper">
-        <div class="header-title">
-            <a href="/" title="编程心语">编程心语</a>
-        </div>
-        <div class="menu">
-            <div class="menu-inner"><a class="menu-item" href="/posts/"> 文章 </a><a class="menu-item" href="/categories/"> 分类 </a><a class="menu-item" href="/tags/"> 标签 </a><a class="menu-item" href="/about-me/"> 关于 </a><span class="menu-item delimiter"></span><span class="menu-item search" id="search-desktop">
-                        <input type="text" placeholder="搜索文章..." id="search-input-desktop">
-                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-desktop" title="Search">
-                            <i class="fas fa-search fa-fw" aria-hidden="true"></i>
-                        </a>
-                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-desktop" title="Clear">
-                            <i class="fas fa-times-circle fa-fw" aria-hidden="true"></i>
-                        </a>
-                        <span class="search-button search-loading" id="search-loading-desktop">
-                            <i class="fas fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
-                        </span>
-                    </span><a href="javascript:void(0);" class="menu-item theme-switch" title="Switch Theme">
-                    <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
-                </a>
-            </div>
-        </div>
-    </div>
-</header><header class="mobile" id="header-mobile">
-    <div class="header-container">
-        <div class="header-wrapper">
-            <div class="header-title">
-                <a href="/" title="编程心语">编程心语</a>
-            </div>
-            <div class="menu-toggle" id="menu-toggle-mobile">
-                <span></span><span></span><span></span>
-            </div>
-        </div>
-        <div class="menu" id="menu-mobile"><div class="search-wrapper">
-                    <div class="search mobile" id="search-mobile">
-                        <input type="text" placeholder="搜索文章..." id="search-input-mobile">
-                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-mobile" title="Search">
-                            <i class="fas fa-search fa-fw" aria-hidden="true"></i>
-                        </a>
-                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-mobile" title="Clear">
-                            <i class="fas fa-times-circle fa-fw" aria-hidden="true"></i>
-                        </a>
-                        <span class="search-button search-loading" id="search-loading-mobile">
-                            <i class="fas fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
-                        </span>
-                    </div>
-                    <a href="javascript:void(0);" class="search-cancel" id="search-cancel-mobile">
-                        Cancel
-                    </a>
-                </div><a class="menu-item" href="/posts/" title="">文章</a><a class="menu-item" href="/categories/" title="">分类</a><a class="menu-item" href="/tags/" title="">标签</a><a class="menu-item" href="/about-me/" title="">关于</a><a href="javascript:void(0);" class="menu-item theme-switch" title="Switch Theme">
-                <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
-            </a></div>
-    </div>
-</header><div class="search-dropdown desktop">
-        <div id="search-dropdown-desktop"></div>
-    </div>
-    <div class="search-dropdown mobile">
-        <div id="search-dropdown-mobile"></div>
-    </div><main class="main">
-                <div class="container"><div class="toc" id="toc-auto">
-            <h2 class="toc-title">Contents</h2>
-            <div class="toc-content" id="toc-content-auto"></div>
-        </div><article class="page single"><h1 class="single-title animate__animated animate__flipInX">SSH 隧道实战：端口转发、跳板机与反向代理的完整指南</h1><div class="post-meta">
-            <div class="post-meta-line"><span class="post-author"><a href="https://www.ithome.me/" title="Author" target="_blank" rel="noopener noreferrer author" class="author"><i class="fas fa-user-circle fa-fw" aria-hidden="true"></i>Simon</a>
-</span>&nbsp;<span class="post-category">included in <a href="/categories/essay/"><i class="far fa-folder fa-fw" aria-hidden="true"></i>Essay</a></span></div>
-            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw" aria-hidden="true"></i>&nbsp;<time datetime="2026-07-05">2026-07-05</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden="true"></i>&nbsp;1621 words&nbsp;
-                <i class="far fa-clock fa-fw" aria-hidden="true"></i>&nbsp;4 minutes&nbsp;</div>
-        </div><div class="details toc" id="toc-static"  data-kept="true">
-                <div class="details-summary toc-title">
-                    <span>Contents</span>
-                    <span><i class="details-icon fas fa-angle-right" aria-hidden="true"></i></span>
-                </div>
-                <div class="details-content toc-content" id="toc-content-static"><nav id="TableOfContents">
-  <ul>
-    <li><a href="#为什么你需要掌握-ssh-隧道">为什么你需要掌握 SSH 隧道</a></li>
-    <li><a href="#本地端口转发-l把远程端口映射到本地">本地端口转发（-L）：把远程端口映射到本地</a></li>
-    <li><a href="#远程端口转发-r把本地端口暴露到远程">远程端口转发（-R）：把本地端口暴露到远程</a></li>
-    <li><a href="#动态端口转发-dsocks-代理">动态端口转发（-D）：SOCKS 代理</a></li>
-    <li><a href="#proxyjump多级跳板的标准做法">ProxyJump：多级跳板的标准做法</a></li>
-    <li><a href="#sshconfig-实用配置模板">~/.ssh/config 实用配置模板</a></li>
-    <li><a href="#autossh保持隧道不断">autossh：保持隧道不断</a></li>
-    <li><a href="#安全注意事项">安全注意事项</a></li>
-    <li><a href="#速查表">速查表</a></li>
-  </ul>
-</nav></div>
-            </div><div class="content" id="content"><h2 id="为什么你需要掌握-ssh-隧道">为什么你需要掌握 SSH 隧道</h2>
-<p>日常开发中，你大概率遇到过这些场景：本地调试需要连接内网数据库、生产服务器只允许跳板机访问、内网服务需要临时暴露给外部测试。很多人第一反应是改防火墙规则或装个 frp，但其实 SSH 自带的三种端口转发就能解决绝大多数问题，无需额外工具。</p>
-<h2 id="本地端口转发-l把远程端口映射到本地">本地端口转发（-L）：把远程端口映射到本地</h2>
-<p>最常用的模式。你的本地机器访问不了内网的 Redis，但能 SSH 到一台跳板机，跳板机能访问 Redis。</p>
-<div class="highlight"><div class="chroma">
-<table class="lntable"><tr><td class="lntd">
-<pre tabindex="0" class="chroma"><code><span class="lnt">1
-</span><span class="lnt">2
-</span><span class="lnt">3
-</span><span class="lnt">4
-</span><span class="lnt">5
-</span><span class="lnt">6
-</span><span class="lnt">7
-</span><span class="lnt">8
-</span></code></pre></td>
-<td class="lntd">
-<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl"><span class="c1"># 语法：ssh -L [本地地址:]本地端口:目标地址:目标端口 user@跳板机</span>
-</span></span><span class="line"><span class="cl">ssh -L 6379:redis.internal:6379 user@jump-host
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="c1"># 指定本地监听地址（默认只监听 127.0.0.1）</span>
-</span></span><span class="line"><span class="cl">ssh -L 0.0.0.0:6379:redis.internal:6379 user@jump-host
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="c1"># 后台运行，不打开 shell</span>
-</span></span><span class="line"><span class="cl">ssh -fNL 6379:redis.internal:6379 user@jump-host
-</span></span></code></pre></td></tr></table>
-</div>
-</div><p>执行后，本地 <code>localhost:6379</code> 就等于 <code>redis.internal:6379</code>。用 <code>redis-cli</code> 连接本地 6379 即可操作内网 Redis。</p>
-<p><strong>关键点</strong>：目标地址是从跳板机的视角解析的，不是你本地。所以 <code>redis.internal</code> 必须是跳板机能解析到的地址。</p>
-<h2 id="远程端口转发-r把本地端口暴露到远程">远程端口转发（-R）：把本地端口暴露到远程</h2>
-<p>反向操作。你本地跑了个 Web 服务，想让远程服务器临时访问。典型场景：开发微信回调接口，需要公网地址接收请求。</p>
-<div class="highlight"><div class="chroma">
-<table class="lntable"><tr><td class="lntd">
-<pre tabindex="0" class="chroma"><code><span class="lnt">1
-</span><span class="lnt">2
-</span><span class="lnt">3
-</span><span class="lnt">4
-</span><span class="lnt">5
-</span><span class="lnt">6
-</span></code></pre></td>
-<td class="lntd">
-<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl"><span class="c1"># 语法：ssh -R [远程地址:]远程端口:本地地址:本地端口 user@远程服务器</span>
-</span></span><span class="line"><span class="cl">ssh -R 8080:localhost:3000 user@remote-server
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="c1"># 让远程所有 IP 都能访问（默认只监听远程的 localhost）</span>
-</span></span><span class="line"><span class="cl"><span class="c1"># 需要在远程 sshd_config 设置 GatewayPorts yes</span>
-</span></span><span class="line"><span class="cl">ssh -R 0.0.0.0:8080:localhost:3000 user@remote-server
-</span></span></code></pre></td></tr></table>
-</div>
-</div><p>执行后，访问 <code>remote-server:8080</code> 就会转发到你本地的 <code>3000</code> 端口。</p>
-<p><strong>坑点</strong>：默认远程转发只监听 <code>127.0.0.1</code>，外部访问不了。需要在远程服务器的 <code>/etc/ssh/sshd_config</code> 中设置 <code>GatewayPorts yes</code>，然后重启 sshd。</p>
-<h2 id="动态端口转发-dsocks-代理">动态端口转发（-D）：SOCKS 代理</h2>
-<p>一键搭建 SOCKS5 代理，所有流量走 SSH 隧道。比 VPN 轻量得多。</p>
-<div class="highlight"><div class="chroma">
-<table class="lntable"><tr><td class="lntd">
-<pre tabindex="0" class="chroma"><code><span class="lnt">1
-</span><span class="lnt">2
-</span><span class="lnt">3
-</span><span class="lnt">4
-</span><span class="lnt">5
-</span></code></pre></td>
-<td class="lntd">
-<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl"><span class="c1"># 语法：ssh -D [本地地址:]本地端口 user@远程服务器</span>
-</span></span><span class="line"><span class="cl">ssh -D <span class="m">1080</span> user@remote-server
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="c1"># 后台运行</span>
-</span></span><span class="line"><span class="cl">ssh -fND <span class="m">1080</span> user@remote-server
-</span></span></code></pre></td></tr></table>
-</div>
-</div><p>然后在浏览器或应用中配置 SOCKS5 代理 <code>127.0.0.1:1080</code>，所有流量都会通过远程服务器出去。</p>
-<div class="highlight"><div class="chroma">
-<table class="lntable"><tr><td class="lntd">
-<pre tabindex="0" class="chroma"><code><span class="lnt">1
-</span><span class="lnt">2
-</span><span class="lnt">3
-</span><span class="lnt">4
-</span><span class="lnt">5
-</span></code></pre></td>
-<td class="lntd">
-<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl"><span class="c1"># curl 走 SOCKS5 代理</span>
-</span></span><span class="line"><span class="cl">curl --socks5 127.0.0.1:1080 https://internal-api.example.com
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="c1"># git 走 SOCKS5 代理</span>
-</span></span><span class="line"><span class="cl">git config --global socks.proxy <span class="s2">&#34;socks5://127.0.0.1:1080&#34;</span>
-</span></span></code></pre></td></tr></table>
-</div>
-</div><h2 id="proxyjump多级跳板的标准做法">ProxyJump：多级跳板的标准做法</h2>
-<p>以前连内网机器要在 <code>~/.ssh/config</code> 里配一堆 <code>ProxyCommand</code>，现在用 <code>ProxyJump</code> 一行搞定。</p>
-<div class="highlight"><div class="chroma">
-<table class="lntable"><tr><td class="lntd">
-<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
-</span><span class="lnt"> 2
-</span><span class="lnt"> 3
-</span><span class="lnt"> 4
-</span><span class="lnt"> 5
-</span><span class="lnt"> 6
-</span><span class="lnt"> 7
-</span><span class="lnt"> 8
-</span><span class="lnt"> 9
-</span><span class="lnt">10
-</span><span class="lnt">11
-</span><span class="lnt">12
-</span></code></pre></td>
-<td class="lntd">
-<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl"><span class="c1"># 命令行直接用 -J</span>
-</span></span><span class="line"><span class="cl">ssh -J jump-host target.internal
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="c1"># 多级跳板</span>
-</span></span><span class="line"><span class="cl">ssh -J jump1,jump2 target.internal
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="c1"># 在 ~/.ssh/config 中配置</span>
-</span></span><span class="line"><span class="cl">Host target
-</span></span><span class="line"><span class="cl">    HostName target.internal
-</span></span><span class="line"><span class="cl">    User app
-</span></span><span class="line"><span class="cl">    ProxyJump jump-user@jump-host
-</span></span><span class="line"><span class="cl">    <span class="c1"># 等价于先 ssh 到 jump-host，再从 jump-host ssh 到 target.internal</span>
-</span></span></code></pre></td></tr></table>
-</div>
-</div><p>配好之后直接 <code>ssh target</code> 就行，SSH 会自动经过跳板机。</p>
-<h2 id="sshconfig-实用配置模板">~/.ssh/config 实用配置模板</h2>
-<p>把常用连接都写进配置文件，告别又长又难记的命令行参数。</p>
-<div class="highlight"><div class="chroma">
-<table class="lntable"><tr><td class="lntd">
-<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
-</span><span class="lnt"> 2
-</span><span class="lnt"> 3
-</span><span class="lnt"> 4
-</span><span class="lnt"> 5
-</span><span class="lnt"> 6
-</span><span class="lnt"> 7
-</span><span class="lnt"> 8
-</span><span class="lnt"> 9
-</span><span class="lnt">10
-</span><span class="lnt">11
-</span><span class="lnt">12
-</span><span class="lnt">13
-</span><span class="lnt">14
-</span><span class="lnt">15
-</span><span class="lnt">16
-</span><span class="lnt">17
-</span><span class="lnt">18
-</span><span class="lnt">19
-</span><span class="lnt">20
-</span><span class="lnt">21
-</span><span class="lnt">22
-</span><span class="lnt">23
-</span><span class="lnt">24
-</span><span class="lnt">25
-</span><span class="lnt">26
-</span><span class="lnt">27
-</span><span class="lnt">28
-</span><span class="lnt">29
-</span><span class="lnt">30
-</span><span class="lnt">31
-</span><span class="lnt">32
-</span><span class="lnt">33
-</span></code></pre></td>
-<td class="lntd">
-<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl"># === 基础配置 ===
-</span></span><span class="line"><span class="cl">Host *
-</span></span><span class="line"><span class="cl">    ServerAliveInterval 60
-</span></span><span class="line"><span class="cl">    ServerAliveCountMax 3
-</span></span><span class="line"><span class="cl">    ControlMaster auto
-</span></span><span class="line"><span class="cl">    ControlPath ~/.ssh/sockets/%r@%h:%p
-</span></span><span class="line"><span class="cl">    ControlPersist 10m
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"># === 跳板机 ===
-</span></span><span class="line"><span class="cl">Host jump
-</span></span><span class="line"><span class="cl">    HostName jump.example.com
-</span></span><span class="line"><span class="cl">    User deploy
-</span></span><span class="line"><span class="cl">    Port 2222
-</span></span><span class="line"><span class="cl">    IdentityFile ~/.ssh/jump_key
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"># === 内网服务（经过跳板机）===
-</span></span><span class="line"><span class="cl">Host db-internal
-</span></span><span class="line"><span class="cl">    HostName 10.0.1.100
-</span></span><span class="line"><span class="cl">    User app
-</span></span><span class="line"><span class="cl">    ProxyJump jump
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"># === 本地转发（连接时自动建立隧道）===
-</span></span><span class="line"><span class="cl">Host db-tunnel
-</span></span><span class="line"><span class="cl">    HostName 10.0.1.100
-</span></span><span class="line"><span class="cl">    User app
-</span></span><span class="line"><span class="cl">    ProxyJump jump
-</span></span><span class="line"><span class="cl">    LocalForward 5432 10.0.1.100:5432
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"># === 远程转发 ===
-</span></span><span class="line"><span class="cl">Host expose-dev
-</span></span><span class="line"><span class="cl">    HostName dev-server.example.com
-</span></span><span class="line"><span class="cl">    User deploy
-</span></span><span class="line"><span class="cl">    RemoteForward 8080 localhost:3000
-</span></span></code></pre></td></tr></table>
-</div>
-</div><p><strong>ControlMaster</strong> 配置很重要：同一个服务器的多个 SSH 连接复用一个 TCP 连接，第二次连接几乎瞬间完成。先确保 <code>~/.ssh/sockets/</code> 目录存在：<code>mkdir -p ~/.ssh/sockets</code>。</p>
-<h2 id="autossh保持隧道不断">autossh：保持隧道不断</h2>
-<p>SSH 隧道断开后不会自动重连。生产环境用 <code>autossh</code> 替代：</p>
-<div class="highlight"><div class="chroma">
-<table class="lntable"><tr><td class="lntd">
-<pre tabindex="0" class="chroma"><code><span class="lnt">1
-</span><span class="lnt">2
-</span><span class="lnt">3
-</span><span class="lnt">4
-</span><span class="lnt">5
-</span><span class="lnt">6
-</span><span class="lnt">7
-</span><span class="lnt">8
-</span><span class="lnt">9
-</span></code></pre></td>
-<td class="lntd">
-<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl"><span class="c1"># 安装</span>
-</span></span><span class="line"><span class="cl">sudo apt install autossh   <span class="c1"># Debian/Ubuntu</span>
-</span></span><span class="line"><span class="cl">brew install autossh        <span class="c1"># macOS</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="c1"># 用法：把 ssh 换成 autossh，加 M 参数指定监控端口</span>
-</span></span><span class="line"><span class="cl">autossh -M <span class="m">0</span> -fND <span class="m">1080</span> user@remote-server
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="c1"># -M 0 表示禁用监控端口，依赖 ServerAliveInterval 检测断连</span>
-</span></span><span class="line"><span class="cl"><span class="c1"># 写成 systemd service 更可靠</span>
-</span></span></code></pre></td></tr></table>
-</div>
-</div><p>systemd service 示例：</p>
-<div class="highlight"><div class="chroma">
-<table class="lntable"><tr><td class="lntd">
-<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
-</span><span class="lnt"> 2
-</span><span class="lnt"> 3
-</span><span class="lnt"> 4
-</span><span class="lnt"> 5
-</span><span class="lnt"> 6
-</span><span class="lnt"> 7
-</span><span class="lnt"> 8
-</span><span class="lnt"> 9
-</span><span class="lnt">10
-</span><span class="lnt">11
-</span><span class="lnt">12
-</span><span class="lnt">13
-</span></code></pre></td>
-<td class="lntd">
-<pre tabindex="0" class="chroma"><code class="language-ini" data-lang="ini"><span class="line"><span class="cl"><span class="k">[Unit]</span>
-</span></span><span class="line"><span class="cl"><span class="na">Description</span><span class="o">=</span><span class="s">SSH Tunnel</span>
-</span></span><span class="line"><span class="cl"><span class="na">After</span><span class="o">=</span><span class="s">network-online.target</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="k">[Service]</span>
-</span></span><span class="line"><span class="cl"><span class="na">User</span><span class="o">=</span><span class="s">myuser</span>
-</span></span><span class="line"><span class="cl"><span class="na">ExecStart</span><span class="o">=</span><span class="s">/usr/bin/autossh -M 0 -ND 1080 user@remote-server</span>
-</span></span><span class="line"><span class="cl"><span class="na">Restart</span><span class="o">=</span><span class="s">always</span>
-</span></span><span class="line"><span class="cl"><span class="na">RestartSec</span><span class="o">=</span><span class="s">5</span>
-</span></span><span class="line"><span class="cl"><span class="na">Environment</span><span class="o">=</span><span class="s">AUTOSSH_GATETIME=0</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="k">[Install]</span>
-</span></span><span class="line"><span class="cl"><span class="na">WantedBy</span><span class="o">=</span><span class="s">multi-user.target</span>
-</span></span></code></pre></td></tr></table>
-</div>
-</div><h2 id="安全注意事项">安全注意事项</h2>
-<ol>
-<li><strong>不要用 <code>-L 0.0.0.0:端口</code> 暴露转发端口</strong>，除非你明确需要。默认只监听 localhost 更安全</li>
-<li><strong>用密钥认证，禁用密码登录</strong>。<code>PasswordAuthentication no</code></li>
-<li><strong>远程转发配合 <code>GatewayPorts yes</code> 时要加防火墙规则</strong>，避免端口被扫描</li>
-<li><strong>跳板机的 SSH key 单独管理</strong>，不要和开发用的 key 混用</li>
-<li><strong>定期检查 <code>~/.ssh/known_hosts</code></strong>，跳板机更换后及时更新指纹</li>
-</ol>
-<h2 id="速查表">速查表</h2>
-<table>
-<thead>
-<tr>
-<th>模式</th>
-<th>参数</th>
-<th>方向</th>
-<th>典型场景</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>本地转发</td>
-<td>-L</td>
-<td>远程→本地</td>
-<td>本地访问内网数据库</td>
-</tr>
-<tr>
-<td>远程转发</td>
-<td>-R</td>
-<td>本地→远程</td>
-<td>把本地服务暴露到公网</td>
-</tr>
-<tr>
-<td>动态转发</td>
-<td>-D</td>
-<td>双向</td>
-<td>SOCKS5 代理</td>
-</tr>
-<tr>
-<td>跳板机</td>
-<td>-J</td>
-<td>多级</td>
-<td>穿透多层网络</td>
-</tr>
-</tbody>
-</table>
-<p>记住核心区别：<code>-L</code> 是把远程的东西拉到本地，<code>-R</code> 是把本地的东西推到远程，<code>-D</code> 是全流量代理。搞清楚方向，其他都是参数配置的问题。</p>
-</div><div class="post-footer" id="post-footer">
-    <div class="post-info">
-        <div class="post-info-line">
-            <div class="post-info-mod">
-                <span>Updated on 2026-07-05&nbsp;<a class="git-hash" href="https://github.com/cikichen/hugo-sync/commit/1a5bc5fdad2792ec8a76920a2fa0dca103e0e298" target="_blank" title="commit by cikichen(cikichen@github.com) 1a5bc5fdad2792ec8a76920a2fa0dca103e0e298: Auto: 2026-07-05 - SSH 隧道实战：端口转发、跳板机与反向代理">
-                                    <i class="fas fa-hashtag fa-fw" aria-hidden="true"></i>1a5bc5fd</a></span>
-            </div></div>
-        <div class="post-info-line">
-            <div class="post-info-md"></div>
-            <div class="post-info-share">
-                <span><a href="javascript:void(0);" title="Share on Twitter" data-sharer="twitter" data-url="https://www.ithome.me/post/2026/07/05/ssh-tunnel-port-forwarding/" data-title="SSH 隧道实战：端口转发、跳板机与反向代理的完整指南" data-via="ChenCiki" data-hashtags="SSH,Linux,网络,运维"><i class="fab fa-twitter fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on Linkedin" data-sharer="linkedin" data-url="https://www.ithome.me/post/2026/07/05/ssh-tunnel-port-forwarding/"><i class="fab fa-linkedin fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on 微博" data-sharer="weibo" data-url="https://www.ithome.me/post/2026/07/05/ssh-tunnel-port-forwarding/" data-title="SSH 隧道实战：端口转发、跳板机与反向代理的完整指南" data-ralateuid="xxx"><i class="fab fa-weibo fa-fw" aria-hidden="true"></i></a></span>
-            </div>
-        </div>
-    </div>
-
-    <div class="post-info-more">
-        <section class="post-tags"><i class="fas fa-tags fa-fw" aria-hidden="true"></i>&nbsp;<a href="/tags/ssh/">SSH</a>,&nbsp;<a href="/tags/linux/">Linux</a>,&nbsp;<a href="/tags/%E7%BD%91%E7%BB%9C/">网络</a>,&nbsp;<a href="/tags/%E8%BF%90%E7%BB%B4/">运维</a></section>
-        <section>
-            <span><a href="javascript:void(0);" onclick="window.history.back();">Back</a></span>&nbsp;|&nbsp;<span><a href="/">Home</a></span>
-        </section>
-    </div>
-
-    <div class="post-nav"><a href="/post/2026/07/05/ai%E6%99%BA%E8%83%BD%E4%BD%93%E5%BC%80%E5%8F%91-%E7%AC%AC9%E7%AB%A0-%E5%A4%9A%E6%99%BA%E8%83%BD%E4%BD%93%E5%8D%8F%E4%BD%9C/" class="prev" rel="prev" title="多智能体协作：分工、编排与涌现"><i class="fas fa-angle-left fa-fw" aria-hidden="true"></i>多智能体协作：分工、编排与涌现</a>
-            <a href="/post/2026/07/05/ai%E6%99%BA%E8%83%BD%E4%BD%93%E5%BC%80%E5%8F%91-%E7%AC%AC8%E7%AB%A0-rag%E5%A2%9E%E5%BC%BA%E6%A3%80%E7%B4%A2/" class="next" rel="next" title="RAG增强检索：知识库驱动的智能体">RAG增强检索：知识库驱动的智能体<i class="fas fa-angle-right fa-fw" aria-hidden="true"></i></a></div>
-</div>
-<div id="comments"><div id="gitalk" class="comment"></div><noscript>
-                Please enable JavaScript to view the comments powered by <a href="https://github.com/gitalk/gitalk"></a>Gitalk</a>.
-            </noscript></div></article></div>
-            </main><footer class="footer">
-        <div class="footer-container"><div class="footer-line" itemscope itemtype="http://schema.org/CreativeWork"><i class="far fa-copyright fa-fw" aria-hidden="true"></i><span itemprop="copyrightYear">2011 - 2026</span><span class="author" itemprop="copyrightHolder">&nbsp;<a href="https://www.ithome.me/" target="_blank">Simon Chen</a></span>&nbsp;|&nbsp;<span class="license"><a rel="license external nofollow noopener noreferrer" href="https://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank">CC BY-NC-ND 4.0</a></span></div>
-        </div>
-    </footer></div>
-
-        <div id="fixed-buttons"><a href="#" id="back-to-top" class="fixed-button" title="Back to Top">
-                <i class="fas fa-arrow-up fa-fw" aria-hidden="true"></i>
-            </a><a href="#" id="view-comments" class="fixed-button" title="View Comments">
-                <i class="fas fa-comment fa-fw" aria-hidden="true"></i>
-            </a>
-        </div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1.8.0/dist/gitalk.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/css/lightgallery-bundle.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/katex.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/copy-tex.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.css"><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/gitalk@1.8.0/dist/gitalk.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/autocomplete.js@0.38.1/dist/autocomplete.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lunr@2.3.9/lunr.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lazysizes@5.3.1/lazysizes.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/lightgallery.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/plugins/thumbnail/lg-thumbnail.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/plugins/zoom/lg-zoom.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/clipboard@2.0.11/dist/clipboard.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/sharer.js@0.5.1/sharer.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/katex.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/auto-render.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/copy-tex.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/mhchem.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.js"></script><script type="text/javascript">window.config={"code":{"copyTitle":"Copy to clipboard","maxShownLines":50},"comment":{"gitalk":{"admin":["cikichen"],"clientID":"be0f52370ed1285b6c7c","clientSecret":"734a7d8d0ded346ca7a3d565d57de3f8eeb2850b","id":"2026-07-05T00:00:00Z","owner":"cikichen","repo":"gitalk","title":"SSH 隧道实战：端口转发、跳板机与反向代理的完整指南"}},"cookieconsent":{"content":{"dismiss":"我知道了","link":"了解更多","message":"本网站使用 Cookies 来改善您的浏览体验."},"enable":true,"palette":{"button":{"background":"#f0f0f0"},"popup":{"background":"#1aa3ff"}},"theme":"edgeless"},"lightgallery":true,"math":{"delimiters":[{"display":true,"left":"$$","right":"$$"},{"display":true,"left":"\\[","right":"\\]"},{"display":true,"left":"\\begin{equation}","right":"\\end{equation}"},{"display":true,"left":"\\begin{equation*}","right":"\\end{equation*}"},{"display":true,"left":"\\begin{align}","right":"\\end{align}"},{"display":true,"left":"\\begin{align*}","right":"\\end{align*}"},{"display":true,"left":"\\begin{alignat}","right":"\\end{alignat}"},{"display":true,"left":"\\begin{alignat*}","right":"\\end{alignat*}"},{"display":true,"left":"\\begin{gather}","right":"\\end{gather}"},{"display":true,"left":"\\begin{CD}","right":"\\end{CD}"},{"display":false,"left":"$","right":"$"},{"display":false,"left":"\\(","right":"\\)"}],"strict":false},"search":{"highlightTag":"em","lunrIndexURL":"/index.json","maxResultLength":10,"noResultsFound":"No results found","snippetLength":50,"type":"lunr"}};</script><script type="text/javascript" src="/js/theme.min.js"></script></body>
-</html>
+<!doctype html><html lang=zh-CN><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><meta name=robots content="noodp"><title>SSH 隧道实战：端口转发、跳板机与反向代理的完整指南 - 编程心语</title><meta name=Description content="详解 SSH 端口转发的三种模式——本地转发、远程转发、动态转发，以及 ProxyJump 跳板机配置，附实际场景与完整命令示例。"><meta property="og:url" content="https://www.ithome.me/post/2026/07/05/ssh-tunnel-port-forwarding/">
+<meta property="og:site_name" content="编程心语"><meta property="og:title" content="SSH 隧道实战：端口转发、跳板机与反向代理的完整指南"><meta property="og:description" content="详解 SSH 端口转发的三种模式——本地转发、远程转发、动态转发，以及 ProxyJump 跳板机配置，附实际场景与完整命令示例。"><meta property="og:locale" content="zh_CN"><meta property="og:type" content="article"><meta property="article:section" content="posts"><meta property="article:published_time" content="2026-07-05T08:00:00+08:00"><meta property="article:modified_time" content="2026-07-05T08:00:00+08:00"><meta property="article:tag" content="SSH"><meta property="article:tag" content="Linux"><meta property="article:tag" content="网络"><meta property="article:tag" content="运维"><meta name=twitter:card content="summary"><meta name=twitter:title content="SSH 隧道实战：端口转发、跳板机与反向代理的完整指南"><meta name=twitter:description content="详解 SSH 端口转发的三种模式——本地转发、远程转发、动态转发，以及 ProxyJump 跳板机配置，附实际场景与完整命令示例。"><meta name=twitter:site content="@ChenCiki"><meta name=application-name content="编程心语"><meta name=apple-mobile-web-app-title content="编程心语"><meta name=theme-color content="#ffffff"><meta name=msapplication-TileColor content="#da532c"><link rel="shortcut icon" type=image/x-icon href=/favicon.ico><link rel=icon type=image/png sizes=32x32 href=/favicon-32x32.png><link rel=icon type=image/png sizes=16x16 href=/favicon-16x16.png><link rel=apple-touch-icon sizes=180x180 href=/apple-touch-icon.png><link rel=mask-icon href=/safari-pinned-tab.svg color=#5bbad5><link rel=manifest href=/site.webmanifest><link rel=canonical href=https://www.ithome.me/post/2026/07/05/ssh-tunnel-port-forwarding/><link rel=prev href=https://www.ithome.me/post/2026/07/05/ai%E6%99%BA%E8%83%BD%E4%BD%93%E5%BC%80%E5%8F%91-%E7%AC%AC9%E7%AB%A0-%E5%A4%9A%E6%99%BA%E8%83%BD%E4%BD%93%E5%8D%8F%E4%BD%9C/><link rel=next href=https://www.ithome.me/post/2026/07/05/ai%E6%99%BA%E8%83%BD%E4%BD%93%E5%BC%80%E5%8F%91-%E7%AC%AC8%E7%AB%A0-rag%E5%A2%9E%E5%BC%BA%E6%A3%80%E7%B4%A2/><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/normalize.css@8.0.1/normalize.min.css><link rel=stylesheet href=/css/style.min.css><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css><script type=application/ld+json>{"@context":"http://schema.org","@type":"BlogPosting","headline":"SSH 隧道实战：端口转发、跳板机与反向代理的完整指南","inLanguage":"zh-CN","mainEntityOfPage":{"@type":"WebPage","@id":"https:\/\/www.ithome.me\/post\/2026\/07\/05\/ssh-tunnel-port-forwarding\/"},"image":["https:\/\/www.ithome.me\/cover.png"],"genre":"posts","keywords":"SSH, Linux, 网络, 运维","wordcount":1621,"url":"https:\/\/www.ithome.me\/post\/2026\/07\/05\/ssh-tunnel-port-forwarding\/","datePublished":"2026-07-05T08:00:00+08:00","dateModified":"2026-07-05T08:00:00+08:00","publisher":{"@type":"Organization","name":"SimonChen","logo":"https:\/\/www.ithome.me\/logo.png"},"author":{"@type":"Person","name":"Simon"},"description":"详解 SSH 端口转发的三种模式——本地转发、远程转发、动态转发，以及 ProxyJump 跳板机配置，附实际场景与完整命令示例。"}</script><script async src="https://www.googletagmanager.com/gtag/js?id=G-H1Q5563VR8"></script><script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag("js",new Date),gtag("config","G-H1Q5563VR8",{anonymize_ip:!0})</script></head><body data-header-desktop=fixed data-header-mobile=auto><script type=text/javascript>(window.localStorage&&localStorage.getItem("theme")?localStorage.getItem("theme")==="dark":"auto"==="auto"?window.matchMedia("(prefers-color-scheme: dark)").matches:"auto"==="dark")&&document.body.setAttribute("theme","dark")</script><div id=mask></div><div class=wrapper><header class=desktop id=header-desktop><div class=header-wrapper><div class=header-title><a href=/ title=编程心语>编程心语</a></div><div class=menu><div class=menu-inner><a class=menu-item href=/posts/>文章 </a><a class=menu-item href=/categories/>分类 </a><a class=menu-item href=/tags/>标签 </a><a class=menu-item href=/about-me/>关于 </a><span class="menu-item delimiter"></span><span class="menu-item search" id=search-desktop>
+<input type=text placeholder=搜索文章... id=search-input-desktop>
+<a href=javascript:void(0); class="search-button search-toggle" id=search-toggle-desktop title=Search><i class="fas fa-search fa-fw" aria-hidden=true></i>
+</a><a href=javascript:void(0); class="search-button search-clear" id=search-clear-desktop title=Clear><i class="fas fa-times-circle fa-fw" aria-hidden=true></i>
+</a><span class="search-button search-loading" id=search-loading-desktop><i class="fas fa-spinner fa-fw fa-spin" aria-hidden=true></i>
+</span></span><a href=javascript:void(0); class="menu-item theme-switch" title="Switch Theme"><i class="fas fa-adjust fa-fw" aria-hidden=true></i></a></div></div></div></header><header class=mobile id=header-mobile><div class=header-container><div class=header-wrapper><div class=header-title><a href=/ title=编程心语>编程心语</a></div><div class=menu-toggle id=menu-toggle-mobile><span></span><span></span><span></span></div></div><div class=menu id=menu-mobile><div class=search-wrapper><div class="search mobile" id=search-mobile><input type=text placeholder=搜索文章... id=search-input-mobile>
+<a href=javascript:void(0); class="search-button search-toggle" id=search-toggle-mobile title=Search><i class="fas fa-search fa-fw" aria-hidden=true></i>
+</a><a href=javascript:void(0); class="search-button search-clear" id=search-clear-mobile title=Clear><i class="fas fa-times-circle fa-fw" aria-hidden=true></i>
+</a><span class="search-button search-loading" id=search-loading-mobile><i class="fas fa-spinner fa-fw fa-spin" aria-hidden=true></i></span></div><a href=javascript:void(0); class=search-cancel id=search-cancel-mobile>Cancel</a></div><a class=menu-item href=/posts/ title>文章</a><a class=menu-item href=/categories/ title>分类</a><a class=menu-item href=/tags/ title>标签</a><a class=menu-item href=/about-me/ title>关于</a><a href=javascript:void(0); class="menu-item theme-switch" title="Switch Theme">
+<i class="fas fa-adjust fa-fw" aria-hidden=true></i></a></div></div></header><div class="search-dropdown desktop"><div id=search-dropdown-desktop></div></div><div class="search-dropdown mobile"><div id=search-dropdown-mobile></div></div><main class=main><div class=container><div class=toc id=toc-auto><h2 class=toc-title>Contents</h2><div class=toc-content id=toc-content-auto></div></div><article class="page single"><h1 class="single-title animate__animated animate__flipInX">SSH 隧道实战：端口转发、跳板机与反向代理的完整指南</h1><div class=post-meta><div class=post-meta-line><span class=post-author><a href=https://www.ithome.me/ title=Author target=_blank rel="noopener noreferrer author" class=author><i class="fas fa-user-circle fa-fw" aria-hidden=true></i>Simon</a>
+</span>&nbsp;<span class=post-category>included in <a href=/categories/backend/><i class="far fa-folder fa-fw" aria-hidden=true></i>Backend</a></span></div><div class=post-meta-line><i class="far fa-calendar-alt fa-fw" aria-hidden=true></i>&nbsp;<time datetime=2026-07-05>2026-07-05</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden=true></i>&nbsp;1621 words&nbsp;
+<i class="far fa-clock fa-fw" aria-hidden=true></i>&nbsp;4 minutes&nbsp;</div></div><div class="details toc" id=toc-static data-kept=true><div class="details-summary toc-title"><span>Contents</span>
+<span><i class="details-icon fas fa-angle-right" aria-hidden=true></i></span></div><div class="details-content toc-content" id=toc-content-static><nav id=TableOfContents><ul><li><a href=#为什么你需要掌握-ssh-隧道>为什么你需要掌握 SSH 隧道</a></li><li><a href=#本地端口转发-l把远程端口映射到本地>本地端口转发（-L）：把远程端口映射到本地</a></li><li><a href=#远程端口转发-r把本地端口暴露到远程>远程端口转发（-R）：把本地端口暴露到远程</a></li><li><a href=#动态端口转发-dsocks-代理>动态端口转发（-D）：SOCKS 代理</a></li><li><a href=#proxyjump多级跳板的标准做法>ProxyJump：多级跳板的标准做法</a></li><li><a href=#sshconfig-实用配置模板>~/.ssh/config 实用配置模板</a></li><li><a href=#autossh保持隧道不断>autossh：保持隧道不断</a></li><li><a href=#安全注意事项>安全注意事项</a></li><li><a href=#速查表>速查表</a></li></ul></nav></div></div><div class=content id=content><h2 id=为什么你需要掌握-ssh-隧道>为什么你需要掌握 SSH 隧道</h2><p>日常开发中，你大概率遇到过这些场景：本地调试需要连接内网数据库、生产服务器只允许跳板机访问、内网服务需要临时暴露给外部测试。很多人第一反应是改防火墙规则或装个 frp，但其实 SSH 自带的三种端口转发就能解决绝大多数问题，无需额外工具。</p><h2 id=本地端口转发-l把远程端口映射到本地>本地端口转发（-L）：把远程端口映射到本地</h2><p>最常用的模式。你的本地机器访问不了内网的 Redis，但能 SSH 到一台跳板机，跳板机能访问 Redis。</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span><span class=lnt>4
+</span><span class=lnt>5
+</span><span class=lnt>6
+</span><span class=lnt>7
+</span><span class=lnt>8
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl><span class=c1># 语法：ssh -L [本地地址:]本地端口:目标地址:目标端口 user@跳板机</span>
+</span></span><span class=line><span class=cl>ssh -L 6379:redis.internal:6379 user@jump-host
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1># 指定本地监听地址（默认只监听 127.0.0.1）</span>
+</span></span><span class=line><span class=cl>ssh -L 0.0.0.0:6379:redis.internal:6379 user@jump-host
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1># 后台运行，不打开 shell</span>
+</span></span><span class=line><span class=cl>ssh -fNL 6379:redis.internal:6379 user@jump-host
+</span></span></code></pre></td></tr></table></div></div><p>执行后，本地 <code>localhost:6379</code> 就等于 <code>redis.internal:6379</code>。用 <code>redis-cli</code> 连接本地 6379 即可操作内网 Redis。</p><p><strong>关键点</strong>：目标地址是从跳板机的视角解析的，不是你本地。所以 <code>redis.internal</code> 必须是跳板机能解析到的地址。</p><h2 id=远程端口转发-r把本地端口暴露到远程>远程端口转发（-R）：把本地端口暴露到远程</h2><p>反向操作。你本地跑了个 Web 服务，想让远程服务器临时访问。典型场景：开发微信回调接口，需要公网地址接收请求。</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span><span class=lnt>4
+</span><span class=lnt>5
+</span><span class=lnt>6
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl><span class=c1># 语法：ssh -R [远程地址:]远程端口:本地地址:本地端口 user@远程服务器</span>
+</span></span><span class=line><span class=cl>ssh -R 8080:localhost:3000 user@remote-server
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1># 让远程所有 IP 都能访问（默认只监听远程的 localhost）</span>
+</span></span><span class=line><span class=cl><span class=c1># 需要在远程 sshd_config 设置 GatewayPorts yes</span>
+</span></span><span class=line><span class=cl>ssh -R 0.0.0.0:8080:localhost:3000 user@remote-server
+</span></span></code></pre></td></tr></table></div></div><p>执行后，访问 <code>remote-server:8080</code> 就会转发到你本地的 <code>3000</code> 端口。</p><p><strong>坑点</strong>：默认远程转发只监听 <code>127.0.0.1</code>，外部访问不了。需要在远程服务器的 <code>/etc/ssh/sshd_config</code> 中设置 <code>GatewayPorts yes</code>，然后重启 sshd。</p><h2 id=动态端口转发-dsocks-代理>动态端口转发（-D）：SOCKS 代理</h2><p>一键搭建 SOCKS5 代理，所有流量走 SSH 隧道。比 VPN 轻量得多。</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span><span class=lnt>4
+</span><span class=lnt>5
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl><span class=c1># 语法：ssh -D [本地地址:]本地端口 user@远程服务器</span>
+</span></span><span class=line><span class=cl>ssh -D <span class=m>1080</span> user@remote-server
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1># 后台运行</span>
+</span></span><span class=line><span class=cl>ssh -fND <span class=m>1080</span> user@remote-server
+</span></span></code></pre></td></tr></table></div></div><p>然后在浏览器或应用中配置 SOCKS5 代理 <code>127.0.0.1:1080</code>，所有流量都会通过远程服务器出去。</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span><span class=lnt>4
+</span><span class=lnt>5
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl><span class=c1># curl 走 SOCKS5 代理</span>
+</span></span><span class=line><span class=cl>curl --socks5 127.0.0.1:1080 https://internal-api.example.com
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1># git 走 SOCKS5 代理</span>
+</span></span><span class=line><span class=cl>git config --global socks.proxy <span class=s2>&#34;socks5://127.0.0.1:1080&#34;</span>
+</span></span></code></pre></td></tr></table></div></div><h2 id=proxyjump多级跳板的标准做法>ProxyJump：多级跳板的标准做法</h2><p>以前连内网机器要在 <code>~/.ssh/config</code> 里配一堆 <code>ProxyCommand</code>，现在用 <code>ProxyJump</code> 一行搞定。</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl><span class=c1># 命令行直接用 -J</span>
+</span></span><span class=line><span class=cl>ssh -J jump-host target.internal
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1># 多级跳板</span>
+</span></span><span class=line><span class=cl>ssh -J jump1,jump2 target.internal
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1># 在 ~/.ssh/config 中配置</span>
+</span></span><span class=line><span class=cl>Host target
+</span></span><span class=line><span class=cl>    HostName target.internal
+</span></span><span class=line><span class=cl>    User app
+</span></span><span class=line><span class=cl>    ProxyJump jump-user@jump-host
+</span></span><span class=line><span class=cl>    <span class=c1># 等价于先 ssh 到 jump-host，再从 jump-host ssh 到 target.internal</span>
+</span></span></code></pre></td></tr></table></div></div><p>配好之后直接 <code>ssh target</code> 就行，SSH 会自动经过跳板机。</p><h2 id=sshconfig-实用配置模板>~/.ssh/config 实用配置模板</h2><p>把常用连接都写进配置文件，告别又长又难记的命令行参数。</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span><span class=lnt>17
+</span><span class=lnt>18
+</span><span class=lnt>19
+</span><span class=lnt>20
+</span><span class=lnt>21
+</span><span class=lnt>22
+</span><span class=lnt>23
+</span><span class=lnt>24
+</span><span class=lnt>25
+</span><span class=lnt>26
+</span><span class=lnt>27
+</span><span class=lnt>28
+</span><span class=lnt>29
+</span><span class=lnt>30
+</span><span class=lnt>31
+</span><span class=lnt>32
+</span><span class=lnt>33
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-fallback data-lang=fallback><span class=line><span class=cl># === 基础配置 ===
+</span></span><span class=line><span class=cl>Host *
+</span></span><span class=line><span class=cl>    ServerAliveInterval 60
+</span></span><span class=line><span class=cl>    ServerAliveCountMax 3
+</span></span><span class=line><span class=cl>    ControlMaster auto
+</span></span><span class=line><span class=cl>    ControlPath ~/.ssh/sockets/%r@%h:%p
+</span></span><span class=line><span class=cl>    ControlPersist 10m
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl># === 跳板机 ===
+</span></span><span class=line><span class=cl>Host jump
+</span></span><span class=line><span class=cl>    HostName jump.example.com
+</span></span><span class=line><span class=cl>    User deploy
+</span></span><span class=line><span class=cl>    Port 2222
+</span></span><span class=line><span class=cl>    IdentityFile ~/.ssh/jump_key
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl># === 内网服务（经过跳板机）===
+</span></span><span class=line><span class=cl>Host db-internal
+</span></span><span class=line><span class=cl>    HostName 10.0.1.100
+</span></span><span class=line><span class=cl>    User app
+</span></span><span class=line><span class=cl>    ProxyJump jump
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl># === 本地转发（连接时自动建立隧道）===
+</span></span><span class=line><span class=cl>Host db-tunnel
+</span></span><span class=line><span class=cl>    HostName 10.0.1.100
+</span></span><span class=line><span class=cl>    User app
+</span></span><span class=line><span class=cl>    ProxyJump jump
+</span></span><span class=line><span class=cl>    LocalForward 5432 10.0.1.100:5432
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl># === 远程转发 ===
+</span></span><span class=line><span class=cl>Host expose-dev
+</span></span><span class=line><span class=cl>    HostName dev-server.example.com
+</span></span><span class=line><span class=cl>    User deploy
+</span></span><span class=line><span class=cl>    RemoteForward 8080 localhost:3000
+</span></span></code></pre></td></tr></table></div></div><p><strong>ControlMaster</strong> 配置很重要：同一个服务器的多个 SSH 连接复用一个 TCP 连接，第二次连接几乎瞬间完成。先确保 <code>~/.ssh/sockets/</code> 目录存在：<code>mkdir -p ~/.ssh/sockets</code>。</p><h2 id=autossh保持隧道不断>autossh：保持隧道不断</h2><p>SSH 隧道断开后不会自动重连。生产环境用 <code>autossh</code> 替代：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span><span class=lnt>4
+</span><span class=lnt>5
+</span><span class=lnt>6
+</span><span class=lnt>7
+</span><span class=lnt>8
+</span><span class=lnt>9
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl><span class=c1># 安装</span>
+</span></span><span class=line><span class=cl>sudo apt install autossh   <span class=c1># Debian/Ubuntu</span>
+</span></span><span class=line><span class=cl>brew install autossh        <span class=c1># macOS</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1># 用法：把 ssh 换成 autossh，加 M 参数指定监控端口</span>
+</span></span><span class=line><span class=cl>autossh -M <span class=m>0</span> -fND <span class=m>1080</span> user@remote-server
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1># -M 0 表示禁用监控端口，依赖 ServerAliveInterval 检测断连</span>
+</span></span><span class=line><span class=cl><span class=c1># 写成 systemd service 更可靠</span>
+</span></span></code></pre></td></tr></table></div></div><p>systemd service 示例：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-ini data-lang=ini><span class=line><span class=cl><span class=k>[Unit]</span>
+</span></span><span class=line><span class=cl><span class=na>Description</span><span class=o>=</span><span class=s>SSH Tunnel</span>
+</span></span><span class=line><span class=cl><span class=na>After</span><span class=o>=</span><span class=s>network-online.target</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=k>[Service]</span>
+</span></span><span class=line><span class=cl><span class=na>User</span><span class=o>=</span><span class=s>myuser</span>
+</span></span><span class=line><span class=cl><span class=na>ExecStart</span><span class=o>=</span><span class=s>/usr/bin/autossh -M 0 -ND 1080 user@remote-server</span>
+</span></span><span class=line><span class=cl><span class=na>Restart</span><span class=o>=</span><span class=s>always</span>
+</span></span><span class=line><span class=cl><span class=na>RestartSec</span><span class=o>=</span><span class=s>5</span>
+</span></span><span class=line><span class=cl><span class=na>Environment</span><span class=o>=</span><span class=s>AUTOSSH_GATETIME=0</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=k>[Install]</span>
+</span></span><span class=line><span class=cl><span class=na>WantedBy</span><span class=o>=</span><span class=s>multi-user.target</span>
+</span></span></code></pre></td></tr></table></div></div><h2 id=安全注意事项>安全注意事项</h2><ol><li><strong>不要用 <code>-L 0.0.0.0:端口</code> 暴露转发端口</strong>，除非你明确需要。默认只监听 localhost 更安全</li><li><strong>用密钥认证，禁用密码登录</strong>。<code>PasswordAuthentication no</code></li><li><strong>远程转发配合 <code>GatewayPorts yes</code> 时要加防火墙规则</strong>，避免端口被扫描</li><li><strong>跳板机的 SSH key 单独管理</strong>，不要和开发用的 key 混用</li><li><strong>定期检查 <code>~/.ssh/known_hosts</code></strong>，跳板机更换后及时更新指纹</li></ol><h2 id=速查表>速查表</h2><table><thead><tr><th>模式</th><th>参数</th><th>方向</th><th>典型场景</th></tr></thead><tbody><tr><td>本地转发</td><td>-L</td><td>远程→本地</td><td>本地访问内网数据库</td></tr><tr><td>远程转发</td><td>-R</td><td>本地→远程</td><td>把本地服务暴露到公网</td></tr><tr><td>动态转发</td><td>-D</td><td>双向</td><td>SOCKS5 代理</td></tr><tr><td>跳板机</td><td>-J</td><td>多级</td><td>穿透多层网络</td></tr></tbody></table><p>记住核心区别：<code>-L</code> 是把远程的东西拉到本地，<code>-R</code> 是把本地的东西推到远程，<code>-D</code> 是全流量代理。搞清楚方向，其他都是参数配置的问题。</p></div><div class=post-footer id=post-footer><div class=post-info><div class=post-info-line><div class=post-info-mod><span>Updated on 2026-07-05</span></div></div><div class=post-info-line><div class=post-info-md></div><div class=post-info-share><span><a href=javascript:void(0); title="Share on Twitter" data-sharer=twitter data-url=https://www.ithome.me/post/2026/07/05/ssh-tunnel-port-forwarding/ data-title="SSH 隧道实战：端口转发、跳板机与反向代理的完整指南" data-via=ChenCiki data-hashtags=SSH,Linux,网络,运维><i class="fab fa-twitter fa-fw" aria-hidden=true></i></a><a href=javascript:void(0); title="Share on Linkedin" data-sharer=linkedin data-url=https://www.ithome.me/post/2026/07/05/ssh-tunnel-port-forwarding/><i class="fab fa-linkedin fa-fw" aria-hidden=true></i></a><a href=javascript:void(0); title="Share on 微博" data-sharer=weibo data-url=https://www.ithome.me/post/2026/07/05/ssh-tunnel-port-forwarding/ data-title="SSH 隧道实战：端口转发、跳板机与反向代理的完整指南" data-ralateuid=xxx><i class="fab fa-weibo fa-fw" aria-hidden=true></i></a></span></div></div></div><div class=post-info-more><section class=post-tags><i class="fas fa-tags fa-fw" aria-hidden=true></i>&nbsp;<a href=/tags/ssh/>SSH</a>,&nbsp;<a href=/tags/linux/>Linux</a>,&nbsp;<a href=/tags/%E7%BD%91%E7%BB%9C/>网络</a>,&nbsp;<a href=/tags/%E8%BF%90%E7%BB%B4/>运维</a></section><section><span><a href=javascript:void(0); onclick=window.history.back()>Back</a></span>&nbsp;|&nbsp;<span><a href=/>Home</a></span></section></div><div class=post-nav><a href=/post/2026/07/05/ai%E6%99%BA%E8%83%BD%E4%BD%93%E5%BC%80%E5%8F%91-%E7%AC%AC9%E7%AB%A0-%E5%A4%9A%E6%99%BA%E8%83%BD%E4%BD%93%E5%8D%8F%E4%BD%9C/ class=prev rel=prev title=多智能体协作：分工、编排与涌现><i class="fas fa-angle-left fa-fw" aria-hidden=true></i>多智能体协作：分工、编排与涌现</a>
+<a href=/post/2026/07/05/ai%E6%99%BA%E8%83%BD%E4%BD%93%E5%BC%80%E5%8F%91-%E7%AC%AC8%E7%AB%A0-rag%E5%A2%9E%E5%BC%BA%E6%A3%80%E7%B4%A2/ class=next rel=next title=RAG增强检索：知识库驱动的智能体>RAG增强检索：知识库驱动的智能体<i class="fas fa-angle-right fa-fw" aria-hidden=true></i></a></div></div><div id=comments><div id=gitalk class=comment></div><noscript>Please enable JavaScript to view the comments powered by <a href=https://github.com/gitalk/gitalk></a>Gitalk</a>.</noscript></div></article></div></main><footer class=footer><div class=footer-container><div class=footer-line itemscope itemtype=http://schema.org/CreativeWork><i class="far fa-copyright fa-fw" aria-hidden=true></i><span itemprop=copyrightYear>2011 - 2026</span><span class=author itemprop=copyrightHolder>&nbsp;<a href=https://www.ithome.me/ target=_blank>Simon Chen</a></span>&nbsp;|&nbsp;<span class=license><a rel="license external nofollow noopener noreferrer" href=https://creativecommons.org/licenses/by-nc-nd/4.0/ target=_blank>CC BY-NC-ND 4.0</a></span></div></div></footer></div><div id=fixed-buttons><a href=# id=back-to-top class=fixed-button title="Back to Top"><i class="fas fa-arrow-up fa-fw" aria-hidden=true></i>
+</a><a href=# id=view-comments class=fixed-button title="View Comments"><i class="fas fa-comment fa-fw" aria-hidden=true></i></a></div><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/gitalk@1.8.0/dist/gitalk.min.css><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/css/lightgallery-bundle.min.css><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/katex.min.css><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/copy-tex.min.css><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.css><script type=text/javascript src=https://cdn.jsdelivr.net/npm/gitalk@1.8.0/dist/gitalk.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/autocomplete.js@0.38.1/dist/autocomplete.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/lunr@2.3.9/lunr.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/lazysizes@5.3.1/lazysizes.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/lightgallery.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/plugins/thumbnail/lg-thumbnail.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/plugins/zoom/lg-zoom.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/clipboard@2.0.11/dist/clipboard.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/sharer.js@0.5.1/sharer.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/katex.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/auto-render.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/copy-tex.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/mhchem.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.js></script><script type=text/javascript>window.config={code:{copyTitle:"Copy to clipboard",maxShownLines:50},comment:{gitalk:{admin:["cikichen"],clientID:"be0f52370ed1285b6c7c",clientSecret:"734a7d8d0ded346ca7a3d565d57de3f8eeb2850b",id:"2026-07-05T00:00:00Z",owner:"cikichen",repo:"gitalk",title:"SSH 隧道实战：端口转发、跳板机与反向代理的完整指南"}},cookieconsent:{content:{dismiss:"我知道了",link:"了解更多",message:"本网站使用 Cookies 来改善您的浏览体验."},enable:!0,palette:{button:{background:"#f0f0f0"},popup:{background:"#1aa3ff"}},theme:"edgeless"},lightgallery:!0,math:{delimiters:[{display:!0,left:"$$",right:"$$"},{display:!0,left:"\\[",right:"\\]"},{display:!0,left:"\\begin{equation}",right:"\\end{equation}"},{display:!0,left:"\\begin{equation*}",right:"\\end{equation*}"},{display:!0,left:"\\begin{align}",right:"\\end{align}"},{display:!0,left:"\\begin{align*}",right:"\\end{align*}"},{display:!0,left:"\\begin{alignat}",right:"\\end{alignat}"},{display:!0,left:"\\begin{alignat*}",right:"\\end{alignat*}"},{display:!0,left:"\\begin{gather}",right:"\\end{gather}"},{display:!0,left:"\\begin{CD}",right:"\\end{CD}"},{display:!1,left:"$",right:"$"},{display:!1,left:"\\(",right:"\\)"}],strict:!1},search:{highlightTag:"em",lunrIndexURL:"/index.json",maxResultLength:10,noResultsFound:"No results found",snippetLength:50,type:"lunr"}}</script><script type=text/javascript src=/js/theme.min.js></script></body></html>

@@ -1,846 +1,543 @@
-<!DOCTYPE html>
-<html lang="zh-CN">
-    <head>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <meta name="robots" content="noodp" />
-        <title>OpenTelemetry实战：用Docker Compose一键搭建可观测性平台 - 编程心语</title><meta name="Description" content="用Docker Compose快速搭建OpenTelemetry&#43;Prometheus&#43;Grafana&#43;Jaeger完整可观测性栈，实现分布式追踪、指标采集、日志关联的一体化方案。"><meta property="og:url" content="https://www.ithome.me/post/2026/06/20/opentelemetry-docker-compose-observability/">
-  <meta property="og:site_name" content="编程心语">
-  <meta property="og:title" content="OpenTelemetry实战：用Docker Compose一键搭建可观测性平台">
-  <meta property="og:description" content="用Docker Compose快速搭建OpenTelemetry&#43;Prometheus&#43;Grafana&#43;Jaeger完整可观测性栈，实现分布式追踪、指标采集、日志关联的一体化方案。">
-  <meta property="og:locale" content="zh_CN">
-  <meta property="og:type" content="article">
-    <meta property="article:section" content="posts">
-    <meta property="article:published_time" content="2026-06-20T08:00:00+08:00">
-    <meta property="article:modified_time" content="2026-06-20T09:02:30+08:00">
-    <meta property="article:tag" content="OpenTelemetry">
-    <meta property="article:tag" content="可观测性">
-    <meta property="article:tag" content="Docker">
-    <meta property="article:tag" content="Grafana">
-    <meta property="article:tag" content="Jaeger">
-
-  <meta name="twitter:card" content="summary">
-  <meta name="twitter:title" content="OpenTelemetry实战：用Docker Compose一键搭建可观测性平台">
-  <meta name="twitter:description" content="用Docker Compose快速搭建OpenTelemetry&#43;Prometheus&#43;Grafana&#43;Jaeger完整可观测性栈，实现分布式追踪、指标采集、日志关联的一体化方案。">
-      <meta name="twitter:site" content="@ChenCiki">
-<meta name="application-name" content="编程心语">
-<meta name="apple-mobile-web-app-title" content="编程心语"><meta name="theme-color" content="#ffffff"><meta name="msapplication-TileColor" content="#da532c"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
-        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
-        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5"><link rel="manifest" href="/site.webmanifest"><link rel="canonical" href="https://www.ithome.me/post/2026/06/20/opentelemetry-docker-compose-observability/" /><link rel="prev" href="https://www.ithome.me/post/2026/06/19/github-actions-cicd-pipeline/" /><link rel="next" href="https://www.ithome.me/post/2026/06/21/nginx-reverse-proxy-load-balancing/" /><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/normalize.css@8.0.1/normalize.min.css"><link rel="stylesheet" href="/css/style.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css"><script type="application/ld+json">
-    {
-        "@context": "http://schema.org",
-        "@type": "BlogPosting",
-        "headline": "OpenTelemetry实战：用Docker Compose一键搭建可观测性平台",
-        "inLanguage": "zh-CN",
-        "mainEntityOfPage": {
-            "@type": "WebPage",
-            "@id": "https:\/\/www.ithome.me\/post\/2026\/06\/20\/opentelemetry-docker-compose-observability\/"
-        },"image": ["https:\/\/www.ithome.me\/cover.png"],"genre": "posts","keywords": "OpenTelemetry, 可观测性, Docker, Grafana, Jaeger","wordcount":  1779 ,
-        "url": "https:\/\/www.ithome.me\/post\/2026\/06\/20\/opentelemetry-docker-compose-observability\/","datePublished": "2026-06-20T08:00:00+08:00","dateModified": "2026-06-20T09:02:30+08:00","publisher": {
-            "@type": "Organization",
-            "name": "SimonChen","logo": "https:\/\/www.ithome.me\/logo.png"},"author": {
-                "@type": "Person",
-                "name": "Simon Chen"
-            },"description": "用Docker Compose快速搭建OpenTelemetry+Prometheus+Grafana+Jaeger完整可观测性栈，实现分布式追踪、指标采集、日志关联的一体化方案。"
-    }
-    </script><script async src="https://www.googletagmanager.com/gtag/js?id=G-H1Q5563VR8"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-  gtag('config', 'G-H1Q5563VR8', { 'anonymize_ip': true });
-</script></head>
-    <body data-header-desktop="fixed" data-header-mobile="auto"><script type="text/javascript">(window.localStorage && localStorage.getItem('theme') ? localStorage.getItem('theme') === 'dark' : ('auto' === 'auto' ? window.matchMedia('(prefers-color-scheme: dark)').matches : 'auto' === 'dark')) && document.body.setAttribute('theme', 'dark');</script>
-
-        <div id="mask"></div><div class="wrapper"><header class="desktop" id="header-desktop">
-    <div class="header-wrapper">
-        <div class="header-title">
-            <a href="/" title="编程心语">编程心语</a>
-        </div>
-        <div class="menu">
-            <div class="menu-inner"><a class="menu-item" href="/posts/"> 文章 </a><a class="menu-item" href="/categories/"> 分类 </a><a class="menu-item" href="/tags/"> 标签 </a><a class="menu-item" href="/about-me/"> 关于 </a><span class="menu-item delimiter"></span><span class="menu-item search" id="search-desktop">
-                        <input type="text" placeholder="搜索文章..." id="search-input-desktop">
-                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-desktop" title="Search">
-                            <i class="fas fa-search fa-fw" aria-hidden="true"></i>
-                        </a>
-                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-desktop" title="Clear">
-                            <i class="fas fa-times-circle fa-fw" aria-hidden="true"></i>
-                        </a>
-                        <span class="search-button search-loading" id="search-loading-desktop">
-                            <i class="fas fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
-                        </span>
-                    </span><a href="javascript:void(0);" class="menu-item theme-switch" title="Switch Theme">
-                    <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
-                </a>
-            </div>
-        </div>
-    </div>
-</header><header class="mobile" id="header-mobile">
-    <div class="header-container">
-        <div class="header-wrapper">
-            <div class="header-title">
-                <a href="/" title="编程心语">编程心语</a>
-            </div>
-            <div class="menu-toggle" id="menu-toggle-mobile">
-                <span></span><span></span><span></span>
-            </div>
-        </div>
-        <div class="menu" id="menu-mobile"><div class="search-wrapper">
-                    <div class="search mobile" id="search-mobile">
-                        <input type="text" placeholder="搜索文章..." id="search-input-mobile">
-                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-mobile" title="Search">
-                            <i class="fas fa-search fa-fw" aria-hidden="true"></i>
-                        </a>
-                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-mobile" title="Clear">
-                            <i class="fas fa-times-circle fa-fw" aria-hidden="true"></i>
-                        </a>
-                        <span class="search-button search-loading" id="search-loading-mobile">
-                            <i class="fas fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
-                        </span>
-                    </div>
-                    <a href="javascript:void(0);" class="search-cancel" id="search-cancel-mobile">
-                        Cancel
-                    </a>
-                </div><a class="menu-item" href="/posts/" title="">文章</a><a class="menu-item" href="/categories/" title="">分类</a><a class="menu-item" href="/tags/" title="">标签</a><a class="menu-item" href="/about-me/" title="">关于</a><a href="javascript:void(0);" class="menu-item theme-switch" title="Switch Theme">
-                <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
-            </a></div>
-    </div>
-</header><div class="search-dropdown desktop">
-        <div id="search-dropdown-desktop"></div>
-    </div>
-    <div class="search-dropdown mobile">
-        <div id="search-dropdown-mobile"></div>
-    </div><main class="main">
-                <div class="container"><div class="toc" id="toc-auto">
-            <h2 class="toc-title">Contents</h2>
-            <div class="toc-content" id="toc-content-auto"></div>
-        </div><article class="page single"><h1 class="single-title animate__animated animate__flipInX">OpenTelemetry实战：用Docker Compose一键搭建可观测性平台</h1><div class="post-meta">
-            <div class="post-meta-line"><span class="post-author"><a href="https://www.ithome.me/" title="Author" target="_blank" rel="noopener noreferrer author" class="author"><i class="fas fa-user-circle fa-fw" aria-hidden="true"></i>Simon Chen</a>
-</span>&nbsp;<span class="post-category">included in <a href="/categories/uncategorized/"><i class="far fa-folder fa-fw" aria-hidden="true"></i>Uncategorized</a></span></div>
-            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw" aria-hidden="true"></i>&nbsp;<time datetime="2026-06-20">2026-06-20</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden="true"></i>&nbsp;1779 words&nbsp;
-                <i class="far fa-clock fa-fw" aria-hidden="true"></i>&nbsp;4 minutes&nbsp;</div>
-        </div><div class="details toc" id="toc-static"  data-kept="true">
-                <div class="details-summary toc-title">
-                    <span>Contents</span>
-                    <span><i class="details-icon fas fa-angle-right" aria-hidden="true"></i></span>
-                </div>
-                <div class="details-content toc-content" id="toc-content-static"><nav id="TableOfContents">
-  <ul>
-    <li><a href="#为什么需要opentelemetry">为什么需要OpenTelemetry？</a></li>
-    <li><a href="#架构总览">架构总览</a></li>
-    <li><a href="#一项目结构">一、项目结构</a></li>
-    <li><a href="#二docker-compose编排">二、Docker Compose编排</a></li>
-    <li><a href="#三otel-collector配置">三、OTel Collector配置</a></li>
-    <li><a href="#四示例应用python">四、示例应用（Python）</a></li>
-    <li><a href="#五应用依赖与dockerfile">五、应用依赖与Dockerfile</a></li>
-    <li><a href="#六prometheus与grafana配置">六、Prometheus与Grafana配置</a></li>
-    <li><a href="#七启动与验证">七、启动与验证</a></li>
-    <li><a href="#八实战技巧">八、实战技巧</a>
-      <ul>
-        <li><a href="#1-给现有服务加埋点最少改动">1. 给现有服务加埋点（最少改动）</a></li>
-        <li><a href="#2-span之间自动关联">2. Span之间自动关联</a></li>
-        <li><a href="#3-采样策略生产环境必配">3. 采样策略（生产环境必配）</a></li>
-      </ul>
-    </li>
-    <li><a href="#总结">总结</a></li>
-  </ul>
-</nav></div>
-            </div><div class="content" id="content"><h2 id="为什么需要opentelemetry">为什么需要OpenTelemetry？</h2>
-<p>微服务架构下，一个请求可能经过5-10个服务。出了问题怎么办？传统的做法是翻日志、查数据库、猜链路——效率极低。</p>
-<p><strong>OpenTelemetry（简称OTel）</strong> 是CNCF孵化的可观测性标准框架，提供统一的API和SDK，让你用一套代码同时采集<strong>Traces（链路追踪）</strong>、<strong>Metrics（指标）<strong>和</strong>Logs（日志）</strong>，然后导出到任意后端。</p>
-<p>本文用Docker Compose一键搭建完整的可观测性平台，从零到可用只要10分钟。</p>
-<h2 id="架构总览">架构总览</h2>
-<div class="highlight"><div class="chroma">
-<table class="lntable"><tr><td class="lntd">
-<pre tabindex="0" class="chroma"><code><span class="lnt">1
-</span><span class="lnt">2
-</span><span class="lnt">3
-</span><span class="lnt">4
-</span></code></pre></td>
-<td class="lntd">
-<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">应用（OTel SDK） → OTel Collector → Prometheus（指标）
-</span></span><span class="line"><span class="cl">                                  → Jaeger（追踪）
-</span></span><span class="line"><span class="cl">                                  → Loki（日志）
-</span></span><span class="line"><span class="cl">                    Grafana（统一展示）
-</span></span></code></pre></td></tr></table>
-</div>
-</div><h2 id="一项目结构">一、项目结构</h2>
-<p>创建以下目录结构：</p>
-<div class="highlight"><div class="chroma">
-<table class="lntable"><tr><td class="lntd">
-<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
-</span><span class="lnt"> 2
-</span><span class="lnt"> 3
-</span><span class="lnt"> 4
-</span><span class="lnt"> 5
-</span><span class="lnt"> 6
-</span><span class="lnt"> 7
-</span><span class="lnt"> 8
-</span><span class="lnt"> 9
-</span><span class="lnt">10
-</span><span class="lnt">11
-</span><span class="lnt">12
-</span></code></pre></td>
-<td class="lntd">
-<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">otel-demo/
-</span></span><span class="line"><span class="cl">├── docker-compose.yml
-</span></span><span class="line"><span class="cl">├── otel-config.yml          # OTel Collector配置
-</span></span><span class="line"><span class="cl">├── prometheus.yml            # Prometheus配置
-</span></span><span class="line"><span class="cl">├── grafana/
-</span></span><span class="line"><span class="cl">│   └── provisioning/
-</span></span><span class="line"><span class="cl">│       └── datasources/
-</span></span><span class="line"><span class="cl">│           └── datasource.yml
-</span></span><span class="line"><span class="cl">├── app/
-</span></span><span class="line"><span class="cl">│   ├── Dockerfile
-</span></span><span class="line"><span class="cl">│   ├── requirements.txt
-</span></span><span class="line"><span class="cl">│   └── main.py               # 示例应用
-</span></span></code></pre></td></tr></table>
-</div>
-</div><h2 id="二docker-compose编排">二、Docker Compose编排</h2>
-<div class="highlight"><div class="chroma">
-<table class="lntable"><tr><td class="lntd">
-<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
-</span><span class="lnt"> 2
-</span><span class="lnt"> 3
-</span><span class="lnt"> 4
-</span><span class="lnt"> 5
-</span><span class="lnt"> 6
-</span><span class="lnt"> 7
-</span><span class="lnt"> 8
-</span><span class="lnt"> 9
-</span><span class="lnt">10
-</span><span class="lnt">11
-</span><span class="lnt">12
-</span><span class="lnt">13
-</span><span class="lnt">14
-</span><span class="lnt">15
-</span><span class="lnt">16
-</span><span class="lnt">17
-</span><span class="lnt">18
-</span><span class="lnt">19
-</span><span class="lnt">20
-</span><span class="lnt">21
-</span><span class="lnt">22
-</span><span class="lnt">23
-</span><span class="lnt">24
-</span><span class="lnt">25
-</span><span class="lnt">26
-</span><span class="lnt">27
-</span><span class="lnt">28
-</span><span class="lnt">29
-</span><span class="lnt">30
-</span><span class="lnt">31
-</span><span class="lnt">32
-</span><span class="lnt">33
-</span><span class="lnt">34
-</span><span class="lnt">35
-</span><span class="lnt">36
-</span><span class="lnt">37
-</span><span class="lnt">38
-</span><span class="lnt">39
-</span><span class="lnt">40
-</span><span class="lnt">41
-</span><span class="lnt">42
-</span><span class="lnt">43
-</span><span class="lnt">44
-</span><span class="lnt">45
-</span><span class="lnt">46
-</span><span class="lnt">47
-</span><span class="lnt">48
-</span><span class="lnt">49
-</span><span class="lnt">50
-</span></code></pre></td>
-<td class="lntd">
-<pre tabindex="0" class="chroma"><code class="language-yaml" data-lang="yaml"><span class="line"><span class="cl"><span class="c"># docker-compose.yml</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="nt">version</span><span class="p">:</span><span class="w"> </span><span class="s2">&#34;3.8&#34;</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="nt">services</span><span class="p">:</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="c"># OTel Collector - 统一采集入口</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="nt">otel-collector</span><span class="p">:</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l">otel/opentelemetry-collector-contrib:0.102.0</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nt">command</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&#34;--config=/etc/otelcol/config.yml&#34;</span><span class="p">]</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nt">volumes</span><span class="p">:</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">      </span>- <span class="l">./otel-config.yml:/etc/otelcol/config.yml</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nt">ports</span><span class="p">:</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">      </span>- <span class="s2">&#34;4317:4317&#34;</span><span class="w">   </span><span class="c"># OTLP gRPC</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">      </span>- <span class="s2">&#34;4318:4318&#34;</span><span class="w">   </span><span class="c"># OTLP HTTP</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">      </span>- <span class="s2">&#34;8888:8888&#34;</span><span class="w">   </span><span class="c"># Collector指标</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="c"># Prometheus - 存储指标</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="nt">prometheus</span><span class="p">:</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l">prom/prometheus:v2.53.0</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nt">volumes</span><span class="p">:</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">      </span>- <span class="l">./prometheus.yml:/etc/prometheus/prometheus.yml</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nt">ports</span><span class="p">:</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">      </span>- <span class="s2">&#34;9090:9090&#34;</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="c"># Jaeger - 存储和展示追踪</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="nt">jaeger</span><span class="p">:</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l">jaegertracing/all-in-one:1.58</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nt">environment</span><span class="p">:</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">      </span>- <span class="l">COLLECTOR_OTLP_ENABLED=true</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nt">ports</span><span class="p">:</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">      </span>- <span class="s2">&#34;16686:16686&#34;</span><span class="w">  </span><span class="c"># Jaeger UI</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">      </span>- <span class="s2">&#34;14250:14250&#34;</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="c"># Grafana - 统一可视化</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="nt">grafana</span><span class="p">:</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l">grafana/grafana:11.1.0</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nt">volumes</span><span class="p">:</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">      </span>- <span class="l">./grafana/provisioning:/etc/grafana/provisioning</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nt">environment</span><span class="p">:</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">      </span>- <span class="l">GF_SECURITY_ADMIN_PASSWORD=admin123</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nt">ports</span><span class="p">:</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">      </span>- <span class="s2">&#34;3000:3000&#34;</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="c"># 示例应用</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="nt">app</span><span class="p">:</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nt">build</span><span class="p">:</span><span class="w"> </span><span class="l">./app</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nt">environment</span><span class="p">:</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">      </span>- <span class="l">OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">      </span>- <span class="l">OTEL_SERVICE_NAME=demo-app</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nt">ports</span><span class="p">:</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">      </span>- <span class="s2">&#34;8080:8080&#34;</span><span class="w">
-</span></span></span></code></pre></td></tr></table>
-</div>
-</div><h2 id="三otel-collector配置">三、OTel Collector配置</h2>
-<div class="highlight"><div class="chroma">
-<table class="lntable"><tr><td class="lntd">
-<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
-</span><span class="lnt"> 2
-</span><span class="lnt"> 3
-</span><span class="lnt"> 4
-</span><span class="lnt"> 5
-</span><span class="lnt"> 6
-</span><span class="lnt"> 7
-</span><span class="lnt"> 8
-</span><span class="lnt"> 9
-</span><span class="lnt">10
-</span><span class="lnt">11
-</span><span class="lnt">12
-</span><span class="lnt">13
-</span><span class="lnt">14
-</span><span class="lnt">15
-</span><span class="lnt">16
-</span><span class="lnt">17
-</span><span class="lnt">18
-</span><span class="lnt">19
-</span><span class="lnt">20
-</span><span class="lnt">21
-</span><span class="lnt">22
-</span><span class="lnt">23
-</span><span class="lnt">24
-</span><span class="lnt">25
-</span><span class="lnt">26
-</span><span class="lnt">27
-</span><span class="lnt">28
-</span><span class="lnt">29
-</span><span class="lnt">30
-</span><span class="lnt">31
-</span><span class="lnt">32
-</span><span class="lnt">33
-</span><span class="lnt">34
-</span><span class="lnt">35
-</span><span class="lnt">36
-</span><span class="lnt">37
-</span><span class="lnt">38
-</span><span class="lnt">39
-</span><span class="lnt">40
-</span><span class="lnt">41
-</span><span class="lnt">42
-</span><span class="lnt">43
-</span><span class="lnt">44
-</span></code></pre></td>
-<td class="lntd">
-<pre tabindex="0" class="chroma"><code class="language-yaml" data-lang="yaml"><span class="line"><span class="cl"><span class="c"># otel-config.yml</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="nt">receivers</span><span class="p">:</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="nt">otlp</span><span class="p">:</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nt">protocols</span><span class="p">:</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">      </span><span class="nt">grpc</span><span class="p">:</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="nt">endpoint</span><span class="p">:</span><span class="w"> </span><span class="m">0.0.0.0</span><span class="p">:</span><span class="m">4317</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">      </span><span class="nt">http</span><span class="p">:</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="nt">endpoint</span><span class="p">:</span><span class="w"> </span><span class="m">0.0.0.0</span><span class="p">:</span><span class="m">4318</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="nt">processors</span><span class="p">:</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="nt">batch</span><span class="p">:</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nt">timeout</span><span class="p">:</span><span class="w"> </span><span class="l">5s</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nt">send_batch_size</span><span class="p">:</span><span class="w"> </span><span class="m">1024</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="nt">exporters</span><span class="p">:</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="c"># 追踪导出到Jaeger</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="nt">otlp/jaeger</span><span class="p">:</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nt">endpoint</span><span class="p">:</span><span class="w"> </span><span class="l">jaeger:4317</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nt">tls</span><span class="p">:</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">      </span><span class="nt">insecure</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="c"># 指标导出到Prometheus</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="nt">prometheus</span><span class="p">:</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nt">endpoint</span><span class="p">:</span><span class="w"> </span><span class="s2">&#34;0.0.0.0:8889&#34;</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nt">namespace</span><span class="p">:</span><span class="w"> </span><span class="l">demo</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="c"># 日志导出到控制台（开发环境）</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="nt">debug</span><span class="p">:</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nt">verbosity</span><span class="p">:</span><span class="w"> </span><span class="l">basic</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="nt">service</span><span class="p">:</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="nt">pipelines</span><span class="p">:</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nt">traces</span><span class="p">:</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">      </span><span class="nt">receivers</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="l">otlp]</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">      </span><span class="nt">processors</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="l">batch]</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">      </span><span class="nt">exporters</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="l">otlp/jaeger]</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nt">metrics</span><span class="p">:</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">      </span><span class="nt">receivers</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="l">otlp]</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">      </span><span class="nt">processors</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="l">batch]</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">      </span><span class="nt">exporters</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="l">prometheus]</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nt">logs</span><span class="p">:</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">      </span><span class="nt">receivers</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="l">otlp]</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">      </span><span class="nt">processors</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="l">batch]</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">      </span><span class="nt">exporters</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="l">debug]</span><span class="w">
-</span></span></span></code></pre></td></tr></table>
-</div>
-</div><h2 id="四示例应用python">四、示例应用（Python）</h2>
-<div class="highlight"><div class="chroma">
-<table class="lntable"><tr><td class="lntd">
-<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
-</span><span class="lnt"> 2
-</span><span class="lnt"> 3
-</span><span class="lnt"> 4
-</span><span class="lnt"> 5
-</span><span class="lnt"> 6
-</span><span class="lnt"> 7
-</span><span class="lnt"> 8
-</span><span class="lnt"> 9
-</span><span class="lnt">10
-</span><span class="lnt">11
-</span><span class="lnt">12
-</span><span class="lnt">13
-</span><span class="lnt">14
-</span><span class="lnt">15
-</span><span class="lnt">16
-</span><span class="lnt">17
-</span><span class="lnt">18
-</span><span class="lnt">19
-</span><span class="lnt">20
-</span><span class="lnt">21
-</span><span class="lnt">22
-</span><span class="lnt">23
-</span><span class="lnt">24
-</span><span class="lnt">25
-</span><span class="lnt">26
-</span><span class="lnt">27
-</span><span class="lnt">28
-</span><span class="lnt">29
-</span><span class="lnt">30
-</span><span class="lnt">31
-</span><span class="lnt">32
-</span><span class="lnt">33
-</span><span class="lnt">34
-</span><span class="lnt">35
-</span><span class="lnt">36
-</span><span class="lnt">37
-</span><span class="lnt">38
-</span><span class="lnt">39
-</span><span class="lnt">40
-</span><span class="lnt">41
-</span><span class="lnt">42
-</span><span class="lnt">43
-</span><span class="lnt">44
-</span><span class="lnt">45
-</span><span class="lnt">46
-</span><span class="lnt">47
-</span><span class="lnt">48
-</span><span class="lnt">49
-</span><span class="lnt">50
-</span><span class="lnt">51
-</span><span class="lnt">52
-</span><span class="lnt">53
-</span><span class="lnt">54
-</span><span class="lnt">55
-</span><span class="lnt">56
-</span><span class="lnt">57
-</span><span class="lnt">58
-</span><span class="lnt">59
-</span><span class="lnt">60
-</span><span class="lnt">61
-</span><span class="lnt">62
-</span><span class="lnt">63
-</span><span class="lnt">64
-</span><span class="lnt">65
-</span><span class="lnt">66
-</span><span class="lnt">67
-</span><span class="lnt">68
-</span><span class="lnt">69
-</span><span class="lnt">70
-</span><span class="lnt">71
-</span><span class="lnt">72
-</span><span class="lnt">73
-</span><span class="lnt">74
-</span><span class="lnt">75
-</span><span class="lnt">76
-</span><span class="lnt">77
-</span><span class="lnt">78
-</span><span class="lnt">79
-</span><span class="lnt">80
-</span><span class="lnt">81
-</span><span class="lnt">82
-</span><span class="lnt">83
-</span><span class="lnt">84
-</span><span class="lnt">85
-</span><span class="lnt">86
-</span><span class="lnt">87
-</span><span class="lnt">88
-</span></code></pre></td>
-<td class="lntd">
-<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="c1"># app/main.py</span>
-</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">flask</span> <span class="kn">import</span> <span class="n">Flask</span><span class="p">,</span> <span class="n">jsonify</span>
-</span></span><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">time</span>
-</span></span><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">random</span>
-</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">opentelemetry</span> <span class="kn">import</span> <span class="n">trace</span><span class="p">,</span> <span class="n">metrics</span>
-</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">opentelemetry.sdk.trace</span> <span class="kn">import</span> <span class="n">TracerProvider</span>
-</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">opentelemetry.sdk.trace.export</span> <span class="kn">import</span> <span class="n">BatchSpanProcessor</span>
-</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">opentelemetry.sdk.metrics</span> <span class="kn">import</span> <span class="n">MeterProvider</span>
-</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">opentelemetry.sdk.metrics.export</span> <span class="kn">import</span> <span class="n">PeriodicExportingMetricReader</span>
-</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">opentelemetry.exporter.otlp.proto.grpc.trace_exporter</span> <span class="kn">import</span> <span class="n">OTLPSpanExporter</span>
-</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">opentelemetry.exporter.otlp.proto.grpc.metric_exporter</span> <span class="kn">import</span> <span class="n">OTLPMetricExporter</span>
-</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">opentelemetry.instrumentation.flask</span> <span class="kn">import</span> <span class="n">FlaskInstrumentor</span>
-</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">opentelemetry.instrumentation.requests</span> <span class="kn">import</span> <span class="n">RequestsInstrumentor</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="c1"># 初始化Tracer</span>
-</span></span><span class="line"><span class="cl"><span class="n">tracer_provider</span> <span class="o">=</span> <span class="n">TracerProvider</span><span class="p">()</span>
-</span></span><span class="line"><span class="cl"><span class="n">tracer_provider</span><span class="o">.</span><span class="n">add_span_processor</span><span class="p">(</span>
-</span></span><span class="line"><span class="cl">    <span class="n">BatchSpanProcessor</span><span class="p">(</span><span class="n">OTLPSpanExporter</span><span class="p">(</span><span class="n">endpoint</span><span class="o">=</span><span class="s2">&#34;otel-collector:4317&#34;</span><span class="p">,</span> <span class="n">insecure</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
-</span></span><span class="line"><span class="cl"><span class="p">)</span>
-</span></span><span class="line"><span class="cl"><span class="n">trace</span><span class="o">.</span><span class="n">set_tracer_provider</span><span class="p">(</span><span class="n">tracer_provider</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl"><span class="n">tracer</span> <span class="o">=</span> <span class="n">trace</span><span class="o">.</span><span class="n">get_tracer</span><span class="p">(</span><span class="s2">&#34;demo-app&#34;</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="c1"># 初始化Meter</span>
-</span></span><span class="line"><span class="cl"><span class="n">metric_reader</span> <span class="o">=</span> <span class="n">PeriodicExportingMetricReader</span><span class="p">(</span>
-</span></span><span class="line"><span class="cl">    <span class="n">OTLPMetricExporter</span><span class="p">(</span><span class="n">endpoint</span><span class="o">=</span><span class="s2">&#34;otel-collector:4317&#34;</span><span class="p">,</span> <span class="n">insecure</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
-</span></span><span class="line"><span class="cl">    <span class="n">export_interval_millis</span><span class="o">=</span><span class="mi">5000</span><span class="p">,</span>
-</span></span><span class="line"><span class="cl"><span class="p">)</span>
-</span></span><span class="line"><span class="cl"><span class="n">meter_provider</span> <span class="o">=</span> <span class="n">MeterProvider</span><span class="p">(</span><span class="n">metric_readers</span><span class="o">=</span><span class="p">[</span><span class="n">metric_reader</span><span class="p">])</span>
-</span></span><span class="line"><span class="cl"><span class="n">metrics</span><span class="o">.</span><span class="n">set_meter_provider</span><span class="p">(</span><span class="n">meter_provider</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl"><span class="n">meter</span> <span class="o">=</span> <span class="n">metrics</span><span class="o">.</span><span class="n">get_meter</span><span class="p">(</span><span class="s2">&#34;demo-app&#34;</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="c1"># 自定义指标</span>
-</span></span><span class="line"><span class="cl"><span class="n">request_counter</span> <span class="o">=</span> <span class="n">meter</span><span class="o">.</span><span class="n">create_counter</span><span class="p">(</span>
-</span></span><span class="line"><span class="cl">    <span class="n">name</span><span class="o">=</span><span class="s2">&#34;http_requests_total&#34;</span><span class="p">,</span>
-</span></span><span class="line"><span class="cl">    <span class="n">description</span><span class="o">=</span><span class="s2">&#34;Total HTTP requests&#34;</span><span class="p">,</span>
-</span></span><span class="line"><span class="cl">    <span class="n">unit</span><span class="o">=</span><span class="s2">&#34;1&#34;</span><span class="p">,</span>
-</span></span><span class="line"><span class="cl"><span class="p">)</span>
-</span></span><span class="line"><span class="cl"><span class="n">request_duration</span> <span class="o">=</span> <span class="n">meter</span><span class="o">.</span><span class="n">create_histogram</span><span class="p">(</span>
-</span></span><span class="line"><span class="cl">    <span class="n">name</span><span class="o">=</span><span class="s2">&#34;http_request_duration_seconds&#34;</span><span class="p">,</span>
-</span></span><span class="line"><span class="cl">    <span class="n">description</span><span class="o">=</span><span class="s2">&#34;Request duration&#34;</span><span class="p">,</span>
-</span></span><span class="line"><span class="cl">    <span class="n">unit</span><span class="o">=</span><span class="s2">&#34;s&#34;</span><span class="p">,</span>
-</span></span><span class="line"><span class="cl"><span class="p">)</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="n">app</span> <span class="o">=</span> <span class="n">Flask</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl"><span class="n">FlaskInstrumentor</span><span class="p">()</span><span class="o">.</span><span class="n">instrument_app</span><span class="p">(</span><span class="n">app</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl"><span class="n">RequestsInstrumentor</span><span class="p">()</span><span class="o">.</span><span class="n">instrument</span><span class="p">()</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="nd">@app.route</span><span class="p">(</span><span class="s2">&#34;/&#34;</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">index</span><span class="p">():</span>
-</span></span><span class="line"><span class="cl">    <span class="k">with</span> <span class="n">tracer</span><span class="o">.</span><span class="n">start_as_current_span</span><span class="p">(</span><span class="s2">&#34;handle_index&#34;</span><span class="p">)</span> <span class="k">as</span> <span class="n">span</span><span class="p">:</span>
-</span></span><span class="line"><span class="cl">        <span class="n">span</span><span class="o">.</span><span class="n">set_attribute</span><span class="p">(</span><span class="s2">&#34;user.id&#34;</span><span class="p">,</span> <span class="s2">&#34;demo-user&#34;</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">        <span class="c1"># 模拟业务逻辑</span>
-</span></span><span class="line"><span class="cl">        <span class="n">_simulate_work</span><span class="p">()</span>
-</span></span><span class="line"><span class="cl">        <span class="n">request_counter</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="p">{</span><span class="s2">&#34;method&#34;</span><span class="p">:</span> <span class="s2">&#34;GET&#34;</span><span class="p">,</span> <span class="s2">&#34;path&#34;</span><span class="p">:</span> <span class="s2">&#34;/&#34;</span><span class="p">})</span>
-</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="n">jsonify</span><span class="p">({</span><span class="s2">&#34;message&#34;</span><span class="p">:</span> <span class="s2">&#34;Hello OpenTelemetry!&#34;</span><span class="p">})</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="nd">@app.route</span><span class="p">(</span><span class="s2">&#34;/slow&#34;</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">slow_endpoint</span><span class="p">():</span>
-</span></span><span class="line"><span class="cl">    <span class="k">with</span> <span class="n">tracer</span><span class="o">.</span><span class="n">start_as_current_span</span><span class="p">(</span><span class="s2">&#34;handle_slow&#34;</span><span class="p">)</span> <span class="k">as</span> <span class="n">span</span><span class="p">:</span>
-</span></span><span class="line"><span class="cl">        <span class="n">delay</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">        <span class="n">span</span><span class="o">.</span><span class="n">set_attribute</span><span class="p">(</span><span class="s2">&#34;delay.seconds&#34;</span><span class="p">,</span> <span class="n">delay</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">        <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="n">delay</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">        <span class="n">request_counter</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="p">{</span><span class="s2">&#34;method&#34;</span><span class="p">:</span> <span class="s2">&#34;GET&#34;</span><span class="p">,</span> <span class="s2">&#34;path&#34;</span><span class="p">:</span> <span class="s2">&#34;/slow&#34;</span><span class="p">})</span>
-</span></span><span class="line"><span class="cl">        <span class="n">request_duration</span><span class="o">.</span><span class="n">record</span><span class="p">(</span><span class="n">delay</span><span class="p">,</span> <span class="p">{</span><span class="s2">&#34;path&#34;</span><span class="p">:</span> <span class="s2">&#34;/slow&#34;</span><span class="p">})</span>
-</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="n">jsonify</span><span class="p">({</span><span class="s2">&#34;delay&#34;</span><span class="p">:</span> <span class="n">delay</span><span class="p">})</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="nd">@app.route</span><span class="p">(</span><span class="s2">&#34;/error&#34;</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">error_endpoint</span><span class="p">():</span>
-</span></span><span class="line"><span class="cl">    <span class="k">with</span> <span class="n">tracer</span><span class="o">.</span><span class="n">start_as_current_span</span><span class="p">(</span><span class="s2">&#34;handle_error&#34;</span><span class="p">)</span> <span class="k">as</span> <span class="n">span</span><span class="p">:</span>
-</span></span><span class="line"><span class="cl">        <span class="k">try</span><span class="p">:</span>
-</span></span><span class="line"><span class="cl">            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&#34;Something went wrong!&#34;</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">        <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-</span></span><span class="line"><span class="cl">            <span class="n">span</span><span class="o">.</span><span class="n">record_exception</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">            <span class="n">span</span><span class="o">.</span><span class="n">set_status</span><span class="p">(</span><span class="n">trace</span><span class="o">.</span><span class="n">StatusCode</span><span class="o">.</span><span class="n">ERROR</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
-</span></span><span class="line"><span class="cl">            <span class="n">request_counter</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="p">{</span><span class="s2">&#34;method&#34;</span><span class="p">:</span> <span class="s2">&#34;GET&#34;</span><span class="p">,</span> <span class="s2">&#34;path&#34;</span><span class="p">:</span> <span class="s2">&#34;/error&#34;</span><span class="p">})</span>
-</span></span><span class="line"><span class="cl">            <span class="k">raise</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">_simulate_work</span><span class="p">():</span>
-</span></span><span class="line"><span class="cl">    <span class="k">with</span> <span class="n">tracer</span><span class="o">.</span><span class="n">start_as_current_span</span><span class="p">(</span><span class="s2">&#34;simulate_work&#34;</span><span class="p">):</span>
-</span></span><span class="line"><span class="cl">        <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mf">0.01</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">))</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&#34;__main__&#34;</span><span class="p">:</span>
-</span></span><span class="line"><span class="cl">    <span class="n">app</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">host</span><span class="o">=</span><span class="s2">&#34;0.0.0.0&#34;</span><span class="p">,</span> <span class="n">port</span><span class="o">=</span><span class="mi">8080</span><span class="p">)</span>
-</span></span></code></pre></td></tr></table>
-</div>
-</div><h2 id="五应用依赖与dockerfile">五、应用依赖与Dockerfile</h2>
-<div class="highlight"><div class="chroma">
-<table class="lntable"><tr><td class="lntd">
-<pre tabindex="0" class="chroma"><code><span class="lnt">1
-</span><span class="lnt">2
-</span><span class="lnt">3
-</span><span class="lnt">4
-</span><span class="lnt">5
-</span><span class="lnt">6
-</span><span class="lnt">7
-</span></code></pre></td>
-<td class="lntd">
-<pre tabindex="0" class="chroma"><code class="language-txt" data-lang="txt"><span class="line"><span class="cl"># app/requirements.txt
-</span></span><span class="line"><span class="cl">flask==3.0.3
-</span></span><span class="line"><span class="cl">opentelemetry-api==1.25.0
-</span></span><span class="line"><span class="cl">opentelemetry-sdk==1.25.0
-</span></span><span class="line"><span class="cl">opentelemetry-exporter-otlp-proto-grpc==1.25.0
-</span></span><span class="line"><span class="cl">opentelemetry-instrumentation-flask==0.46b0
-</span></span><span class="line"><span class="cl">opentelemetry-instrumentation-requests==0.46b0
-</span></span></code></pre></td></tr></table>
-</div>
-</div><div class="highlight"><div class="chroma">
-<table class="lntable"><tr><td class="lntd">
-<pre tabindex="0" class="chroma"><code><span class="lnt">1
-</span><span class="lnt">2
-</span><span class="lnt">3
-</span><span class="lnt">4
-</span><span class="lnt">5
-</span><span class="lnt">6
-</span><span class="lnt">7
-</span><span class="lnt">8
-</span></code></pre></td>
-<td class="lntd">
-<pre tabindex="0" class="chroma"><code class="language-dockerfile" data-lang="dockerfile"><span class="line"><span class="cl"><span class="c"># app/Dockerfile</span><span class="err">
-</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="k">FROM</span><span class="s"> python:3.12-slim</span><span class="err">
-</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="k">WORKDIR</span><span class="s"> /app</span><span class="err">
-</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="k">COPY</span> requirements.txt .<span class="err">
-</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="k">RUN</span> pip install --no-cache-dir -r requirements.txt<span class="err">
-</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="k">COPY</span> main.py .<span class="err">
-</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="k">EXPOSE</span><span class="s"> 8080</span><span class="err">
-</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="k">CMD</span> <span class="p">[</span><span class="s2">&#34;python&#34;</span><span class="p">,</span> <span class="s2">&#34;main.py&#34;</span><span class="p">]</span><span class="err">
-</span></span></span></code></pre></td></tr></table>
-</div>
-</div><h2 id="六prometheus与grafana配置">六、Prometheus与Grafana配置</h2>
-<div class="highlight"><div class="chroma">
-<table class="lntable"><tr><td class="lntd">
-<pre tabindex="0" class="chroma"><code><span class="lnt">1
-</span><span class="lnt">2
-</span><span class="lnt">3
-</span><span class="lnt">4
-</span><span class="lnt">5
-</span><span class="lnt">6
-</span><span class="lnt">7
-</span><span class="lnt">8
-</span></code></pre></td>
-<td class="lntd">
-<pre tabindex="0" class="chroma"><code class="language-yaml" data-lang="yaml"><span class="line"><span class="cl"><span class="c"># prometheus.yml</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="nt">global</span><span class="p">:</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="nt">scrape_interval</span><span class="p">:</span><span class="w"> </span><span class="l">15s</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="nt">scrape_configs</span><span class="p">:</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">  </span>- <span class="nt">job_name</span><span class="p">:</span><span class="w"> </span><span class="s2">&#34;otel-collector&#34;</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nt">static_configs</span><span class="p">:</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">      </span>- <span class="nt">targets</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&#34;otel-collector:8889&#34;</span><span class="p">]</span><span class="w">
-</span></span></span></code></pre></td></tr></table>
-</div>
-</div><div class="highlight"><div class="chroma">
-<table class="lntable"><tr><td class="lntd">
-<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
-</span><span class="lnt"> 2
-</span><span class="lnt"> 3
-</span><span class="lnt"> 4
-</span><span class="lnt"> 5
-</span><span class="lnt"> 6
-</span><span class="lnt"> 7
-</span><span class="lnt"> 8
-</span><span class="lnt"> 9
-</span><span class="lnt">10
-</span></code></pre></td>
-<td class="lntd">
-<pre tabindex="0" class="chroma"><code class="language-yaml" data-lang="yaml"><span class="line"><span class="cl"><span class="c"># grafana/provisioning/datasources/datasource.yml</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="nt">apiVersion</span><span class="p">:</span><span class="w"> </span><span class="m">1</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="nt">datasources</span><span class="p">:</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">  </span>- <span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l">Prometheus</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l">prometheus</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nt">url</span><span class="p">:</span><span class="w"> </span><span class="l">http://prometheus:9090</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nt">isDefault</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">  </span>- <span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l">Jaeger</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l">jaeger</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nt">url</span><span class="p">:</span><span class="w"> </span><span class="l">http://jaeger:16686</span><span class="w">
-</span></span></span></code></pre></td></tr></table>
-</div>
-</div><h2 id="七启动与验证">七、启动与验证</h2>
-<div class="highlight"><div class="chroma">
-<table class="lntable"><tr><td class="lntd">
-<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
-</span><span class="lnt"> 2
-</span><span class="lnt"> 3
-</span><span class="lnt"> 4
-</span><span class="lnt"> 5
-</span><span class="lnt"> 6
-</span><span class="lnt"> 7
-</span><span class="lnt"> 8
-</span><span class="lnt"> 9
-</span><span class="lnt">10
-</span><span class="lnt">11
-</span><span class="lnt">12
-</span><span class="lnt">13
-</span><span class="lnt">14
-</span><span class="lnt">15
-</span></code></pre></td>
-<td class="lntd">
-<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl"><span class="c1"># 启动所有服务</span>
-</span></span><span class="line"><span class="cl">docker-compose up -d
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="c1"># 查看日志确认启动成功</span>
-</span></span><span class="line"><span class="cl">docker-compose logs -f otel-collector
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="c1"># 生成一些请求</span>
-</span></span><span class="line"><span class="cl">curl http://localhost:8080/
-</span></span><span class="line"><span class="cl">curl http://localhost:8080/slow
-</span></span><span class="line"><span class="cl">curl http://localhost:8080/error
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="c1"># 打开各组件UI</span>
-</span></span><span class="line"><span class="cl"><span class="c1"># Grafana: http://localhost:3000 (admin/admin123)</span>
-</span></span><span class="line"><span class="cl"><span class="c1"># Jaeger:  http://localhost:16686</span>
-</span></span><span class="line"><span class="cl"><span class="c1"># Prometheus: http://localhost:9090</span>
-</span></span></code></pre></td></tr></table>
-</div>
-</div><h2 id="八实战技巧">八、实战技巧</h2>
-<h3 id="1-给现有服务加埋点最少改动">1. 给现有服务加埋点（最少改动）</h3>
-<p>用自动插桩，只需要3行代码：</p>
-<div class="highlight"><div class="chroma">
-<table class="lntable"><tr><td class="lntd">
-<pre tabindex="0" class="chroma"><code><span class="lnt">1
-</span><span class="lnt">2
-</span><span class="lnt">3
-</span></code></pre></td>
-<td class="lntd">
-<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">opentelemetry.instrumentation.flask</span> <span class="kn">import</span> <span class="n">FlaskInstrumentor</span>
-</span></span><span class="line"><span class="cl"><span class="c1"># 原有代码不需要改</span>
-</span></span><span class="line"><span class="cl"><span class="n">FlaskInstrumentor</span><span class="p">()</span><span class="o">.</span><span class="n">instrument_app</span><span class="p">(</span><span class="n">app</span><span class="p">)</span>  <span class="c1"># 加这一行</span>
-</span></span></code></pre></td></tr></table>
-</div>
-</div><p>Python支持自动插桩的库：Flask、Django、FastAPI、requests、SQLAlchemy、Redis、gRPC等。</p>
-<h3 id="2-span之间自动关联">2. Span之间自动关联</h3>
-<p>同一进程内的Span会自动继承Context，不需要手动传递。跨进程调用通过HTTP Header自动传播：</p>
-<div class="highlight"><div class="chroma">
-<table class="lntable"><tr><td class="lntd">
-<pre tabindex="0" class="chroma"><code><span class="lnt">1
-</span><span class="lnt">2
-</span></code></pre></td>
-<td class="lntd">
-<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="c1"># 自动注入traceparent Header到出站请求</span>
-</span></span><span class="line"><span class="cl"><span class="n">RequestsInstrumentor</span><span class="p">()</span><span class="o">.</span><span class="n">instrument</span><span class="p">()</span>  <span class="c1"># 自动处理</span>
-</span></span></code></pre></td></tr></table>
-</div>
-</div><h3 id="3-采样策略生产环境必配">3. 采样策略（生产环境必配）</h3>
-<div class="highlight"><div class="chroma">
-<table class="lntable"><tr><td class="lntd">
-<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
-</span><span class="lnt"> 2
-</span><span class="lnt"> 3
-</span><span class="lnt"> 4
-</span><span class="lnt"> 5
-</span><span class="lnt"> 6
-</span><span class="lnt"> 7
-</span><span class="lnt"> 8
-</span><span class="lnt"> 9
-</span><span class="lnt">10
-</span><span class="lnt">11
-</span><span class="lnt">12
-</span></code></pre></td>
-<td class="lntd">
-<pre tabindex="0" class="chroma"><code class="language-yaml" data-lang="yaml"><span class="line"><span class="cl"><span class="c"># otel-config.yml中添加</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="nt">processors</span><span class="p">:</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="nt">probabilistic_sampler</span><span class="p">:</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nt">sampling_percentage</span><span class="p">:</span><span class="w"> </span><span class="m">10</span><span class="w">  </span><span class="c"># 只采样10%</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="nt">tail_sampling</span><span class="p">:</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nt">policies</span><span class="p">:</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">      </span>- <span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l">errors</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l">status_code</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="nt">status_code</span><span class="p">:</span><span class="w"> </span>{<span class="nt">status_codes</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="l">ERROR]}</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">      </span>- <span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l">slow</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l">latency</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="nt">latency</span><span class="p">:</span><span class="w"> </span>{<span class="nt">threshold_ms</span><span class="p">:</span><span class="w"> </span><span class="m">1000</span>}<span class="w">
-</span></span></span></code></pre></td></tr></table>
-</div>
-</div><p>关键：<strong>错误和慢请求100%采集，正常请求采样10%</strong>，既节省存储又不丢重要数据。</p>
-<h2 id="总结">总结</h2>
-<p>OpenTelemetry的最大价值是<strong>标准化</strong>——你不需要为每个监控后端写不同的集成代码。换后端只需改Collector配置，应用代码一行不用动。</p>
-<table>
-<thead>
-<tr>
-<th>组件</th>
-<th>作用</th>
-<th>默认端口</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>OTel Collector</td>
-<td>数据采集+转发</td>
-<td>4317(gRPC) / 4318(HTTP)</td>
-</tr>
-<tr>
-<td>Prometheus</td>
-<td>指标存储+查询</td>
-<td>9090</td>
-</tr>
-<tr>
-<td>Jaeger</td>
-<td>追踪存储+查询</td>
-<td>16686(UI)</td>
-</tr>
-<tr>
-<td>Grafana</td>
-<td>统一可视化面板</td>
-<td>3000</td>
-</tr>
-</tbody>
-</table>
-<p>整套方案全部开源，没有任何厂商锁定。从单体到微服务，从开发到生产，这套可观测性栈够用很久。</p>
-</div><div class="post-footer" id="post-footer">
-    <div class="post-info">
-        <div class="post-info-line">
-            <div class="post-info-mod">
-                <span>Updated on 2026-06-20&nbsp;<a class="git-hash" href="https://github.com/cikichen/hugo-sync/commit/a071a7cdac680b7f6963dbb06619fa8af7ce86f6" target="_blank" title="commit by cikichen(cikichen@github.com) a071a7cdac680b7f6963dbb06619fa8af7ce86f6: Auto: 2026-06-20 - OpenTelemetry实战：用Docker Compose一键搭建可观测性平台">
-                                    <i class="fas fa-hashtag fa-fw" aria-hidden="true"></i>a071a7cd</a></span>
-            </div></div>
-        <div class="post-info-line">
-            <div class="post-info-md"></div>
-            <div class="post-info-share">
-                <span><a href="javascript:void(0);" title="Share on Twitter" data-sharer="twitter" data-url="https://www.ithome.me/post/2026/06/20/opentelemetry-docker-compose-observability/" data-title="OpenTelemetry实战：用Docker Compose一键搭建可观测性平台" data-via="ChenCiki" data-hashtags="OpenTelemetry,可观测性,Docker,Grafana,Jaeger"><i class="fab fa-twitter fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on Linkedin" data-sharer="linkedin" data-url="https://www.ithome.me/post/2026/06/20/opentelemetry-docker-compose-observability/"><i class="fab fa-linkedin fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on 微博" data-sharer="weibo" data-url="https://www.ithome.me/post/2026/06/20/opentelemetry-docker-compose-observability/" data-title="OpenTelemetry实战：用Docker Compose一键搭建可观测性平台" data-ralateuid="xxx"><i class="fab fa-weibo fa-fw" aria-hidden="true"></i></a></span>
-            </div>
-        </div>
-    </div>
-
-    <div class="post-info-more">
-        <section class="post-tags"><i class="fas fa-tags fa-fw" aria-hidden="true"></i>&nbsp;<a href="/tags/opentelemetry/">OpenTelemetry</a>,&nbsp;<a href="/tags/%E5%8F%AF%E8%A7%82%E6%B5%8B%E6%80%A7/">可观测性</a>,&nbsp;<a href="/tags/docker/">Docker</a>,&nbsp;<a href="/tags/grafana/">Grafana</a>,&nbsp;<a href="/tags/jaeger/">Jaeger</a></section>
-        <section>
-            <span><a href="javascript:void(0);" onclick="window.history.back();">Back</a></span>&nbsp;|&nbsp;<span><a href="/">Home</a></span>
-        </section>
-    </div>
-
-    <div class="post-nav"><a href="/post/2026/06/19/github-actions-cicd-pipeline/" class="prev" rel="prev" title="GitHub Actions 实战：为你的项目搭建完整的 CI/CD 自动化流水线"><i class="fas fa-angle-left fa-fw" aria-hidden="true"></i>GitHub Actions 实战：为你的项目搭建完整的 CI/CD 自动化流水线</a>
-            <a href="/post/2026/06/21/nginx-reverse-proxy-load-balancing/" class="next" rel="next" title="Nginx 反向代理、负载均衡与 HTTPS 配置实战">Nginx 反向代理、负载均衡与 HTTPS 配置实战<i class="fas fa-angle-right fa-fw" aria-hidden="true"></i></a></div>
-</div>
-<div id="comments"><div id="gitalk" class="comment"></div><noscript>
-                Please enable JavaScript to view the comments powered by <a href="https://github.com/gitalk/gitalk"></a>Gitalk</a>.
-            </noscript></div></article></div>
-            </main><footer class="footer">
-        <div class="footer-container"><div class="footer-line" itemscope itemtype="http://schema.org/CreativeWork"><i class="far fa-copyright fa-fw" aria-hidden="true"></i><span itemprop="copyrightYear">2011 - 2026</span><span class="author" itemprop="copyrightHolder">&nbsp;<a href="https://www.ithome.me/" target="_blank">Simon Chen</a></span>&nbsp;|&nbsp;<span class="license"><a rel="license external nofollow noopener noreferrer" href="https://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank">CC BY-NC-ND 4.0</a></span></div>
-        </div>
-    </footer></div>
-
-        <div id="fixed-buttons"><a href="#" id="back-to-top" class="fixed-button" title="Back to Top">
-                <i class="fas fa-arrow-up fa-fw" aria-hidden="true"></i>
-            </a><a href="#" id="view-comments" class="fixed-button" title="View Comments">
-                <i class="fas fa-comment fa-fw" aria-hidden="true"></i>
-            </a>
-        </div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1.8.0/dist/gitalk.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/css/lightgallery-bundle.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/katex.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/copy-tex.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.css"><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/gitalk@1.8.0/dist/gitalk.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/autocomplete.js@0.38.1/dist/autocomplete.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lunr@2.3.9/lunr.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lazysizes@5.3.1/lazysizes.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/lightgallery.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/plugins/thumbnail/lg-thumbnail.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/plugins/zoom/lg-zoom.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/clipboard@2.0.11/dist/clipboard.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/sharer.js@0.5.1/sharer.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/katex.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/auto-render.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/copy-tex.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/mhchem.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.js"></script><script type="text/javascript">window.config={"code":{"copyTitle":"Copy to clipboard","maxShownLines":50},"comment":{"gitalk":{"admin":["cikichen"],"clientID":"be0f52370ed1285b6c7c","clientSecret":"734a7d8d0ded346ca7a3d565d57de3f8eeb2850b","id":"2026-06-20T00:00:00Z","owner":"cikichen","repo":"gitalk","title":"OpenTelemetry实战：用Docker Compose一键搭建可观测性平台"}},"cookieconsent":{"content":{"dismiss":"我知道了","link":"了解更多","message":"本网站使用 Cookies 来改善您的浏览体验."},"enable":true,"palette":{"button":{"background":"#f0f0f0"},"popup":{"background":"#1aa3ff"}},"theme":"edgeless"},"lightgallery":true,"math":{"delimiters":[{"display":true,"left":"$$","right":"$$"},{"display":true,"left":"\\[","right":"\\]"},{"display":true,"left":"\\begin{equation}","right":"\\end{equation}"},{"display":true,"left":"\\begin{equation*}","right":"\\end{equation*}"},{"display":true,"left":"\\begin{align}","right":"\\end{align}"},{"display":true,"left":"\\begin{align*}","right":"\\end{align*}"},{"display":true,"left":"\\begin{alignat}","right":"\\end{alignat}"},{"display":true,"left":"\\begin{alignat*}","right":"\\end{alignat*}"},{"display":true,"left":"\\begin{gather}","right":"\\end{gather}"},{"display":true,"left":"\\begin{CD}","right":"\\end{CD}"},{"display":false,"left":"$","right":"$"},{"display":false,"left":"\\(","right":"\\)"}],"strict":false},"search":{"highlightTag":"em","lunrIndexURL":"/index.json","maxResultLength":10,"noResultsFound":"No results found","snippetLength":50,"type":"lunr"}};</script><script type="text/javascript" src="/js/theme.min.js"></script></body>
-</html>
+<!doctype html><html lang=zh-CN><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><meta name=robots content="noodp"><title>OpenTelemetry实战：用Docker Compose一键搭建可观测性平台 - 编程心语</title><meta name=Description content="用Docker Compose快速搭建OpenTelemetry+Prometheus+Grafana+Jaeger完整可观测性栈，实现分布式追踪、指标采集、日志关联的一体化方案。"><meta property="og:url" content="https://www.ithome.me/post/2026/06/20/opentelemetry-docker-compose-observability/">
+<meta property="og:site_name" content="编程心语"><meta property="og:title" content="OpenTelemetry实战：用Docker Compose一键搭建可观测性平台"><meta property="og:description" content="用Docker Compose快速搭建OpenTelemetry+Prometheus+Grafana+Jaeger完整可观测性栈，实现分布式追踪、指标采集、日志关联的一体化方案。"><meta property="og:locale" content="zh_CN"><meta property="og:type" content="article"><meta property="article:section" content="posts"><meta property="article:published_time" content="2026-06-20T08:00:00+08:00"><meta property="article:modified_time" content="2026-06-20T09:02:30+08:00"><meta property="article:tag" content="OpenTelemetry"><meta property="article:tag" content="可观测性"><meta property="article:tag" content="Docker"><meta property="article:tag" content="Grafana"><meta property="article:tag" content="Jaeger"><meta name=twitter:card content="summary"><meta name=twitter:title content="OpenTelemetry实战：用Docker Compose一键搭建可观测性平台"><meta name=twitter:description content="用Docker Compose快速搭建OpenTelemetry+Prometheus+Grafana+Jaeger完整可观测性栈，实现分布式追踪、指标采集、日志关联的一体化方案。"><meta name=twitter:site content="@ChenCiki"><meta name=application-name content="编程心语"><meta name=apple-mobile-web-app-title content="编程心语"><meta name=theme-color content="#ffffff"><meta name=msapplication-TileColor content="#da532c"><link rel="shortcut icon" type=image/x-icon href=/favicon.ico><link rel=icon type=image/png sizes=32x32 href=/favicon-32x32.png><link rel=icon type=image/png sizes=16x16 href=/favicon-16x16.png><link rel=apple-touch-icon sizes=180x180 href=/apple-touch-icon.png><link rel=mask-icon href=/safari-pinned-tab.svg color=#5bbad5><link rel=manifest href=/site.webmanifest><link rel=canonical href=https://www.ithome.me/post/2026/06/20/opentelemetry-docker-compose-observability/><link rel=prev href=https://www.ithome.me/post/2026/06/19/github-actions-cicd-pipeline/><link rel=next href=https://www.ithome.me/post/2026/06/21/nginx-reverse-proxy-load-balancing/><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/normalize.css@8.0.1/normalize.min.css><link rel=stylesheet href=/css/style.min.css><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css><script type=application/ld+json>{"@context":"http://schema.org","@type":"BlogPosting","headline":"OpenTelemetry实战：用Docker Compose一键搭建可观测性平台","inLanguage":"zh-CN","mainEntityOfPage":{"@type":"WebPage","@id":"https:\/\/www.ithome.me\/post\/2026\/06\/20\/opentelemetry-docker-compose-observability\/"},"image":["https:\/\/www.ithome.me\/cover.png"],"genre":"posts","keywords":"OpenTelemetry, 可观测性, Docker, Grafana, Jaeger","wordcount":1779,"url":"https:\/\/www.ithome.me\/post\/2026\/06\/20\/opentelemetry-docker-compose-observability\/","datePublished":"2026-06-20T08:00:00+08:00","dateModified":"2026-06-20T09:02:30+08:00","publisher":{"@type":"Organization","name":"SimonChen","logo":"https:\/\/www.ithome.me\/logo.png"},"author":{"@type":"Person","name":"Simon Chen"},"description":"用Docker Compose快速搭建OpenTelemetry+Prometheus+Grafana+Jaeger完整可观测性栈，实现分布式追踪、指标采集、日志关联的一体化方案。"}</script><script async src="https://www.googletagmanager.com/gtag/js?id=G-H1Q5563VR8"></script><script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag("js",new Date),gtag("config","G-H1Q5563VR8",{anonymize_ip:!0})</script></head><body data-header-desktop=fixed data-header-mobile=auto><script type=text/javascript>(window.localStorage&&localStorage.getItem("theme")?localStorage.getItem("theme")==="dark":"auto"==="auto"?window.matchMedia("(prefers-color-scheme: dark)").matches:"auto"==="dark")&&document.body.setAttribute("theme","dark")</script><div id=mask></div><div class=wrapper><header class=desktop id=header-desktop><div class=header-wrapper><div class=header-title><a href=/ title=编程心语>编程心语</a></div><div class=menu><div class=menu-inner><a class=menu-item href=/posts/>文章 </a><a class=menu-item href=/categories/>分类 </a><a class=menu-item href=/tags/>标签 </a><a class=menu-item href=/about-me/>关于 </a><span class="menu-item delimiter"></span><span class="menu-item search" id=search-desktop>
+<input type=text placeholder=搜索文章... id=search-input-desktop>
+<a href=javascript:void(0); class="search-button search-toggle" id=search-toggle-desktop title=Search><i class="fas fa-search fa-fw" aria-hidden=true></i>
+</a><a href=javascript:void(0); class="search-button search-clear" id=search-clear-desktop title=Clear><i class="fas fa-times-circle fa-fw" aria-hidden=true></i>
+</a><span class="search-button search-loading" id=search-loading-desktop><i class="fas fa-spinner fa-fw fa-spin" aria-hidden=true></i>
+</span></span><a href=javascript:void(0); class="menu-item theme-switch" title="Switch Theme"><i class="fas fa-adjust fa-fw" aria-hidden=true></i></a></div></div></div></header><header class=mobile id=header-mobile><div class=header-container><div class=header-wrapper><div class=header-title><a href=/ title=编程心语>编程心语</a></div><div class=menu-toggle id=menu-toggle-mobile><span></span><span></span><span></span></div></div><div class=menu id=menu-mobile><div class=search-wrapper><div class="search mobile" id=search-mobile><input type=text placeholder=搜索文章... id=search-input-mobile>
+<a href=javascript:void(0); class="search-button search-toggle" id=search-toggle-mobile title=Search><i class="fas fa-search fa-fw" aria-hidden=true></i>
+</a><a href=javascript:void(0); class="search-button search-clear" id=search-clear-mobile title=Clear><i class="fas fa-times-circle fa-fw" aria-hidden=true></i>
+</a><span class="search-button search-loading" id=search-loading-mobile><i class="fas fa-spinner fa-fw fa-spin" aria-hidden=true></i></span></div><a href=javascript:void(0); class=search-cancel id=search-cancel-mobile>Cancel</a></div><a class=menu-item href=/posts/ title>文章</a><a class=menu-item href=/categories/ title>分类</a><a class=menu-item href=/tags/ title>标签</a><a class=menu-item href=/about-me/ title>关于</a><a href=javascript:void(0); class="menu-item theme-switch" title="Switch Theme">
+<i class="fas fa-adjust fa-fw" aria-hidden=true></i></a></div></div></header><div class="search-dropdown desktop"><div id=search-dropdown-desktop></div></div><div class="search-dropdown mobile"><div id=search-dropdown-mobile></div></div><main class=main><div class=container><div class=toc id=toc-auto><h2 class=toc-title>Contents</h2><div class=toc-content id=toc-content-auto></div></div><article class="page single"><h1 class="single-title animate__animated animate__flipInX">OpenTelemetry实战：用Docker Compose一键搭建可观测性平台</h1><div class=post-meta><div class=post-meta-line><span class=post-author><a href=https://www.ithome.me/ title=Author target=_blank rel="noopener noreferrer author" class=author><i class="fas fa-user-circle fa-fw" aria-hidden=true></i>Simon Chen</a>
+</span>&nbsp;<span class=post-category>included in <a href=/categories/uncategorized/><i class="far fa-folder fa-fw" aria-hidden=true></i>Uncategorized</a></span></div><div class=post-meta-line><i class="far fa-calendar-alt fa-fw" aria-hidden=true></i>&nbsp;<time datetime=2026-06-20>2026-06-20</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden=true></i>&nbsp;1779 words&nbsp;
+<i class="far fa-clock fa-fw" aria-hidden=true></i>&nbsp;4 minutes&nbsp;</div></div><div class="details toc" id=toc-static data-kept=true><div class="details-summary toc-title"><span>Contents</span>
+<span><i class="details-icon fas fa-angle-right" aria-hidden=true></i></span></div><div class="details-content toc-content" id=toc-content-static><nav id=TableOfContents><ul><li><a href=#为什么需要opentelemetry>为什么需要OpenTelemetry？</a></li><li><a href=#架构总览>架构总览</a></li><li><a href=#一项目结构>一、项目结构</a></li><li><a href=#二docker-compose编排>二、Docker Compose编排</a></li><li><a href=#三otel-collector配置>三、OTel Collector配置</a></li><li><a href=#四示例应用python>四、示例应用（Python）</a></li><li><a href=#五应用依赖与dockerfile>五、应用依赖与Dockerfile</a></li><li><a href=#六prometheus与grafana配置>六、Prometheus与Grafana配置</a></li><li><a href=#七启动与验证>七、启动与验证</a></li><li><a href=#八实战技巧>八、实战技巧</a><ul><li><a href=#1-给现有服务加埋点最少改动>1. 给现有服务加埋点（最少改动）</a></li><li><a href=#2-span之间自动关联>2. Span之间自动关联</a></li><li><a href=#3-采样策略生产环境必配>3. 采样策略（生产环境必配）</a></li></ul></li><li><a href=#总结>总结</a></li></ul></nav></div></div><div class=content id=content><h2 id=为什么需要opentelemetry>为什么需要OpenTelemetry？</h2><p>微服务架构下，一个请求可能经过5-10个服务。出了问题怎么办？传统的做法是翻日志、查数据库、猜链路——效率极低。</p><p><strong>OpenTelemetry（简称OTel）</strong> 是CNCF孵化的可观测性标准框架，提供统一的API和SDK，让你用一套代码同时采集<strong>Traces（链路追踪）</strong>、<strong>Metrics（指标）<strong>和</strong>Logs（日志）</strong>，然后导出到任意后端。</p><p>本文用Docker Compose一键搭建完整的可观测性平台，从零到可用只要10分钟。</p><h2 id=架构总览>架构总览</h2><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span><span class=lnt>4
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-fallback data-lang=fallback><span class=line><span class=cl>应用（OTel SDK） → OTel Collector → Prometheus（指标）
+</span></span><span class=line><span class=cl>                                  → Jaeger（追踪）
+</span></span><span class=line><span class=cl>                                  → Loki（日志）
+</span></span><span class=line><span class=cl>                    Grafana（统一展示）
+</span></span></code></pre></td></tr></table></div></div><h2 id=一项目结构>一、项目结构</h2><p>创建以下目录结构：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-fallback data-lang=fallback><span class=line><span class=cl>otel-demo/
+</span></span><span class=line><span class=cl>├── docker-compose.yml
+</span></span><span class=line><span class=cl>├── otel-config.yml          # OTel Collector配置
+</span></span><span class=line><span class=cl>├── prometheus.yml            # Prometheus配置
+</span></span><span class=line><span class=cl>├── grafana/
+</span></span><span class=line><span class=cl>│   └── provisioning/
+</span></span><span class=line><span class=cl>│       └── datasources/
+</span></span><span class=line><span class=cl>│           └── datasource.yml
+</span></span><span class=line><span class=cl>├── app/
+</span></span><span class=line><span class=cl>│   ├── Dockerfile
+</span></span><span class=line><span class=cl>│   ├── requirements.txt
+</span></span><span class=line><span class=cl>│   └── main.py               # 示例应用
+</span></span></code></pre></td></tr></table></div></div><h2 id=二docker-compose编排>二、Docker Compose编排</h2><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span><span class=lnt>17
+</span><span class=lnt>18
+</span><span class=lnt>19
+</span><span class=lnt>20
+</span><span class=lnt>21
+</span><span class=lnt>22
+</span><span class=lnt>23
+</span><span class=lnt>24
+</span><span class=lnt>25
+</span><span class=lnt>26
+</span><span class=lnt>27
+</span><span class=lnt>28
+</span><span class=lnt>29
+</span><span class=lnt>30
+</span><span class=lnt>31
+</span><span class=lnt>32
+</span><span class=lnt>33
+</span><span class=lnt>34
+</span><span class=lnt>35
+</span><span class=lnt>36
+</span><span class=lnt>37
+</span><span class=lnt>38
+</span><span class=lnt>39
+</span><span class=lnt>40
+</span><span class=lnt>41
+</span><span class=lnt>42
+</span><span class=lnt>43
+</span><span class=lnt>44
+</span><span class=lnt>45
+</span><span class=lnt>46
+</span><span class=lnt>47
+</span><span class=lnt>48
+</span><span class=lnt>49
+</span><span class=lnt>50
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-yaml data-lang=yaml><span class=line><span class=cl><span class=c># docker-compose.yml</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=nt>version</span><span class=p>:</span><span class=w> </span><span class=s2>&#34;3.8&#34;</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=nt>services</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>  </span><span class=c># OTel Collector - 统一采集入口</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>  </span><span class=nt>otel-collector</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nt>image</span><span class=p>:</span><span class=w> </span><span class=l>otel/opentelemetry-collector-contrib:0.102.0</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nt>command</span><span class=p>:</span><span class=w> </span><span class=p>[</span><span class=s2>&#34;--config=/etc/otelcol/config.yml&#34;</span><span class=p>]</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nt>volumes</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>      </span>- <span class=l>./otel-config.yml:/etc/otelcol/config.yml</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nt>ports</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>      </span>- <span class=s2>&#34;4317:4317&#34;</span><span class=w>   </span><span class=c># OTLP gRPC</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>      </span>- <span class=s2>&#34;4318:4318&#34;</span><span class=w>   </span><span class=c># OTLP HTTP</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>      </span>- <span class=s2>&#34;8888:8888&#34;</span><span class=w>   </span><span class=c># Collector指标</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>  </span><span class=c># Prometheus - 存储指标</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>  </span><span class=nt>prometheus</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nt>image</span><span class=p>:</span><span class=w> </span><span class=l>prom/prometheus:v2.53.0</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nt>volumes</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>      </span>- <span class=l>./prometheus.yml:/etc/prometheus/prometheus.yml</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nt>ports</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>      </span>- <span class=s2>&#34;9090:9090&#34;</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>  </span><span class=c># Jaeger - 存储和展示追踪</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>  </span><span class=nt>jaeger</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nt>image</span><span class=p>:</span><span class=w> </span><span class=l>jaegertracing/all-in-one:1.58</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nt>environment</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>      </span>- <span class=l>COLLECTOR_OTLP_ENABLED=true</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nt>ports</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>      </span>- <span class=s2>&#34;16686:16686&#34;</span><span class=w>  </span><span class=c># Jaeger UI</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>      </span>- <span class=s2>&#34;14250:14250&#34;</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>  </span><span class=c># Grafana - 统一可视化</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>  </span><span class=nt>grafana</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nt>image</span><span class=p>:</span><span class=w> </span><span class=l>grafana/grafana:11.1.0</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nt>volumes</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>      </span>- <span class=l>./grafana/provisioning:/etc/grafana/provisioning</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nt>environment</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>      </span>- <span class=l>GF_SECURITY_ADMIN_PASSWORD=admin123</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nt>ports</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>      </span>- <span class=s2>&#34;3000:3000&#34;</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>  </span><span class=c># 示例应用</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>  </span><span class=nt>app</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nt>build</span><span class=p>:</span><span class=w> </span><span class=l>./app</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nt>environment</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>      </span>- <span class=l>OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>      </span>- <span class=l>OTEL_SERVICE_NAME=demo-app</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nt>ports</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>      </span>- <span class=s2>&#34;8080:8080&#34;</span><span class=w>
+</span></span></span></code></pre></td></tr></table></div></div><h2 id=三otel-collector配置>三、OTel Collector配置</h2><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span><span class=lnt>17
+</span><span class=lnt>18
+</span><span class=lnt>19
+</span><span class=lnt>20
+</span><span class=lnt>21
+</span><span class=lnt>22
+</span><span class=lnt>23
+</span><span class=lnt>24
+</span><span class=lnt>25
+</span><span class=lnt>26
+</span><span class=lnt>27
+</span><span class=lnt>28
+</span><span class=lnt>29
+</span><span class=lnt>30
+</span><span class=lnt>31
+</span><span class=lnt>32
+</span><span class=lnt>33
+</span><span class=lnt>34
+</span><span class=lnt>35
+</span><span class=lnt>36
+</span><span class=lnt>37
+</span><span class=lnt>38
+</span><span class=lnt>39
+</span><span class=lnt>40
+</span><span class=lnt>41
+</span><span class=lnt>42
+</span><span class=lnt>43
+</span><span class=lnt>44
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-yaml data-lang=yaml><span class=line><span class=cl><span class=c># otel-config.yml</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=nt>receivers</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>  </span><span class=nt>otlp</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nt>protocols</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>      </span><span class=nt>grpc</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=nt>endpoint</span><span class=p>:</span><span class=w> </span><span class=m>0.0.0.0</span><span class=p>:</span><span class=m>4317</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>      </span><span class=nt>http</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=nt>endpoint</span><span class=p>:</span><span class=w> </span><span class=m>0.0.0.0</span><span class=p>:</span><span class=m>4318</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=nt>processors</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>  </span><span class=nt>batch</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nt>timeout</span><span class=p>:</span><span class=w> </span><span class=l>5s</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nt>send_batch_size</span><span class=p>:</span><span class=w> </span><span class=m>1024</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=nt>exporters</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>  </span><span class=c># 追踪导出到Jaeger</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>  </span><span class=nt>otlp/jaeger</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nt>endpoint</span><span class=p>:</span><span class=w> </span><span class=l>jaeger:4317</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nt>tls</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>      </span><span class=nt>insecure</span><span class=p>:</span><span class=w> </span><span class=kc>true</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>  </span><span class=c># 指标导出到Prometheus</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>  </span><span class=nt>prometheus</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nt>endpoint</span><span class=p>:</span><span class=w> </span><span class=s2>&#34;0.0.0.0:8889&#34;</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nt>namespace</span><span class=p>:</span><span class=w> </span><span class=l>demo</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>  </span><span class=c># 日志导出到控制台（开发环境）</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>  </span><span class=nt>debug</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nt>verbosity</span><span class=p>:</span><span class=w> </span><span class=l>basic</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=nt>service</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>  </span><span class=nt>pipelines</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nt>traces</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>      </span><span class=nt>receivers</span><span class=p>:</span><span class=w> </span><span class=p>[</span><span class=l>otlp]</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>      </span><span class=nt>processors</span><span class=p>:</span><span class=w> </span><span class=p>[</span><span class=l>batch]</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>      </span><span class=nt>exporters</span><span class=p>:</span><span class=w> </span><span class=p>[</span><span class=l>otlp/jaeger]</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nt>metrics</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>      </span><span class=nt>receivers</span><span class=p>:</span><span class=w> </span><span class=p>[</span><span class=l>otlp]</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>      </span><span class=nt>processors</span><span class=p>:</span><span class=w> </span><span class=p>[</span><span class=l>batch]</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>      </span><span class=nt>exporters</span><span class=p>:</span><span class=w> </span><span class=p>[</span><span class=l>prometheus]</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nt>logs</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>      </span><span class=nt>receivers</span><span class=p>:</span><span class=w> </span><span class=p>[</span><span class=l>otlp]</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>      </span><span class=nt>processors</span><span class=p>:</span><span class=w> </span><span class=p>[</span><span class=l>batch]</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>      </span><span class=nt>exporters</span><span class=p>:</span><span class=w> </span><span class=p>[</span><span class=l>debug]</span><span class=w>
+</span></span></span></code></pre></td></tr></table></div></div><h2 id=四示例应用python>四、示例应用（Python）</h2><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span><span class=lnt>17
+</span><span class=lnt>18
+</span><span class=lnt>19
+</span><span class=lnt>20
+</span><span class=lnt>21
+</span><span class=lnt>22
+</span><span class=lnt>23
+</span><span class=lnt>24
+</span><span class=lnt>25
+</span><span class=lnt>26
+</span><span class=lnt>27
+</span><span class=lnt>28
+</span><span class=lnt>29
+</span><span class=lnt>30
+</span><span class=lnt>31
+</span><span class=lnt>32
+</span><span class=lnt>33
+</span><span class=lnt>34
+</span><span class=lnt>35
+</span><span class=lnt>36
+</span><span class=lnt>37
+</span><span class=lnt>38
+</span><span class=lnt>39
+</span><span class=lnt>40
+</span><span class=lnt>41
+</span><span class=lnt>42
+</span><span class=lnt>43
+</span><span class=lnt>44
+</span><span class=lnt>45
+</span><span class=lnt>46
+</span><span class=lnt>47
+</span><span class=lnt>48
+</span><span class=lnt>49
+</span><span class=lnt>50
+</span><span class=lnt>51
+</span><span class=lnt>52
+</span><span class=lnt>53
+</span><span class=lnt>54
+</span><span class=lnt>55
+</span><span class=lnt>56
+</span><span class=lnt>57
+</span><span class=lnt>58
+</span><span class=lnt>59
+</span><span class=lnt>60
+</span><span class=lnt>61
+</span><span class=lnt>62
+</span><span class=lnt>63
+</span><span class=lnt>64
+</span><span class=lnt>65
+</span><span class=lnt>66
+</span><span class=lnt>67
+</span><span class=lnt>68
+</span><span class=lnt>69
+</span><span class=lnt>70
+</span><span class=lnt>71
+</span><span class=lnt>72
+</span><span class=lnt>73
+</span><span class=lnt>74
+</span><span class=lnt>75
+</span><span class=lnt>76
+</span><span class=lnt>77
+</span><span class=lnt>78
+</span><span class=lnt>79
+</span><span class=lnt>80
+</span><span class=lnt>81
+</span><span class=lnt>82
+</span><span class=lnt>83
+</span><span class=lnt>84
+</span><span class=lnt>85
+</span><span class=lnt>86
+</span><span class=lnt>87
+</span><span class=lnt>88
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-python data-lang=python><span class=line><span class=cl><span class=c1># app/main.py</span>
+</span></span><span class=line><span class=cl><span class=kn>from</span> <span class=nn>flask</span> <span class=kn>import</span> <span class=n>Flask</span><span class=p>,</span> <span class=n>jsonify</span>
+</span></span><span class=line><span class=cl><span class=kn>import</span> <span class=nn>time</span>
+</span></span><span class=line><span class=cl><span class=kn>import</span> <span class=nn>random</span>
+</span></span><span class=line><span class=cl><span class=kn>from</span> <span class=nn>opentelemetry</span> <span class=kn>import</span> <span class=n>trace</span><span class=p>,</span> <span class=n>metrics</span>
+</span></span><span class=line><span class=cl><span class=kn>from</span> <span class=nn>opentelemetry.sdk.trace</span> <span class=kn>import</span> <span class=n>TracerProvider</span>
+</span></span><span class=line><span class=cl><span class=kn>from</span> <span class=nn>opentelemetry.sdk.trace.export</span> <span class=kn>import</span> <span class=n>BatchSpanProcessor</span>
+</span></span><span class=line><span class=cl><span class=kn>from</span> <span class=nn>opentelemetry.sdk.metrics</span> <span class=kn>import</span> <span class=n>MeterProvider</span>
+</span></span><span class=line><span class=cl><span class=kn>from</span> <span class=nn>opentelemetry.sdk.metrics.export</span> <span class=kn>import</span> <span class=n>PeriodicExportingMetricReader</span>
+</span></span><span class=line><span class=cl><span class=kn>from</span> <span class=nn>opentelemetry.exporter.otlp.proto.grpc.trace_exporter</span> <span class=kn>import</span> <span class=n>OTLPSpanExporter</span>
+</span></span><span class=line><span class=cl><span class=kn>from</span> <span class=nn>opentelemetry.exporter.otlp.proto.grpc.metric_exporter</span> <span class=kn>import</span> <span class=n>OTLPMetricExporter</span>
+</span></span><span class=line><span class=cl><span class=kn>from</span> <span class=nn>opentelemetry.instrumentation.flask</span> <span class=kn>import</span> <span class=n>FlaskInstrumentor</span>
+</span></span><span class=line><span class=cl><span class=kn>from</span> <span class=nn>opentelemetry.instrumentation.requests</span> <span class=kn>import</span> <span class=n>RequestsInstrumentor</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1># 初始化Tracer</span>
+</span></span><span class=line><span class=cl><span class=n>tracer_provider</span> <span class=o>=</span> <span class=n>TracerProvider</span><span class=p>()</span>
+</span></span><span class=line><span class=cl><span class=n>tracer_provider</span><span class=o>.</span><span class=n>add_span_processor</span><span class=p>(</span>
+</span></span><span class=line><span class=cl>    <span class=n>BatchSpanProcessor</span><span class=p>(</span><span class=n>OTLPSpanExporter</span><span class=p>(</span><span class=n>endpoint</span><span class=o>=</span><span class=s2>&#34;otel-collector:4317&#34;</span><span class=p>,</span> <span class=n>insecure</span><span class=o>=</span><span class=kc>True</span><span class=p>))</span>
+</span></span><span class=line><span class=cl><span class=p>)</span>
+</span></span><span class=line><span class=cl><span class=n>trace</span><span class=o>.</span><span class=n>set_tracer_provider</span><span class=p>(</span><span class=n>tracer_provider</span><span class=p>)</span>
+</span></span><span class=line><span class=cl><span class=n>tracer</span> <span class=o>=</span> <span class=n>trace</span><span class=o>.</span><span class=n>get_tracer</span><span class=p>(</span><span class=s2>&#34;demo-app&#34;</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1># 初始化Meter</span>
+</span></span><span class=line><span class=cl><span class=n>metric_reader</span> <span class=o>=</span> <span class=n>PeriodicExportingMetricReader</span><span class=p>(</span>
+</span></span><span class=line><span class=cl>    <span class=n>OTLPMetricExporter</span><span class=p>(</span><span class=n>endpoint</span><span class=o>=</span><span class=s2>&#34;otel-collector:4317&#34;</span><span class=p>,</span> <span class=n>insecure</span><span class=o>=</span><span class=kc>True</span><span class=p>),</span>
+</span></span><span class=line><span class=cl>    <span class=n>export_interval_millis</span><span class=o>=</span><span class=mi>5000</span><span class=p>,</span>
+</span></span><span class=line><span class=cl><span class=p>)</span>
+</span></span><span class=line><span class=cl><span class=n>meter_provider</span> <span class=o>=</span> <span class=n>MeterProvider</span><span class=p>(</span><span class=n>metric_readers</span><span class=o>=</span><span class=p>[</span><span class=n>metric_reader</span><span class=p>])</span>
+</span></span><span class=line><span class=cl><span class=n>metrics</span><span class=o>.</span><span class=n>set_meter_provider</span><span class=p>(</span><span class=n>meter_provider</span><span class=p>)</span>
+</span></span><span class=line><span class=cl><span class=n>meter</span> <span class=o>=</span> <span class=n>metrics</span><span class=o>.</span><span class=n>get_meter</span><span class=p>(</span><span class=s2>&#34;demo-app&#34;</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1># 自定义指标</span>
+</span></span><span class=line><span class=cl><span class=n>request_counter</span> <span class=o>=</span> <span class=n>meter</span><span class=o>.</span><span class=n>create_counter</span><span class=p>(</span>
+</span></span><span class=line><span class=cl>    <span class=n>name</span><span class=o>=</span><span class=s2>&#34;http_requests_total&#34;</span><span class=p>,</span>
+</span></span><span class=line><span class=cl>    <span class=n>description</span><span class=o>=</span><span class=s2>&#34;Total HTTP requests&#34;</span><span class=p>,</span>
+</span></span><span class=line><span class=cl>    <span class=n>unit</span><span class=o>=</span><span class=s2>&#34;1&#34;</span><span class=p>,</span>
+</span></span><span class=line><span class=cl><span class=p>)</span>
+</span></span><span class=line><span class=cl><span class=n>request_duration</span> <span class=o>=</span> <span class=n>meter</span><span class=o>.</span><span class=n>create_histogram</span><span class=p>(</span>
+</span></span><span class=line><span class=cl>    <span class=n>name</span><span class=o>=</span><span class=s2>&#34;http_request_duration_seconds&#34;</span><span class=p>,</span>
+</span></span><span class=line><span class=cl>    <span class=n>description</span><span class=o>=</span><span class=s2>&#34;Request duration&#34;</span><span class=p>,</span>
+</span></span><span class=line><span class=cl>    <span class=n>unit</span><span class=o>=</span><span class=s2>&#34;s&#34;</span><span class=p>,</span>
+</span></span><span class=line><span class=cl><span class=p>)</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=n>app</span> <span class=o>=</span> <span class=n>Flask</span><span class=p>(</span><span class=vm>__name__</span><span class=p>)</span>
+</span></span><span class=line><span class=cl><span class=n>FlaskInstrumentor</span><span class=p>()</span><span class=o>.</span><span class=n>instrument_app</span><span class=p>(</span><span class=n>app</span><span class=p>)</span>
+</span></span><span class=line><span class=cl><span class=n>RequestsInstrumentor</span><span class=p>()</span><span class=o>.</span><span class=n>instrument</span><span class=p>()</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=nd>@app.route</span><span class=p>(</span><span class=s2>&#34;/&#34;</span><span class=p>)</span>
+</span></span><span class=line><span class=cl><span class=k>def</span> <span class=nf>index</span><span class=p>():</span>
+</span></span><span class=line><span class=cl>    <span class=k>with</span> <span class=n>tracer</span><span class=o>.</span><span class=n>start_as_current_span</span><span class=p>(</span><span class=s2>&#34;handle_index&#34;</span><span class=p>)</span> <span class=k>as</span> <span class=n>span</span><span class=p>:</span>
+</span></span><span class=line><span class=cl>        <span class=n>span</span><span class=o>.</span><span class=n>set_attribute</span><span class=p>(</span><span class=s2>&#34;user.id&#34;</span><span class=p>,</span> <span class=s2>&#34;demo-user&#34;</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>        <span class=c1># 模拟业务逻辑</span>
+</span></span><span class=line><span class=cl>        <span class=n>_simulate_work</span><span class=p>()</span>
+</span></span><span class=line><span class=cl>        <span class=n>request_counter</span><span class=o>.</span><span class=n>add</span><span class=p>(</span><span class=mi>1</span><span class=p>,</span> <span class=p>{</span><span class=s2>&#34;method&#34;</span><span class=p>:</span> <span class=s2>&#34;GET&#34;</span><span class=p>,</span> <span class=s2>&#34;path&#34;</span><span class=p>:</span> <span class=s2>&#34;/&#34;</span><span class=p>})</span>
+</span></span><span class=line><span class=cl>        <span class=k>return</span> <span class=n>jsonify</span><span class=p>({</span><span class=s2>&#34;message&#34;</span><span class=p>:</span> <span class=s2>&#34;Hello OpenTelemetry!&#34;</span><span class=p>})</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=nd>@app.route</span><span class=p>(</span><span class=s2>&#34;/slow&#34;</span><span class=p>)</span>
+</span></span><span class=line><span class=cl><span class=k>def</span> <span class=nf>slow_endpoint</span><span class=p>():</span>
+</span></span><span class=line><span class=cl>    <span class=k>with</span> <span class=n>tracer</span><span class=o>.</span><span class=n>start_as_current_span</span><span class=p>(</span><span class=s2>&#34;handle_slow&#34;</span><span class=p>)</span> <span class=k>as</span> <span class=n>span</span><span class=p>:</span>
+</span></span><span class=line><span class=cl>        <span class=n>delay</span> <span class=o>=</span> <span class=n>random</span><span class=o>.</span><span class=n>uniform</span><span class=p>(</span><span class=mf>0.5</span><span class=p>,</span> <span class=mf>2.0</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>        <span class=n>span</span><span class=o>.</span><span class=n>set_attribute</span><span class=p>(</span><span class=s2>&#34;delay.seconds&#34;</span><span class=p>,</span> <span class=n>delay</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>        <span class=n>time</span><span class=o>.</span><span class=n>sleep</span><span class=p>(</span><span class=n>delay</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>        <span class=n>request_counter</span><span class=o>.</span><span class=n>add</span><span class=p>(</span><span class=mi>1</span><span class=p>,</span> <span class=p>{</span><span class=s2>&#34;method&#34;</span><span class=p>:</span> <span class=s2>&#34;GET&#34;</span><span class=p>,</span> <span class=s2>&#34;path&#34;</span><span class=p>:</span> <span class=s2>&#34;/slow&#34;</span><span class=p>})</span>
+</span></span><span class=line><span class=cl>        <span class=n>request_duration</span><span class=o>.</span><span class=n>record</span><span class=p>(</span><span class=n>delay</span><span class=p>,</span> <span class=p>{</span><span class=s2>&#34;path&#34;</span><span class=p>:</span> <span class=s2>&#34;/slow&#34;</span><span class=p>})</span>
+</span></span><span class=line><span class=cl>        <span class=k>return</span> <span class=n>jsonify</span><span class=p>({</span><span class=s2>&#34;delay&#34;</span><span class=p>:</span> <span class=n>delay</span><span class=p>})</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=nd>@app.route</span><span class=p>(</span><span class=s2>&#34;/error&#34;</span><span class=p>)</span>
+</span></span><span class=line><span class=cl><span class=k>def</span> <span class=nf>error_endpoint</span><span class=p>():</span>
+</span></span><span class=line><span class=cl>    <span class=k>with</span> <span class=n>tracer</span><span class=o>.</span><span class=n>start_as_current_span</span><span class=p>(</span><span class=s2>&#34;handle_error&#34;</span><span class=p>)</span> <span class=k>as</span> <span class=n>span</span><span class=p>:</span>
+</span></span><span class=line><span class=cl>        <span class=k>try</span><span class=p>:</span>
+</span></span><span class=line><span class=cl>            <span class=k>raise</span> <span class=ne>ValueError</span><span class=p>(</span><span class=s2>&#34;Something went wrong!&#34;</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>        <span class=k>except</span> <span class=ne>ValueError</span> <span class=k>as</span> <span class=n>e</span><span class=p>:</span>
+</span></span><span class=line><span class=cl>            <span class=n>span</span><span class=o>.</span><span class=n>record_exception</span><span class=p>(</span><span class=n>e</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>            <span class=n>span</span><span class=o>.</span><span class=n>set_status</span><span class=p>(</span><span class=n>trace</span><span class=o>.</span><span class=n>StatusCode</span><span class=o>.</span><span class=n>ERROR</span><span class=p>,</span> <span class=nb>str</span><span class=p>(</span><span class=n>e</span><span class=p>))</span>
+</span></span><span class=line><span class=cl>            <span class=n>request_counter</span><span class=o>.</span><span class=n>add</span><span class=p>(</span><span class=mi>1</span><span class=p>,</span> <span class=p>{</span><span class=s2>&#34;method&#34;</span><span class=p>:</span> <span class=s2>&#34;GET&#34;</span><span class=p>,</span> <span class=s2>&#34;path&#34;</span><span class=p>:</span> <span class=s2>&#34;/error&#34;</span><span class=p>})</span>
+</span></span><span class=line><span class=cl>            <span class=k>raise</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=k>def</span> <span class=nf>_simulate_work</span><span class=p>():</span>
+</span></span><span class=line><span class=cl>    <span class=k>with</span> <span class=n>tracer</span><span class=o>.</span><span class=n>start_as_current_span</span><span class=p>(</span><span class=s2>&#34;simulate_work&#34;</span><span class=p>):</span>
+</span></span><span class=line><span class=cl>        <span class=n>time</span><span class=o>.</span><span class=n>sleep</span><span class=p>(</span><span class=n>random</span><span class=o>.</span><span class=n>uniform</span><span class=p>(</span><span class=mf>0.01</span><span class=p>,</span> <span class=mf>0.1</span><span class=p>))</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=k>if</span> <span class=vm>__name__</span> <span class=o>==</span> <span class=s2>&#34;__main__&#34;</span><span class=p>:</span>
+</span></span><span class=line><span class=cl>    <span class=n>app</span><span class=o>.</span><span class=n>run</span><span class=p>(</span><span class=n>host</span><span class=o>=</span><span class=s2>&#34;0.0.0.0&#34;</span><span class=p>,</span> <span class=n>port</span><span class=o>=</span><span class=mi>8080</span><span class=p>)</span>
+</span></span></code></pre></td></tr></table></div></div><h2 id=五应用依赖与dockerfile>五、应用依赖与Dockerfile</h2><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span><span class=lnt>4
+</span><span class=lnt>5
+</span><span class=lnt>6
+</span><span class=lnt>7
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-txt data-lang=txt><span class=line><span class=cl># app/requirements.txt
+</span></span><span class=line><span class=cl>flask==3.0.3
+</span></span><span class=line><span class=cl>opentelemetry-api==1.25.0
+</span></span><span class=line><span class=cl>opentelemetry-sdk==1.25.0
+</span></span><span class=line><span class=cl>opentelemetry-exporter-otlp-proto-grpc==1.25.0
+</span></span><span class=line><span class=cl>opentelemetry-instrumentation-flask==0.46b0
+</span></span><span class=line><span class=cl>opentelemetry-instrumentation-requests==0.46b0
+</span></span></code></pre></td></tr></table></div></div><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span><span class=lnt>4
+</span><span class=lnt>5
+</span><span class=lnt>6
+</span><span class=lnt>7
+</span><span class=lnt>8
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-dockerfile data-lang=dockerfile><span class=line><span class=cl><span class=c># app/Dockerfile</span><span class=err>
+</span></span></span><span class=line><span class=cl><span class=err></span><span class=k>FROM</span><span class=s> python:3.12-slim</span><span class=err>
+</span></span></span><span class=line><span class=cl><span class=err></span><span class=k>WORKDIR</span><span class=s> /app</span><span class=err>
+</span></span></span><span class=line><span class=cl><span class=err></span><span class=k>COPY</span> requirements.txt .<span class=err>
+</span></span></span><span class=line><span class=cl><span class=err></span><span class=k>RUN</span> pip install --no-cache-dir -r requirements.txt<span class=err>
+</span></span></span><span class=line><span class=cl><span class=err></span><span class=k>COPY</span> main.py .<span class=err>
+</span></span></span><span class=line><span class=cl><span class=err></span><span class=k>EXPOSE</span><span class=s> 8080</span><span class=err>
+</span></span></span><span class=line><span class=cl><span class=err></span><span class=k>CMD</span> <span class=p>[</span><span class=s2>&#34;python&#34;</span><span class=p>,</span> <span class=s2>&#34;main.py&#34;</span><span class=p>]</span><span class=err>
+</span></span></span></code></pre></td></tr></table></div></div><h2 id=六prometheus与grafana配置>六、Prometheus与Grafana配置</h2><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span><span class=lnt>4
+</span><span class=lnt>5
+</span><span class=lnt>6
+</span><span class=lnt>7
+</span><span class=lnt>8
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-yaml data-lang=yaml><span class=line><span class=cl><span class=c># prometheus.yml</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=nt>global</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>  </span><span class=nt>scrape_interval</span><span class=p>:</span><span class=w> </span><span class=l>15s</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=nt>scrape_configs</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>  </span>- <span class=nt>job_name</span><span class=p>:</span><span class=w> </span><span class=s2>&#34;otel-collector&#34;</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nt>static_configs</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>      </span>- <span class=nt>targets</span><span class=p>:</span><span class=w> </span><span class=p>[</span><span class=s2>&#34;otel-collector:8889&#34;</span><span class=p>]</span><span class=w>
+</span></span></span></code></pre></td></tr></table></div></div><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-yaml data-lang=yaml><span class=line><span class=cl><span class=c># grafana/provisioning/datasources/datasource.yml</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=nt>apiVersion</span><span class=p>:</span><span class=w> </span><span class=m>1</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=nt>datasources</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>  </span>- <span class=nt>name</span><span class=p>:</span><span class=w> </span><span class=l>Prometheus</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nt>type</span><span class=p>:</span><span class=w> </span><span class=l>prometheus</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nt>url</span><span class=p>:</span><span class=w> </span><span class=l>http://prometheus:9090</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nt>isDefault</span><span class=p>:</span><span class=w> </span><span class=kc>true</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>  </span>- <span class=nt>name</span><span class=p>:</span><span class=w> </span><span class=l>Jaeger</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nt>type</span><span class=p>:</span><span class=w> </span><span class=l>jaeger</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nt>url</span><span class=p>:</span><span class=w> </span><span class=l>http://jaeger:16686</span><span class=w>
+</span></span></span></code></pre></td></tr></table></div></div><h2 id=七启动与验证>七、启动与验证</h2><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl><span class=c1># 启动所有服务</span>
+</span></span><span class=line><span class=cl>docker-compose up -d
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1># 查看日志确认启动成功</span>
+</span></span><span class=line><span class=cl>docker-compose logs -f otel-collector
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1># 生成一些请求</span>
+</span></span><span class=line><span class=cl>curl http://localhost:8080/
+</span></span><span class=line><span class=cl>curl http://localhost:8080/slow
+</span></span><span class=line><span class=cl>curl http://localhost:8080/error
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1># 打开各组件UI</span>
+</span></span><span class=line><span class=cl><span class=c1># Grafana: http://localhost:3000 (admin/admin123)</span>
+</span></span><span class=line><span class=cl><span class=c1># Jaeger:  http://localhost:16686</span>
+</span></span><span class=line><span class=cl><span class=c1># Prometheus: http://localhost:9090</span>
+</span></span></code></pre></td></tr></table></div></div><h2 id=八实战技巧>八、实战技巧</h2><h3 id=1-给现有服务加埋点最少改动>1. 给现有服务加埋点（最少改动）</h3><p>用自动插桩，只需要3行代码：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-python data-lang=python><span class=line><span class=cl><span class=kn>from</span> <span class=nn>opentelemetry.instrumentation.flask</span> <span class=kn>import</span> <span class=n>FlaskInstrumentor</span>
+</span></span><span class=line><span class=cl><span class=c1># 原有代码不需要改</span>
+</span></span><span class=line><span class=cl><span class=n>FlaskInstrumentor</span><span class=p>()</span><span class=o>.</span><span class=n>instrument_app</span><span class=p>(</span><span class=n>app</span><span class=p>)</span>  <span class=c1># 加这一行</span>
+</span></span></code></pre></td></tr></table></div></div><p>Python支持自动插桩的库：Flask、Django、FastAPI、requests、SQLAlchemy、Redis、gRPC等。</p><h3 id=2-span之间自动关联>2. Span之间自动关联</h3><p>同一进程内的Span会自动继承Context，不需要手动传递。跨进程调用通过HTTP Header自动传播：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-python data-lang=python><span class=line><span class=cl><span class=c1># 自动注入traceparent Header到出站请求</span>
+</span></span><span class=line><span class=cl><span class=n>RequestsInstrumentor</span><span class=p>()</span><span class=o>.</span><span class=n>instrument</span><span class=p>()</span>  <span class=c1># 自动处理</span>
+</span></span></code></pre></td></tr></table></div></div><h3 id=3-采样策略生产环境必配>3. 采样策略（生产环境必配）</h3><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-yaml data-lang=yaml><span class=line><span class=cl><span class=c># otel-config.yml中添加</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=nt>processors</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>  </span><span class=nt>probabilistic_sampler</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nt>sampling_percentage</span><span class=p>:</span><span class=w> </span><span class=m>10</span><span class=w>  </span><span class=c># 只采样10%</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>  </span><span class=nt>tail_sampling</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nt>policies</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>      </span>- <span class=nt>name</span><span class=p>:</span><span class=w> </span><span class=l>errors</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=nt>type</span><span class=p>:</span><span class=w> </span><span class=l>status_code</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=nt>status_code</span><span class=p>:</span><span class=w> </span>{<span class=nt>status_codes</span><span class=p>:</span><span class=w> </span><span class=p>[</span><span class=l>ERROR]}</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>      </span>- <span class=nt>name</span><span class=p>:</span><span class=w> </span><span class=l>slow</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=nt>type</span><span class=p>:</span><span class=w> </span><span class=l>latency</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=nt>latency</span><span class=p>:</span><span class=w> </span>{<span class=nt>threshold_ms</span><span class=p>:</span><span class=w> </span><span class=m>1000</span>}<span class=w>
+</span></span></span></code></pre></td></tr></table></div></div><p>关键：<strong>错误和慢请求100%采集，正常请求采样10%</strong>，既节省存储又不丢重要数据。</p><h2 id=总结>总结</h2><p>OpenTelemetry的最大价值是<strong>标准化</strong>——你不需要为每个监控后端写不同的集成代码。换后端只需改Collector配置，应用代码一行不用动。</p><table><thead><tr><th>组件</th><th>作用</th><th>默认端口</th></tr></thead><tbody><tr><td>OTel Collector</td><td>数据采集+转发</td><td>4317(gRPC) / 4318(HTTP)</td></tr><tr><td>Prometheus</td><td>指标存储+查询</td><td>9090</td></tr><tr><td>Jaeger</td><td>追踪存储+查询</td><td>16686(UI)</td></tr><tr><td>Grafana</td><td>统一可视化面板</td><td>3000</td></tr></tbody></table><p>整套方案全部开源，没有任何厂商锁定。从单体到微服务，从开发到生产，这套可观测性栈够用很久。</p></div><div class=post-footer id=post-footer><div class=post-info><div class=post-info-line><div class=post-info-mod><span>Updated on 2026-06-20&nbsp;<a class=git-hash href=https://github.com/cikichen/hugo-sync/commit/a071a7cdac680b7f6963dbb06619fa8af7ce86f6 target=_blank title="commit by cikichen(cikichen@github.com) a071a7cdac680b7f6963dbb06619fa8af7ce86f6: Auto: 2026-06-20 - OpenTelemetry实战：用Docker Compose一键搭建可观测性平台">
+<i class="fas fa-hashtag fa-fw" aria-hidden=true></i>a071a7cd</a></span></div></div><div class=post-info-line><div class=post-info-md></div><div class=post-info-share><span><a href=javascript:void(0); title="Share on Twitter" data-sharer=twitter data-url=https://www.ithome.me/post/2026/06/20/opentelemetry-docker-compose-observability/ data-title="OpenTelemetry实战：用Docker Compose一键搭建可观测性平台" data-via=ChenCiki data-hashtags=OpenTelemetry,可观测性,Docker,Grafana,Jaeger><i class="fab fa-twitter fa-fw" aria-hidden=true></i></a><a href=javascript:void(0); title="Share on Linkedin" data-sharer=linkedin data-url=https://www.ithome.me/post/2026/06/20/opentelemetry-docker-compose-observability/><i class="fab fa-linkedin fa-fw" aria-hidden=true></i></a><a href=javascript:void(0); title="Share on 微博" data-sharer=weibo data-url=https://www.ithome.me/post/2026/06/20/opentelemetry-docker-compose-observability/ data-title="OpenTelemetry实战：用Docker Compose一键搭建可观测性平台" data-ralateuid=xxx><i class="fab fa-weibo fa-fw" aria-hidden=true></i></a></span></div></div></div><div class=post-info-more><section class=post-tags><i class="fas fa-tags fa-fw" aria-hidden=true></i>&nbsp;<a href=/tags/opentelemetry/>OpenTelemetry</a>,&nbsp;<a href=/tags/%E5%8F%AF%E8%A7%82%E6%B5%8B%E6%80%A7/>可观测性</a>,&nbsp;<a href=/tags/docker/>Docker</a>,&nbsp;<a href=/tags/grafana/>Grafana</a>,&nbsp;<a href=/tags/jaeger/>Jaeger</a></section><section><span><a href=javascript:void(0); onclick=window.history.back()>Back</a></span>&nbsp;|&nbsp;<span><a href=/>Home</a></span></section></div><div class=post-nav><a href=/post/2026/06/19/github-actions-cicd-pipeline/ class=prev rel=prev title="GitHub Actions 实战：为你的项目搭建完整的 CI/CD 自动化流水线"><i class="fas fa-angle-left fa-fw" aria-hidden=true></i>GitHub Actions 实战：为你的项目搭建完整的 CI/CD 自动化流水线</a>
+<a href=/post/2026/06/21/nginx-reverse-proxy-load-balancing/ class=next rel=next title="Nginx 反向代理、负载均衡与 HTTPS 配置实战">Nginx 反向代理、负载均衡与 HTTPS 配置实战<i class="fas fa-angle-right fa-fw" aria-hidden=true></i></a></div></div><div id=comments><div id=gitalk class=comment></div><noscript>Please enable JavaScript to view the comments powered by <a href=https://github.com/gitalk/gitalk></a>Gitalk</a>.</noscript></div></article></div></main><footer class=footer><div class=footer-container><div class=footer-line itemscope itemtype=http://schema.org/CreativeWork><i class="far fa-copyright fa-fw" aria-hidden=true></i><span itemprop=copyrightYear>2011 - 2026</span><span class=author itemprop=copyrightHolder>&nbsp;<a href=https://www.ithome.me/ target=_blank>Simon Chen</a></span>&nbsp;|&nbsp;<span class=license><a rel="license external nofollow noopener noreferrer" href=https://creativecommons.org/licenses/by-nc-nd/4.0/ target=_blank>CC BY-NC-ND 4.0</a></span></div></div></footer></div><div id=fixed-buttons><a href=# id=back-to-top class=fixed-button title="Back to Top"><i class="fas fa-arrow-up fa-fw" aria-hidden=true></i>
+</a><a href=# id=view-comments class=fixed-button title="View Comments"><i class="fas fa-comment fa-fw" aria-hidden=true></i></a></div><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/gitalk@1.8.0/dist/gitalk.min.css><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/css/lightgallery-bundle.min.css><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/katex.min.css><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/copy-tex.min.css><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.css><script type=text/javascript src=https://cdn.jsdelivr.net/npm/gitalk@1.8.0/dist/gitalk.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/autocomplete.js@0.38.1/dist/autocomplete.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/lunr@2.3.9/lunr.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/lazysizes@5.3.1/lazysizes.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/lightgallery.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/plugins/thumbnail/lg-thumbnail.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/plugins/zoom/lg-zoom.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/clipboard@2.0.11/dist/clipboard.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/sharer.js@0.5.1/sharer.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/katex.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/auto-render.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/copy-tex.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/mhchem.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.js></script><script type=text/javascript>window.config={code:{copyTitle:"Copy to clipboard",maxShownLines:50},comment:{gitalk:{admin:["cikichen"],clientID:"be0f52370ed1285b6c7c",clientSecret:"734a7d8d0ded346ca7a3d565d57de3f8eeb2850b",id:"2026-06-20T00:00:00Z",owner:"cikichen",repo:"gitalk",title:"OpenTelemetry实战：用Docker Compose一键搭建可观测性平台"}},cookieconsent:{content:{dismiss:"我知道了",link:"了解更多",message:"本网站使用 Cookies 来改善您的浏览体验."},enable:!0,palette:{button:{background:"#f0f0f0"},popup:{background:"#1aa3ff"}},theme:"edgeless"},lightgallery:!0,math:{delimiters:[{display:!0,left:"$$",right:"$$"},{display:!0,left:"\\[",right:"\\]"},{display:!0,left:"\\begin{equation}",right:"\\end{equation}"},{display:!0,left:"\\begin{equation*}",right:"\\end{equation*}"},{display:!0,left:"\\begin{align}",right:"\\end{align}"},{display:!0,left:"\\begin{align*}",right:"\\end{align*}"},{display:!0,left:"\\begin{alignat}",right:"\\end{alignat}"},{display:!0,left:"\\begin{alignat*}",right:"\\end{alignat*}"},{display:!0,left:"\\begin{gather}",right:"\\end{gather}"},{display:!0,left:"\\begin{CD}",right:"\\end{CD}"},{display:!1,left:"$",right:"$"},{display:!1,left:"\\(",right:"\\)"}],strict:!1},search:{highlightTag:"em",lunrIndexURL:"/index.json",maxResultLength:10,noResultsFound:"No results found",snippetLength:50,type:"lunr"}}</script><script type=text/javascript src=/js/theme.min.js></script></body></html>
