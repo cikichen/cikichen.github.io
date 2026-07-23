@@ -1,0 +1,372 @@
+<!doctype html><html lang=zh-CN><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><meta name=robots content="noodp"><title>Go 并发原语实战：sync.Pool、sync.Once 与 sync.Cond 的正确打开方式 - 编程心语</title><meta name=Description content="深入 Go sync 包的三个高价值原语：sync.Pool 复用对象降低 GC 压力，sync.Once 实现安全的延迟初始化，sync.Cond 精准唤醒等待协程。每个原语配完整代码示例与避坑指南。"><meta property="og:url" content="https://www.ithome.me/post/2026/07/21/go-sync-primitives-pool-once-cond/"><meta property="og:site_name" content="编程心语"><meta property="og:title" content="Go 并发原语实战：sync.Pool、sync.Once 与 sync.Cond 的正确打开方式"><meta property="og:description" content="深入 Go sync 包的三个高价值原语：sync.Pool 复用对象降低 GC 压力，sync.Once 实现安全的延迟初始化，sync.Cond 精准唤醒等待协程。每个原语配完整代码示例与避坑指南。"><meta property="og:locale" content="zh_CN"><meta property="og:type" content="article"><meta property="article:section" content="posts"><meta property="article:published_time" content="2026-07-21T08:00:00+08:00"><meta property="article:modified_time" content="2026-07-21T08:33:03+08:00"><meta property="article:tag" content="Go"><meta property="article:tag" content="并发编程"><meta property="article:tag" content="Sync"><meta property="article:tag" content="性能优化"><meta name=twitter:card content="summary"><meta name=twitter:title content="Go 并发原语实战：sync.Pool、sync.Once 与 sync.Cond 的正确打开方式"><meta name=twitter:description content="深入 Go sync 包的三个高价值原语：sync.Pool 复用对象降低 GC 压力，sync.Once 实现安全的延迟初始化，sync.Cond 精准唤醒等待协程。每个原语配完整代码示例与避坑指南。"><meta name=twitter:site content="@ChenCiki"><meta name=application-name content="编程心语"><meta name=apple-mobile-web-app-title content="编程心语"><meta name=theme-color content="#ffffff"><meta name=msapplication-TileColor content="#da532c"><link rel="shortcut icon" type=image/x-icon href=/favicon.ico><link rel=icon type=image/png sizes=32x32 href=/favicon-32x32.png><link rel=icon type=image/png sizes=16x16 href=/favicon-16x16.png><link rel=apple-touch-icon sizes=180x180 href=/apple-touch-icon.png><link rel=mask-icon href=/safari-pinned-tab.svg color=#5bbad5><link rel=manifest href=/site.webmanifest><link rel=canonical href=https://www.ithome.me/post/2026/07/21/go-sync-primitives-pool-once-cond/><link rel=prev href=https://www.ithome.me/post/2026/07/20/circuit-breaker-pattern-go/><link rel=next href=https://www.ithome.me/post/2026/07/21/github-trending-2026-07-21/><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/normalize.css@8.0.1/normalize.min.css><link rel=stylesheet href=/css/style.min.css><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css><script type=application/ld+json>{"@context":"http://schema.org","@type":"BlogPosting","headline":"Go 并发原语实战：sync.Pool、sync.Once 与 sync.Cond 的正确打开方式","inLanguage":"zh-CN","mainEntityOfPage":{"@type":"WebPage","@id":"https:\/\/www.ithome.me\/post\/2026\/07\/21\/go-sync-primitives-pool-once-cond\/"},"image":["https:\/\/www.ithome.me\/cover.png"],"genre":"posts","keywords":"Go, 并发编程, sync, 性能优化","wordcount":1867,"url":"https:\/\/www.ithome.me\/post\/2026\/07\/21\/go-sync-primitives-pool-once-cond\/","datePublished":"2026-07-21T08:00:00+08:00","dateModified":"2026-07-21T08:33:03+08:00","publisher":{"@type":"Organization","name":"SimonChen","logo":"https:\/\/www.ithome.me\/logo.png"},"author":{"@type":"Person","name":"Simon"},"description":"深入 Go sync 包的三个高价值原语：sync.Pool 复用对象降低 GC 压力，sync.Once 实现安全的延迟初始化，sync.Cond 精准唤醒等待协程。每个原语配完整代码示例与避坑指南。"}</script><script async src="https://www.googletagmanager.com/gtag/js?id=G-H1Q5563VR8"></script><script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag("js",new Date),gtag("config","G-H1Q5563VR8",{anonymize_ip:!0})</script></head><body data-header-desktop=fixed data-header-mobile=auto><script type=text/javascript>(window.localStorage&&localStorage.getItem("theme")?localStorage.getItem("theme")==="dark":"auto"==="auto"?window.matchMedia("(prefers-color-scheme: dark)").matches:"auto"==="dark")&&document.body.setAttribute("theme","dark")</script><div id=mask></div><div class=wrapper><header class=desktop id=header-desktop><div class=header-wrapper><div class=header-title><a href=/ title=编程心语>编程心语</a></div><div class=menu><div class=menu-inner><a class=menu-item href=/posts/>文章 </a><a class=menu-item href=/categories/>分类 </a><a class=menu-item href=/tags/>标签 </a><a class=menu-item href=/about-me/>关于 </a><span class="menu-item delimiter"></span><span class="menu-item search" id=search-desktop>
+<input type=text placeholder=搜索文章... id=search-input-desktop>
+<a href=javascript:void(0); class="search-button search-toggle" id=search-toggle-desktop title=搜索><i class="fas fa-search fa-fw" aria-hidden=true></i>
+</a><a href=javascript:void(0); class="search-button search-clear" id=search-clear-desktop title=清空><i class="fas fa-times-circle fa-fw" aria-hidden=true></i>
+</a><span class="search-button search-loading" id=search-loading-desktop><i class="fas fa-spinner fa-fw fa-spin" aria-hidden=true></i>
+</span></span><a href=javascript:void(0); class="menu-item theme-switch" title=切换主题><i class="fas fa-adjust fa-fw" aria-hidden=true></i></a></div></div></div></header><header class=mobile id=header-mobile><div class=header-container><div class=header-wrapper><div class=header-title><a href=/ title=编程心语>编程心语</a></div><div class=menu-toggle id=menu-toggle-mobile><span></span><span></span><span></span></div></div><div class=menu id=menu-mobile><div class=search-wrapper><div class="search mobile" id=search-mobile><input type=text placeholder=搜索文章... id=search-input-mobile>
+<a href=javascript:void(0); class="search-button search-toggle" id=search-toggle-mobile title=搜索><i class="fas fa-search fa-fw" aria-hidden=true></i>
+</a><a href=javascript:void(0); class="search-button search-clear" id=search-clear-mobile title=清空><i class="fas fa-times-circle fa-fw" aria-hidden=true></i>
+</a><span class="search-button search-loading" id=search-loading-mobile><i class="fas fa-spinner fa-fw fa-spin" aria-hidden=true></i></span></div><a href=javascript:void(0); class=search-cancel id=search-cancel-mobile>取消</a></div><a class=menu-item href=/posts/ title>文章</a><a class=menu-item href=/categories/ title>分类</a><a class=menu-item href=/tags/ title>标签</a><a class=menu-item href=/about-me/ title>关于</a><a href=javascript:void(0); class="menu-item theme-switch" title=切换主题>
+<i class="fas fa-adjust fa-fw" aria-hidden=true></i></a></div></div></header><div class="search-dropdown desktop"><div id=search-dropdown-desktop></div></div><div class="search-dropdown mobile"><div id=search-dropdown-mobile></div></div><main class=main><div class=container><div class=toc id=toc-auto><h2 class=toc-title>目录</h2><div class=toc-content id=toc-content-auto></div></div><article class="page single"><h1 class="single-title animate__animated animate__flipInX">Go 并发原语实战：sync.Pool、sync.Once 与 sync.Cond 的正确打开方式</h1><div class=post-meta><div class=post-meta-line><span class=post-author><a href=https://www.ithome.me/ title=Author target=_blank rel="noopener noreferrer author" class=author><i class="fas fa-user-circle fa-fw" aria-hidden=true></i>Simon</a>
+</span>&nbsp;<span class=post-category>收录于 <a href=/categories/backend/><i class="far fa-folder fa-fw" aria-hidden=true></i>Backend</a></span></div><div class=post-meta-line><i class="far fa-calendar-alt fa-fw" aria-hidden=true></i>&nbsp;<time datetime=2026-07-21>2026-07-21</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden=true></i>&nbsp;约 1867 字&nbsp;
+<i class="far fa-clock fa-fw" aria-hidden=true></i>&nbsp;预计阅读 4 分钟&nbsp;</div></div><div class="details toc" id=toc-static data-kept=true><div class="details-summary toc-title"><span>目录</span>
+<span><i class="details-icon fas fa-angle-right" aria-hidden=true></i></span></div><div class="details-content toc-content" id=toc-content-static><nav id=TableOfContents><ul><li><a href=#syncpool对象复用压住-gc-开销>sync.Pool：对象复用，压住 GC 开销</a><ul><li><a href=#问题场景>问题场景</a></li><li><a href=#基本用法>基本用法</a></li><li><a href=#实战http-中间件复用-json-buffer>实战：HTTP 中间件复用 JSON Buffer</a></li><li><a href=#避坑>避坑</a></li></ul></li><li><a href=#synconce延迟初始化的标准答案>sync.Once：延迟初始化的标准答案</a><ul><li><a href=#为什么不用-init>为什么不用 init()?</a></li><li><a href=#基本用法-1>基本用法</a></li><li><a href=#进阶go-121-的-oncefunc>进阶：Go 1.21+ 的 OnceFunc</a></li><li><a href=#避坑-1>避坑</a></li></ul></li><li><a href=#synccond条件变量精准唤醒>sync.Cond：条件变量，精准唤醒</a><ul><li><a href=#什么时候用-cond-而不是-channel>什么时候用 Cond 而不是 channel?</a></li><li><a href=#实战有界队列的生产者-消费者>实战：有界队列的生产者-消费者</a></li><li><a href=#为什么用-for-循环而不是-if>为什么用 for 循环而不是 if?</a></li><li><a href=#signal-vs-broadcast>Signal vs Broadcast</a></li></ul></li><li><a href=#选型速查表>选型速查表</a></li></ul></nav></div></div><div class=content id=content><p>Go 的并发编程有两套武器库：一套是 CSP 模型的 goroutine + channel，另一套是标准库 <code>sync</code> 包提供的底层原语。大多数教程把焦点放在 channel 上，但真正到生产环境里，<code>sync.Pool</code>、<code>sync.Once</code> 和 <code>sync.Cond</code> 这三个原语用得反而不少——它们各自解决 channel 不擅长的问题。本文用实际代码逐一拆解。</p><h2 id=syncpool对象复用压住-gc-开销>sync.Pool：对象复用，压住 GC 开销</h2><h3 id=问题场景>问题场景</h3><p>在高吞吐场景下频繁创建临时对象（如 JSON buffer、protobuf 对象），GC 压力会成为瓶颈。<code>sync.Pool</code> 的思路很简单：用过的对象不要丢，存起来下次复用，减少堆分配。</p><h3 id=基本用法>基本用法</h3><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span><span class=lnt>17
+</span><span class=lnt>18
+</span><span class=lnt>19
+</span><span class=lnt>20
+</span><span class=lnt>21
+</span><span class=lnt>22
+</span><span class=lnt>23
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-go data-lang=go><span class=line><span class=cl><span class=kn>package</span><span class=w> </span><span class=nx>main</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>
+</span></span></span><span class=line><span class=cl><span class=kn>import</span><span class=w> </span><span class=p>(</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=s>&#34;bytes&#34;</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=s>&#34;sync&#34;</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=p>)</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>
+</span></span></span><span class=line><span class=cl><span class=kd>var</span><span class=w> </span><span class=nx>bufPool</span><span class=w> </span><span class=p>=</span><span class=w> </span><span class=nx>sync</span><span class=p>.</span><span class=nx>Pool</span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nx>New</span><span class=p>:</span><span class=w> </span><span class=kd>func</span><span class=p>()</span><span class=w> </span><span class=kd>interface</span><span class=p>{}</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=k>return</span><span class=w> </span><span class=nx>bytes</span><span class=p>.</span><span class=nf>NewBuffer</span><span class=p>(</span><span class=nb>make</span><span class=p>([]</span><span class=kt>byte</span><span class=p>,</span><span class=w> </span><span class=mi>0</span><span class=p>,</span><span class=w> </span><span class=mi>4096</span><span class=p>))</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=p>},</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=p>}</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>
+</span></span></span><span class=line><span class=cl><span class=kd>func</span><span class=w> </span><span class=nf>Process</span><span class=p>(</span><span class=nx>data</span><span class=w> </span><span class=p>[]</span><span class=kt>byte</span><span class=p>)</span><span class=w> </span><span class=kt>string</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nx>buf</span><span class=w> </span><span class=o>:=</span><span class=w> </span><span class=nx>bufPool</span><span class=p>.</span><span class=nf>Get</span><span class=p>().(</span><span class=o>*</span><span class=nx>bytes</span><span class=p>.</span><span class=nx>Buffer</span><span class=p>)</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nx>buf</span><span class=p>.</span><span class=nf>Reset</span><span class=p>()</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=k>defer</span><span class=w> </span><span class=nx>bufPool</span><span class=p>.</span><span class=nf>Put</span><span class=p>(</span><span class=nx>buf</span><span class=p>)</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nx>buf</span><span class=p>.</span><span class=nf>Write</span><span class=p>(</span><span class=nx>data</span><span class=p>)</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=c1>// 模拟处理逻辑</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nx>buf</span><span class=p>.</span><span class=nf>WriteString</span><span class=p>(</span><span class=s>&#34;-processed&#34;</span><span class=p>)</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=k>return</span><span class=w> </span><span class=nx>buf</span><span class=p>.</span><span class=nf>String</span><span class=p>()</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=p>}</span><span class=w>
+</span></span></span></code></pre></td></tr></table></div></div><p>关键点：</p><ul><li><code>New</code> 函数在 Pool 为空时创建新对象</li><li><code>Get</code> 后必须 <code>Reset</code>，清理上次使用的残留数据</li><li><code>Put</code> 前确保对象不再被引用</li></ul><h3 id=实战http-中间件复用-json-buffer>实战：HTTP 中间件复用 JSON Buffer</h3><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span><span class=lnt>17
+</span><span class=lnt>18
+</span><span class=lnt>19
+</span><span class=lnt>20
+</span><span class=lnt>21
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-go data-lang=go><span class=line><span class=cl><span class=kd>var</span><span class=w> </span><span class=nx>jsonBufPool</span><span class=w> </span><span class=p>=</span><span class=w> </span><span class=nx>sync</span><span class=p>.</span><span class=nx>Pool</span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nx>New</span><span class=p>:</span><span class=w> </span><span class=kd>func</span><span class=p>()</span><span class=w> </span><span class=kd>interface</span><span class=p>{}</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=k>return</span><span class=w> </span><span class=nb>new</span><span class=p>(</span><span class=nx>bytes</span><span class=p>.</span><span class=nx>Buffer</span><span class=p>)</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=p>},</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=p>}</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>
+</span></span></span><span class=line><span class=cl><span class=kd>func</span><span class=w> </span><span class=nf>JSONMiddleware</span><span class=p>(</span><span class=nx>next</span><span class=w> </span><span class=nx>http</span><span class=p>.</span><span class=nx>Handler</span><span class=p>)</span><span class=w> </span><span class=nx>http</span><span class=p>.</span><span class=nx>Handler</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=k>return</span><span class=w> </span><span class=nx>http</span><span class=p>.</span><span class=nf>HandlerFunc</span><span class=p>(</span><span class=kd>func</span><span class=p>(</span><span class=nx>w</span><span class=w> </span><span class=nx>http</span><span class=p>.</span><span class=nx>ResponseWriter</span><span class=p>,</span><span class=w> </span><span class=nx>r</span><span class=w> </span><span class=o>*</span><span class=nx>http</span><span class=p>.</span><span class=nx>Request</span><span class=p>)</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=nx>buf</span><span class=w> </span><span class=o>:=</span><span class=w> </span><span class=nx>jsonBufPool</span><span class=p>.</span><span class=nf>Get</span><span class=p>().(</span><span class=o>*</span><span class=nx>bytes</span><span class=p>.</span><span class=nx>Buffer</span><span class=p>)</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=nx>buf</span><span class=p>.</span><span class=nf>Reset</span><span class=p>()</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=k>defer</span><span class=w> </span><span class=nx>jsonBufPool</span><span class=p>.</span><span class=nf>Put</span><span class=p>(</span><span class=nx>buf</span><span class=p>)</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=c1>// 读取请求体到复用的 buffer</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=k>if</span><span class=w> </span><span class=nx>_</span><span class=p>,</span><span class=w> </span><span class=nx>err</span><span class=w> </span><span class=o>:=</span><span class=w> </span><span class=nx>io</span><span class=p>.</span><span class=nf>Copy</span><span class=p>(</span><span class=nx>buf</span><span class=p>,</span><span class=w> </span><span class=nx>r</span><span class=p>.</span><span class=nx>Body</span><span class=p>);</span><span class=w> </span><span class=nx>err</span><span class=w> </span><span class=o>!=</span><span class=w> </span><span class=kc>nil</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>            </span><span class=nx>http</span><span class=p>.</span><span class=nf>Error</span><span class=p>(</span><span class=nx>w</span><span class=p>,</span><span class=w> </span><span class=s>&#34;read error&#34;</span><span class=p>,</span><span class=w> </span><span class=nx>http</span><span class=p>.</span><span class=nx>StatusBadRequest</span><span class=p>)</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>            </span><span class=k>return</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=p>}</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=nx>r</span><span class=p>.</span><span class=nx>Body</span><span class=w> </span><span class=p>=</span><span class=w> </span><span class=nx>io</span><span class=p>.</span><span class=nf>NopCloser</span><span class=p>(</span><span class=nx>bytes</span><span class=p>.</span><span class=nf>NewReader</span><span class=p>(</span><span class=nx>buf</span><span class=p>.</span><span class=nf>Bytes</span><span class=p>()))</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=nx>next</span><span class=p>.</span><span class=nf>ServeHTTP</span><span class=p>(</span><span class=nx>w</span><span class=p>,</span><span class=w> </span><span class=nx>r</span><span class=p>)</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=p>})</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=p>}</span><span class=w>
+</span></span></span></code></pre></td></tr></table></div></div><h3 id=避坑>避坑</h3><ul><li><strong>Pool 不保证存活</strong>：GC 触发时 Pool 中的对象会被清理，别把 Pool 当缓存用。</li><li><strong>不要 Put 大对象</strong>：Pool 中的对象在 GC 前会驻留内存，放 10MB 的 buffer 进去等于泄漏。</li><li><strong>Get 的对象类型不安全</strong>：如果多个地方往同一个 Pool 放不同类型，Get 出来断言会 panic。一个 Pool 一种类型。</li></ul><h2 id=synconce延迟初始化的标准答案>sync.Once：延迟初始化的标准答案</h2><h3 id=为什么不用-init>为什么不用 init()?</h3><p><code>init()</code> 在包加载时执行，无法控制时机，也无法处理依赖运行时参数的初始化。<code>sync.Once</code> 把初始化推迟到第一次使用时，且保证只执行一次。</p><h3 id=基本用法-1>基本用法</h3><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span><span class=lnt>17
+</span><span class=lnt>18
+</span><span class=lnt>19
+</span><span class=lnt>20
+</span><span class=lnt>21
+</span><span class=lnt>22
+</span><span class=lnt>23
+</span><span class=lnt>24
+</span><span class=lnt>25
+</span><span class=lnt>26
+</span><span class=lnt>27
+</span><span class=lnt>28
+</span><span class=lnt>29
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-go data-lang=go><span class=line><span class=cl><span class=kn>package</span><span class=w> </span><span class=nx>config</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>
+</span></span></span><span class=line><span class=cl><span class=kn>import</span><span class=w> </span><span class=s>&#34;sync&#34;</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>
+</span></span></span><span class=line><span class=cl><span class=kd>var</span><span class=w> </span><span class=p>(</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nx>instance</span><span class=w> </span><span class=o>*</span><span class=nx>Config</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nx>once</span><span class=w>     </span><span class=nx>sync</span><span class=p>.</span><span class=nx>Once</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=p>)</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>
+</span></span></span><span class=line><span class=cl><span class=kd>type</span><span class=w> </span><span class=nx>Config</span><span class=w> </span><span class=kd>struct</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nx>DBUrl</span><span class=w> </span><span class=kt>string</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nx>Port</span><span class=w>  </span><span class=kt>int</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=p>}</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>
+</span></span></span><span class=line><span class=cl><span class=kd>func</span><span class=w> </span><span class=nf>GetConfig</span><span class=p>()</span><span class=w> </span><span class=o>*</span><span class=nx>Config</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nx>once</span><span class=p>.</span><span class=nf>Do</span><span class=p>(</span><span class=kd>func</span><span class=p>()</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=c1>// 只执行一次，即使并发调用</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=nx>instance</span><span class=w> </span><span class=p>=</span><span class=w> </span><span class=o>&amp;</span><span class=nx>Config</span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>            </span><span class=nx>DBUrl</span><span class=p>:</span><span class=w> </span><span class=nf>loadFromEnv</span><span class=p>(</span><span class=s>&#34;DB_URL&#34;</span><span class=p>),</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>            </span><span class=nx>Port</span><span class=p>:</span><span class=w>  </span><span class=mi>8080</span><span class=p>,</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=p>}</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=p>})</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=k>return</span><span class=w> </span><span class=nx>instance</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=p>}</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>
+</span></span></span><span class=line><span class=cl><span class=kd>func</span><span class=w> </span><span class=nf>loadFromEnv</span><span class=p>(</span><span class=nx>key</span><span class=w> </span><span class=kt>string</span><span class=p>)</span><span class=w> </span><span class=kt>string</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=c1>// 实际从环境变量或配置中心加载</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=k>return</span><span class=w> </span><span class=s>&#34;postgres://localhost:5432/mydb&#34;</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=p>}</span><span class=w>
+</span></span></span></code></pre></td></tr></table></div></div><h3 id=进阶go-121-的-oncefunc>进阶：Go 1.21+ 的 OnceFunc</h3><p>Go 1.21 新增了 <code>sync.OnceFunc</code>、<code>sync.OnceValue</code> 和 <code>sync.OnceValues</code>，用泛型简化常见模式：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-go data-lang=go><span class=line><span class=cl><span class=kn>package</span><span class=w> </span><span class=nx>config</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>
+</span></span></span><span class=line><span class=cl><span class=kn>import</span><span class=w> </span><span class=s>&#34;sync&#34;</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>
+</span></span></span><span class=line><span class=cl><span class=kd>var</span><span class=w> </span><span class=nx>GetConfig</span><span class=w> </span><span class=p>=</span><span class=w> </span><span class=nx>sync</span><span class=p>.</span><span class=nf>OnceValue</span><span class=p>(</span><span class=kd>func</span><span class=p>()</span><span class=w> </span><span class=o>*</span><span class=nx>Config</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=k>return</span><span class=w> </span><span class=o>&amp;</span><span class=nx>Config</span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=nx>DBUrl</span><span class=p>:</span><span class=w> </span><span class=nf>loadFromEnv</span><span class=p>(</span><span class=s>&#34;DB_URL&#34;</span><span class=p>),</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=nx>Port</span><span class=p>:</span><span class=w>  </span><span class=mi>8080</span><span class=p>,</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=p>}</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=p>})</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>
+</span></span></span><span class=line><span class=cl><span class=c1>// 调用方式：cfg := GetConfig()</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=c1>// 第一次调用执行初始化，后续调用直接返回缓存值</span><span class=w>
+</span></span></span></code></pre></td></tr></table></div></div><p><code>OnceValue</code> 返回单个值，<code>OnceValues</code> 返回两个值（适合返回 <code>(T, error)</code> 模式）：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span><span class=lnt>4
+</span><span class=lnt>5
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-go data-lang=go><span class=line><span class=cl><span class=kd>var</span><span class=w> </span><span class=nx>loadDB</span><span class=w> </span><span class=p>=</span><span class=w> </span><span class=nx>sync</span><span class=p>.</span><span class=nf>OnceValues</span><span class=p>(</span><span class=kd>func</span><span class=p>()</span><span class=w> </span><span class=p>(</span><span class=o>*</span><span class=nx>sql</span><span class=p>.</span><span class=nx>DB</span><span class=p>,</span><span class=w> </span><span class=kt>error</span><span class=p>)</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=k>return</span><span class=w> </span><span class=nx>sql</span><span class=p>.</span><span class=nf>Open</span><span class=p>(</span><span class=s>&#34;postgres&#34;</span><span class=p>,</span><span class=w> </span><span class=nx>connStr</span><span class=p>)</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=p>})</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>
+</span></span></span><span class=line><span class=cl><span class=nx>db</span><span class=p>,</span><span class=w> </span><span class=nx>err</span><span class=w> </span><span class=o>:=</span><span class=w> </span><span class=nf>loadDB</span><span class=p>()</span><span class=w>
+</span></span></span></code></pre></td></tr></table></div></div><h3 id=避坑-1>避坑</h3><ul><li><strong>Do 中 panic 仍会标记为已执行</strong>：如果 <code>Once.Do</code> 中的函数 panic，Once 会认为已初始化完成，后续调用不会重试。初始化逻辑要做 panic recovery。</li><li><strong>Once 不可复制</strong>：<code>sync.Once</code> 包含 <code>uint32</code> 和 <code>sync.Mutex</code>，复制后状态不一致。必须用指针传递。</li></ul><h2 id=synccond条件变量精准唤醒>sync.Cond：条件变量，精准唤醒</h2><h3 id=什么时候用-cond-而不是-channel>什么时候用 Cond 而不是 channel?</h3><p>Channel 擅长传递值，但不擅长「等待某个条件满足」的场景。比如一个队列，消费者需要等队列非空，生产者需要等队列非满。用 channel 可以实现，但 <code>sync.Cond</code> 更直接，且支持 <code>Broadcast</code> 唤醒所有等待者。</p><h3 id=实战有界队列的生产者-消费者>实战：有界队列的生产者-消费者</h3><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span><span class=lnt>17
+</span><span class=lnt>18
+</span><span class=lnt>19
+</span><span class=lnt>20
+</span><span class=lnt>21
+</span><span class=lnt>22
+</span><span class=lnt>23
+</span><span class=lnt>24
+</span><span class=lnt>25
+</span><span class=lnt>26
+</span><span class=lnt>27
+</span><span class=lnt>28
+</span><span class=lnt>29
+</span><span class=lnt>30
+</span><span class=lnt>31
+</span><span class=lnt>32
+</span><span class=lnt>33
+</span><span class=lnt>34
+</span><span class=lnt>35
+</span><span class=lnt>36
+</span><span class=lnt>37
+</span><span class=lnt>38
+</span><span class=lnt>39
+</span><span class=lnt>40
+</span><span class=lnt>41
+</span><span class=lnt>42
+</span><span class=lnt>43
+</span><span class=lnt>44
+</span><span class=lnt>45
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-go data-lang=go><span class=line><span class=cl><span class=kn>package</span><span class=w> </span><span class=nx>main</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>
+</span></span></span><span class=line><span class=cl><span class=kn>import</span><span class=w> </span><span class=p>(</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=s>&#34;sync&#34;</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=p>)</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>
+</span></span></span><span class=line><span class=cl><span class=kd>type</span><span class=w> </span><span class=nx>BoundedQueue</span><span class=w> </span><span class=kd>struct</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nx>mu</span><span class=w>    </span><span class=nx>sync</span><span class=p>.</span><span class=nx>Mutex</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nx>cond</span><span class=w>  </span><span class=o>*</span><span class=nx>sync</span><span class=p>.</span><span class=nx>Cond</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nx>items</span><span class=w> </span><span class=p>[]</span><span class=kd>interface</span><span class=p>{}</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nx>cap</span><span class=w>   </span><span class=kt>int</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=p>}</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>
+</span></span></span><span class=line><span class=cl><span class=kd>func</span><span class=w> </span><span class=nf>NewBoundedQueue</span><span class=p>(</span><span class=nx>capacity</span><span class=w> </span><span class=kt>int</span><span class=p>)</span><span class=w> </span><span class=o>*</span><span class=nx>BoundedQueue</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nx>q</span><span class=w> </span><span class=o>:=</span><span class=w> </span><span class=o>&amp;</span><span class=nx>BoundedQueue</span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=nx>items</span><span class=p>:</span><span class=w> </span><span class=nb>make</span><span class=p>([]</span><span class=kd>interface</span><span class=p>{},</span><span class=w> </span><span class=mi>0</span><span class=p>,</span><span class=w> </span><span class=nx>capacity</span><span class=p>),</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=nx>cap</span><span class=p>:</span><span class=w>   </span><span class=nx>capacity</span><span class=p>,</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=p>}</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nx>q</span><span class=p>.</span><span class=nx>cond</span><span class=w> </span><span class=p>=</span><span class=w> </span><span class=nx>sync</span><span class=p>.</span><span class=nf>NewCond</span><span class=p>(</span><span class=o>&amp;</span><span class=nx>q</span><span class=p>.</span><span class=nx>mu</span><span class=p>)</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=k>return</span><span class=w> </span><span class=nx>q</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=p>}</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>
+</span></span></span><span class=line><span class=cl><span class=c1>// 生产者：队列满了就等</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=kd>func</span><span class=w> </span><span class=p>(</span><span class=nx>q</span><span class=w> </span><span class=o>*</span><span class=nx>BoundedQueue</span><span class=p>)</span><span class=w> </span><span class=nf>Put</span><span class=p>(</span><span class=nx>item</span><span class=w> </span><span class=kd>interface</span><span class=p>{})</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nx>q</span><span class=p>.</span><span class=nx>mu</span><span class=p>.</span><span class=nf>Lock</span><span class=p>()</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=k>for</span><span class=w> </span><span class=nb>len</span><span class=p>(</span><span class=nx>q</span><span class=p>.</span><span class=nx>items</span><span class=p>)</span><span class=w> </span><span class=o>&gt;=</span><span class=w> </span><span class=nx>q</span><span class=p>.</span><span class=nx>cap</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=nx>q</span><span class=p>.</span><span class=nx>cond</span><span class=p>.</span><span class=nf>Wait</span><span class=p>()</span><span class=w> </span><span class=c1>// 释放锁并等待，被唤醒后重新获取锁</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=p>}</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nx>q</span><span class=p>.</span><span class=nx>items</span><span class=w> </span><span class=p>=</span><span class=w> </span><span class=nb>append</span><span class=p>(</span><span class=nx>q</span><span class=p>.</span><span class=nx>items</span><span class=p>,</span><span class=w> </span><span class=nx>item</span><span class=p>)</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nx>q</span><span class=p>.</span><span class=nx>cond</span><span class=p>.</span><span class=nf>Broadcast</span><span class=p>()</span><span class=w> </span><span class=c1>// 通知可能有消费者在等非空</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nx>q</span><span class=p>.</span><span class=nx>mu</span><span class=p>.</span><span class=nf>Unlock</span><span class=p>()</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=p>}</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>
+</span></span></span><span class=line><span class=cl><span class=c1>// 消费者：队列空了就等</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=kd>func</span><span class=w> </span><span class=p>(</span><span class=nx>q</span><span class=w> </span><span class=o>*</span><span class=nx>BoundedQueue</span><span class=p>)</span><span class=w> </span><span class=nf>Get</span><span class=p>()</span><span class=w> </span><span class=kd>interface</span><span class=p>{}</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nx>q</span><span class=p>.</span><span class=nx>mu</span><span class=p>.</span><span class=nf>Lock</span><span class=p>()</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=k>for</span><span class=w> </span><span class=nb>len</span><span class=p>(</span><span class=nx>q</span><span class=p>.</span><span class=nx>items</span><span class=p>)</span><span class=w> </span><span class=o>==</span><span class=w> </span><span class=mi>0</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=nx>q</span><span class=p>.</span><span class=nx>cond</span><span class=p>.</span><span class=nf>Wait</span><span class=p>()</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=p>}</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nx>item</span><span class=w> </span><span class=o>:=</span><span class=w> </span><span class=nx>q</span><span class=p>.</span><span class=nx>items</span><span class=p>[</span><span class=mi>0</span><span class=p>]</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nx>q</span><span class=p>.</span><span class=nx>items</span><span class=w> </span><span class=p>=</span><span class=w> </span><span class=nx>q</span><span class=p>.</span><span class=nx>items</span><span class=p>[</span><span class=mi>1</span><span class=p>:]</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nx>q</span><span class=p>.</span><span class=nx>cond</span><span class=p>.</span><span class=nf>Broadcast</span><span class=p>()</span><span class=w> </span><span class=c1>// 通知可能有生产者在等非满</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nx>q</span><span class=p>.</span><span class=nx>mu</span><span class=p>.</span><span class=nf>Unlock</span><span class=p>()</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=k>return</span><span class=w> </span><span class=nx>item</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=p>}</span><span class=w>
+</span></span></span></code></pre></td></tr></table></div></div><h3 id=为什么用-for-循环而不是-if>为什么用 for 循环而不是 if?</h3><p><code>Cond.Wait()</code> 被唤醒后，条件<strong>不一定</strong>满足——可能有其他等待者在你之前抢到锁消费了数据。这叫「虚假唤醒」（spurious wakeup）。所以必须用 <code>for</code> 循环重新检查条件：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span><span class=lnt>4
+</span><span class=lnt>5
+</span><span class=lnt>6
+</span><span class=lnt>7
+</span><span class=lnt>8
+</span><span class=lnt>9
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-go data-lang=go><span class=line><span class=cl><span class=c1>// 正确</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=k>for</span><span class=w> </span><span class=nb>len</span><span class=p>(</span><span class=nx>q</span><span class=p>.</span><span class=nx>items</span><span class=p>)</span><span class=w> </span><span class=o>==</span><span class=w> </span><span class=mi>0</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nx>q</span><span class=p>.</span><span class=nx>cond</span><span class=p>.</span><span class=nf>Wait</span><span class=p>()</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=p>}</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>
+</span></span></span><span class=line><span class=cl><span class=c1>// 错误：可能从空队列读取</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=k>if</span><span class=w> </span><span class=nb>len</span><span class=p>(</span><span class=nx>q</span><span class=p>.</span><span class=nx>items</span><span class=p>)</span><span class=w> </span><span class=o>==</span><span class=w> </span><span class=mi>0</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nx>q</span><span class=p>.</span><span class=nx>cond</span><span class=p>.</span><span class=nf>Wait</span><span class=p>()</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=p>}</span><span class=w>
+</span></span></span></code></pre></td></tr></table></div></div><h3 id=signal-vs-broadcast>Signal vs Broadcast</h3><ul><li><code>Signal()</code>：唤醒一个等待者。适合只有一个消费者等一个资源的场景。</li><li><code>Broadcast()</code>：唤醒所有等待者。适合多种条件共享一个 Cond 的场景。</li></ul><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span><span class=lnt>17
+</span><span class=lnt>18
+</span><span class=lnt>19
+</span><span class=lnt>20
+</span><span class=lnt>21
+</span><span class=lnt>22
+</span><span class=lnt>23
+</span><span class=lnt>24
+</span><span class=lnt>25
+</span><span class=lnt>26
+</span><span class=lnt>27
+</span><span class=lnt>28
+</span><span class=lnt>29
+</span><span class=lnt>30
+</span><span class=lnt>31
+</span><span class=lnt>32
+</span><span class=lnt>33
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-go data-lang=go><span class=line><span class=cl><span class=c1>// 多条件共享一个 Cond</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=kd>type</span><span class=w> </span><span class=nx>Store</span><span class=w> </span><span class=kd>struct</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nx>mu</span><span class=w>     </span><span class=nx>sync</span><span class=p>.</span><span class=nx>Mutex</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nx>cond</span><span class=w>   </span><span class=o>*</span><span class=nx>sync</span><span class=p>.</span><span class=nx>Cond</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nx>stock</span><span class=w>  </span><span class=kt>int</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nx>orders</span><span class=w> </span><span class=kt>int</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=p>}</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>
+</span></span></span><span class=line><span class=cl><span class=c1>// 等库存</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=kd>func</span><span class=w> </span><span class=p>(</span><span class=nx>s</span><span class=w> </span><span class=o>*</span><span class=nx>Store</span><span class=p>)</span><span class=w> </span><span class=nf>WaitStock</span><span class=p>()</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nx>s</span><span class=p>.</span><span class=nx>mu</span><span class=p>.</span><span class=nf>Lock</span><span class=p>()</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=k>for</span><span class=w> </span><span class=nx>s</span><span class=p>.</span><span class=nx>stock</span><span class=w> </span><span class=o>==</span><span class=w> </span><span class=mi>0</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=nx>s</span><span class=p>.</span><span class=nx>cond</span><span class=p>.</span><span class=nf>Wait</span><span class=p>()</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=p>}</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nx>s</span><span class=p>.</span><span class=nx>mu</span><span class=p>.</span><span class=nf>Unlock</span><span class=p>()</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=p>}</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>
+</span></span></span><span class=line><span class=cl><span class=c1>// 等订单</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=kd>func</span><span class=w> </span><span class=p>(</span><span class=nx>s</span><span class=w> </span><span class=o>*</span><span class=nx>Store</span><span class=p>)</span><span class=w> </span><span class=nf>WaitOrders</span><span class=p>()</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nx>s</span><span class=p>.</span><span class=nx>mu</span><span class=p>.</span><span class=nf>Lock</span><span class=p>()</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=k>for</span><span class=w> </span><span class=nx>s</span><span class=p>.</span><span class=nx>orders</span><span class=w> </span><span class=o>==</span><span class=w> </span><span class=mi>0</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=nx>s</span><span class=p>.</span><span class=nx>cond</span><span class=p>.</span><span class=nf>Wait</span><span class=p>()</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=p>}</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nx>s</span><span class=p>.</span><span class=nx>mu</span><span class=p>.</span><span class=nf>Unlock</span><span class=p>()</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=p>}</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>
+</span></span></span><span class=line><span class=cl><span class=c1>// 任何状态变更都唤醒所有等待者</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=kd>func</span><span class=w> </span><span class=p>(</span><span class=nx>s</span><span class=w> </span><span class=o>*</span><span class=nx>Store</span><span class=p>)</span><span class=w> </span><span class=nf>Restock</span><span class=p>(</span><span class=nx>n</span><span class=w> </span><span class=kt>int</span><span class=p>)</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nx>s</span><span class=p>.</span><span class=nx>mu</span><span class=p>.</span><span class=nf>Lock</span><span class=p>()</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nx>s</span><span class=p>.</span><span class=nx>stock</span><span class=w> </span><span class=o>+=</span><span class=w> </span><span class=nx>n</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nx>s</span><span class=p>.</span><span class=nx>cond</span><span class=p>.</span><span class=nf>Broadcast</span><span class=p>()</span><span class=w> </span><span class=c1>// 库存和订单的等待者都要检查</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nx>s</span><span class=p>.</span><span class=nx>mu</span><span class=p>.</span><span class=nf>Unlock</span><span class=p>()</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=p>}</span><span class=w>
+</span></span></span></code></pre></td></tr></table></div></div><h2 id=选型速查表>选型速查表</h2><table><thead><tr><th>原语</th><th>核心能力</th><th>典型场景</th><th>替代方案</th></tr></thead><tbody><tr><td>sync.Pool</td><td>对象复用</td><td>高频临时对象分配</td><td>预分配切片</td></tr><tr><td>sync.Once</td><td>一次性初始化</td><td>单例、配置加载</td><td>init() 函数</td></tr><tr><td>sync.Cond</td><td>条件等待+唤醒</td><td>生产者-消费者</td><td>channel + select</td></tr></tbody></table><p>一句话总结：<strong>Pool 省内存，Once 保初始化，Cond 控时序</strong>。三个原语各自解决一个 channel 不够顺手的问题，配合 goroutine 使用，覆盖了 Go 并发编程 80% 的实战需求。</p></div><div class=post-footer id=post-footer><div class=post-info><div class=post-info-line><div class=post-info-mod><span>更新于 2026-07-21&nbsp;<a class=git-hash href=https://github.com/cikichen/hugo-sync/commit/b53aecea3924d2ba7965269d4d1c794ea2890aa0 target=_blank title="commit by cikichen(cikichen@github.com) b53aecea3924d2ba7965269d4d1c794ea2890aa0: Auto: 2026-07-21 - Go 并发原语实战 sync.Pool sync.Once sync.Cond">
+<i class="fas fa-hashtag fa-fw" aria-hidden=true></i>b53aecea</a></span></div></div><div class=post-info-line><div class=post-info-md></div><div class=post-info-share><span><a href=javascript:void(0); title="分享到 Twitter" data-sharer=twitter data-url=https://www.ithome.me/post/2026/07/21/go-sync-primitives-pool-once-cond/ data-title="Go 并发原语实战：sync.Pool、sync.Once 与 sync.Cond 的正确打开方式" data-via=ChenCiki data-hashtags=Go,并发编程,sync,性能优化><i class="fab fa-twitter fa-fw" aria-hidden=true></i></a><a href=javascript:void(0); title="分享到 Linkedin" data-sharer=linkedin data-url=https://www.ithome.me/post/2026/07/21/go-sync-primitives-pool-once-cond/><i class="fab fa-linkedin fa-fw" aria-hidden=true></i></a><a href=javascript:void(0); title="分享到 微博" data-sharer=weibo data-url=https://www.ithome.me/post/2026/07/21/go-sync-primitives-pool-once-cond/ data-title="Go 并发原语实战：sync.Pool、sync.Once 与 sync.Cond 的正确打开方式" data-ralateuid=xxx><i class="fab fa-weibo fa-fw" aria-hidden=true></i></a></span></div></div></div><div class=post-info-more><section class=post-tags><i class="fas fa-tags fa-fw" aria-hidden=true></i>&nbsp;<a href=/tags/go/>Go</a>,&nbsp;<a href=/tags/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B/>并发编程</a>,&nbsp;<a href=/tags/sync/>Sync</a>,&nbsp;<a href=/tags/%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96/>性能优化</a></section><section><span><a href=javascript:void(0); onclick=window.history.back()>返回</a></span>&nbsp;|&nbsp;<span><a href=/>主页</a></span></section></div><div class=post-nav><a href=/post/2026/07/20/circuit-breaker-pattern-go/ class=prev rel=prev title=熔断器实战：用Go实现优雅的服务降级与自动恢复><i class="fas fa-angle-left fa-fw" aria-hidden=true></i>熔断器实战：用Go实现优雅的服务降级与自动恢复</a>
+<a href=/post/2026/07/21/github-trending-2026-07-21/ class=next rel=next title="GitHub Trending 周报 - 2026-07-21">GitHub Trending 周报 - 2026-07-21<i class="fas fa-angle-right fa-fw" aria-hidden=true></i></a></div></div><div id=comments><div id=gitalk class=comment></div><noscript>Please enable JavaScript to view the comments powered by <a href=https://github.com/gitalk/gitalk></a>Gitalk</a>.</noscript></div></article></div></main><footer class=footer><div class=footer-container><div class=footer-line itemscope itemtype=http://schema.org/CreativeWork><i class="far fa-copyright fa-fw" aria-hidden=true></i><span itemprop=copyrightYear>2011 - 2026</span><span class=author itemprop=copyrightHolder>&nbsp;<a href=https://www.ithome.me/ target=_blank>Simon Chen</a></span>&nbsp;|&nbsp;<span class=license><a rel="license external nofollow noopener noreferrer" href=https://creativecommons.org/licenses/by-nc-nd/4.0/ target=_blank>CC BY-NC-ND 4.0</a></span></div></div></footer></div><div id=fixed-buttons><a href=# id=back-to-top class=fixed-button title=回到顶部><i class="fas fa-arrow-up fa-fw" aria-hidden=true></i>
+</a><a href=# id=view-comments class=fixed-button title=查看评论><i class="fas fa-comment fa-fw" aria-hidden=true></i></a></div><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/gitalk@1.7.2/dist/gitalk.min.css><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/css/lightgallery-bundle.min.css><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/katex.min.css><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/copy-tex.min.css><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.css><script type=text/javascript src=https://cdn.jsdelivr.net/npm/gitalk@1.7.2/dist/gitalk.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/autocomplete.js@0.38.1/dist/autocomplete.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/lunr@2.3.9/lunr.min.js></script><script type=text/javascript src=/lib/lunr/lunr.stemmer.support.min.js></script><script type=text/javascript src=/lib/lunr/lunr.zh.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/lazysizes@5.3.1/lazysizes.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/lightgallery.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/plugins/thumbnail/lg-thumbnail.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/plugins/zoom/lg-zoom.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/clipboard@2.0.11/dist/clipboard.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/sharer.js@0.5.1/sharer.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/katex.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/auto-render.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/copy-tex.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/mhchem.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.js></script><script type=text/javascript>window.config={code:{copyTitle:"复制到剪贴板",maxShownLines:50},comment:{gitalk:{admin:["cikichen"],clientID:"be0f52370ed1285b6c7c",clientSecret:"734a7d8d0ded346ca7a3d565d57de3f8eeb2850b",id:"2026-07-21T00:00:00Z",owner:"cikichen",repo:"gitalk",title:"Go 并发原语实战：sync.Pool、sync.Once 与 sync.Cond 的正确打开方式"}},cookieconsent:{content:{dismiss:"我知道了",link:"了解更多",message:"本网站使用 Cookies 来改善您的浏览体验."},enable:!0,palette:{button:{background:"#f0f0f0"},popup:{background:"#1aa3ff"}},theme:"edgeless"},lightgallery:!0,math:{delimiters:[{display:!0,left:"$$",right:"$$"},{display:!0,left:"\\[",right:"\\]"},{display:!0,left:"\\begin{equation}",right:"\\end{equation}"},{display:!0,left:"\\begin{equation*}",right:"\\end{equation*}"},{display:!0,left:"\\begin{align}",right:"\\end{align}"},{display:!0,left:"\\begin{align*}",right:"\\end{align*}"},{display:!0,left:"\\begin{alignat}",right:"\\end{alignat}"},{display:!0,left:"\\begin{alignat*}",right:"\\end{alignat*}"},{display:!0,left:"\\begin{gather}",right:"\\end{gather}"},{display:!0,left:"\\begin{CD}",right:"\\end{CD}"},{display:!1,left:"$",right:"$"},{display:!1,left:"\\(",right:"\\)"}],strict:!1},search:{highlightTag:"em",lunrIndexURL:"/index.json",lunrLanguageCode:"zh",lunrSegmentitURL:"/lib/lunr/lunr.segmentit.js",maxResultLength:10,noResultsFound:"没有找到结果",snippetLength:50,type:"lunr"}}</script><script type=text/javascript src=/js/theme.min.js></script></body></html>

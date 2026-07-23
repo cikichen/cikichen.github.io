@@ -1,0 +1,248 @@
+<!doctype html><html lang=zh-CN><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><meta name=robots content="noodp"><title>布隆过滤器实战：在海量数据中优雅判断存在性 - 编程心语</title><meta name=Description content="从原理到工程落地，深入解析布隆过滤器的位图结构、哈希函数选择、误判率控制，附 Go 原生实现与 Redis 集成方案，解决缓存穿透、去重等经典场景"><meta property="og:url" content="https://www.ithome.me/post/2026/07/19/bloom-filter-massive-data-membership/"><meta property="og:site_name" content="编程心语"><meta property="og:title" content="布隆过滤器实战：在海量数据中优雅判断存在性"><meta property="og:description" content="从原理到工程落地，深入解析布隆过滤器的位图结构、哈希函数选择、误判率控制，附 Go 原生实现与 Redis 集成方案，解决缓存穿透、去重等经典场景"><meta property="og:locale" content="zh_CN"><meta property="og:type" content="article"><meta property="article:section" content="posts"><meta property="article:published_time" content="2026-07-19T08:00:00+08:00"><meta property="article:modified_time" content="2026-07-19T08:32:30+08:00"><meta property="article:tag" content="布隆过滤器"><meta property="article:tag" content="算法"><meta property="article:tag" content="Redis"><meta property="article:tag" content="Go"><meta property="article:tag" content="缓存"><meta name=twitter:card content="summary"><meta name=twitter:title content="布隆过滤器实战：在海量数据中优雅判断存在性"><meta name=twitter:description content="从原理到工程落地，深入解析布隆过滤器的位图结构、哈希函数选择、误判率控制，附 Go 原生实现与 Redis 集成方案，解决缓存穿透、去重等经典场景"><meta name=twitter:site content="@ChenCiki"><meta name=application-name content="编程心语"><meta name=apple-mobile-web-app-title content="编程心语"><meta name=theme-color content="#ffffff"><meta name=msapplication-TileColor content="#da532c"><link rel="shortcut icon" type=image/x-icon href=/favicon.ico><link rel=icon type=image/png sizes=32x32 href=/favicon-32x32.png><link rel=icon type=image/png sizes=16x16 href=/favicon-16x16.png><link rel=apple-touch-icon sizes=180x180 href=/apple-touch-icon.png><link rel=mask-icon href=/safari-pinned-tab.svg color=#5bbad5><link rel=manifest href=/site.webmanifest><link rel=canonical href=https://www.ithome.me/post/2026/07/19/bloom-filter-massive-data-membership/><link rel=prev href=https://www.ithome.me/post/2026/07/17/afraid-to-quit/><link rel=next href=https://www.ithome.me/post/2026/07/20/circuit-breaker-pattern-go/><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/normalize.css@8.0.1/normalize.min.css><link rel=stylesheet href=/css/style.min.css><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css><script type=application/ld+json>{"@context":"http://schema.org","@type":"BlogPosting","headline":"布隆过滤器实战：在海量数据中优雅判断存在性","inLanguage":"zh-CN","mainEntityOfPage":{"@type":"WebPage","@id":"https:\/\/www.ithome.me\/post\/2026\/07\/19\/bloom-filter-massive-data-membership\/"},"image":["https:\/\/www.ithome.me\/cover.png"],"genre":"posts","keywords":"布隆过滤器, 算法, Redis, Go, 缓存","wordcount":1959,"url":"https:\/\/www.ithome.me\/post\/2026\/07\/19\/bloom-filter-massive-data-membership\/","datePublished":"2026-07-19T08:00:00+08:00","dateModified":"2026-07-19T08:32:30+08:00","publisher":{"@type":"Organization","name":"SimonChen","logo":"https:\/\/www.ithome.me\/logo.png"},"author":{"@type":"Person","name":"Simon"},"description":"从原理到工程落地，深入解析布隆过滤器的位图结构、哈希函数选择、误判率控制，附 Go 原生实现与 Redis 集成方案，解决缓存穿透、去重等经典场景"}</script><script async src="https://www.googletagmanager.com/gtag/js?id=G-H1Q5563VR8"></script><script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag("js",new Date),gtag("config","G-H1Q5563VR8",{anonymize_ip:!0})</script></head><body data-header-desktop=fixed data-header-mobile=auto><script type=text/javascript>(window.localStorage&&localStorage.getItem("theme")?localStorage.getItem("theme")==="dark":"auto"==="auto"?window.matchMedia("(prefers-color-scheme: dark)").matches:"auto"==="dark")&&document.body.setAttribute("theme","dark")</script><div id=mask></div><div class=wrapper><header class=desktop id=header-desktop><div class=header-wrapper><div class=header-title><a href=/ title=编程心语>编程心语</a></div><div class=menu><div class=menu-inner><a class=menu-item href=/posts/>文章 </a><a class=menu-item href=/categories/>分类 </a><a class=menu-item href=/tags/>标签 </a><a class=menu-item href=/about-me/>关于 </a><span class="menu-item delimiter"></span><span class="menu-item search" id=search-desktop>
+<input type=text placeholder=搜索文章... id=search-input-desktop>
+<a href=javascript:void(0); class="search-button search-toggle" id=search-toggle-desktop title=搜索><i class="fas fa-search fa-fw" aria-hidden=true></i>
+</a><a href=javascript:void(0); class="search-button search-clear" id=search-clear-desktop title=清空><i class="fas fa-times-circle fa-fw" aria-hidden=true></i>
+</a><span class="search-button search-loading" id=search-loading-desktop><i class="fas fa-spinner fa-fw fa-spin" aria-hidden=true></i>
+</span></span><a href=javascript:void(0); class="menu-item theme-switch" title=切换主题><i class="fas fa-adjust fa-fw" aria-hidden=true></i></a></div></div></div></header><header class=mobile id=header-mobile><div class=header-container><div class=header-wrapper><div class=header-title><a href=/ title=编程心语>编程心语</a></div><div class=menu-toggle id=menu-toggle-mobile><span></span><span></span><span></span></div></div><div class=menu id=menu-mobile><div class=search-wrapper><div class="search mobile" id=search-mobile><input type=text placeholder=搜索文章... id=search-input-mobile>
+<a href=javascript:void(0); class="search-button search-toggle" id=search-toggle-mobile title=搜索><i class="fas fa-search fa-fw" aria-hidden=true></i>
+</a><a href=javascript:void(0); class="search-button search-clear" id=search-clear-mobile title=清空><i class="fas fa-times-circle fa-fw" aria-hidden=true></i>
+</a><span class="search-button search-loading" id=search-loading-mobile><i class="fas fa-spinner fa-fw fa-spin" aria-hidden=true></i></span></div><a href=javascript:void(0); class=search-cancel id=search-cancel-mobile>取消</a></div><a class=menu-item href=/posts/ title>文章</a><a class=menu-item href=/categories/ title>分类</a><a class=menu-item href=/tags/ title>标签</a><a class=menu-item href=/about-me/ title>关于</a><a href=javascript:void(0); class="menu-item theme-switch" title=切换主题>
+<i class="fas fa-adjust fa-fw" aria-hidden=true></i></a></div></div></header><div class="search-dropdown desktop"><div id=search-dropdown-desktop></div></div><div class="search-dropdown mobile"><div id=search-dropdown-mobile></div></div><main class=main><div class=container><div class=toc id=toc-auto><h2 class=toc-title>目录</h2><div class=toc-content id=toc-content-auto></div></div><article class="page single"><h1 class="single-title animate__animated animate__flipInX">布隆过滤器实战：在海量数据中优雅判断存在性</h1><div class=post-meta><div class=post-meta-line><span class=post-author><a href=https://www.ithome.me/ title=Author target=_blank rel="noopener noreferrer author" class=author><i class="fas fa-user-circle fa-fw" aria-hidden=true></i>Simon</a>
+</span>&nbsp;<span class=post-category>收录于 <a href=/categories/backend/><i class="far fa-folder fa-fw" aria-hidden=true></i>Backend</a></span></div><div class=post-meta-line><i class="far fa-calendar-alt fa-fw" aria-hidden=true></i>&nbsp;<time datetime=2026-07-19>2026-07-19</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden=true></i>&nbsp;约 1959 字&nbsp;
+<i class="far fa-clock fa-fw" aria-hidden=true></i>&nbsp;预计阅读 4 分钟&nbsp;</div></div><div class="details toc" id=toc-static data-kept=true><div class="details-summary toc-title"><span>目录</span>
+<span><i class="details-icon fas fa-angle-right" aria-hidden=true></i></span></div><div class="details-content toc-content" id=toc-content-static><nav id=TableOfContents><ul><li><a href=#一个被低估的数据结构>一个被低估的数据结构</a></li><li><a href=#厃普西隆布隆过滤器的核心原理>厃普西隆：布隆过滤器的核心原理</a><ul><li><a href=#工作流程>工作流程</a></li></ul></li><li><a href=#go-原生实现>Go 原生实现</a></li><li><a href=#redis-集成跨进程共享布隆过滤器>Redis 集成：跨进程共享布隆过滤器</a></li><li><a href=#三个经典工程场景>三个经典工程场景</a><ul><li><a href=#场景一缓存穿透防护>场景一：缓存穿透防护</a></li><li><a href=#场景二爬虫-url-去重>场景二：爬虫 URL 去重</a></li><li><a href=#场景三邮箱手机号注册拦截>场景三：邮箱/手机号注册拦截</a></li></ul></li><li><a href=#参数调优误判率与内存的权衡>参数调优：误判率与内存的权衡</a></li><li><a href=#总结>总结</a></li></ul></nav></div></div><div class=content id=content><h2 id=一个被低估的数据结构>一个被低估的数据结构</h2><p>后端开发中经常遇到这类需求：判断一个元素是否在集合中存在。当数据量小的时候，一个 <code>map</code> 或 <code>Set</code> 就够了。但当数据量到亿级——比如邮箱是否已注册、URL 是否已爬取、手机号是否在黑名单——内存就吃不消了。</p><p>10 亿个 64 字符的字符串直接放内存，大约需要 60 GB。布隆过滤器用不到 2 GB 就能覆盖同样的数据量，代价只是极低的误判率。</p><h2 id=厃普西隆布隆过滤器的核心原理>厃普西隆：布隆过滤器的核心原理</h2><p>布隆过滤器由 Burton Bloom 在 1970 年提出，核心思路是：<strong>用一个位数组加多个哈希函数，用空间换准确性</strong>。</p><p>它有两个关键特征：</p><ul><li><strong>可能误判（假阳性）</strong>：说存在，可能不存在</li><li><strong>绝不漏判（假阴性）</strong>：说不存在，一定不存在</li></ul><p>这个不对称性非常重要——它适合「宁可错杀，不可放过」的场景。</p><h3 id=工作流程>工作流程</h3><p>初始化一个 m 位的位数组，全置 0。插入元素时，用 k 个哈希函数算出 k 个位置，全部置 1。查询时，同样算出 k 个位置，只要有一个位是 0，则元素一定不在；如果全是 1，则元素「可能」在。</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-fallback data-lang=fallback><span class=line><span class=cl>位数组: [0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1]
+</span></span><span class=line><span class=cl>            ↑        ↑     ↑           ↑
+</span></span><span class=line><span class=cl>         hash1(x) hash2(x) hash3(x)  hash4(x)
+</span></span></code></pre></td></tr></table></div></div><p>不同元素的哈希位置会重叠，这就是误判的来源。但只要位数组够大、哈希函数够多，误判率可以控制在 1% 以下。</p><h2 id=go-原生实现>Go 原生实现</h2><p>下面是一个最小可用的布隆过滤器实现，核心逻辑不到 60 行：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span><span class=lnt>17
+</span><span class=lnt>18
+</span><span class=lnt>19
+</span><span class=lnt>20
+</span><span class=lnt>21
+</span><span class=lnt>22
+</span><span class=lnt>23
+</span><span class=lnt>24
+</span><span class=lnt>25
+</span><span class=lnt>26
+</span><span class=lnt>27
+</span><span class=lnt>28
+</span><span class=lnt>29
+</span><span class=lnt>30
+</span><span class=lnt>31
+</span><span class=lnt>32
+</span><span class=lnt>33
+</span><span class=lnt>34
+</span><span class=lnt>35
+</span><span class=lnt>36
+</span><span class=lnt>37
+</span><span class=lnt>38
+</span><span class=lnt>39
+</span><span class=lnt>40
+</span><span class=lnt>41
+</span><span class=lnt>42
+</span><span class=lnt>43
+</span><span class=lnt>44
+</span><span class=lnt>45
+</span><span class=lnt>46
+</span><span class=lnt>47
+</span><span class=lnt>48
+</span><span class=lnt>49
+</span><span class=lnt>50
+</span><span class=lnt>51
+</span><span class=lnt>52
+</span><span class=lnt>53
+</span><span class=lnt>54
+</span><span class=lnt>55
+</span><span class=lnt>56
+</span><span class=lnt>57
+</span><span class=lnt>58
+</span><span class=lnt>59
+</span><span class=lnt>60
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-go data-lang=go><span class=line><span class=cl><span class=kn>package</span><span class=w> </span><span class=nx>bloom</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>
+</span></span></span><span class=line><span class=cl><span class=kn>import</span><span class=w> </span><span class=p>(</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>	</span><span class=s>&#34;hash/fnv&#34;</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>	</span><span class=s>&#34;math&#34;</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=p>)</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>
+</span></span></span><span class=line><span class=cl><span class=c1>// BloomFilter 布隆过滤器</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=kd>type</span><span class=w> </span><span class=nx>BloomFilter</span><span class=w> </span><span class=kd>struct</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>	</span><span class=nx>bitmap</span><span class=w> </span><span class=p>[]</span><span class=kt>uint64</span><span class=w>    </span><span class=c1>// 位数组，用 uint64 切片模拟</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>	</span><span class=nx>k</span><span class=w>      </span><span class=kt>int</span><span class=w>         </span><span class=c1>// 哈希函数数量</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>	</span><span class=nx>bits</span><span class=w>   </span><span class=kt>uint</span><span class=w>        </span><span class=c1>// 位数组总位数</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=p>}</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>
+</span></span></span><span class=line><span class=cl><span class=c1>// New 根据预期元素数 n 和目标误判率 p 计算最优参数</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=kd>func</span><span class=w> </span><span class=nf>New</span><span class=p>(</span><span class=nx>n</span><span class=w> </span><span class=kt>int</span><span class=p>,</span><span class=w> </span><span class=nx>p</span><span class=w> </span><span class=kt>float64</span><span class=p>)</span><span class=w> </span><span class=o>*</span><span class=nx>BloomFilter</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>	</span><span class=c1>// 最优位数组大小: m = -(n * ln(p)) / (ln(2)^2)</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>	</span><span class=nx>m</span><span class=w> </span><span class=o>:=</span><span class=w> </span><span class=nb>uint</span><span class=p>(</span><span class=nx>math</span><span class=p>.</span><span class=nf>Ceil</span><span class=p>(</span><span class=o>-</span><span class=mi>1</span><span class=w> </span><span class=o>*</span><span class=w> </span><span class=nb>float64</span><span class=p>(</span><span class=nx>n</span><span class=p>)</span><span class=w> </span><span class=o>*</span><span class=w> </span><span class=nx>math</span><span class=p>.</span><span class=nf>Log</span><span class=p>(</span><span class=nx>p</span><span class=p>)</span><span class=w> </span><span class=o>/</span><span class=w> </span><span class=p>(</span><span class=nx>math</span><span class=p>.</span><span class=nx>Ln2</span><span class=w> </span><span class=o>*</span><span class=w> </span><span class=nx>math</span><span class=p>.</span><span class=nx>Ln2</span><span class=p>)))</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>	</span><span class=c1>// 最优哈希函数数: k = (m/n) * ln(2)</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>	</span><span class=nx>k</span><span class=w> </span><span class=o>:=</span><span class=w> </span><span class=nb>int</span><span class=p>(</span><span class=nx>math</span><span class=p>.</span><span class=nf>Ceil</span><span class=p>(</span><span class=nb>float64</span><span class=p>(</span><span class=nx>m</span><span class=p>)</span><span class=w> </span><span class=o>/</span><span class=w> </span><span class=nb>float64</span><span class=p>(</span><span class=nx>n</span><span class=p>)</span><span class=w> </span><span class=o>*</span><span class=w> </span><span class=nx>math</span><span class=p>.</span><span class=nx>Ln2</span><span class=p>))</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>	</span><span class=k>return</span><span class=w> </span><span class=o>&amp;</span><span class=nx>BloomFilter</span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>		</span><span class=nx>bitmap</span><span class=p>:</span><span class=w> </span><span class=nb>make</span><span class=p>([]</span><span class=kt>uint64</span><span class=p>,</span><span class=w> </span><span class=p>(</span><span class=nx>m</span><span class=o>+</span><span class=mi>63</span><span class=p>)</span><span class=o>/</span><span class=mi>64</span><span class=p>),</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>		</span><span class=nx>k</span><span class=p>:</span><span class=w>      </span><span class=nx>k</span><span class=p>,</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>		</span><span class=nx>bits</span><span class=p>:</span><span class=w>   </span><span class=nx>m</span><span class=p>,</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>	</span><span class=p>}</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=p>}</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>
+</span></span></span><span class=line><span class=cl><span class=kd>func</span><span class=w> </span><span class=p>(</span><span class=nx>bf</span><span class=w> </span><span class=o>*</span><span class=nx>BloomFilter</span><span class=p>)</span><span class=w> </span><span class=nf>hash</span><span class=p>(</span><span class=nx>data</span><span class=w> </span><span class=p>[]</span><span class=kt>byte</span><span class=p>,</span><span class=w> </span><span class=nx>seed</span><span class=w> </span><span class=kt>uint32</span><span class=p>)</span><span class=w> </span><span class=kt>uint</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>	</span><span class=nx>h</span><span class=w> </span><span class=o>:=</span><span class=w> </span><span class=nx>fnv</span><span class=p>.</span><span class=nf>New32a</span><span class=p>()</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>	</span><span class=nx>h</span><span class=p>.</span><span class=nf>Write</span><span class=p>([]</span><span class=kt>byte</span><span class=p>{</span><span class=nb>byte</span><span class=p>(</span><span class=nx>seed</span><span class=p>),</span><span class=w> </span><span class=nb>byte</span><span class=p>(</span><span class=nx>seed</span><span class=w> </span><span class=o>&gt;&gt;</span><span class=w> </span><span class=mi>8</span><span class=p>),</span><span class=w> </span><span class=nb>byte</span><span class=p>(</span><span class=nx>seed</span><span class=w> </span><span class=o>&gt;&gt;</span><span class=w> </span><span class=mi>16</span><span class=p>)})</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>	</span><span class=nx>h</span><span class=p>.</span><span class=nf>Write</span><span class=p>(</span><span class=nx>data</span><span class=p>)</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>	</span><span class=k>return</span><span class=w> </span><span class=nb>uint</span><span class=p>(</span><span class=nx>h</span><span class=p>.</span><span class=nf>Sum32</span><span class=p>())</span><span class=w> </span><span class=o>%</span><span class=w> </span><span class=nx>bf</span><span class=p>.</span><span class=nx>bits</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=p>}</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>
+</span></span></span><span class=line><span class=cl><span class=kd>func</span><span class=w> </span><span class=p>(</span><span class=nx>bf</span><span class=w> </span><span class=o>*</span><span class=nx>BloomFilter</span><span class=p>)</span><span class=w> </span><span class=nf>setBit</span><span class=p>(</span><span class=nx>pos</span><span class=w> </span><span class=kt>uint</span><span class=p>)</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>	</span><span class=nx>idx</span><span class=p>,</span><span class=w> </span><span class=nx>offset</span><span class=w> </span><span class=o>:=</span><span class=w> </span><span class=nx>pos</span><span class=o>/</span><span class=mi>64</span><span class=p>,</span><span class=w> </span><span class=nx>pos</span><span class=o>%</span><span class=mi>64</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>	</span><span class=nx>bf</span><span class=p>.</span><span class=nx>bitmap</span><span class=p>[</span><span class=nx>idx</span><span class=p>]</span><span class=w> </span><span class=o>|=</span><span class=w> </span><span class=mi>1</span><span class=w> </span><span class=o>&lt;&lt;</span><span class=w> </span><span class=nx>offset</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=p>}</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>
+</span></span></span><span class=line><span class=cl><span class=kd>func</span><span class=w> </span><span class=p>(</span><span class=nx>bf</span><span class=w> </span><span class=o>*</span><span class=nx>BloomFilter</span><span class=p>)</span><span class=w> </span><span class=nf>getBit</span><span class=p>(</span><span class=nx>pos</span><span class=w> </span><span class=kt>uint</span><span class=p>)</span><span class=w> </span><span class=kt>bool</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>	</span><span class=nx>idx</span><span class=p>,</span><span class=w> </span><span class=nx>offset</span><span class=w> </span><span class=o>:=</span><span class=w> </span><span class=nx>pos</span><span class=o>/</span><span class=mi>64</span><span class=p>,</span><span class=w> </span><span class=nx>pos</span><span class=o>%</span><span class=mi>64</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>	</span><span class=k>return</span><span class=w> </span><span class=nx>bf</span><span class=p>.</span><span class=nx>bitmap</span><span class=p>[</span><span class=nx>idx</span><span class=p>]</span><span class=o>&amp;</span><span class=p>(</span><span class=mi>1</span><span class=o>&lt;&lt;</span><span class=nx>offset</span><span class=p>)</span><span class=w> </span><span class=o>!=</span><span class=w> </span><span class=mi>0</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=p>}</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>
+</span></span></span><span class=line><span class=cl><span class=c1>// Add 添加元素</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=kd>func</span><span class=w> </span><span class=p>(</span><span class=nx>bf</span><span class=w> </span><span class=o>*</span><span class=nx>BloomFilter</span><span class=p>)</span><span class=w> </span><span class=nf>Add</span><span class=p>(</span><span class=nx>data</span><span class=w> </span><span class=p>[]</span><span class=kt>byte</span><span class=p>)</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>	</span><span class=k>for</span><span class=w> </span><span class=nx>i</span><span class=w> </span><span class=o>:=</span><span class=w> </span><span class=mi>0</span><span class=p>;</span><span class=w> </span><span class=nx>i</span><span class=w> </span><span class=p>&lt;</span><span class=w> </span><span class=nx>bf</span><span class=p>.</span><span class=nx>k</span><span class=p>;</span><span class=w> </span><span class=nx>i</span><span class=o>++</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>		</span><span class=nx>bf</span><span class=p>.</span><span class=nf>setBit</span><span class=p>(</span><span class=nx>bf</span><span class=p>.</span><span class=nf>hash</span><span class=p>(</span><span class=nx>data</span><span class=p>,</span><span class=w> </span><span class=nb>uint32</span><span class=p>(</span><span class=nx>i</span><span class=p>)))</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>	</span><span class=p>}</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=p>}</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>
+</span></span></span><span class=line><span class=cl><span class=c1>// Contains 判断元素是否存在（可能有假阳性）</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=kd>func</span><span class=w> </span><span class=p>(</span><span class=nx>bf</span><span class=w> </span><span class=o>*</span><span class=nx>BloomFilter</span><span class=p>)</span><span class=w> </span><span class=nf>Contains</span><span class=p>(</span><span class=nx>data</span><span class=w> </span><span class=p>[]</span><span class=kt>byte</span><span class=p>)</span><span class=w> </span><span class=kt>bool</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>	</span><span class=k>for</span><span class=w> </span><span class=nx>i</span><span class=w> </span><span class=o>:=</span><span class=w> </span><span class=mi>0</span><span class=p>;</span><span class=w> </span><span class=nx>i</span><span class=w> </span><span class=p>&lt;</span><span class=w> </span><span class=nx>bf</span><span class=p>.</span><span class=nx>k</span><span class=p>;</span><span class=w> </span><span class=nx>i</span><span class=o>++</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>		</span><span class=k>if</span><span class=w> </span><span class=p>!</span><span class=nx>bf</span><span class=p>.</span><span class=nf>getBit</span><span class=p>(</span><span class=nx>bf</span><span class=p>.</span><span class=nf>hash</span><span class=p>(</span><span class=nx>data</span><span class=p>,</span><span class=w> </span><span class=nb>uint32</span><span class=p>(</span><span class=nx>i</span><span class=p>)))</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>			</span><span class=k>return</span><span class=w> </span><span class=kc>false</span><span class=w> </span><span class=c1>// 任一位为 0，必定不存在</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>		</span><span class=p>}</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>	</span><span class=p>}</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>	</span><span class=k>return</span><span class=w> </span><span class=kc>true</span><span class=w> </span><span class=c1>// 全为 1，可能存在</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=p>}</span><span class=w>
+</span></span></span></code></pre></td></tr></table></div></div><p>实际生产中不要自己造轮子——用 <code>github.com/bits-and-blooms/bloom/v3</code> 库，API 更完善，支持序列化和并发安全：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-go data-lang=go><span class=line><span class=cl><span class=kn>import</span><span class=w> </span><span class=s>&#34;github.com/bits-and-blooms/bloom/v3&#34;</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>
+</span></span></span><span class=line><span class=cl><span class=c1>// 容量 1000 万，误判率 0.1%</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=nx>filter</span><span class=w> </span><span class=o>:=</span><span class=w> </span><span class=nx>bloom</span><span class=p>.</span><span class=nf>NewWithEstimates</span><span class=p>(</span><span class=mi>10000000</span><span class=p>,</span><span class=w> </span><span class=mf>0.001</span><span class=p>)</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=nx>filter</span><span class=p>.</span><span class=nf>Add</span><span class=p>([]</span><span class=nb>byte</span><span class=p>(</span><span class=s>&#34;user@example.com&#34;</span><span class=p>))</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>
+</span></span></span><span class=line><span class=cl><span class=k>if</span><span class=w> </span><span class=nx>filter</span><span class=p>.</span><span class=nf>Test</span><span class=p>([]</span><span class=nb>byte</span><span class=p>(</span><span class=s>&#34;user@example.com&#34;</span><span class=p>))</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=c1>// 可能存在，查数据库确认</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=p>}</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=k>if</span><span class=w> </span><span class=p>!</span><span class=nx>filter</span><span class=p>.</span><span class=nf>Test</span><span class=p>([]</span><span class=nb>byte</span><span class=p>(</span><span class=s>&#34;nobody@example.com&#34;</span><span class=p>))</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=c1>// 一定不存在，直接返回</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=p>}</span><span class=w>
+</span></span></span></code></pre></td></tr></table></div></div><h2 id=redis-集成跨进程共享布隆过滤器>Redis 集成：跨进程共享布隆过滤器</h2><p>单机布隆过滤器重启就丢失，多实例之间也无法共享。Redis 4.0+ 通过 RedisBloom 模块提供了原生的布隆过滤器支持：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=line><span class=cl><span class=c1># 创建容量 100 万、误判率 1% 的过滤器</span>
+</span></span><span class=line><span class=cl>BF.RESERVE user_emails 0.01 <span class=m>1000000</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1># 添加元素</span>
+</span></span><span class=line><span class=cl>BF.ADD user_emails <span class=s2>&#34;alice@example.com&#34;</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1># 批量添加</span>
+</span></span><span class=line><span class=cl>BF.MADD user_emails <span class=s2>&#34;bob@example.com&#34;</span> <span class=s2>&#34;carol@example.com&#34;</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1># 判断是否存在</span>
+</span></span><span class=line><span class=cl>BF.EXISTS user_emails <span class=s2>&#34;alice@example.com&#34;</span>    <span class=c1># 返回 1（可能存在）</span>
+</span></span><span class=line><span class=cl>BF.EXISTS user_emails <span class=s2>&#34;nobody@example.com&#34;</span>   <span class=c1># 返回 0（一定不存在）</span>
+</span></span></code></pre></td></tr></table></div></div><p>Go 客户端用 <code>github.com/redis/go-redis/v9</code> 配合 RedisBloom：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span><span class=lnt>17
+</span><span class=lnt>18
+</span><span class=lnt>19
+</span><span class=lnt>20
+</span><span class=lnt>21
+</span><span class=lnt>22
+</span><span class=lnt>23
+</span><span class=lnt>24
+</span><span class=lnt>25
+</span><span class=lnt>26
+</span><span class=lnt>27
+</span><span class=lnt>28
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-go data-lang=go><span class=line><span class=cl><span class=kn>package</span><span class=w> </span><span class=nx>main</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>
+</span></span></span><span class=line><span class=cl><span class=kn>import</span><span class=w> </span><span class=p>(</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>	</span><span class=s>&#34;context&#34;</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>	</span><span class=s>&#34;fmt&#34;</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>	</span><span class=nx>redisbloom</span><span class=w> </span><span class=s>&#34;github.com/RedisBloom/redisbloom-go&#34;</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=p>)</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>
+</span></span></span><span class=line><span class=cl><span class=kd>func</span><span class=w> </span><span class=nf>main</span><span class=p>()</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>	</span><span class=nx>client</span><span class=w> </span><span class=o>:=</span><span class=w> </span><span class=nx>redisbloom</span><span class=p>.</span><span class=nf>NewClient</span><span class=p>(</span><span class=s>&#34;localhost:6379&#34;</span><span class=p>,</span><span class=w> </span><span class=s>&#34;&#34;</span><span class=p>,</span><span class=w> </span><span class=kc>nil</span><span class=p>)</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>	</span><span class=nx>ctx</span><span class=w> </span><span class=o>:=</span><span class=w> </span><span class=nx>context</span><span class=p>.</span><span class=nf>Background</span><span class=p>()</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>	</span><span class=nx>_</span><span class=w> </span><span class=p>=</span><span class=w> </span><span class=nx>ctx</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>	</span><span class=c1>// 创建过滤器（已存在则忽略错误）</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>	</span><span class=nx>client</span><span class=p>.</span><span class=nf>Reserve</span><span class=p>(</span><span class=s>&#34;url_seen&#34;</span><span class=p>,</span><span class=w> </span><span class=mf>0.01</span><span class=p>,</span><span class=w> </span><span class=mi>1000000</span><span class=p>)</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>	</span><span class=c1>// 爬虫去重场景</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>	</span><span class=nx>url</span><span class=w> </span><span class=o>:=</span><span class=w> </span><span class=s>&#34;https://example.com/page-123&#34;</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>	</span><span class=nx>exists</span><span class=p>,</span><span class=w> </span><span class=nx>_</span><span class=w> </span><span class=o>:=</span><span class=w> </span><span class=nx>client</span><span class=p>.</span><span class=nf>Exists</span><span class=p>(</span><span class=s>&#34;url_seen&#34;</span><span class=p>,</span><span class=w> </span><span class=nx>url</span><span class=p>)</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>	</span><span class=k>if</span><span class=w> </span><span class=nx>exists</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>		</span><span class=nx>fmt</span><span class=p>.</span><span class=nf>Println</span><span class=p>(</span><span class=s>&#34;已爬取过，跳过&#34;</span><span class=p>)</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>		</span><span class=k>return</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>	</span><span class=p>}</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>	</span><span class=c1>// 抓取页面...</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>	</span><span class=nx>client</span><span class=p>.</span><span class=nf>Add</span><span class=p>(</span><span class=s>&#34;url_seen&#34;</span><span class=p>,</span><span class=w> </span><span class=nx>url</span><span class=p>)</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>	</span><span class=nx>fmt</span><span class=p>.</span><span class=nf>Println</span><span class=p>(</span><span class=s>&#34;新增到爬取队列&#34;</span><span class=p>)</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=p>}</span><span class=w>
+</span></span></span></code></pre></td></tr></table></div></div><h2 id=三个经典工程场景>三个经典工程场景</h2><h3 id=场景一缓存穿透防护>场景一：缓存穿透防护</h3><p>恶意请求大量不存在的 key，绕过缓存直击数据库。布隆过滤器挡在最前面：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-fallback data-lang=fallback><span class=line><span class=cl>请求 → 布隆过滤器拦截 → 命中？查缓存/DB → 未命中？直接返回空
+</span></span></code></pre></td></tr></table></div></div><p>启动时把数据库所有 ID 灌入布隆过滤器，请求先过布隆这一关。假阳性偶尔漏几个请求到数据库，不影响大局。</p><h3 id=场景二爬虫-url-去重>场景二：爬虫 URL 去重</h3><p>10 亿 URL 全放内存要 60+ GB，布隆过滤器只需 1.7 GB（误判率 1%）。偶尔重复抓取几个页面，远比 60 GB 内存划算。</p><h3 id=场景三邮箱手机号注册拦截>场景三：邮箱/手机号注册拦截</h3><p>用户输入邮箱时，前端先查布隆过滤器。如果返回「不存在」，100% 可以放行注册；如果返回「可能存在」，再查数据库确认。大部分新邮箱直接通过，数据库压力大幅降低。</p><h2 id=参数调优误判率与内存的权衡>参数调优：误判率与内存的权衡</h2><p>布隆过滤器没有银弹，核心是三个变量的关系：元素数 n、误判率 p、位数组大小 m、哈希函数数 k。</p><table><thead><tr><th>元素数 n</th><th>误判率 p</th><th>内存占用</th><th>哈希函数 k</th></tr></thead><tbody><tr><td>100 万</td><td>1%</td><td>1.2 MB</td><td>7</td></tr><tr><td>100 万</td><td>0.1%</td><td>1.8 MB</td><td>10</td></tr><tr><td>1 亿</td><td>1%</td><td>114 MB</td><td>7</td></tr><tr><td>1 亿</td><td>0.01%</td><td>229 MB</td><td>16</td></tr></tbody></table><p>经验法则：<strong>先定 n（容量），再定 p（误判率），m 和 k 由公式自动算出</strong>。p 调小一档，内存翻倍但误判大幅下降。</p><p>一个容易踩的坑：布隆过滤器<strong>不支持删除</strong>。如果业务需要移除元素，用 Counting Bloom Filter（每个位用计数器代替 0/1），或改用 Cuckoo Filter。</p><h2 id=总结>总结</h2><p>布隆过滤器解决的不是「存什么」，而是「肯定不存在」这个判断。它的不对称性——假阴性为零，假阳性可控——让它在缓存防护、去重、黑名单等场景无可替代。</p><p>实践建议：</p><ul><li>优先用 RedisBloom，跨进程共享且支持持久化</li><li>误判率起步设 1%，够用再降</li><li>容量预估宁大勿小，满了误判率会指数上升</li><li>需要删除时换 Cuckoo Filter，别硬删</li></ul><p>掌握布隆过滤器，你就在工具箱里多了一把专门解决「海量数据存在性判断」的利器。</p></div><div class=post-footer id=post-footer><div class=post-info><div class=post-info-line><div class=post-info-mod><span>更新于 2026-07-19&nbsp;<a class=git-hash href=https://github.com/cikichen/hugo-sync/commit/e02f299cb3d1c65a7ac989e21b702538821f2a59 target=_blank title="commit by cikichen(cikichen@github.com) e02f299cb3d1c65a7ac989e21b702538821f2a59: Auto: 2026-07-19 - 布隆过滤器实战">
+<i class="fas fa-hashtag fa-fw" aria-hidden=true></i>e02f299c</a></span></div></div><div class=post-info-line><div class=post-info-md></div><div class=post-info-share><span><a href=javascript:void(0); title="分享到 Twitter" data-sharer=twitter data-url=https://www.ithome.me/post/2026/07/19/bloom-filter-massive-data-membership/ data-title=布隆过滤器实战：在海量数据中优雅判断存在性 data-via=ChenCiki data-hashtags=布隆过滤器,算法,Redis,Go,缓存><i class="fab fa-twitter fa-fw" aria-hidden=true></i></a><a href=javascript:void(0); title="分享到 Linkedin" data-sharer=linkedin data-url=https://www.ithome.me/post/2026/07/19/bloom-filter-massive-data-membership/><i class="fab fa-linkedin fa-fw" aria-hidden=true></i></a><a href=javascript:void(0); title="分享到 微博" data-sharer=weibo data-url=https://www.ithome.me/post/2026/07/19/bloom-filter-massive-data-membership/ data-title=布隆过滤器实战：在海量数据中优雅判断存在性 data-ralateuid=xxx><i class="fab fa-weibo fa-fw" aria-hidden=true></i></a></span></div></div></div><div class=post-info-more><section class=post-tags><i class="fas fa-tags fa-fw" aria-hidden=true></i>&nbsp;<a href=/tags/%E5%B8%83%E9%9A%86%E8%BF%87%E6%BB%A4%E5%99%A8/>布隆过滤器</a>,&nbsp;<a href=/tags/%E7%AE%97%E6%B3%95/>算法</a>,&nbsp;<a href=/tags/redis/>Redis</a>,&nbsp;<a href=/tags/go/>Go</a>,&nbsp;<a href=/tags/%E7%BC%93%E5%AD%98/>缓存</a></section><section><span><a href=javascript:void(0); onclick=window.history.back()>返回</a></span>&nbsp;|&nbsp;<span><a href=/>主页</a></span></section></div><div class=post-nav><a href=/post/2026/07/17/afraid-to-quit/ class=prev rel=prev title=不敢裸辞的全栈开发者><i class="fas fa-angle-left fa-fw" aria-hidden=true></i>不敢裸辞的全栈开发者</a>
+<a href=/post/2026/07/20/circuit-breaker-pattern-go/ class=next rel=next title=熔断器实战：用Go实现优雅的服务降级与自动恢复>熔断器实战：用Go实现优雅的服务降级与自动恢复<i class="fas fa-angle-right fa-fw" aria-hidden=true></i></a></div></div><div id=comments><div id=gitalk class=comment></div><noscript>Please enable JavaScript to view the comments powered by <a href=https://github.com/gitalk/gitalk></a>Gitalk</a>.</noscript></div></article></div></main><footer class=footer><div class=footer-container><div class=footer-line itemscope itemtype=http://schema.org/CreativeWork><i class="far fa-copyright fa-fw" aria-hidden=true></i><span itemprop=copyrightYear>2011 - 2026</span><span class=author itemprop=copyrightHolder>&nbsp;<a href=https://www.ithome.me/ target=_blank>Simon Chen</a></span>&nbsp;|&nbsp;<span class=license><a rel="license external nofollow noopener noreferrer" href=https://creativecommons.org/licenses/by-nc-nd/4.0/ target=_blank>CC BY-NC-ND 4.0</a></span></div></div></footer></div><div id=fixed-buttons><a href=# id=back-to-top class=fixed-button title=回到顶部><i class="fas fa-arrow-up fa-fw" aria-hidden=true></i>
+</a><a href=# id=view-comments class=fixed-button title=查看评论><i class="fas fa-comment fa-fw" aria-hidden=true></i></a></div><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/gitalk@1.7.2/dist/gitalk.min.css><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/css/lightgallery-bundle.min.css><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/katex.min.css><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/copy-tex.min.css><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.css><script type=text/javascript src=https://cdn.jsdelivr.net/npm/gitalk@1.7.2/dist/gitalk.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/autocomplete.js@0.38.1/dist/autocomplete.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/lunr@2.3.9/lunr.min.js></script><script type=text/javascript src=/lib/lunr/lunr.stemmer.support.min.js></script><script type=text/javascript src=/lib/lunr/lunr.zh.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/lazysizes@5.3.1/lazysizes.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/lightgallery.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/plugins/thumbnail/lg-thumbnail.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/plugins/zoom/lg-zoom.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/clipboard@2.0.11/dist/clipboard.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/sharer.js@0.5.1/sharer.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/katex.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/auto-render.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/copy-tex.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/mhchem.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.js></script><script type=text/javascript>window.config={code:{copyTitle:"复制到剪贴板",maxShownLines:50},comment:{gitalk:{admin:["cikichen"],clientID:"be0f52370ed1285b6c7c",clientSecret:"734a7d8d0ded346ca7a3d565d57de3f8eeb2850b",id:"2026-07-19T00:00:00Z",owner:"cikichen",repo:"gitalk",title:"布隆过滤器实战：在海量数据中优雅判断存在性"}},cookieconsent:{content:{dismiss:"我知道了",link:"了解更多",message:"本网站使用 Cookies 来改善您的浏览体验."},enable:!0,palette:{button:{background:"#f0f0f0"},popup:{background:"#1aa3ff"}},theme:"edgeless"},lightgallery:!0,math:{delimiters:[{display:!0,left:"$$",right:"$$"},{display:!0,left:"\\[",right:"\\]"},{display:!0,left:"\\begin{equation}",right:"\\end{equation}"},{display:!0,left:"\\begin{equation*}",right:"\\end{equation*}"},{display:!0,left:"\\begin{align}",right:"\\end{align}"},{display:!0,left:"\\begin{align*}",right:"\\end{align*}"},{display:!0,left:"\\begin{alignat}",right:"\\end{alignat}"},{display:!0,left:"\\begin{alignat*}",right:"\\end{alignat*}"},{display:!0,left:"\\begin{gather}",right:"\\end{gather}"},{display:!0,left:"\\begin{CD}",right:"\\end{CD}"},{display:!1,left:"$",right:"$"},{display:!1,left:"\\(",right:"\\)"}],strict:!1},search:{highlightTag:"em",lunrIndexURL:"/index.json",lunrLanguageCode:"zh",lunrSegmentitURL:"/lib/lunr/lunr.segmentit.js",maxResultLength:10,noResultsFound:"没有找到结果",snippetLength:50,type:"lunr"}}</script><script type=text/javascript src=/js/theme.min.js></script></body></html>

@@ -1,0 +1,294 @@
+<!doctype html><html lang=zh-CN><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><meta name=robots content="noodp"><title>SwiftUI @MainActor 深入理解：告别主线程崩溃与 UI 无响应 - 编程心语</title><meta name=Description content="深入理解 Swift 6 中 @MainActor 的工作原理、全局 actor 隔离机制，以及 SwiftUI 中正确使用主线程的最佳实践，附带 5 个常见坑点与代码修复方案。"><meta property="og:url" content="https://www.ithome.me/post/2026/07/23/swiftui-mainactor-deep-dive/"><meta property="og:site_name" content="编程心语"><meta property="og:title" content="SwiftUI @MainActor 深入理解：告别主线程崩溃与 UI 无响应"><meta property="og:description" content="深入理解 Swift 6 中 @MainActor 的工作原理、全局 actor 隔离机制，以及 SwiftUI 中正确使用主线程的最佳实践，附带 5 个常见坑点与代码修复方案。"><meta property="og:locale" content="zh_CN"><meta property="og:type" content="article"><meta property="article:section" content="posts"><meta property="article:published_time" content="2026-07-23T08:00:00+08:00"><meta property="article:modified_time" content="2026-07-23T08:00:00+08:00"><meta property="article:tag" content="Swift"><meta property="article:tag" content="SwiftUI"><meta property="article:tag" content="@MainActor"><meta property="article:tag" content="并发编程"><meta property="article:tag" content="IOS开发"><meta name=twitter:card content="summary"><meta name=twitter:title content="SwiftUI @MainActor 深入理解：告别主线程崩溃与 UI 无响应"><meta name=twitter:description content="深入理解 Swift 6 中 @MainActor 的工作原理、全局 actor 隔离机制，以及 SwiftUI 中正确使用主线程的最佳实践，附带 5 个常见坑点与代码修复方案。"><meta name=twitter:site content="@ChenCiki"><meta name=application-name content="编程心语"><meta name=apple-mobile-web-app-title content="编程心语"><meta name=theme-color content="#ffffff"><meta name=msapplication-TileColor content="#da532c"><link rel="shortcut icon" type=image/x-icon href=/favicon.ico><link rel=icon type=image/png sizes=32x32 href=/favicon-32x32.png><link rel=icon type=image/png sizes=16x16 href=/favicon-16x16.png><link rel=apple-touch-icon sizes=180x180 href=/apple-touch-icon.png><link rel=mask-icon href=/safari-pinned-tab.svg color=#5bbad5><link rel=manifest href=/site.webmanifest><link rel=canonical href=https://www.ithome.me/post/2026/07/23/swiftui-mainactor-deep-dive/><link rel=prev href=https://www.ithome.me/post/2026/07/21/github-trending-2026-07-21/><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/normalize.css@8.0.1/normalize.min.css><link rel=stylesheet href=/css/style.min.css><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css><script type=application/ld+json>{"@context":"http://schema.org","@type":"BlogPosting","headline":"SwiftUI @MainActor 深入理解：告别主线程崩溃与 UI 无响应","inLanguage":"zh-CN","mainEntityOfPage":{"@type":"WebPage","@id":"https:\/\/www.ithome.me\/post\/2026\/07\/23\/swiftui-mainactor-deep-dive\/"},"image":["https:\/\/www.ithome.me\/cover.png"],"genre":"posts","keywords":"Swift, SwiftUI, @MainActor, 并发编程, iOS开发","wordcount":1810,"url":"https:\/\/www.ithome.me\/post\/2026\/07\/23\/swiftui-mainactor-deep-dive\/","datePublished":"2026-07-23T08:00:00+08:00","dateModified":"2026-07-23T08:00:00+08:00","publisher":{"@type":"Organization","name":"SimonChen","logo":"https:\/\/www.ithome.me\/logo.png"},"author":{"@type":"Person","name":"Simon"},"description":"深入理解 Swift 6 中 @MainActor 的工作原理、全局 actor 隔离机制，以及 SwiftUI 中正确使用主线程的最佳实践，附带 5 个常见坑点与代码修复方案。"}</script><script async src="https://www.googletagmanager.com/gtag/js?id=G-H1Q5563VR8"></script><script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag("js",new Date),gtag("config","G-H1Q5563VR8",{anonymize_ip:!0})</script></head><body data-header-desktop=fixed data-header-mobile=auto><script type=text/javascript>(window.localStorage&&localStorage.getItem("theme")?localStorage.getItem("theme")==="dark":"auto"==="auto"?window.matchMedia("(prefers-color-scheme: dark)").matches:"auto"==="dark")&&document.body.setAttribute("theme","dark")</script><div id=mask></div><div class=wrapper><header class=desktop id=header-desktop><div class=header-wrapper><div class=header-title><a href=/ title=编程心语>编程心语</a></div><div class=menu><div class=menu-inner><a class=menu-item href=/posts/>文章 </a><a class=menu-item href=/categories/>分类 </a><a class=menu-item href=/tags/>标签 </a><a class=menu-item href=/about-me/>关于 </a><span class="menu-item delimiter"></span><span class="menu-item search" id=search-desktop>
+<input type=text placeholder=搜索文章... id=search-input-desktop>
+<a href=javascript:void(0); class="search-button search-toggle" id=search-toggle-desktop title=搜索><i class="fas fa-search fa-fw" aria-hidden=true></i>
+</a><a href=javascript:void(0); class="search-button search-clear" id=search-clear-desktop title=清空><i class="fas fa-times-circle fa-fw" aria-hidden=true></i>
+</a><span class="search-button search-loading" id=search-loading-desktop><i class="fas fa-spinner fa-fw fa-spin" aria-hidden=true></i>
+</span></span><a href=javascript:void(0); class="menu-item theme-switch" title=切换主题><i class="fas fa-adjust fa-fw" aria-hidden=true></i></a></div></div></div></header><header class=mobile id=header-mobile><div class=header-container><div class=header-wrapper><div class=header-title><a href=/ title=编程心语>编程心语</a></div><div class=menu-toggle id=menu-toggle-mobile><span></span><span></span><span></span></div></div><div class=menu id=menu-mobile><div class=search-wrapper><div class="search mobile" id=search-mobile><input type=text placeholder=搜索文章... id=search-input-mobile>
+<a href=javascript:void(0); class="search-button search-toggle" id=search-toggle-mobile title=搜索><i class="fas fa-search fa-fw" aria-hidden=true></i>
+</a><a href=javascript:void(0); class="search-button search-clear" id=search-clear-mobile title=清空><i class="fas fa-times-circle fa-fw" aria-hidden=true></i>
+</a><span class="search-button search-loading" id=search-loading-mobile><i class="fas fa-spinner fa-fw fa-spin" aria-hidden=true></i></span></div><a href=javascript:void(0); class=search-cancel id=search-cancel-mobile>取消</a></div><a class=menu-item href=/posts/ title>文章</a><a class=menu-item href=/categories/ title>分类</a><a class=menu-item href=/tags/ title>标签</a><a class=menu-item href=/about-me/ title>关于</a><a href=javascript:void(0); class="menu-item theme-switch" title=切换主题>
+<i class="fas fa-adjust fa-fw" aria-hidden=true></i></a></div></div></header><div class="search-dropdown desktop"><div id=search-dropdown-desktop></div></div><div class="search-dropdown mobile"><div id=search-dropdown-mobile></div></div><main class=main><div class=container><div class=toc id=toc-auto><h2 class=toc-title>目录</h2><div class=toc-content id=toc-content-auto></div></div><article class="page single"><h1 class="single-title animate__animated animate__flipInX">SwiftUI @MainActor 深入理解：告别主线程崩溃与 UI 无响应</h1><div class=post-meta><div class=post-meta-line><span class=post-author><a href=https://www.ithome.me/ title=Author target=_blank rel="noopener noreferrer author" class=author><i class="fas fa-user-circle fa-fw" aria-hidden=true></i>Simon</a>
+</span>&nbsp;<span class=post-category>收录于 <a href=/categories/bigfrontend/><i class="far fa-folder fa-fw" aria-hidden=true></i>Bigfrontend</a></span></div><div class=post-meta-line><i class="far fa-calendar-alt fa-fw" aria-hidden=true></i>&nbsp;<time datetime=2026-07-23>2026-07-23</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden=true></i>&nbsp;约 1810 字&nbsp;
+<i class="far fa-clock fa-fw" aria-hidden=true></i>&nbsp;预计阅读 4 分钟&nbsp;</div></div><div class="details toc" id=toc-static data-kept=true><div class="details-summary toc-title"><span>目录</span>
+<span><i class="details-icon fas fa-angle-right" aria-hidden=true></i></span></div><div class="details-content toc-content" id=toc-content-static><nav id=TableOfContents><ul><li><a href=#为什么你的-swiftui-应用偶尔白屏或崩溃>为什么你的 SwiftUI 应用偶尔白屏或崩溃？</a></li><li><a href=#什么是-actor先打个比方>什么是 Actor？先打个比方</a></li><li><a href=#mainactor-做了什么>@MainActor 做了什么</a></li><li><a href=#swiftui-中的-mainactor>SwiftUI 中的 @MainActor</a></li><li><a href=#最容易踩坑的场景后台网络请求更新-ui>最容易踩坑的场景：后台网络请求更新 UI</a></li><li><a href=#5-个常见坑点与解决方案>5 个常见坑点与解决方案</a><ul><li><a href=#坑-1closure-中的隐式非-mainactor>坑 1：Closure 中的隐式非 MainActor</a></li><li><a href=#坑-2委托回调不在主线程>坑 2：委托回调不在主线程</a></li><li><a href=#坑-3nonisolated-误用>坑 3：nonisolated 误用</a></li><li><a href=#坑-4combine-的-sink-回调>坑 4：Combine 的 sink 回调</a></li><li><a href=#坑-5全局变量的线程安全>坑 5：全局变量的线程安全</a></li></ul></li><li><a href=#mainactor-的性能考量>@MainActor 的性能考量</a></li><li><a href=#总结什么时候应该用-mainactor>总结：什么时候应该用 @MainActor？</a></li></ul></nav></div></div><div class=content id=content><h2 id=为什么你的-swiftui-应用偶尔白屏或崩溃>为什么你的 SwiftUI 应用偶尔白屏或崩溃？</h2><p>如果你写过 SwiftUI 应用，大概率遇到过这种场景：App 跑起来后点几下按钮，界面突然卡住不动，或者控制台冒出一堆 <code>Main Thread Checker</code> 警告，甚至直接崩溃。常见的错误信息是：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-fallback data-lang=fallback><span class=line><span class=cl>Modifications to the layout engine must be performed from the main thread.
+</span></span></code></pre></td></tr></table></div></div><p>这个问题的根源在于：<strong>UIKit/SwiftUI 的 UI 更新必须在主线程进行</strong>。听起来很简单，但在 Swift 并发模型（async/await）普及后，稍不注意就会在后台线程操作 UI。</p><p><code>@MainActor</code> 就是 Apple 为解决这个问题而设计的<strong>全局 Actor</strong>。本文带你彻底搞懂它的工作原理和正确用法。</p><h2 id=什么是-actor先打个比方>什么是 Actor？先打个比方</h2><p>Actor 是 Swift 5.5 引入的一种并发安全机制。你可以把它想象成一个<strong>独立的办公室</strong>：</p><ul><li>办公室里只有一个人（串行执行）</li><li>所有人要进去办事都得排队（await）</li><li>办公室给每人发一个号码牌（提供对自身状态的隔离访问）</li></ul><p>普通 Actor 保证自己的内部状态不会被多个线程同时访问导致数据竞争。而 <code>@MainActor</code> 是一个特殊的<strong>全局 Actor</strong>，它对应的"办公室"就是<strong>主线程</strong>。</p><h2 id=mainactor-做了什么>@MainActor 做了什么</h2><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span><span class=lnt>4
+</span><span class=lnt>5
+</span><span class=lnt>6
+</span><span class=lnt>7
+</span><span class=lnt>8
+</span><span class=lnt>9
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-swift data-lang=swift><span class=line><span class=cl><span class=c1>// 声明一个类型运行在主线程</span>
+</span></span><span class=line><span class=cl><span class=p>@</span><span class=n>MainActor</span>
+</span></span><span class=line><span class=cl><span class=kd>class</span> <span class=nc>ViewModel</span><span class=p>:</span> <span class=n>ObservableObject</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=p>@</span><span class=n>Published</span> <span class=kd>var</span> <span class=nv>items</span><span class=p>:</span> <span class=p>[</span><span class=nb>String</span><span class=p>]</span> <span class=p>=</span> <span class=p>[]</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>    <span class=kd>func</span> <span class=nf>loadData</span><span class=p>()</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>        <span class=c1>// 这个方法一定在主线程执行</span>
+</span></span><span class=line><span class=cl>    <span class=p>}</span>
+</span></span><span class=line><span class=cl><span class=p>}</span>
+</span></span></code></pre></td></tr></table></div></div><p>当你在类或方法上标记 <code>@MainActor</code>，Swift 编译器会保证：</p><ol><li>所有标记为 <code>@MainActor</code> 的函数<strong>自动在主线程调度</strong></li><li>如果你从非主 Actor 上下文调用它，编译器会要求你加 <code>await</code></li><li>从主 Actor 内部调用其他 Actor 的方法也需要 <code>await</code></li></ol><p><strong>为什么这比 <code>DispatchQueue.main.async</code> 好？</strong></p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-swift data-lang=swift><span class=line><span class=cl><span class=c1>// 旧方式 —— 容易遗漏，且无法编译检查</span>
+</span></span><span class=line><span class=cl><span class=n>DispatchQueue</span><span class=p>.</span><span class=n>main</span><span class=p>.</span><span class=n>async</span> <span class=p>{</span> <span class=p>[</span><span class=kr>weak</span> <span class=kc>self</span><span class=p>]</span> <span class=k>in</span>
+</span></span><span class=line><span class=cl>    <span class=kc>self</span><span class=p>?.</span><span class=n>tableView</span><span class=p>.</span><span class=n>reloadData</span><span class=p>()</span>
+</span></span><span class=line><span class=cl><span class=p>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1>// @MainActor 方式 —— 编译器强制保证</span>
+</span></span><span class=line><span class=cl><span class=p>@</span><span class=n>MainActor</span>
+</span></span><span class=line><span class=cl><span class=kd>func</span> <span class=nf>updateUI</span><span class=p>()</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=c1>// 这里一定在主线程</span>
+</span></span><span class=line><span class=cl><span class=p>}</span>
+</span></span></code></pre></td></tr></table></div></div><p>核心区别：<code>DispatchQueue.main.async</code> 靠程序员自觉，而 <code>@MainActor</code> 有<strong>编译期强制检查</strong>。</p><h2 id=swiftui-中的-mainactor>SwiftUI 中的 @MainActor</h2><p>SwiftUI 的许多关键类型默认就是 <code>@MainActor</code> 的：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-swift data-lang=swift><span class=line><span class=cl><span class=c1>// ObservableObject 的 objectWillChange 是 @MainActor</span>
+</span></span><span class=line><span class=cl><span class=c1>// @StateObject 和 @ObservedObject 在 @MainActor 上下文中使用</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=kd>struct</span> <span class=nc>ContentView</span><span class=p>:</span> <span class=n>View</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=p>@</span><span class=n>StateObject</span> <span class=kd>private</span> <span class=kd>var</span> <span class=nv>viewModel</span> <span class=p>=</span> <span class=n>MyViewModel</span><span class=p>()</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>    <span class=kd>var</span> <span class=nv>body</span><span class=p>:</span> <span class=n>some</span> <span class=n>View</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>        <span class=n>List</span><span class=p>(</span><span class=n>viewModel</span><span class=p>.</span><span class=n>items</span><span class=p>,</span> <span class=n>id</span><span class=p>:</span> <span class=err>\</span><span class=p>.</span><span class=kc>self</span><span class=p>)</span> <span class=p>{</span> <span class=n>item</span> <span class=k>in</span>
+</span></span><span class=line><span class=cl>            <span class=n>Text</span><span class=p>(</span><span class=n>item</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>        <span class=p>}</span>
+</span></span><span class=line><span class=cl>        <span class=p>.</span><span class=n>task</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>            <span class=c1>// .task 修饰符创建的闭包也是 @MainActor</span>
+</span></span><span class=line><span class=cl>            <span class=n>await</span> <span class=n>viewModel</span><span class=p>.</span><span class=n>loadItems</span><span class=p>()</span>
+</span></span><span class=line><span class=cl>        <span class=p>}</span>
+</span></span><span class=line><span class=cl>    <span class=p>}</span>
+</span></span><span class=line><span class=cl><span class=p>}</span>
+</span></span></code></pre></td></tr></table></div></div><p><strong>关键点</strong>：SwiftUI 的 <code>View</code> 协议、<code>@State</code>、<code>@Binding</code>、<code>.task</code>、<code>.onAppear</code> 等都是在 <code>@MainActor</code> 上下文中运行的。</p><h2 id=最容易踩坑的场景后台网络请求更新-ui>最容易踩坑的场景：后台网络请求更新 UI</h2><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-swift data-lang=swift><span class=line><span class=cl><span class=kd>class</span> <span class=nc>BadViewModel</span><span class=p>:</span> <span class=n>ObservableObject</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=p>@</span><span class=n>Published</span> <span class=kd>var</span> <span class=nv>data</span><span class=p>:</span> <span class=p>[</span><span class=nb>String</span><span class=p>]</span> <span class=p>=</span> <span class=p>[]</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>    <span class=kd>func</span> <span class=nf>fetchData</span><span class=p>()</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>        <span class=c1>// ❌ 严重错误：URLSession 的回调可能在后台线程</span>
+</span></span><span class=line><span class=cl>        <span class=n>URLSession</span><span class=p>.</span><span class=n>shared</span><span class=p>.</span><span class=n>dataTask</span><span class=p>(</span><span class=n>with</span><span class=p>:</span> <span class=n>URL</span><span class=p>(</span><span class=n>string</span><span class=p>:</span> <span class=s>&#34;https://api.example.com/data&#34;</span><span class=p>)</span><span class=o>!</span><span class=p>)</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>            <span class=n>data</span><span class=p>,</span> <span class=kc>_</span><span class=p>,</span> <span class=n>error</span> <span class=k>in</span>
+</span></span><span class=line><span class=cl>            <span class=c1>// 这里不在主线程！</span>
+</span></span><span class=line><span class=cl>            <span class=kc>self</span><span class=p>.</span><span class=n>data</span> <span class=p>=</span> <span class=k>try</span><span class=p>!</span> <span class=n>JSONDecoder</span><span class=p>().</span><span class=n>decode</span><span class=p>([</span><span class=nb>String</span><span class=p>].</span><span class=kc>self</span><span class=p>,</span> <span class=n>from</span><span class=p>:</span> <span class=n>data</span><span class=p>!)</span>
+</span></span><span class=line><span class=cl>        <span class=p>}.</span><span class=n>resume</span><span class=p>()</span>
+</span></span><span class=line><span class=cl>    <span class=p>}</span>
+</span></span><span class=line><span class=cl><span class=p>}</span>
+</span></span></code></pre></td></tr></table></div></div><p>修复 —— 用 <code>@MainActor</code> 包裹更新操作：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span><span class=lnt>17
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-swift data-lang=swift><span class=line><span class=cl><span class=kd>class</span> <span class=nc>GoodViewModel</span><span class=p>:</span> <span class=n>ObservableObject</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=p>@</span><span class=n>Published</span> <span class=kd>var</span> <span class=nv>data</span><span class=p>:</span> <span class=p>[</span><span class=nb>String</span><span class=p>]</span> <span class=p>=</span> <span class=p>[]</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>    <span class=kd>func</span> <span class=nf>fetchData</span><span class=p>()</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>        <span class=n>Task</span> <span class=p>{</span> <span class=p>@</span><span class=n>MainActor</span> <span class=k>in</span>
+</span></span><span class=line><span class=cl>            <span class=kd>let</span> <span class=nv>result</span> <span class=p>=</span> <span class=n>await</span> <span class=n>loadFromNetwork</span><span class=p>()</span>
+</span></span><span class=line><span class=cl>            <span class=kc>self</span><span class=p>.</span><span class=n>data</span> <span class=p>=</span> <span class=n>result</span>
+</span></span><span class=line><span class=cl>        <span class=p>}</span>
+</span></span><span class=line><span class=cl>    <span class=p>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>    <span class=kd>private</span> <span class=kd>func</span> <span class=nf>loadFromNetwork</span><span class=p>()</span> <span class=n>async</span> <span class=p>-&gt;</span> <span class=p>[</span><span class=nb>String</span><span class=p>]</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>        <span class=kd>let</span> <span class=p>(</span><span class=n>data</span><span class=p>,</span> <span class=kc>_</span><span class=p>)</span> <span class=p>=</span> <span class=k>try</span><span class=p>!</span> <span class=n>await</span> <span class=n>URLSession</span><span class=p>.</span><span class=n>shared</span><span class=p>.</span><span class=n>data</span><span class=p>(</span>
+</span></span><span class=line><span class=cl>            <span class=n>from</span><span class=p>:</span> <span class=n>URL</span><span class=p>(</span><span class=n>string</span><span class=p>:</span> <span class=s>&#34;https://api.example.com/data&#34;</span><span class=p>)</span><span class=o>!</span>
+</span></span><span class=line><span class=cl>        <span class=p>)</span>
+</span></span><span class=line><span class=cl>        <span class=k>return</span> <span class=k>try</span><span class=p>!</span> <span class=n>JSONDecoder</span><span class=p>().</span><span class=n>decode</span><span class=p>([</span><span class=nb>String</span><span class=p>].</span><span class=kc>self</span><span class=p>,</span> <span class=n>from</span><span class=p>:</span> <span class=n>data</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>    <span class=p>}</span>
+</span></span><span class=line><span class=cl><span class=p>}</span>
+</span></span></code></pre></td></tr></table></div></div><p>或者更彻底——直接把整个 ViewModel 声明为 @MainActor：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-swift data-lang=swift><span class=line><span class=cl><span class=p>@</span><span class=n>MainActor</span>
+</span></span><span class=line><span class=cl><span class=kd>class</span> <span class=nc>CleanViewModel</span><span class=p>:</span> <span class=n>ObservableObject</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=p>@</span><span class=n>Published</span> <span class=kd>var</span> <span class=nv>data</span><span class=p>:</span> <span class=p>[</span><span class=nb>String</span><span class=p>]</span> <span class=p>=</span> <span class=p>[]</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>    <span class=kd>func</span> <span class=nf>fetchData</span><span class=p>()</span> <span class=n>async</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>        <span class=kd>let</span> <span class=p>(</span><span class=n>data</span><span class=p>,</span> <span class=kc>_</span><span class=p>)</span> <span class=p>=</span> <span class=k>try</span><span class=p>!</span> <span class=n>await</span> <span class=n>URLSession</span><span class=p>.</span><span class=n>shared</span><span class=p>.</span><span class=n>data</span><span class=p>(</span>
+</span></span><span class=line><span class=cl>            <span class=n>from</span><span class=p>:</span> <span class=n>URL</span><span class=p>(</span><span class=n>string</span><span class=p>:</span> <span class=s>&#34;https://api.example.com/data&#34;</span><span class=p>)</span><span class=o>!</span>
+</span></span><span class=line><span class=cl>        <span class=p>)</span>
+</span></span><span class=line><span class=cl>        <span class=kd>let</span> <span class=nv>decoded</span> <span class=p>=</span> <span class=k>try</span><span class=p>!</span> <span class=n>JSONDecoder</span><span class=p>().</span><span class=n>decode</span><span class=p>([</span><span class=nb>String</span><span class=p>].</span><span class=kc>self</span><span class=p>,</span> <span class=n>from</span><span class=p>:</span> <span class=n>data</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>        <span class=kc>self</span><span class=p>.</span><span class=n>data</span> <span class=p>=</span> <span class=n>decoded</span>  <span class=c1>// ✅ 回到主线程，安全更新 UI</span>
+</span></span><span class=line><span class=cl>    <span class=p>}</span>
+</span></span><span class=line><span class=cl><span class=p>}</span>
+</span></span></code></pre></td></tr></table></div></div><h2 id=5-个常见坑点与解决方案>5 个常见坑点与解决方案</h2><h3 id=坑-1closure-中的隐式非-mainactor>坑 1：Closure 中的隐式非 MainActor</h3><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-swift data-lang=swift><span class=line><span class=cl><span class=p>@</span><span class=n>MainActor</span>
+</span></span><span class=line><span class=cl><span class=kd>class</span> <span class=nc>ViewModel</span><span class=p>:</span> <span class=n>ObservableObject</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=p>@</span><span class=n>Published</span> <span class=kd>var</span> <span class=nv>count</span> <span class=p>=</span> <span class=mi>0</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>    <span class=kd>func</span> <span class=nf>startTimer</span><span class=p>()</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>        <span class=n>Timer</span><span class=p>.</span><span class=n>scheduledTimer</span><span class=p>(</span><span class=n>withTimeInterval</span><span class=p>:</span> <span class=mf>1.0</span><span class=p>,</span> <span class=n>repeats</span><span class=p>:</span> <span class=kc>true</span><span class=p>)</span> <span class=p>{</span> <span class=kc>_</span> <span class=k>in</span>
+</span></span><span class=line><span class=cl>            <span class=c1>// ❌ Timer 的闭包不自动继承 @MainActor</span>
+</span></span><span class=line><span class=cl>            <span class=kc>self</span><span class=p>.</span><span class=bp>count</span> <span class=o>+=</span> <span class=mi>1</span>  <span class=c1>// 可能崩溃</span>
+</span></span><span class=line><span class=cl>        <span class=p>}</span>
+</span></span><span class=line><span class=cl>    <span class=p>}</span>
+</span></span><span class=line><span class=cl><span class=p>}</span>
+</span></span></code></pre></td></tr></table></div></div><p><strong>修复</strong>：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span><span class=lnt>4
+</span><span class=lnt>5
+</span><span class=lnt>6
+</span><span class=lnt>7
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-swift data-lang=swift><span class=line><span class=cl>    <span class=kd>func</span> <span class=nf>startTimer</span><span class=p>()</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>        <span class=n>Timer</span><span class=p>.</span><span class=n>scheduledTimer</span><span class=p>(</span><span class=n>withTimeInterval</span><span class=p>:</span> <span class=mf>1.0</span><span class=p>,</span> <span class=n>repeats</span><span class=p>:</span> <span class=kc>true</span><span class=p>)</span> <span class=p>{</span> <span class=p>[</span><span class=kr>weak</span> <span class=kc>self</span><span class=p>]</span> <span class=kc>_</span> <span class=k>in</span>
+</span></span><span class=line><span class=cl>            <span class=n>Task</span> <span class=p>{</span> <span class=p>@</span><span class=n>MainActor</span> <span class=k>in</span>
+</span></span><span class=line><span class=cl>                <span class=kc>self</span><span class=p>?.</span><span class=bp>count</span> <span class=o>+=</span> <span class=mi>1</span>
+</span></span><span class=line><span class=cl>            <span class=p>}</span>
+</span></span><span class=line><span class=cl>        <span class=p>}</span>
+</span></span><span class=line><span class=cl>    <span class=p>}</span>
+</span></span></code></pre></td></tr></table></div></div><h3 id=坑-2委托回调不在主线程>坑 2：委托回调不在主线程</h3><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span><span class=lnt>4
+</span><span class=lnt>5
+</span><span class=lnt>6
+</span><span class=lnt>7
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-swift data-lang=swift><span class=line><span class=cl><span class=kd>extension</span> <span class=nc>ViewModel</span><span class=p>:</span> <span class=n>CLLocationManagerDelegate</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=kd>func</span> <span class=nf>locationManager</span><span class=p>(</span><span class=kc>_</span> <span class=n>manager</span><span class=p>:</span> <span class=n>CLLocationManager</span><span class=p>,</span>
+</span></span><span class=line><span class=cl>                         <span class=n>didUpdateLocations</span> <span class=n>locations</span><span class=p>:</span> <span class=p>[</span><span class=n>CLLocation</span><span class=p>])</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>        <span class=c1>// ❌ 文档只说&#34;可能在主线程&#34;，实际可能不在</span>
+</span></span><span class=line><span class=cl>        <span class=kc>self</span><span class=p>.</span><span class=n>lastLocation</span> <span class=p>=</span> <span class=n>locations</span><span class=p>.</span><span class=bp>last</span>
+</span></span><span class=line><span class=cl>    <span class=p>}</span>
+</span></span><span class=line><span class=cl><span class=p>}</span>
+</span></span></code></pre></td></tr></table></div></div><p><strong>修复</strong>：加上 <code>@MainActor</code> 修饰：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span><span class=lnt>4
+</span><span class=lnt>5
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-swift data-lang=swift><span class=line><span class=cl>    <span class=p>@</span><span class=n>MainActor</span>
+</span></span><span class=line><span class=cl>    <span class=kd>func</span> <span class=nf>locationManager</span><span class=p>(</span><span class=kc>_</span> <span class=n>manager</span><span class=p>:</span> <span class=n>CLLocationManager</span><span class=p>,</span>
+</span></span><span class=line><span class=cl>                         <span class=n>didUpdateLocations</span> <span class=n>locations</span><span class=p>:</span> <span class=p>[</span><span class=n>CLLocation</span><span class=p>])</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>        <span class=kc>self</span><span class=p>.</span><span class=n>lastLocation</span> <span class=p>=</span> <span class=n>locations</span><span class=p>.</span><span class=bp>last</span>
+</span></span><span class=line><span class=cl>    <span class=p>}</span>
+</span></span></code></pre></td></tr></table></div></div><h3 id=坑-3nonisolated-误用>坑 3：nonisolated 误用</h3><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-swift data-lang=swift><span class=line><span class=cl><span class=p>@</span><span class=n>MainActor</span>
+</span></span><span class=line><span class=cl><span class=kd>class</span> <span class=nc>ViewModel</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=kd>var</span> <span class=nv>name</span><span class=p>:</span> <span class=nb>String</span> <span class=p>=</span> <span class=s>&#34;&#34;</span>
+</span></span><span class=line><span class=cl>    <span class=kd>func</span> <span class=nf>updateName</span><span class=p>(</span><span class=kc>_</span> <span class=n>new</span><span class=p>:</span> <span class=nb>String</span><span class=p>)</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>        <span class=n>name</span> <span class=p>=</span> <span class=n>new</span>  <span class=c1>// 主线程，安全</span>
+</span></span><span class=line><span class=cl>    <span class=p>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>    <span class=n>nonisolated</span> <span class=kd>func</span> <span class=nf>computeHash</span><span class=p>()</span> <span class=p>-&gt;</span> <span class=nb>Int</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>        <span class=c1>// ❌ 不能访问 Actor 隔离的属性</span>
+</span></span><span class=line><span class=cl>        <span class=c1>// return name.hashValue  // 编译错误</span>
+</span></span><span class=line><span class=cl>        <span class=k>return</span> <span class=mi>42</span>
+</span></span><span class=line><span class=cl>    <span class=p>}</span>
+</span></span><span class=line><span class=cl><span class=p>}</span>
+</span></span></code></pre></td></tr></table></div></div><h3 id=坑-4combine-的-sink-回调>坑 4：Combine 的 sink 回调</h3><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-swift data-lang=swift><span class=line><span class=cl><span class=kd>class</span> <span class=nc>ViewModel</span><span class=p>:</span> <span class=n>ObservableObject</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=p>@</span><span class=n>Published</span> <span class=kd>var</span> <span class=nv>query</span> <span class=p>=</span> <span class=s>&#34;&#34;</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>    <span class=kd>init</span><span class=p>()</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>        <span class=err>$</span><span class=n>query</span>
+</span></span><span class=line><span class=cl>            <span class=p>.</span><span class=n>debounce</span><span class=p>(</span><span class=k>for</span><span class=p>:</span> <span class=p>.</span><span class=n>seconds</span><span class=p>(</span><span class=mf>0.5</span><span class=p>),</span> <span class=n>scheduler</span><span class=p>:</span> <span class=n>RunLoop</span><span class=p>.</span><span class=n>main</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>            <span class=p>.</span><span class=n>sink</span> <span class=p>{</span> <span class=p>[</span><span class=kr>weak</span> <span class=kc>self</span><span class=p>]</span> <span class=n>value</span> <span class=k>in</span>
+</span></span><span class=line><span class=cl>                <span class=c1>// ✅ RunLoop.main 保证在主线程</span>
+</span></span><span class=line><span class=cl>                <span class=kc>self</span><span class=p>?.</span><span class=n>search</span><span class=p>(</span><span class=n>value</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>            <span class=p>}</span>
+</span></span><span class=line><span class=cl>            <span class=p>.</span><span class=n>store</span><span class=p>(</span><span class=k>in</span><span class=p>:</span> <span class=p>&amp;</span><span class=n>cancellables</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>    <span class=p>}</span>
+</span></span><span class=line><span class=cl><span class=p>}</span>
+</span></span></code></pre></td></tr></table></div></div><h3 id=坑-5全局变量的线程安全>坑 5：全局变量的线程安全</h3><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-swift data-lang=swift><span class=line><span class=cl><span class=c1>// ❌ 全局变量默认没有 Actor 保护</span>
+</span></span><span class=line><span class=cl><span class=kd>var</span> <span class=nv>sharedCache</span><span class=p>:</span> <span class=p>[</span><span class=nb>String</span><span class=p>:</span> <span class=n>Data</span><span class=p>]</span> <span class=p>=</span> <span class=p>[:]</span>
+</span></span></code></pre></td></tr></table></div></div><p><strong>修复</strong>：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span><span class=lnt>4
+</span><span class=lnt>5
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-swift data-lang=swift><span class=line><span class=cl><span class=p>@</span><span class=n>MainActor</span>
+</span></span><span class=line><span class=cl><span class=kd>var</span> <span class=nv>sharedCache</span><span class=p>:</span> <span class=p>[</span><span class=nb>String</span><span class=p>:</span> <span class=n>Data</span><span class=p>]</span> <span class=p>=</span> <span class=p>[:]</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1>// 或使用 let 常量（不可变，线程安全）</span>
+</span></span><span class=line><span class=cl><span class=kd>let</span> <span class=nv>config</span><span class=p>:</span> <span class=p>[</span><span class=nb>String</span><span class=p>:</span> <span class=nb>String</span><span class=p>]</span> <span class=p>=</span> <span class=p>[</span><span class=s>&#34;key&#34;</span><span class=p>:</span> <span class=s>&#34;value&#34;</span><span class=p>]</span>
+</span></span></code></pre></td></tr></table></div></div><h2 id=mainactor-的性能考量>@MainActor 的性能考量</h2><ul><li><strong>零运行时开销</strong>：<code>@MainActor</code> 主要是编译器检查</li><li>访问已经主线程时，不会做多余的上下文切换</li><li>比 <code>DispatchQueue.main.async</code> 更高效（编译器可优化掉不必要的调度）</li></ul><h2 id=总结什么时候应该用-mainactor>总结：什么时候应该用 @MainActor？</h2><table><thead><tr><th>场景</th><th>推荐做法</th></tr></thead><tbody><tr><td>ObservableObject 类</td><td>整个类标记 <code>@MainActor</code></td></tr><tr><td>SwiftUI View 的私有方法</td><td>默认可不用标，View 自身就是 MainActor</td></tr><tr><td>异步加载数据后更新 UI</td><td>用 <code>Task { @MainActor in }</code> 包裹</td></tr><tr><td>Delegate/回调方法</td><td>显式加 <code>@MainActor</code></td></tr><tr><td>与 UIKit 桥接的代码</td><td>必须加 <code>@MainActor</code></td></tr></tbody></table><p><strong>一句话记住</strong>：所有直接或间接操作 UI 的代码，都让 <code>@MainActor</code> 给你兜底。编译器替你检查，比靠程序员记住靠谱一万倍。</p><blockquote><p><strong>小贴士</strong>：Xcode 14+ 的 Main Thread Checker 能在运行时检测非主线程的 UI 操作并抛出警告。但警告不是编译错误，生产环境可能漏掉。用 <code>@MainActor</code> 从源头解决问题才是正道。</p></blockquote></div><div class=post-footer id=post-footer><div class=post-info><div class=post-info-line><div class=post-info-mod><span>更新于 2026-07-23</span></div><div class=post-info-license><span>https://creativecommons.org/licenses/by-nc-nd/4.0/</span></div></div><div class=post-info-line><div class=post-info-md></div><div class=post-info-share><span><a href=javascript:void(0); title="分享到 Twitter" data-sharer=twitter data-url=https://www.ithome.me/post/2026/07/23/swiftui-mainactor-deep-dive/ data-title="SwiftUI @MainActor 深入理解：告别主线程崩溃与 UI 无响应" data-via=ChenCiki data-hashtags=Swift,SwiftUI,@MainActor,并发编程,iOS开发><i class="fab fa-twitter fa-fw" aria-hidden=true></i></a><a href=javascript:void(0); title="分享到 Linkedin" data-sharer=linkedin data-url=https://www.ithome.me/post/2026/07/23/swiftui-mainactor-deep-dive/><i class="fab fa-linkedin fa-fw" aria-hidden=true></i></a><a href=javascript:void(0); title="分享到 微博" data-sharer=weibo data-url=https://www.ithome.me/post/2026/07/23/swiftui-mainactor-deep-dive/ data-title="SwiftUI @MainActor 深入理解：告别主线程崩溃与 UI 无响应" data-ralateuid=xxx><i class="fab fa-weibo fa-fw" aria-hidden=true></i></a></span></div></div></div><div class=post-info-more><section class=post-tags><i class="fas fa-tags fa-fw" aria-hidden=true></i>&nbsp;<a href=/tags/swift/>Swift</a>,&nbsp;<a href=/tags/swiftui/>SwiftUI</a>,&nbsp;<a href=/tags/@mainactor/>@MainActor</a>,&nbsp;<a href=/tags/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B/>并发编程</a>,&nbsp;<a href=/tags/ios%E5%BC%80%E5%8F%91/>IOS开发</a></section><section><span><a href=javascript:void(0); onclick=window.history.back()>返回</a></span>&nbsp;|&nbsp;<span><a href=/>主页</a></span></section></div><div class=post-nav><a href=/post/2026/07/21/github-trending-2026-07-21/ class=prev rel=prev title="GitHub Trending 周报 - 2026-07-21"><i class="fas fa-angle-left fa-fw" aria-hidden=true></i>GitHub Trending 周报 - 2026-07-21</a></div></div><div id=comments><div id=gitalk class=comment></div><noscript>Please enable JavaScript to view the comments powered by <a href=https://github.com/gitalk/gitalk></a>Gitalk</a>.</noscript></div></article></div></main><footer class=footer><div class=footer-container><div class=footer-line itemscope itemtype=http://schema.org/CreativeWork><i class="far fa-copyright fa-fw" aria-hidden=true></i><span itemprop=copyrightYear>2011 - 2026</span><span class=author itemprop=copyrightHolder>&nbsp;<a href=https://www.ithome.me/ target=_blank>Simon Chen</a></span>&nbsp;|&nbsp;<span class=license><a rel="license external nofollow noopener noreferrer" href=https://creativecommons.org/licenses/by-nc-nd/4.0/ target=_blank>CC BY-NC-ND 4.0</a></span></div></div></footer></div><div id=fixed-buttons><a href=# id=back-to-top class=fixed-button title=回到顶部><i class="fas fa-arrow-up fa-fw" aria-hidden=true></i>
+</a><a href=# id=view-comments class=fixed-button title=查看评论><i class="fas fa-comment fa-fw" aria-hidden=true></i></a></div><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/gitalk@1.7.2/dist/gitalk.min.css><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/css/lightgallery-bundle.min.css><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/katex.min.css><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/copy-tex.min.css><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.css><script type=text/javascript src=https://cdn.jsdelivr.net/npm/gitalk@1.7.2/dist/gitalk.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/autocomplete.js@0.38.1/dist/autocomplete.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/lunr@2.3.9/lunr.min.js></script><script type=text/javascript src=/lib/lunr/lunr.stemmer.support.min.js></script><script type=text/javascript src=/lib/lunr/lunr.zh.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/lazysizes@5.3.1/lazysizes.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/lightgallery.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/plugins/thumbnail/lg-thumbnail.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/plugins/zoom/lg-zoom.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/clipboard@2.0.11/dist/clipboard.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/sharer.js@0.5.1/sharer.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/katex.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/auto-render.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/copy-tex.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/mhchem.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.js></script><script type=text/javascript>window.config={code:{copyTitle:"复制到剪贴板",maxShownLines:50},comment:{gitalk:{admin:["cikichen"],clientID:"be0f52370ed1285b6c7c",clientSecret:"734a7d8d0ded346ca7a3d565d57de3f8eeb2850b",id:"2026-07-23T00:00:00Z",owner:"cikichen",repo:"gitalk",title:"SwiftUI @MainActor 深入理解：告别主线程崩溃与 UI 无响应"}},cookieconsent:{content:{dismiss:"我知道了",link:"了解更多",message:"本网站使用 Cookies 来改善您的浏览体验."},enable:!0,palette:{button:{background:"#f0f0f0"},popup:{background:"#1aa3ff"}},theme:"edgeless"},lightgallery:!0,math:{delimiters:[{display:!0,left:"$$",right:"$$"},{display:!0,left:"\\[",right:"\\]"},{display:!0,left:"\\begin{equation}",right:"\\end{equation}"},{display:!0,left:"\\begin{equation*}",right:"\\end{equation*}"},{display:!0,left:"\\begin{align}",right:"\\end{align}"},{display:!0,left:"\\begin{align*}",right:"\\end{align*}"},{display:!0,left:"\\begin{alignat}",right:"\\end{alignat}"},{display:!0,left:"\\begin{alignat*}",right:"\\end{alignat*}"},{display:!0,left:"\\begin{gather}",right:"\\end{gather}"},{display:!0,left:"\\begin{CD}",right:"\\end{CD}"},{display:!1,left:"$",right:"$"},{display:!1,left:"\\(",right:"\\)"}],strict:!1},search:{highlightTag:"em",lunrIndexURL:"/index.json",lunrLanguageCode:"zh",lunrSegmentitURL:"/lib/lunr/lunr.segmentit.js",maxResultLength:10,noResultsFound:"没有找到结果",snippetLength:50,type:"lunr"}}</script><script type=text/javascript src=/js/theme.min.js></script></body></html>

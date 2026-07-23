@@ -1,0 +1,396 @@
+<!doctype html><html lang=zh-CN><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><meta name=robots content="noodp"><title>熔断器实战：用Go实现优雅的服务降级与自动恢复 - 编程心语</title><meta name=Description content="深入理解熔断器模式的三态机制，用Go从零实现一个生产级熔断器，包含滑动窗口统计、半开探测、自动恢复等核心能力，附完整代码与集成示例。"><meta property="og:url" content="https://www.ithome.me/post/2026/07/20/circuit-breaker-pattern-go/"><meta property="og:site_name" content="编程心语"><meta property="og:title" content="熔断器实战：用Go实现优雅的服务降级与自动恢复"><meta property="og:description" content="深入理解熔断器模式的三态机制，用Go从零实现一个生产级熔断器，包含滑动窗口统计、半开探测、自动恢复等核心能力，附完整代码与集成示例。"><meta property="og:locale" content="zh_CN"><meta property="og:type" content="article"><meta property="article:section" content="posts"><meta property="article:published_time" content="2026-07-20T08:00:00+08:00"><meta property="article:modified_time" content="2026-07-20T08:32:03+08:00"><meta property="article:tag" content="Go"><meta property="article:tag" content="熔断器"><meta property="article:tag" content="微服务"><meta property="article:tag" content="容错设计"><meta name=twitter:card content="summary"><meta name=twitter:title content="熔断器实战：用Go实现优雅的服务降级与自动恢复"><meta name=twitter:description content="深入理解熔断器模式的三态机制，用Go从零实现一个生产级熔断器，包含滑动窗口统计、半开探测、自动恢复等核心能力，附完整代码与集成示例。"><meta name=twitter:site content="@ChenCiki"><meta name=application-name content="编程心语"><meta name=apple-mobile-web-app-title content="编程心语"><meta name=theme-color content="#ffffff"><meta name=msapplication-TileColor content="#da532c"><link rel="shortcut icon" type=image/x-icon href=/favicon.ico><link rel=icon type=image/png sizes=32x32 href=/favicon-32x32.png><link rel=icon type=image/png sizes=16x16 href=/favicon-16x16.png><link rel=apple-touch-icon sizes=180x180 href=/apple-touch-icon.png><link rel=mask-icon href=/safari-pinned-tab.svg color=#5bbad5><link rel=manifest href=/site.webmanifest><link rel=canonical href=https://www.ithome.me/post/2026/07/20/circuit-breaker-pattern-go/><link rel=prev href=https://www.ithome.me/post/2026/07/19/bloom-filter-massive-data-membership/><link rel=next href=https://www.ithome.me/post/2026/07/21/go-sync-primitives-pool-once-cond/><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/normalize.css@8.0.1/normalize.min.css><link rel=stylesheet href=/css/style.min.css><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css><script type=application/ld+json>{"@context":"http://schema.org","@type":"BlogPosting","headline":"熔断器实战：用Go实现优雅的服务降级与自动恢复","inLanguage":"zh-CN","mainEntityOfPage":{"@type":"WebPage","@id":"https:\/\/www.ithome.me\/post\/2026\/07\/20\/circuit-breaker-pattern-go\/"},"image":["https:\/\/www.ithome.me\/cover.png"],"genre":"posts","keywords":"Go, 熔断器, 微服务, 容错设计","wordcount":1758,"url":"https:\/\/www.ithome.me\/post\/2026\/07\/20\/circuit-breaker-pattern-go\/","datePublished":"2026-07-20T08:00:00+08:00","dateModified":"2026-07-20T08:32:03+08:00","publisher":{"@type":"Organization","name":"SimonChen","logo":"https:\/\/www.ithome.me\/logo.png"},"author":{"@type":"Person","name":"Simon"},"description":"深入理解熔断器模式的三态机制，用Go从零实现一个生产级熔断器，包含滑动窗口统计、半开探测、自动恢复等核心能力，附完整代码与集成示例。"}</script><script async src="https://www.googletagmanager.com/gtag/js?id=G-H1Q5563VR8"></script><script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag("js",new Date),gtag("config","G-H1Q5563VR8",{anonymize_ip:!0})</script></head><body data-header-desktop=fixed data-header-mobile=auto><script type=text/javascript>(window.localStorage&&localStorage.getItem("theme")?localStorage.getItem("theme")==="dark":"auto"==="auto"?window.matchMedia("(prefers-color-scheme: dark)").matches:"auto"==="dark")&&document.body.setAttribute("theme","dark")</script><div id=mask></div><div class=wrapper><header class=desktop id=header-desktop><div class=header-wrapper><div class=header-title><a href=/ title=编程心语>编程心语</a></div><div class=menu><div class=menu-inner><a class=menu-item href=/posts/>文章 </a><a class=menu-item href=/categories/>分类 </a><a class=menu-item href=/tags/>标签 </a><a class=menu-item href=/about-me/>关于 </a><span class="menu-item delimiter"></span><span class="menu-item search" id=search-desktop>
+<input type=text placeholder=搜索文章... id=search-input-desktop>
+<a href=javascript:void(0); class="search-button search-toggle" id=search-toggle-desktop title=搜索><i class="fas fa-search fa-fw" aria-hidden=true></i>
+</a><a href=javascript:void(0); class="search-button search-clear" id=search-clear-desktop title=清空><i class="fas fa-times-circle fa-fw" aria-hidden=true></i>
+</a><span class="search-button search-loading" id=search-loading-desktop><i class="fas fa-spinner fa-fw fa-spin" aria-hidden=true></i>
+</span></span><a href=javascript:void(0); class="menu-item theme-switch" title=切换主题><i class="fas fa-adjust fa-fw" aria-hidden=true></i></a></div></div></div></header><header class=mobile id=header-mobile><div class=header-container><div class=header-wrapper><div class=header-title><a href=/ title=编程心语>编程心语</a></div><div class=menu-toggle id=menu-toggle-mobile><span></span><span></span><span></span></div></div><div class=menu id=menu-mobile><div class=search-wrapper><div class="search mobile" id=search-mobile><input type=text placeholder=搜索文章... id=search-input-mobile>
+<a href=javascript:void(0); class="search-button search-toggle" id=search-toggle-mobile title=搜索><i class="fas fa-search fa-fw" aria-hidden=true></i>
+</a><a href=javascript:void(0); class="search-button search-clear" id=search-clear-mobile title=清空><i class="fas fa-times-circle fa-fw" aria-hidden=true></i>
+</a><span class="search-button search-loading" id=search-loading-mobile><i class="fas fa-spinner fa-fw fa-spin" aria-hidden=true></i></span></div><a href=javascript:void(0); class=search-cancel id=search-cancel-mobile>取消</a></div><a class=menu-item href=/posts/ title>文章</a><a class=menu-item href=/categories/ title>分类</a><a class=menu-item href=/tags/ title>标签</a><a class=menu-item href=/about-me/ title>关于</a><a href=javascript:void(0); class="menu-item theme-switch" title=切换主题>
+<i class="fas fa-adjust fa-fw" aria-hidden=true></i></a></div></div></header><div class="search-dropdown desktop"><div id=search-dropdown-desktop></div></div><div class="search-dropdown mobile"><div id=search-dropdown-mobile></div></div><main class=main><div class=container><div class=toc id=toc-auto><h2 class=toc-title>目录</h2><div class=toc-content id=toc-content-auto></div></div><article class="page single"><h1 class="single-title animate__animated animate__flipInX">熔断器实战：用Go实现优雅的服务降级与自动恢复</h1><div class=post-meta><div class=post-meta-line><span class=post-author><a href=https://www.ithome.me/ title=Author target=_blank rel="noopener noreferrer author" class=author><i class="fas fa-user-circle fa-fw" aria-hidden=true></i>Simon</a>
+</span>&nbsp;<span class=post-category>收录于 <a href=/categories/backend/><i class="far fa-folder fa-fw" aria-hidden=true></i>Backend</a></span></div><div class=post-meta-line><i class="far fa-calendar-alt fa-fw" aria-hidden=true></i>&nbsp;<time datetime=2026-07-20>2026-07-20</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden=true></i>&nbsp;约 1758 字&nbsp;
+<i class="far fa-clock fa-fw" aria-hidden=true></i>&nbsp;预计阅读 4 分钟&nbsp;</div></div><div class="details toc" id=toc-static data-kept=true><div class="details-summary toc-title"><span>目录</span>
+<span><i class="details-icon fas fa-angle-right" aria-hidden=true></i></span></div><div class="details-content toc-content" id=toc-content-static><nav id=TableOfContents><ul><li><a href=#为什么你的服务需要熔断器>为什么你的服务需要熔断器</a></li><li><a href=#熔断器的三态机制>熔断器的三态机制</a></li><li><a href=#用go实现一个生产级熔断器>用Go实现一个生产级熔断器</a><ul><li><a href=#核心数据结构>核心数据结构</a></li><li><a href=#滑动窗口统计>滑动窗口统计</a></li><li><a href=#状态机请求放行与结果记录>状态机：请求放行与结果记录</a></li><li><a href=#包装调用与使用示例>包装调用与使用示例</a></li></ul></li><li><a href=#开源库选型>开源库选型</a></li><li><a href=#关键配置建议>关键配置建议</a></li><li><a href=#熔断器不是银弹>熔断器不是银弹</a></li></ul></nav></div></div><div class=content id=content><h2 id=为什么你的服务需要熔断器>为什么你的服务需要熔断器</h2><p>你的订单服务调用支付服务，某天支付服务突然变慢——从50ms飙到5秒。你的订单服务每个请求都在等5秒，线程池迅速耗尽，整个服务雪崩。最后，一个下游服务的慢响应，把你整个系统拖垮了。</p><p>这就是<strong>级联故障</strong>。熔断器（Circuit Breaker）是解决这个问题的经典模式：当下游错误率超过阈值时，主动切断调用，快速失败，给下游喘息恢复的时间。</p><h2 id=熔断器的三态机制>熔断器的三态机制</h2><p>熔断器有三个状态，像一个智能开关：</p><ul><li><strong>Closed（关闭）</strong>：正常放行所有请求，同时统计失败率</li><li><strong>Open（打开）</strong>：熔断状态，所有请求直接失败，不发出实际调用</li><li><strong>Half-Open（半开）</strong>：试探性放行少量请求，根据结果决定恢复或重新熔断</li></ul><p>状态流转：Closed →（失败率超阈值）→ Open →（冷却时间到期）→ Half-Open →（探测成功）→ Closed，或 →（探测失败）→ Open</p><h2 id=用go实现一个生产级熔断器>用Go实现一个生产级熔断器</h2><h3 id=核心数据结构>核心数据结构</h3><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span><span class=lnt>17
+</span><span class=lnt>18
+</span><span class=lnt>19
+</span><span class=lnt>20
+</span><span class=lnt>21
+</span><span class=lnt>22
+</span><span class=lnt>23
+</span><span class=lnt>24
+</span><span class=lnt>25
+</span><span class=lnt>26
+</span><span class=lnt>27
+</span><span class=lnt>28
+</span><span class=lnt>29
+</span><span class=lnt>30
+</span><span class=lnt>31
+</span><span class=lnt>32
+</span><span class=lnt>33
+</span><span class=lnt>34
+</span><span class=lnt>35
+</span><span class=lnt>36
+</span><span class=lnt>37
+</span><span class=lnt>38
+</span><span class=lnt>39
+</span><span class=lnt>40
+</span><span class=lnt>41
+</span><span class=lnt>42
+</span><span class=lnt>43
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-go data-lang=go><span class=line><span class=cl><span class=kn>package</span><span class=w> </span><span class=nx>breaker</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>
+</span></span></span><span class=line><span class=cl><span class=kn>import</span><span class=w> </span><span class=p>(</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=s>&#34;errors&#34;</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=s>&#34;sync&#34;</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=s>&#34;time&#34;</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=p>)</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>
+</span></span></span><span class=line><span class=cl><span class=kd>type</span><span class=w> </span><span class=nx>State</span><span class=w> </span><span class=kt>int</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>
+</span></span></span><span class=line><span class=cl><span class=kd>const</span><span class=w> </span><span class=p>(</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nx>StateClosed</span><span class=w>   </span><span class=nx>State</span><span class=w> </span><span class=p>=</span><span class=w> </span><span class=kc>iota</span><span class=w> </span><span class=c1>// 关闭：正常放行</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nx>StateOpen</span><span class=w>                  </span><span class=c1>// 打开：快速失败</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nx>StateHalfOpen</span><span class=w>              </span><span class=c1>// 半开：试探放行</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=p>)</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>
+</span></span></span><span class=line><span class=cl><span class=kd>var</span><span class=w> </span><span class=nx>ErrCircuitOpen</span><span class=w> </span><span class=p>=</span><span class=w> </span><span class=nx>errors</span><span class=p>.</span><span class=nf>New</span><span class=p>(</span><span class=s>&#34;circuit breaker is open&#34;</span><span class=p>)</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>
+</span></span></span><span class=line><span class=cl><span class=kd>type</span><span class=w> </span><span class=nx>Config</span><span class=w> </span><span class=kd>struct</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nx>RequestThreshold</span><span class=w>    </span><span class=kt>int</span><span class=w>           </span><span class=c1>// 触发熔断的最小请求量</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nx>FailureRatio</span><span class=w>        </span><span class=kt>float64</span><span class=w>       </span><span class=c1>// 失败率阈值（0~1）</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nx>OpenTimeout</span><span class=w>         </span><span class=nx>time</span><span class=p>.</span><span class=nx>Duration</span><span class=w> </span><span class=c1>// 熔断持续时间</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nx>HalfOpenMaxCalls</span><span class=w>    </span><span class=kt>int</span><span class=w>           </span><span class=c1>// 半开状态最大探测请求数</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nx>HalfOpenSuccessNeed</span><span class=w> </span><span class=kt>int</span><span class=w>           </span><span class=c1>// 半开状态恢复所需连续成功数</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=p>}</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>
+</span></span></span><span class=line><span class=cl><span class=kd>type</span><span class=w> </span><span class=nx>CircuitBreaker</span><span class=w> </span><span class=kd>struct</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nx>mu</span><span class=w>             </span><span class=nx>sync</span><span class=p>.</span><span class=nx>Mutex</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nx>state</span><span class=w>          </span><span class=nx>State</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nx>config</span><span class=w>         </span><span class=nx>Config</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nx>window</span><span class=w>         </span><span class=o>*</span><span class=nx>slidingWindow</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nx>openedAt</span><span class=w>       </span><span class=nx>time</span><span class=p>.</span><span class=nx>Time</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nx>halfOpenSuccess</span><span class=w> </span><span class=kt>int</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nx>halfOpenCalls</span><span class=w>   </span><span class=kt>int</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=p>}</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>
+</span></span></span><span class=line><span class=cl><span class=kd>func</span><span class=w> </span><span class=nf>New</span><span class=p>(</span><span class=nx>cfg</span><span class=w> </span><span class=nx>Config</span><span class=p>)</span><span class=w> </span><span class=o>*</span><span class=nx>CircuitBreaker</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=k>return</span><span class=w> </span><span class=o>&amp;</span><span class=nx>CircuitBreaker</span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=nx>state</span><span class=p>:</span><span class=w>  </span><span class=nx>StateClosed</span><span class=p>,</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=nx>config</span><span class=p>:</span><span class=w> </span><span class=nx>cfg</span><span class=p>,</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=nx>window</span><span class=p>:</span><span class=w> </span><span class=nf>newSlidingWindow</span><span class=p>(</span><span class=mi>10</span><span class=w> </span><span class=o>*</span><span class=w> </span><span class=nx>time</span><span class=p>.</span><span class=nx>Second</span><span class=p>),</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=p>}</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=p>}</span><span class=w>
+</span></span></span></code></pre></td></tr></table></div></div><h3 id=滑动窗口统计>滑动窗口统计</h3><p>用滑动窗口记录最近N秒的请求结果，比固定窗口更精确，能避免窗口边界处的统计偏差：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span><span class=lnt>17
+</span><span class=lnt>18
+</span><span class=lnt>19
+</span><span class=lnt>20
+</span><span class=lnt>21
+</span><span class=lnt>22
+</span><span class=lnt>23
+</span><span class=lnt>24
+</span><span class=lnt>25
+</span><span class=lnt>26
+</span><span class=lnt>27
+</span><span class=lnt>28
+</span><span class=lnt>29
+</span><span class=lnt>30
+</span><span class=lnt>31
+</span><span class=lnt>32
+</span><span class=lnt>33
+</span><span class=lnt>34
+</span><span class=lnt>35
+</span><span class=lnt>36
+</span><span class=lnt>37
+</span><span class=lnt>38
+</span><span class=lnt>39
+</span><span class=lnt>40
+</span><span class=lnt>41
+</span><span class=lnt>42
+</span><span class=lnt>43
+</span><span class=lnt>44
+</span><span class=lnt>45
+</span><span class=lnt>46
+</span><span class=lnt>47
+</span><span class=lnt>48
+</span><span class=lnt>49
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-go data-lang=go><span class=line><span class=cl><span class=kd>type</span><span class=w> </span><span class=nx>slidingWindow</span><span class=w> </span><span class=kd>struct</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nx>mu</span><span class=w>       </span><span class=nx>sync</span><span class=p>.</span><span class=nx>Mutex</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nx>duration</span><span class=w> </span><span class=nx>time</span><span class=p>.</span><span class=nx>Duration</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nx>buckets</span><span class=w>  </span><span class=p>[]</span><span class=nx>bucket</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=p>}</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>
+</span></span></span><span class=line><span class=cl><span class=kd>type</span><span class=w> </span><span class=nx>bucket</span><span class=w> </span><span class=kd>struct</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nx>timestamp</span><span class=w> </span><span class=nx>time</span><span class=p>.</span><span class=nx>Time</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nx>success</span><span class=w>   </span><span class=kt>int</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nx>failure</span><span class=w>   </span><span class=kt>int</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=p>}</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>
+</span></span></span><span class=line><span class=cl><span class=kd>func</span><span class=w> </span><span class=nf>newSlidingWindow</span><span class=p>(</span><span class=nx>d</span><span class=w> </span><span class=nx>time</span><span class=p>.</span><span class=nx>Duration</span><span class=p>)</span><span class=w> </span><span class=o>*</span><span class=nx>slidingWindow</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=k>return</span><span class=w> </span><span class=o>&amp;</span><span class=nx>slidingWindow</span><span class=p>{</span><span class=nx>duration</span><span class=p>:</span><span class=w> </span><span class=nx>d</span><span class=p>}</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=p>}</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>
+</span></span></span><span class=line><span class=cl><span class=kd>func</span><span class=w> </span><span class=p>(</span><span class=nx>w</span><span class=w> </span><span class=o>*</span><span class=nx>slidingWindow</span><span class=p>)</span><span class=w> </span><span class=nf>Record</span><span class=p>(</span><span class=nx>success</span><span class=w> </span><span class=kt>bool</span><span class=p>)</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nx>w</span><span class=p>.</span><span class=nx>mu</span><span class=p>.</span><span class=nf>Lock</span><span class=p>()</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=k>defer</span><span class=w> </span><span class=nx>w</span><span class=p>.</span><span class=nx>mu</span><span class=p>.</span><span class=nf>Unlock</span><span class=p>()</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nx>now</span><span class=w> </span><span class=o>:=</span><span class=w> </span><span class=nx>time</span><span class=p>.</span><span class=nf>Now</span><span class=p>()</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=c1>// 清理过期桶</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nx>cutoff</span><span class=w> </span><span class=o>:=</span><span class=w> </span><span class=nx>now</span><span class=p>.</span><span class=nf>Add</span><span class=p>(</span><span class=o>-</span><span class=nx>w</span><span class=p>.</span><span class=nx>duration</span><span class=p>)</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nx>alive</span><span class=w> </span><span class=o>:=</span><span class=w> </span><span class=nx>w</span><span class=p>.</span><span class=nx>buckets</span><span class=p>[:</span><span class=mi>0</span><span class=p>]</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=k>for</span><span class=w> </span><span class=nx>_</span><span class=p>,</span><span class=w> </span><span class=nx>b</span><span class=w> </span><span class=o>:=</span><span class=w> </span><span class=k>range</span><span class=w> </span><span class=nx>w</span><span class=p>.</span><span class=nx>buckets</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=k>if</span><span class=w> </span><span class=nx>b</span><span class=p>.</span><span class=nx>timestamp</span><span class=p>.</span><span class=nf>After</span><span class=p>(</span><span class=nx>cutoff</span><span class=p>)</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>            </span><span class=nx>alive</span><span class=w> </span><span class=p>=</span><span class=w> </span><span class=nb>append</span><span class=p>(</span><span class=nx>alive</span><span class=p>,</span><span class=w> </span><span class=nx>b</span><span class=p>)</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=p>}</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=p>}</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nx>w</span><span class=p>.</span><span class=nx>buckets</span><span class=w> </span><span class=p>=</span><span class=w> </span><span class=nx>alive</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=c1>// 追加新记录</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=k>if</span><span class=w> </span><span class=nx>success</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=nx>w</span><span class=p>.</span><span class=nx>buckets</span><span class=w> </span><span class=p>=</span><span class=w> </span><span class=nb>append</span><span class=p>(</span><span class=nx>w</span><span class=p>.</span><span class=nx>buckets</span><span class=p>,</span><span class=w> </span><span class=nx>bucket</span><span class=p>{</span><span class=nx>timestamp</span><span class=p>:</span><span class=w> </span><span class=nx>now</span><span class=p>,</span><span class=w> </span><span class=nx>success</span><span class=p>:</span><span class=w> </span><span class=mi>1</span><span class=p>})</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=p>}</span><span class=w> </span><span class=k>else</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=nx>w</span><span class=p>.</span><span class=nx>buckets</span><span class=w> </span><span class=p>=</span><span class=w> </span><span class=nb>append</span><span class=p>(</span><span class=nx>w</span><span class=p>.</span><span class=nx>buckets</span><span class=p>,</span><span class=w> </span><span class=nx>bucket</span><span class=p>{</span><span class=nx>timestamp</span><span class=p>:</span><span class=w> </span><span class=nx>now</span><span class=p>,</span><span class=w> </span><span class=nx>failure</span><span class=p>:</span><span class=w> </span><span class=mi>1</span><span class=p>})</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=p>}</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=p>}</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>
+</span></span></span><span class=line><span class=cl><span class=kd>func</span><span class=w> </span><span class=p>(</span><span class=nx>w</span><span class=w> </span><span class=o>*</span><span class=nx>slidingWindow</span><span class=p>)</span><span class=w> </span><span class=nf>Stats</span><span class=p>()</span><span class=w> </span><span class=p>(</span><span class=nx>total</span><span class=p>,</span><span class=w> </span><span class=nx>failures</span><span class=w> </span><span class=kt>int</span><span class=p>)</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nx>w</span><span class=p>.</span><span class=nx>mu</span><span class=p>.</span><span class=nf>Lock</span><span class=p>()</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=k>defer</span><span class=w> </span><span class=nx>w</span><span class=p>.</span><span class=nx>mu</span><span class=p>.</span><span class=nf>Unlock</span><span class=p>()</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nx>cutoff</span><span class=w> </span><span class=o>:=</span><span class=w> </span><span class=nx>time</span><span class=p>.</span><span class=nf>Now</span><span class=p>().</span><span class=nf>Add</span><span class=p>(</span><span class=o>-</span><span class=nx>w</span><span class=p>.</span><span class=nx>duration</span><span class=p>)</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=k>for</span><span class=w> </span><span class=nx>_</span><span class=p>,</span><span class=w> </span><span class=nx>b</span><span class=w> </span><span class=o>:=</span><span class=w> </span><span class=k>range</span><span class=w> </span><span class=nx>w</span><span class=p>.</span><span class=nx>buckets</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=k>if</span><span class=w> </span><span class=nx>b</span><span class=p>.</span><span class=nx>timestamp</span><span class=p>.</span><span class=nf>After</span><span class=p>(</span><span class=nx>cutoff</span><span class=p>)</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>            </span><span class=nx>total</span><span class=w> </span><span class=o>+=</span><span class=w> </span><span class=nx>b</span><span class=p>.</span><span class=nx>success</span><span class=w> </span><span class=o>+</span><span class=w> </span><span class=nx>b</span><span class=p>.</span><span class=nx>failure</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>            </span><span class=nx>failures</span><span class=w> </span><span class=o>+=</span><span class=w> </span><span class=nx>b</span><span class=p>.</span><span class=nx>failure</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=p>}</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=p>}</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=k>return</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=p>}</span><span class=w>
+</span></span></span></code></pre></td></tr></table></div></div><h3 id=状态机请求放行与结果记录>状态机：请求放行与结果记录</h3><p>这是熔断器的核心逻辑，两个方法配合驱动状态转换：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span><span class=lnt>17
+</span><span class=lnt>18
+</span><span class=lnt>19
+</span><span class=lnt>20
+</span><span class=lnt>21
+</span><span class=lnt>22
+</span><span class=lnt>23
+</span><span class=lnt>24
+</span><span class=lnt>25
+</span><span class=lnt>26
+</span><span class=lnt>27
+</span><span class=lnt>28
+</span><span class=lnt>29
+</span><span class=lnt>30
+</span><span class=lnt>31
+</span><span class=lnt>32
+</span><span class=lnt>33
+</span><span class=lnt>34
+</span><span class=lnt>35
+</span><span class=lnt>36
+</span><span class=lnt>37
+</span><span class=lnt>38
+</span><span class=lnt>39
+</span><span class=lnt>40
+</span><span class=lnt>41
+</span><span class=lnt>42
+</span><span class=lnt>43
+</span><span class=lnt>44
+</span><span class=lnt>45
+</span><span class=lnt>46
+</span><span class=lnt>47
+</span><span class=lnt>48
+</span><span class=lnt>49
+</span><span class=lnt>50
+</span><span class=lnt>51
+</span><span class=lnt>52
+</span><span class=lnt>53
+</span><span class=lnt>54
+</span><span class=lnt>55
+</span><span class=lnt>56
+</span><span class=lnt>57
+</span><span class=lnt>58
+</span><span class=lnt>59
+</span><span class=lnt>60
+</span><span class=lnt>61
+</span><span class=lnt>62
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-go data-lang=go><span class=line><span class=cl><span class=c1>// Allow 判断请求是否被放行</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=kd>func</span><span class=w> </span><span class=p>(</span><span class=nx>cb</span><span class=w> </span><span class=o>*</span><span class=nx>CircuitBreaker</span><span class=p>)</span><span class=w> </span><span class=nf>Allow</span><span class=p>()</span><span class=w> </span><span class=kt>error</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nx>cb</span><span class=p>.</span><span class=nx>mu</span><span class=p>.</span><span class=nf>Lock</span><span class=p>()</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=k>defer</span><span class=w> </span><span class=nx>cb</span><span class=p>.</span><span class=nx>mu</span><span class=p>.</span><span class=nf>Unlock</span><span class=p>()</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=k>switch</span><span class=w> </span><span class=nx>cb</span><span class=p>.</span><span class=nx>state</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=k>case</span><span class=w> </span><span class=nx>StateClosed</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=k>return</span><span class=w> </span><span class=kc>nil</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=k>case</span><span class=w> </span><span class=nx>StateOpen</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=k>if</span><span class=w> </span><span class=nx>time</span><span class=p>.</span><span class=nf>Since</span><span class=p>(</span><span class=nx>cb</span><span class=p>.</span><span class=nx>openedAt</span><span class=p>)</span><span class=w> </span><span class=o>&gt;=</span><span class=w> </span><span class=nx>cb</span><span class=p>.</span><span class=nx>config</span><span class=p>.</span><span class=nx>OpenTimeout</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>            </span><span class=nx>cb</span><span class=p>.</span><span class=nx>state</span><span class=w> </span><span class=p>=</span><span class=w> </span><span class=nx>StateHalfOpen</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>            </span><span class=nx>cb</span><span class=p>.</span><span class=nx>halfOpenSuccess</span><span class=w> </span><span class=p>=</span><span class=w> </span><span class=mi>0</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>            </span><span class=nx>cb</span><span class=p>.</span><span class=nx>halfOpenCalls</span><span class=w> </span><span class=p>=</span><span class=w> </span><span class=mi>0</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>            </span><span class=k>return</span><span class=w> </span><span class=kc>nil</span><span class=w> </span><span class=c1>// 放行第一个探测请求</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=p>}</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=k>return</span><span class=w> </span><span class=nx>ErrCircuitOpen</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=k>case</span><span class=w> </span><span class=nx>StateHalfOpen</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=k>if</span><span class=w> </span><span class=nx>cb</span><span class=p>.</span><span class=nx>halfOpenCalls</span><span class=w> </span><span class=p>&lt;</span><span class=w> </span><span class=nx>cb</span><span class=p>.</span><span class=nx>config</span><span class=p>.</span><span class=nx>HalfOpenMaxCalls</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>            </span><span class=nx>cb</span><span class=p>.</span><span class=nx>halfOpenCalls</span><span class=o>++</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>            </span><span class=k>return</span><span class=w> </span><span class=kc>nil</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=p>}</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=k>return</span><span class=w> </span><span class=nx>ErrCircuitOpen</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=p>}</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=k>return</span><span class=w> </span><span class=kc>nil</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=p>}</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>
+</span></span></span><span class=line><span class=cl><span class=c1>// Record 记录请求结果，驱动状态转换</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=kd>func</span><span class=w> </span><span class=p>(</span><span class=nx>cb</span><span class=w> </span><span class=o>*</span><span class=nx>CircuitBreaker</span><span class=p>)</span><span class=w> </span><span class=nf>Record</span><span class=p>(</span><span class=nx>err</span><span class=w> </span><span class=kt>error</span><span class=p>)</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nx>cb</span><span class=p>.</span><span class=nx>mu</span><span class=p>.</span><span class=nf>Lock</span><span class=p>()</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=k>defer</span><span class=w> </span><span class=nx>cb</span><span class=p>.</span><span class=nx>mu</span><span class=p>.</span><span class=nf>Unlock</span><span class=p>()</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nx>success</span><span class=w> </span><span class=o>:=</span><span class=w> </span><span class=nx>err</span><span class=w> </span><span class=o>==</span><span class=w> </span><span class=kc>nil</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=k>switch</span><span class=w> </span><span class=nx>cb</span><span class=p>.</span><span class=nx>state</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=k>case</span><span class=w> </span><span class=nx>StateClosed</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=nx>cb</span><span class=p>.</span><span class=nx>window</span><span class=p>.</span><span class=nf>Record</span><span class=p>(</span><span class=nx>success</span><span class=p>)</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=nx>total</span><span class=p>,</span><span class=w> </span><span class=nx>failures</span><span class=w> </span><span class=o>:=</span><span class=w> </span><span class=nx>cb</span><span class=p>.</span><span class=nx>window</span><span class=p>.</span><span class=nf>Stats</span><span class=p>()</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=k>if</span><span class=w> </span><span class=nx>total</span><span class=w> </span><span class=o>&gt;=</span><span class=w> </span><span class=nx>cb</span><span class=p>.</span><span class=nx>config</span><span class=p>.</span><span class=nx>RequestThreshold</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>            </span><span class=k>if</span><span class=w> </span><span class=nb>float64</span><span class=p>(</span><span class=nx>failures</span><span class=p>)</span><span class=o>/</span><span class=nb>float64</span><span class=p>(</span><span class=nx>total</span><span class=p>)</span><span class=w> </span><span class=o>&gt;=</span><span class=w> </span><span class=nx>cb</span><span class=p>.</span><span class=nx>config</span><span class=p>.</span><span class=nx>FailureRatio</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>                </span><span class=nx>cb</span><span class=p>.</span><span class=nf>open</span><span class=p>()</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>            </span><span class=p>}</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=p>}</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=k>case</span><span class=w> </span><span class=nx>StateHalfOpen</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=k>if</span><span class=w> </span><span class=nx>success</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>            </span><span class=nx>cb</span><span class=p>.</span><span class=nx>halfOpenSuccess</span><span class=o>++</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>            </span><span class=k>if</span><span class=w> </span><span class=nx>cb</span><span class=p>.</span><span class=nx>halfOpenSuccess</span><span class=w> </span><span class=o>&gt;=</span><span class=w> </span><span class=nx>cb</span><span class=p>.</span><span class=nx>config</span><span class=p>.</span><span class=nx>HalfOpenSuccessNeed</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>                </span><span class=nx>cb</span><span class=p>.</span><span class=nb>close</span><span class=p>()</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>            </span><span class=p>}</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=p>}</span><span class=w> </span><span class=k>else</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>            </span><span class=nx>cb</span><span class=p>.</span><span class=nf>open</span><span class=p>()</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=p>}</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=p>}</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=p>}</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>
+</span></span></span><span class=line><span class=cl><span class=kd>func</span><span class=w> </span><span class=p>(</span><span class=nx>cb</span><span class=w> </span><span class=o>*</span><span class=nx>CircuitBreaker</span><span class=p>)</span><span class=w> </span><span class=nf>open</span><span class=p>()</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nx>cb</span><span class=p>.</span><span class=nx>state</span><span class=w> </span><span class=p>=</span><span class=w> </span><span class=nx>StateOpen</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nx>cb</span><span class=p>.</span><span class=nx>openedAt</span><span class=w> </span><span class=p>=</span><span class=w> </span><span class=nx>time</span><span class=p>.</span><span class=nf>Now</span><span class=p>()</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=p>}</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>
+</span></span></span><span class=line><span class=cl><span class=kd>func</span><span class=w> </span><span class=p>(</span><span class=nx>cb</span><span class=w> </span><span class=o>*</span><span class=nx>CircuitBreaker</span><span class=p>)</span><span class=w> </span><span class=nb>close</span><span class=p>()</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nx>cb</span><span class=p>.</span><span class=nx>state</span><span class=w> </span><span class=p>=</span><span class=w> </span><span class=nx>StateClosed</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nx>cb</span><span class=p>.</span><span class=nx>window</span><span class=w> </span><span class=p>=</span><span class=w> </span><span class=nf>newSlidingWindow</span><span class=p>(</span><span class=mi>10</span><span class=w> </span><span class=o>*</span><span class=w> </span><span class=nx>time</span><span class=p>.</span><span class=nx>Second</span><span class=p>)</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=p>}</span><span class=w>
+</span></span></span></code></pre></td></tr></table></div></div><h3 id=包装调用与使用示例>包装调用与使用示例</h3><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span><span class=lnt>4
+</span><span class=lnt>5
+</span><span class=lnt>6
+</span><span class=lnt>7
+</span><span class=lnt>8
+</span><span class=lnt>9
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-go data-lang=go><span class=line><span class=cl><span class=c1>// Do 封装请求执行，自动应用熔断逻辑</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=kd>func</span><span class=w> </span><span class=p>(</span><span class=nx>cb</span><span class=w> </span><span class=o>*</span><span class=nx>CircuitBreaker</span><span class=p>)</span><span class=w> </span><span class=nf>Do</span><span class=p>(</span><span class=nx>fn</span><span class=w> </span><span class=kd>func</span><span class=p>()</span><span class=w> </span><span class=kt>error</span><span class=p>)</span><span class=w> </span><span class=kt>error</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=k>if</span><span class=w> </span><span class=nx>err</span><span class=w> </span><span class=o>:=</span><span class=w> </span><span class=nx>cb</span><span class=p>.</span><span class=nf>Allow</span><span class=p>();</span><span class=w> </span><span class=nx>err</span><span class=w> </span><span class=o>!=</span><span class=w> </span><span class=kc>nil</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=k>return</span><span class=w> </span><span class=nx>err</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=p>}</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nx>err</span><span class=w> </span><span class=o>:=</span><span class=w> </span><span class=nf>fn</span><span class=p>()</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nx>cb</span><span class=p>.</span><span class=nf>Record</span><span class=p>(</span><span class=nx>err</span><span class=p>)</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=k>return</span><span class=w> </span><span class=nx>err</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=p>}</span><span class=w>
+</span></span></span></code></pre></td></tr></table></div></div><p>实际使用：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span><span class=lnt>17
+</span><span class=lnt>18
+</span><span class=lnt>19
+</span><span class=lnt>20
+</span><span class=lnt>21
+</span><span class=lnt>22
+</span><span class=lnt>23
+</span><span class=lnt>24
+</span><span class=lnt>25
+</span><span class=lnt>26
+</span><span class=lnt>27
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-go data-lang=go><span class=line><span class=cl><span class=kd>func</span><span class=w> </span><span class=nf>main</span><span class=p>()</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nx>cb</span><span class=w> </span><span class=o>:=</span><span class=w> </span><span class=nf>New</span><span class=p>(</span><span class=nx>Config</span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=nx>RequestThreshold</span><span class=p>:</span><span class=w>    </span><span class=mi>20</span><span class=p>,</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=nx>FailureRatio</span><span class=p>:</span><span class=w>        </span><span class=mf>0.5</span><span class=p>,</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=nx>OpenTimeout</span><span class=p>:</span><span class=w>         </span><span class=mi>30</span><span class=w> </span><span class=o>*</span><span class=w> </span><span class=nx>time</span><span class=p>.</span><span class=nx>Second</span><span class=p>,</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=nx>HalfOpenMaxCalls</span><span class=p>:</span><span class=w>    </span><span class=mi>3</span><span class=p>,</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=nx>HalfOpenSuccessNeed</span><span class=p>:</span><span class=w> </span><span class=mi>2</span><span class=p>,</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=p>})</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nx>callAPI</span><span class=w> </span><span class=o>:=</span><span class=w> </span><span class=kd>func</span><span class=p>()</span><span class=w> </span><span class=kt>error</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=nx>resp</span><span class=p>,</span><span class=w> </span><span class=nx>err</span><span class=w> </span><span class=o>:=</span><span class=w> </span><span class=nx>http</span><span class=p>.</span><span class=nf>Get</span><span class=p>(</span><span class=s>&#34;https://api.example.com/pay&#34;</span><span class=p>)</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=k>if</span><span class=w> </span><span class=nx>err</span><span class=w> </span><span class=o>!=</span><span class=w> </span><span class=kc>nil</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>            </span><span class=k>return</span><span class=w> </span><span class=nx>err</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=p>}</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=k>defer</span><span class=w> </span><span class=nx>resp</span><span class=p>.</span><span class=nx>Body</span><span class=p>.</span><span class=nf>Close</span><span class=p>()</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=k>if</span><span class=w> </span><span class=nx>resp</span><span class=p>.</span><span class=nx>StatusCode</span><span class=w> </span><span class=o>&gt;=</span><span class=w> </span><span class=mi>500</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>            </span><span class=k>return</span><span class=w> </span><span class=nx>errors</span><span class=p>.</span><span class=nf>New</span><span class=p>(</span><span class=s>&#34;server error&#34;</span><span class=p>)</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=p>}</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=k>return</span><span class=w> </span><span class=kc>nil</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=p>}</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nx>err</span><span class=w> </span><span class=o>:=</span><span class=w> </span><span class=nx>cb</span><span class=p>.</span><span class=nf>Do</span><span class=p>(</span><span class=nx>callAPI</span><span class=p>)</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=k>if</span><span class=w> </span><span class=nx>errors</span><span class=p>.</span><span class=nf>Is</span><span class=p>(</span><span class=nx>err</span><span class=p>,</span><span class=w> </span><span class=nx>ErrCircuitOpen</span><span class=p>)</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=c1>// 熔断中，走降级逻辑</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=nx>fmt</span><span class=p>.</span><span class=nf>Println</span><span class=p>(</span><span class=s>&#34;支付服务暂时不可用，请稍后重试&#34;</span><span class=p>)</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=p>}</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=p>}</span><span class=w>
+</span></span></span></code></pre></td></tr></table></div></div><h2 id=开源库选型>开源库选型</h2><p>自实现适合理解原理和定制需求。生产环境也可用成熟的开源库：</p><table><thead><tr><th>库</th><th>特点</th><th>适用场景</th></tr></thead><tbody><tr><td>sony/gobreaker</td><td>轻量，API简洁，支持状态转换回调</td><td>标准熔断需求</td></tr><tr><td>afex/hystrix-go</td><td>Netflix Hystrix的Go移植</td><td>功能最全，但已停止维护</td></tr><tr><td>go-kratos内熔断器</td><td>与框架深度集成</td><td>已用kratos的项目</td></tr></tbody></table><h2 id=关键配置建议>关键配置建议</h2><ul><li><strong>RequestThreshold</strong>：至少20-50，太小容易误判</li><li><strong>FailureRatio</strong>：0.5比较合理，太敏感会导致正常波动也触发熔断</li><li><strong>OpenTimeout</strong>：10-60秒，太短下游没来得及恢复，太长影响可用性</li><li><strong>HalfOpenSuccessNeed</strong>：2-3次，避免单次偶然成功导致误恢复</li></ul><h2 id=熔断器不是银弹>熔断器不是银弹</h2><p>熔断器解决的是<strong>快速失败</strong>的问题，但不是容错的全部。完整的容错体系还需要：</p><ol><li><strong>超时</strong>：每个调用必须有超时，没有超时就没有熔断的基础</li><li><strong>重试</strong>：瞬态错误用重试解决，但必须配指数退避，否则加剧下游压力</li><li><strong>降级</strong>：熔断后返回缓存数据或默认值，而不是直接给用户报错</li><li><strong>隔离仓（Bulkhead）</strong>：不同下游用不同连接池，避免一个下游拖垮全部</li></ol><p>正确顺序：超时 → 重试 → 熔断 → 降级。先保证单次调用有超时，再决定是否重试，熔断拦截持续失败，最后降级兜底。</p></div><div class=post-footer id=post-footer><div class=post-info><div class=post-info-line><div class=post-info-mod><span>更新于 2026-07-20&nbsp;<a class=git-hash href=https://github.com/cikichen/hugo-sync/commit/cbf799d02a7e6e678458e2be060dd138f0a48eef target=_blank title="commit by cikichen(cikichen@github.com) cbf799d02a7e6e678458e2be060dd138f0a48eef: Auto: 2026-07-20 - 熔断器实战：用Go实现优雅的服务降级与自动恢复">
+<i class="fas fa-hashtag fa-fw" aria-hidden=true></i>cbf799d0</a></span></div></div><div class=post-info-line><div class=post-info-md></div><div class=post-info-share><span><a href=javascript:void(0); title="分享到 Twitter" data-sharer=twitter data-url=https://www.ithome.me/post/2026/07/20/circuit-breaker-pattern-go/ data-title=熔断器实战：用Go实现优雅的服务降级与自动恢复 data-via=ChenCiki data-hashtags=Go,熔断器,微服务,容错设计><i class="fab fa-twitter fa-fw" aria-hidden=true></i></a><a href=javascript:void(0); title="分享到 Linkedin" data-sharer=linkedin data-url=https://www.ithome.me/post/2026/07/20/circuit-breaker-pattern-go/><i class="fab fa-linkedin fa-fw" aria-hidden=true></i></a><a href=javascript:void(0); title="分享到 微博" data-sharer=weibo data-url=https://www.ithome.me/post/2026/07/20/circuit-breaker-pattern-go/ data-title=熔断器实战：用Go实现优雅的服务降级与自动恢复 data-ralateuid=xxx><i class="fab fa-weibo fa-fw" aria-hidden=true></i></a></span></div></div></div><div class=post-info-more><section class=post-tags><i class="fas fa-tags fa-fw" aria-hidden=true></i>&nbsp;<a href=/tags/go/>Go</a>,&nbsp;<a href=/tags/%E7%86%94%E6%96%AD%E5%99%A8/>熔断器</a>,&nbsp;<a href=/tags/%E5%BE%AE%E6%9C%8D%E5%8A%A1/>微服务</a>,&nbsp;<a href=/tags/%E5%AE%B9%E9%94%99%E8%AE%BE%E8%AE%A1/>容错设计</a></section><section><span><a href=javascript:void(0); onclick=window.history.back()>返回</a></span>&nbsp;|&nbsp;<span><a href=/>主页</a></span></section></div><div class=post-nav><a href=/post/2026/07/19/bloom-filter-massive-data-membership/ class=prev rel=prev title=布隆过滤器实战：在海量数据中优雅判断存在性><i class="fas fa-angle-left fa-fw" aria-hidden=true></i>布隆过滤器实战：在海量数据中优雅判断存在性</a>
+<a href=/post/2026/07/21/go-sync-primitives-pool-once-cond/ class=next rel=next title="Go 并发原语实战：sync.Pool、sync.Once 与 sync.Cond 的正确打开方式">Go 并发原语实战：sync.Pool、sync.Once 与 sync.Cond 的正确打开方式<i class="fas fa-angle-right fa-fw" aria-hidden=true></i></a></div></div><div id=comments><div id=gitalk class=comment></div><noscript>Please enable JavaScript to view the comments powered by <a href=https://github.com/gitalk/gitalk></a>Gitalk</a>.</noscript></div></article></div></main><footer class=footer><div class=footer-container><div class=footer-line itemscope itemtype=http://schema.org/CreativeWork><i class="far fa-copyright fa-fw" aria-hidden=true></i><span itemprop=copyrightYear>2011 - 2026</span><span class=author itemprop=copyrightHolder>&nbsp;<a href=https://www.ithome.me/ target=_blank>Simon Chen</a></span>&nbsp;|&nbsp;<span class=license><a rel="license external nofollow noopener noreferrer" href=https://creativecommons.org/licenses/by-nc-nd/4.0/ target=_blank>CC BY-NC-ND 4.0</a></span></div></div></footer></div><div id=fixed-buttons><a href=# id=back-to-top class=fixed-button title=回到顶部><i class="fas fa-arrow-up fa-fw" aria-hidden=true></i>
+</a><a href=# id=view-comments class=fixed-button title=查看评论><i class="fas fa-comment fa-fw" aria-hidden=true></i></a></div><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/gitalk@1.7.2/dist/gitalk.min.css><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/css/lightgallery-bundle.min.css><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/katex.min.css><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/copy-tex.min.css><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.css><script type=text/javascript src=https://cdn.jsdelivr.net/npm/gitalk@1.7.2/dist/gitalk.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/autocomplete.js@0.38.1/dist/autocomplete.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/lunr@2.3.9/lunr.min.js></script><script type=text/javascript src=/lib/lunr/lunr.stemmer.support.min.js></script><script type=text/javascript src=/lib/lunr/lunr.zh.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/lazysizes@5.3.1/lazysizes.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/lightgallery.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/plugins/thumbnail/lg-thumbnail.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/plugins/zoom/lg-zoom.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/clipboard@2.0.11/dist/clipboard.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/sharer.js@0.5.1/sharer.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/katex.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/auto-render.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/copy-tex.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/mhchem.min.js></script><script type=text/javascript src=https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.js></script><script type=text/javascript>window.config={code:{copyTitle:"复制到剪贴板",maxShownLines:50},comment:{gitalk:{admin:["cikichen"],clientID:"be0f52370ed1285b6c7c",clientSecret:"734a7d8d0ded346ca7a3d565d57de3f8eeb2850b",id:"2026-07-20T00:00:00Z",owner:"cikichen",repo:"gitalk",title:"熔断器实战：用Go实现优雅的服务降级与自动恢复"}},cookieconsent:{content:{dismiss:"我知道了",link:"了解更多",message:"本网站使用 Cookies 来改善您的浏览体验."},enable:!0,palette:{button:{background:"#f0f0f0"},popup:{background:"#1aa3ff"}},theme:"edgeless"},lightgallery:!0,math:{delimiters:[{display:!0,left:"$$",right:"$$"},{display:!0,left:"\\[",right:"\\]"},{display:!0,left:"\\begin{equation}",right:"\\end{equation}"},{display:!0,left:"\\begin{equation*}",right:"\\end{equation*}"},{display:!0,left:"\\begin{align}",right:"\\end{align}"},{display:!0,left:"\\begin{align*}",right:"\\end{align*}"},{display:!0,left:"\\begin{alignat}",right:"\\end{alignat}"},{display:!0,left:"\\begin{alignat*}",right:"\\end{alignat*}"},{display:!0,left:"\\begin{gather}",right:"\\end{gather}"},{display:!0,left:"\\begin{CD}",right:"\\end{CD}"},{display:!1,left:"$",right:"$"},{display:!1,left:"\\(",right:"\\)"}],strict:!1},search:{highlightTag:"em",lunrIndexURL:"/index.json",lunrLanguageCode:"zh",lunrSegmentitURL:"/lib/lunr/lunr.segmentit.js",maxResultLength:10,noResultsFound:"没有找到结果",snippetLength:50,type:"lunr"}}</script><script type=text/javascript src=/js/theme.min.js></script></body></html>
