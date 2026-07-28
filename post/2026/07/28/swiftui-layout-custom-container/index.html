@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="robots" content="noodp" />
+        <title>SwiftUI 自定义布局协议：用 Layout 构建弹性 UI 容器 - 编程心语</title><meta name="Description" content="深入 SwiftUI 的 Layout 协议，从基本原理到实用组件，教你构建自己的弹性布局容器。"><meta property="og:url" content="https://www.ithome.me/post/2026/07/28/swiftui-layout-custom-container/">
+  <meta property="og:site_name" content="编程心语">
+  <meta property="og:title" content="SwiftUI 自定义布局协议：用 Layout 构建弹性 UI 容器">
+  <meta property="og:description" content="深入 SwiftUI 的 Layout 协议，从基本原理到实用组件，教你构建自己的弹性布局容器。">
+  <meta property="og:locale" content="zh_CN">
+  <meta property="og:type" content="article">
+    <meta property="article:section" content="posts">
+    <meta property="article:published_time" content="2026-07-28T08:00:00+08:00">
+    <meta property="article:modified_time" content="2026-07-27T19:08:55+00:00">
+    <meta property="article:tag" content="SwiftUI">
+    <meta property="article:tag" content="Ios">
+    <meta property="article:tag" content="Layout">
+    <meta property="article:tag" content="自定义布局">
+
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="SwiftUI 自定义布局协议：用 Layout 构建弹性 UI 容器">
+  <meta name="twitter:description" content="深入 SwiftUI 的 Layout 协议，从基本原理到实用组件，教你构建自己的弹性布局容器。">
+      <meta name="twitter:site" content="@ChenCiki">
+<meta name="application-name" content="编程心语">
+<meta name="apple-mobile-web-app-title" content="编程心语"><meta name="theme-color" content="#ffffff"><meta name="msapplication-TileColor" content="#da532c"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5"><link rel="manifest" href="/site.webmanifest"><link rel="canonical" href="https://www.ithome.me/post/2026/07/28/swiftui-layout-custom-container/" /><link rel="prev" href="https://www.ithome.me/post/2026/07/27/css-container-queries-practical-guide/" /><link rel="next" href="https://www.ithome.me/post/2026/07/28/github-trending-weekly/" /><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/normalize.css@8.0.1/normalize.min.css"><link rel="stylesheet" href="/css/style.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css"><script type="application/ld+json">
+    {
+        "@context": "http://schema.org",
+        "@type": "BlogPosting",
+        "headline": "SwiftUI 自定义布局协议：用 Layout 构建弹性 UI 容器",
+        "inLanguage": "zh-CN",
+        "mainEntityOfPage": {
+            "@type": "WebPage",
+            "@id": "https:\/\/www.ithome.me\/post\/2026\/07\/28\/swiftui-layout-custom-container\/"
+        },"image": ["https:\/\/www.ithome.me\/cover.png"],"genre": "posts","keywords": "SwiftUI, iOS, Layout, 自定义布局","wordcount":  1244 ,
+        "url": "https:\/\/www.ithome.me\/post\/2026\/07\/28\/swiftui-layout-custom-container\/","datePublished": "2026-07-28T08:00:00+08:00","dateModified": "2026-07-27T19:08:55+00:00","publisher": {
+            "@type": "Organization",
+            "name": "SimonChen","logo": "https:\/\/www.ithome.me\/logo.png"},"author": {
+                "@type": "Person",
+                "name": "Simon"
+            },"description": "深入 SwiftUI 的 Layout 协议，从基本原理到实用组件，教你构建自己的弹性布局容器。"
+    }
+    </script><script async src="https://www.googletagmanager.com/gtag/js?id=G-H1Q5563VR8"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-H1Q5563VR8', { 'anonymize_ip': true });
+</script></head>
+    <body data-header-desktop="fixed" data-header-mobile="auto"><script type="text/javascript">(window.localStorage && localStorage.getItem('theme') ? localStorage.getItem('theme') === 'dark' : ('auto' === 'auto' ? window.matchMedia('(prefers-color-scheme: dark)').matches : 'auto' === 'dark')) && document.body.setAttribute('theme', 'dark');</script>
+
+        <div id="mask"></div><div class="wrapper"><header class="desktop" id="header-desktop">
+    <div class="header-wrapper">
+        <div class="header-title">
+            <a href="/" title="编程心语">编程心语</a>
+        </div>
+        <div class="menu">
+            <div class="menu-inner"><a class="menu-item" href="/posts/"> 文章 </a><a class="menu-item" href="/categories/"> 分类 </a><a class="menu-item" href="/tags/"> 标签 </a><a class="menu-item" href="/about-me/"> 关于 </a><span class="menu-item delimiter"></span><span class="menu-item search" id="search-desktop">
+                        <input type="text" placeholder="搜索文章..." id="search-input-desktop">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-desktop" title="搜索">
+                            <i class="fas fa-search fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-desktop" title="清空">
+                            <i class="fas fa-times-circle fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-desktop">
+                            <i class="fas fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+                        </span>
+                    </span><a href="javascript:void(0);" class="menu-item theme-switch" title="切换主题">
+                    <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</header><header class="mobile" id="header-mobile">
+    <div class="header-container">
+        <div class="header-wrapper">
+            <div class="header-title">
+                <a href="/" title="编程心语">编程心语</a>
+            </div>
+            <div class="menu-toggle" id="menu-toggle-mobile">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+        <div class="menu" id="menu-mobile"><div class="search-wrapper">
+                    <div class="search mobile" id="search-mobile">
+                        <input type="text" placeholder="搜索文章..." id="search-input-mobile">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-mobile" title="搜索">
+                            <i class="fas fa-search fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-mobile" title="清空">
+                            <i class="fas fa-times-circle fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-mobile">
+                            <i class="fas fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+                        </span>
+                    </div>
+                    <a href="javascript:void(0);" class="search-cancel" id="search-cancel-mobile">
+                        取消
+                    </a>
+                </div><a class="menu-item" href="/posts/" title="">文章</a><a class="menu-item" href="/categories/" title="">分类</a><a class="menu-item" href="/tags/" title="">标签</a><a class="menu-item" href="/about-me/" title="">关于</a><a href="javascript:void(0);" class="menu-item theme-switch" title="切换主题">
+                <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
+            </a></div>
+    </div>
+</header><div class="search-dropdown desktop">
+        <div id="search-dropdown-desktop"></div>
+    </div>
+    <div class="search-dropdown mobile">
+        <div id="search-dropdown-mobile"></div>
+    </div><main class="main">
+                <div class="container"><div class="toc" id="toc-auto">
+            <h2 class="toc-title">目录</h2>
+            <div class="toc-content" id="toc-content-auto"></div>
+        </div><article class="page single"><h1 class="single-title animate__animated animate__flipInX">SwiftUI 自定义布局协议：用 Layout 构建弹性 UI 容器</h1><div class="post-meta">
+            <div class="post-meta-line"><span class="post-author"><a href="https://www.ithome.me/" title="Author" target="_blank" rel="noopener noreferrer author" class="author"><i class="fas fa-user-circle fa-fw" aria-hidden="true"></i>Simon</a>
+</span>&nbsp;<span class="post-category">收录于 <a href="/categories/ios/"><i class="far fa-folder fa-fw" aria-hidden="true"></i>Ios</a></span></div>
+            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw" aria-hidden="true"></i>&nbsp;<time datetime="2026-07-28">2026-07-28</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden="true"></i>&nbsp;约 1244 字&nbsp;
+                <i class="far fa-clock fa-fw" aria-hidden="true"></i>&nbsp;预计阅读 3 分钟&nbsp;</div>
+        </div><div class="details toc" id="toc-static"  data-kept="true">
+                <div class="details-summary toc-title">
+                    <span>目录</span>
+                    <span><i class="details-icon fas fa-angle-right" aria-hidden="true"></i></span>
+                </div>
+                <div class="details-content toc-content" id="toc-content-static"><nav id="TableOfContents">
+  <ul>
+    <li><a href="#layout-协议的核心思想">Layout 协议的核心思想</a></li>
+    <li><a href="#实战实现等高自适应标签云">实战：实现等高自适应标签云</a></li>
+    <li><a href="#性能优化缓存机制">性能优化：缓存机制</a></li>
+    <li><a href="#layout-vs-geometryreader">Layout vs GeometryReader</a></li>
+    <li><a href="#结语">结语</a></li>
+  </ul>
+</nav></div>
+            </div><div class="content" id="content"><p>从 iOS 16 开始，SwiftUI 引入了 <code>Layout</code> 协议，让开发者可以自定义视图的排列方式，不再局限于 <code>HStack</code>、<code>VStack</code> 和 <code>ZStack</code> 这三大件。这篇文章带你从零实现一个实用的自定义布局容器。</p>
+<h2 id="layout-协议的核心思想">Layout 协议的核心思想</h2>
+<p><code>Layout</code> 协议只有两个必需方法：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-swift" data-lang="swift"><span class="line"><span class="cl"><span class="kd">protocol</span> <span class="nc">Layout</span><span class="p">:</span> <span class="n">Animatable</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="kd">func</span> <span class="nf">sizeThatFits</span><span class="p">(</span><span class="n">proposal</span><span class="p">:</span> <span class="n">ProposedViewSize</span><span class="p">,</span> <span class="n">subviews</span><span class="p">:</span> <span class="n">Subviews</span><span class="p">,</span> <span class="n">cache</span><span class="p">:</span> <span class="kr">inout</span> <span class="n">Cache</span><span class="p">)</span> <span class="p">-&gt;</span> <span class="n">CGSize</span>
+</span></span><span class="line"><span class="cl">    <span class="kd">func</span> <span class="nf">placeSubviews</span><span class="p">(</span><span class="k">in</span> <span class="n">bounds</span><span class="p">:</span> <span class="n">CGRect</span><span class="p">,</span> <span class="n">proposal</span><span class="p">:</span> <span class="n">ProposedViewSize</span><span class="p">,</span> <span class="n">subviews</span><span class="p">:</span> <span class="n">Subviews</span><span class="p">,</span> <span class="n">cache</span><span class="p">:</span> <span class="kr">inout</span> <span class="n">Cache</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p><code>sizeThatFits</code> 决定容器整体要占多大空间，<code>placeSubviews</code> 决定每个子视图放在什么位置。SwiftUI 的布局系统会先问&quot;你要多大？&quot;，然后告诉你&quot;给你这么大地方，去摆吧&quot;。</p>
+<blockquote>
+<p><strong>小贴士</strong>：<code>ProposedViewSize</code> 是父视图给你的建议尺寸，可以是固定值、<code>.infinity</code>（尽可能大）或 <code>.unspecified</code>（不限制）。<code>Subviews</code> 包含了所有子视图的布局信息，你可以遍历它们获取每个子视图的尺寸需求。</p>
+</blockquote>
+<h2 id="实战实现等高自适应标签云">实战：实现等高自适应标签云</h2>
+<p>前端常见的标签云效果——标签从左到右排列，一行排不下自动换行，且每一行高度相同。用 <code>Layout</code> 协议实现优雅又高效：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span><span class="lnt">42
+</span><span class="lnt">43
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-swift" data-lang="swift"><span class="line"><span class="cl"><span class="kd">struct</span> <span class="nc">EqualHeightFlowLayout</span><span class="p">:</span> <span class="n">Layout</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="kd">var</span> <span class="nv">spacing</span><span class="p">:</span> <span class="n">CGFloat</span> <span class="p">=</span> <span class="mi">8</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="kd">func</span> <span class="nf">sizeThatFits</span><span class="p">(</span><span class="n">proposal</span><span class="p">:</span> <span class="n">ProposedViewSize</span><span class="p">,</span> <span class="n">subviews</span><span class="p">:</span> <span class="n">Subviews</span><span class="p">,</span> <span class="n">cache</span><span class="p">:</span> <span class="kr">inout</span> <span class="p">())</span> <span class="p">-&gt;</span> <span class="n">CGSize</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="k">guard</span> <span class="o">!</span><span class="n">subviews</span><span class="p">.</span><span class="bp">isEmpty</span> <span class="k">else</span> <span class="p">{</span> <span class="k">return</span> <span class="p">.</span><span class="n">zero</span> <span class="p">}</span>
+</span></span><span class="line"><span class="cl">        <span class="kd">let</span> <span class="nv">maxWidth</span> <span class="p">=</span> <span class="n">proposal</span><span class="p">.</span><span class="n">width</span> <span class="p">??</span> <span class="p">.</span><span class="n">infinity</span>
+</span></span><span class="line"><span class="cl">        <span class="kd">var</span> <span class="nv">height</span><span class="p">:</span> <span class="n">CGFloat</span> <span class="p">=</span> <span class="mi">0</span>
+</span></span><span class="line"><span class="cl">        <span class="kd">var</span> <span class="nv">rowWidth</span><span class="p">:</span> <span class="n">CGFloat</span> <span class="p">=</span> <span class="mi">0</span>
+</span></span><span class="line"><span class="cl">        <span class="kd">var</span> <span class="nv">rowHeight</span><span class="p">:</span> <span class="n">CGFloat</span> <span class="p">=</span> <span class="mi">0</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">        <span class="k">for</span> <span class="n">view</span> <span class="k">in</span> <span class="n">subviews</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">            <span class="kd">let</span> <span class="nv">size</span> <span class="p">=</span> <span class="n">view</span><span class="p">.</span><span class="n">sizeThatFits</span><span class="p">(.</span><span class="n">unspecified</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">            <span class="k">if</span> <span class="n">rowWidth</span> <span class="o">+</span> <span class="n">size</span><span class="p">.</span><span class="n">width</span> <span class="o">+</span> <span class="n">spacing</span> <span class="o">&gt;</span> <span class="n">maxWidth</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">                <span class="n">height</span> <span class="o">+=</span> <span class="n">rowHeight</span> <span class="o">+</span> <span class="n">spacing</span>
+</span></span><span class="line"><span class="cl">                <span class="n">rowWidth</span> <span class="p">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">rowHeight</span> <span class="p">=</span> <span class="mi">0</span>
+</span></span><span class="line"><span class="cl">            <span class="p">}</span>
+</span></span><span class="line"><span class="cl">            <span class="n">rowWidth</span> <span class="o">+=</span> <span class="n">size</span><span class="p">.</span><span class="n">width</span> <span class="o">+</span> <span class="n">spacing</span>
+</span></span><span class="line"><span class="cl">            <span class="n">rowHeight</span> <span class="p">=</span> <span class="bp">max</span><span class="p">(</span><span class="n">rowHeight</span><span class="p">,</span> <span class="n">size</span><span class="p">.</span><span class="n">height</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="p">}</span>
+</span></span><span class="line"><span class="cl">        <span class="n">height</span> <span class="o">+=</span> <span class="n">rowHeight</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="n">CGSize</span><span class="p">(</span><span class="n">width</span><span class="p">:</span> <span class="n">maxWidth</span><span class="p">,</span> <span class="n">height</span><span class="p">:</span> <span class="n">height</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="kd">func</span> <span class="nf">placeSubviews</span><span class="p">(</span><span class="k">in</span> <span class="n">bounds</span><span class="p">:</span> <span class="n">CGRect</span><span class="p">,</span> <span class="n">proposal</span><span class="p">:</span> <span class="n">ProposedViewSize</span><span class="p">,</span> <span class="n">subviews</span><span class="p">:</span> <span class="n">Subviews</span><span class="p">,</span> <span class="n">cache</span><span class="p">:</span> <span class="kr">inout</span> <span class="p">())</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="kd">let</span> <span class="nv">maxWidth</span> <span class="p">=</span> <span class="n">bounds</span><span class="p">.</span><span class="n">width</span>
+</span></span><span class="line"><span class="cl">        <span class="kd">var</span> <span class="nv">origin</span> <span class="p">=</span> <span class="n">CGPoint</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">bounds</span><span class="p">.</span><span class="n">minX</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="n">bounds</span><span class="p">.</span><span class="n">minY</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="kd">var</span> <span class="nv">rowHeight</span><span class="p">:</span> <span class="n">CGFloat</span> <span class="p">=</span> <span class="mi">0</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">        <span class="k">for</span> <span class="n">view</span> <span class="k">in</span> <span class="n">subviews</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">            <span class="kd">let</span> <span class="nv">size</span> <span class="p">=</span> <span class="n">view</span><span class="p">.</span><span class="n">sizeThatFits</span><span class="p">(.</span><span class="n">unspecified</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">            <span class="k">if</span> <span class="n">origin</span><span class="p">.</span><span class="n">x</span> <span class="o">+</span> <span class="n">size</span><span class="p">.</span><span class="n">width</span> <span class="o">&gt;</span> <span class="n">maxWidth</span> <span class="o">+</span> <span class="n">bounds</span><span class="p">.</span><span class="n">minX</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">                <span class="n">origin</span><span class="p">.</span><span class="n">x</span> <span class="p">=</span> <span class="n">bounds</span><span class="p">.</span><span class="n">minX</span>
+</span></span><span class="line"><span class="cl">                <span class="n">origin</span><span class="p">.</span><span class="n">y</span> <span class="o">+=</span> <span class="n">rowHeight</span> <span class="o">+</span> <span class="n">spacing</span>
+</span></span><span class="line"><span class="cl">                <span class="n">rowHeight</span> <span class="p">=</span> <span class="mi">0</span>
+</span></span><span class="line"><span class="cl">            <span class="p">}</span>
+</span></span><span class="line"><span class="cl">            <span class="kd">let</span> <span class="nv">alignedH</span> <span class="p">=</span> <span class="n">rowHeight</span> <span class="p">==</span> <span class="mi">0</span> <span class="p">?</span> <span class="n">size</span><span class="p">.</span><span class="n">height</span> <span class="p">:</span> <span class="n">rowHeight</span>
+</span></span><span class="line"><span class="cl">            <span class="n">view</span><span class="p">.</span><span class="n">place</span><span class="p">(</span><span class="n">at</span><span class="p">:</span> <span class="n">CGPoint</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">origin</span><span class="p">.</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="n">origin</span><span class="p">.</span><span class="n">y</span><span class="p">),</span>
+</span></span><span class="line"><span class="cl">                       <span class="n">proposal</span><span class="p">:</span> <span class="n">ProposedViewSize</span><span class="p">(</span><span class="n">width</span><span class="p">:</span> <span class="n">size</span><span class="p">.</span><span class="n">width</span><span class="p">,</span> <span class="n">height</span><span class="p">:</span> <span class="n">alignedH</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl">            <span class="n">origin</span><span class="p">.</span><span class="n">x</span> <span class="o">+=</span> <span class="n">size</span><span class="p">.</span><span class="n">width</span> <span class="o">+</span> <span class="n">spacing</span>
+</span></span><span class="line"><span class="cl">            <span class="n">rowHeight</span> <span class="p">=</span> <span class="bp">max</span><span class="p">(</span><span class="n">rowHeight</span><span class="p">,</span> <span class="n">size</span><span class="p">.</span><span class="n">height</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p><strong>这段代码做了什么</strong>：<code>sizeThatFits</code> 遍历所有子视图模拟换行，计算出容器总高度。<code>placeSubviews</code> 按同样逻辑将子视图摆放到对应位置，并强制同一行所有子视图高度一致。</p>
+<p>使用起来非常简单直观：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-swift" data-lang="swift"><span class="line"><span class="cl"><span class="kd">struct</span> <span class="nc">TagCloudView</span><span class="p">:</span> <span class="n">View</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="kd">let</span> <span class="nv">tags</span> <span class="p">=</span> <span class="p">[</span><span class="s">&#34;SwiftUI&#34;</span><span class="p">,</span> <span class="s">&#34;iOS 16&#34;</span><span class="p">,</span> <span class="s">&#34;Layout 协议&#34;</span><span class="p">,</span> <span class="s">&#34;自定义布局&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                <span class="s">&#34;响应式设计&#34;</span><span class="p">,</span> <span class="s">&#34;Swift 5.7&#34;</span><span class="p">,</span> <span class="s">&#34;WWDC 2022&#34;</span><span class="p">,</span> <span class="s">&#34;Xcode&#34;</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl">    <span class="kd">var</span> <span class="nv">body</span><span class="p">:</span> <span class="n">some</span> <span class="n">View</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="n">EqualHeightFlowLayout</span><span class="p">(</span><span class="n">spacing</span><span class="p">:</span> <span class="mi">10</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">            <span class="n">ForEach</span><span class="p">(</span><span class="n">tags</span><span class="p">,</span> <span class="n">id</span><span class="p">:</span> <span class="err">\</span><span class="p">.</span><span class="kc">self</span><span class="p">)</span> <span class="p">{</span> <span class="n">tag</span> <span class="k">in</span>
+</span></span><span class="line"><span class="cl">                <span class="n">Text</span><span class="p">(</span><span class="n">tag</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">                    <span class="p">.</span><span class="n">font</span><span class="p">(.</span><span class="n">caption</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">                    <span class="p">.</span><span class="n">padding</span><span class="p">(.</span><span class="n">horizontal</span><span class="p">,</span> <span class="mi">12</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">                    <span class="p">.</span><span class="n">padding</span><span class="p">(.</span><span class="n">vertical</span><span class="p">,</span> <span class="mi">6</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">                    <span class="p">.</span><span class="n">background</span><span class="p">(</span><span class="n">Color</span><span class="p">.</span><span class="n">blue</span><span class="p">.</span><span class="n">opacity</span><span class="p">(</span><span class="mf">0.1</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl">                    <span class="p">.</span><span class="n">cornerRadius</span><span class="p">(</span><span class="mi">8</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">            <span class="p">}</span>
+</span></span><span class="line"><span class="cl">        <span class="p">}</span>
+</span></span><span class="line"><span class="cl">        <span class="p">.</span><span class="n">padding</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h2 id="性能优化缓存机制">性能优化：缓存机制</h2>
+<p>如果涉及大量子视图，可以实现 <code>Cache</code> 关联类型来缓存中间结果：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span><span class="lnt">7
+</span><span class="lnt">8
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-swift" data-lang="swift"><span class="line"><span class="cl"><span class="kd">struct</span> <span class="nc">CachedFlowLayout</span><span class="p">:</span> <span class="n">Layout</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="kd">struct</span> <span class="nc">Cache</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="kd">let</span> <span class="nv">sizes</span><span class="p">:</span> <span class="p">[</span><span class="n">CGSize</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="kd">func</span> <span class="nf">makeCache</span><span class="p">(</span><span class="n">subviews</span><span class="p">:</span> <span class="n">Subviews</span><span class="p">)</span> <span class="p">-&gt;</span> <span class="n">Cache</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="n">Cache</span><span class="p">(</span><span class="n">sizes</span><span class="p">:</span> <span class="n">subviews</span><span class="p">.</span><span class="bp">map</span> <span class="p">{</span> <span class="nv">$0</span><span class="p">.</span><span class="n">sizeThatFits</span><span class="p">(.</span><span class="n">unspecified</span><span class="p">)</span> <span class="p">})</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p><strong>为什么需要缓存</strong>：每次布局变化（如旋转屏幕）都会调用两个必需方法，缓存能避免重复计算每个子视图的尺寸。</p>
+<h2 id="layout-vs-geometryreader">Layout vs GeometryReader</h2>
+<table>
+  <thead>
+      <tr>
+          <th>方案</th>
+          <th>优势</th>
+          <th>劣势</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td><code>Layout</code> 协议</td>
+          <td>只计算一次布局、支持动画、不破坏布局优先级</td>
+          <td>需 iOS 16+</td>
+      </tr>
+      <tr>
+          <td><code>GeometryReader</code></td>
+          <td>兼容旧版本</td>
+          <td>撑满父视图、破坏惰性容器性能</td>
+      </tr>
+  </tbody>
+</table>
+<blockquote>
+<p><strong>怎么选</strong>：如果目标版本 &gt;= iOS 16，优先用 <code>Layout</code> 协议。需兼容 iOS 15 及以下时用 <code>GeometryReader</code>。</p>
+</blockquote>
+<p><strong>为什么 GeometryReader 撑满父视图</strong>：<code>GeometryReader</code> 本身是一个 View，遵循 SwiftUI 标准布局规则——无约束时会尽可能占用全部可用空间。而 <code>Layout</code> 协议返回你指定的尺寸，不影响父视图。</p>
+<h2 id="结语">结语</h2>
+<p><code>Layout</code> 协议是 SwiftUI 布局系统的一次重要开放——它把框架内置的布局能力暴露给了开发者。用 <code>Layout</code> 协议实现自定义容器，代码更直观、性能更好、动画更自然。下次遇到非标准布局需求时，不妨写一个自定义的 <code>Layout</code> 试试。</p>
+</div><div class="post-footer" id="post-footer">
+    <div class="post-info">
+        <div class="post-info-line">
+            <div class="post-info-mod">
+                <span>更新于 2026-07-27&nbsp;<a class="git-hash" href="https://github.com/cikichen/hugo-sync/commit/9821fac2913886d534025171820fe66a17364e1d" target="_blank" title="commit by Hermes Bot(hermes@ithome.me) 9821fac2913886d534025171820fe66a17364e1d: Auto: 2026-07-28 - SwiftUI Layout自定义布局协议">
+                                    <i class="fas fa-hashtag fa-fw" aria-hidden="true"></i>9821fac2</a></span>
+            </div></div>
+        <div class="post-info-line">
+            <div class="post-info-md"></div>
+            <div class="post-info-share">
+                <span><a href="javascript:void(0);" title="分享到 Twitter" data-sharer="twitter" data-url="https://www.ithome.me/post/2026/07/28/swiftui-layout-custom-container/" data-title="SwiftUI 自定义布局协议：用 Layout 构建弹性 UI 容器" data-via="ChenCiki" data-hashtags="SwiftUI,iOS,Layout,自定义布局"><i class="fab fa-twitter fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="分享到 Linkedin" data-sharer="linkedin" data-url="https://www.ithome.me/post/2026/07/28/swiftui-layout-custom-container/"><i class="fab fa-linkedin fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="分享到 微博" data-sharer="weibo" data-url="https://www.ithome.me/post/2026/07/28/swiftui-layout-custom-container/" data-title="SwiftUI 自定义布局协议：用 Layout 构建弹性 UI 容器" data-ralateuid="xxx"><i class="fab fa-weibo fa-fw" aria-hidden="true"></i></a></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="post-info-more">
+        <section class="post-tags"><i class="fas fa-tags fa-fw" aria-hidden="true"></i>&nbsp;<a href="/tags/swiftui/">SwiftUI</a>,&nbsp;<a href="/tags/ios/">Ios</a>,&nbsp;<a href="/tags/layout/">Layout</a>,&nbsp;<a href="/tags/%E8%87%AA%E5%AE%9A%E4%B9%89%E5%B8%83%E5%B1%80/">自定义布局</a></section>
+        <section>
+            <span><a href="javascript:void(0);" onclick="window.history.back();">返回</a></span>&nbsp;|&nbsp;<span><a href="/">主页</a></span>
+        </section>
+    </div>
+
+    <div class="post-nav"><a href="/post/2026/07/27/css-container-queries-practical-guide/" class="prev" rel="prev" title="CSS Container Queries 实战：告别媒体查询，实现真正组件级的响应式设计"><i class="fas fa-angle-left fa-fw" aria-hidden="true"></i>CSS Container Queries 实战：告别媒体查询，实现真正组件级的响应式设计</a>
+            <a href="/post/2026/07/28/github-trending-weekly/" class="next" rel="next" title="GitHub Trending 周报 - 2026-07-28">GitHub Trending 周报 - 2026-07-28<i class="fas fa-angle-right fa-fw" aria-hidden="true"></i></a></div>
+</div>
+<div id="comments"><div id="gitalk" class="comment"></div><noscript>
+                Please enable JavaScript to view the comments powered by <a href="https://github.com/gitalk/gitalk"></a>Gitalk</a>.
+            </noscript></div></article></div>
+            </main><footer class="footer">
+        <div class="footer-container"><div class="footer-line" itemscope itemtype="http://schema.org/CreativeWork"><i class="far fa-copyright fa-fw" aria-hidden="true"></i><span itemprop="copyrightYear">2011 - 2026</span><span class="author" itemprop="copyrightHolder">&nbsp;<a href="https://www.ithome.me/" target="_blank">Simon Chen</a></span>&nbsp;|&nbsp;<span class="license"><a rel="license external nofollow noopener noreferrer" href="https://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank">CC BY-NC-ND 4.0</a></span></div>
+        </div>
+    </footer></div>
+
+        <div id="fixed-buttons"><a href="#" id="back-to-top" class="fixed-button" title="回到顶部">
+                <i class="fas fa-arrow-up fa-fw" aria-hidden="true"></i>
+            </a><a href="#" id="view-comments" class="fixed-button" title="查看评论">
+                <i class="fas fa-comment fa-fw" aria-hidden="true"></i>
+            </a>
+        </div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1.7.2/dist/gitalk.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/css/lightgallery-bundle.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/katex.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/copy-tex.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.css"><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/gitalk@1.7.2/dist/gitalk.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/autocomplete.js@0.38.1/dist/autocomplete.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lunr@2.3.9/lunr.min.js"></script><script type="text/javascript" src="/lib/lunr/lunr.stemmer.support.min.js"></script><script type="text/javascript" src="/lib/lunr/lunr.zh.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lazysizes@5.3.1/lazysizes.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/lightgallery.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/plugins/thumbnail/lg-thumbnail.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/plugins/zoom/lg-zoom.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/clipboard@2.0.11/dist/clipboard.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/sharer.js@0.5.1/sharer.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/katex.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/auto-render.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/copy-tex.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/mhchem.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.js"></script><script type="text/javascript">window.config={"code":{"copyTitle":"复制到剪贴板","maxShownLines":50},"comment":{"gitalk":{"admin":["cikichen"],"clientID":"be0f52370ed1285b6c7c","clientSecret":"734a7d8d0ded346ca7a3d565d57de3f8eeb2850b","id":"2026-07-28T00:00:00Z","owner":"cikichen","repo":"gitalk","title":"SwiftUI 自定义布局协议：用 Layout 构建弹性 UI 容器"}},"cookieconsent":{"content":{"dismiss":"我知道了","link":"了解更多","message":"本网站使用 Cookies 来改善您的浏览体验."},"enable":true,"palette":{"button":{"background":"#f0f0f0"},"popup":{"background":"#1aa3ff"}},"theme":"edgeless"},"lightgallery":true,"math":{"delimiters":[{"display":true,"left":"$$","right":"$$"},{"display":true,"left":"\\[","right":"\\]"},{"display":true,"left":"\\begin{equation}","right":"\\end{equation}"},{"display":true,"left":"\\begin{equation*}","right":"\\end{equation*}"},{"display":true,"left":"\\begin{align}","right":"\\end{align}"},{"display":true,"left":"\\begin{align*}","right":"\\end{align*}"},{"display":true,"left":"\\begin{alignat}","right":"\\end{alignat}"},{"display":true,"left":"\\begin{alignat*}","right":"\\end{alignat*}"},{"display":true,"left":"\\begin{gather}","right":"\\end{gather}"},{"display":true,"left":"\\begin{CD}","right":"\\end{CD}"},{"display":false,"left":"$","right":"$"},{"display":false,"left":"\\(","right":"\\)"}],"strict":false},"search":{"highlightTag":"em","lunrIndexURL":"/index.json","lunrLanguageCode":"zh","lunrSegmentitURL":"/lib/lunr/lunr.segmentit.js","maxResultLength":10,"noResultsFound":"没有找到结果","snippetLength":50,"type":"lunr"}};</script><script type="text/javascript" src="/js/theme.min.js"></script></body>
+</html>
