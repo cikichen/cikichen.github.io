@@ -5,24 +5,24 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="robots" content="noodp" />
         <title>延迟队列的四种实现方案：从数据库轮询到 Redis 时间轮 - 编程心语</title><meta name="Description" content="订单超时关闭、优惠券到期提醒、定时消息推送——延迟任务无处不在。本文从最简单的数据库轮询开始，逐步演进到 Redis ZSet、Lua 脚本原子操作和分层时间轮，对比四种方案的优缺点与适用场景。"><meta property="og:url" content="https://www.ithome.me/post/2026/07/12/delay-queue-four-approaches/">
-  <meta property="og:site_name" content="编程心语">
-  <meta property="og:title" content="延迟队列的四种实现方案：从数据库轮询到 Redis 时间轮">
-  <meta property="og:description" content="订单超时关闭、优惠券到期提醒、定时消息推送——延迟任务无处不在。本文从最简单的数据库轮询开始，逐步演进到 Redis ZSet、Lua 脚本原子操作和分层时间轮，对比四种方案的优缺点与适用场景。">
-  <meta property="og:locale" content="zh_CN">
-  <meta property="og:type" content="article">
-    <meta property="article:section" content="posts">
-    <meta property="article:published_time" content="2026-07-12T08:00:00+08:00">
-    <meta property="article:modified_time" content="2026-07-19T08:32:30+08:00">
-    <meta property="article:tag" content="延迟队列">
-    <meta property="article:tag" content="Redis">
-    <meta property="article:tag" content="架构设计">
-    <meta property="article:tag" content="Go">
-    <meta property="article:tag" content="后端">
+	<meta property="og:site_name" content="编程心语">
+	<meta property="og:title" content="延迟队列的四种实现方案：从数据库轮询到 Redis 时间轮">
+	<meta property="og:description" content="订单超时关闭、优惠券到期提醒、定时消息推送——延迟任务无处不在。本文从最简单的数据库轮询开始，逐步演进到 Redis ZSet、Lua 脚本原子操作和分层时间轮，对比四种方案的优缺点与适用场景。">
+	<meta property="og:locale" content="zh_CN">
+	<meta property="og:type" content="article">
+		<meta property="article:section" content="posts">
+		<meta property="article:published_time" content="2026-07-12T08:00:00+08:00">
+		<meta property="article:modified_time" content="2026-07-28T19:11:15+00:00">
+		<meta property="article:tag" content="延迟队列">
+		<meta property="article:tag" content="Redis">
+		<meta property="article:tag" content="架构设计">
+		<meta property="article:tag" content="Go">
+		<meta property="article:tag" content="后端">
 
-  <meta name="twitter:card" content="summary">
-  <meta name="twitter:title" content="延迟队列的四种实现方案：从数据库轮询到 Redis 时间轮">
-  <meta name="twitter:description" content="订单超时关闭、优惠券到期提醒、定时消息推送——延迟任务无处不在。本文从最简单的数据库轮询开始，逐步演进到 Redis ZSet、Lua 脚本原子操作和分层时间轮，对比四种方案的优缺点与适用场景。">
-      <meta name="twitter:site" content="@ChenCiki">
+	<meta name="twitter:card" content="summary">
+	<meta name="twitter:title" content="延迟队列的四种实现方案：从数据库轮询到 Redis 时间轮">
+	<meta name="twitter:description" content="订单超时关闭、优惠券到期提醒、定时消息推送——延迟任务无处不在。本文从最简单的数据库轮询开始，逐步演进到 Redis ZSet、Lua 脚本原子操作和分层时间轮，对比四种方案的优缺点与适用场景。">
+			<meta name="twitter:site" content="@ChenCiki">
 <meta name="application-name" content="编程心语">
 <meta name="apple-mobile-web-app-title" content="编程心语"><meta name="theme-color" content="#ffffff"><meta name="msapplication-TileColor" content="#da532c"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
         <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
@@ -36,7 +36,7 @@
             "@type": "WebPage",
             "@id": "https:\/\/www.ithome.me\/post\/2026\/07\/12\/delay-queue-four-approaches\/"
         },"image": ["https:\/\/www.ithome.me\/cover.png"],"genre": "posts","keywords": "延迟队列, Redis, 架构设计, Go, 后端","wordcount":  2214 ,
-        "url": "https:\/\/www.ithome.me\/post\/2026\/07\/12\/delay-queue-four-approaches\/","datePublished": "2026-07-12T08:00:00+08:00","dateModified": "2026-07-19T08:32:30+08:00","publisher": {
+        "url": "https:\/\/www.ithome.me\/post\/2026\/07\/12\/delay-queue-four-approaches\/","datePublished": "2026-07-12T08:00:00+08:00","dateModified": "2026-07-28T19:11:15+00:00","publisher": {
             "@type": "Organization",
             "name": "SimonChen","logo": "https:\/\/www.ithome.me\/logo.png"},"author": {
                 "@type": "Person",
@@ -542,50 +542,50 @@
 <p><strong>适用场景</strong>：超大规模延迟任务、内存可接受丢失、追求极致性能。</p>
 <h2 id="选型对比">选型对比</h2>
 <table>
-  <thead>
-      <tr>
-          <th>方案</th>
-          <th>精度</th>
-          <th>吞吐量</th>
-          <th>可靠性</th>
-          <th>实现复杂度</th>
-          <th>适用场景</th>
-      </tr>
-  </thead>
-  <tbody>
-      <tr>
-          <td>数据库轮询</td>
-          <td>秒级</td>
-          <td>低</td>
-          <td>高</td>
-          <td>低</td>
-          <td>任务少、强一致</td>
-      </tr>
-      <tr>
-          <td>Redis ZSet</td>
-          <td>毫秒级</td>
-          <td>高</td>
-          <td>中</td>
-          <td>中</td>
-          <td>通用首选</td>
-      </tr>
-      <tr>
-          <td>Redis + Lua</td>
-          <td>毫秒级</td>
-          <td>很高</td>
-          <td>中</td>
-          <td>中高</td>
-          <td>超高并发</td>
-      </tr>
-      <tr>
-          <td>时间轮</td>
-          <td>tick级</td>
-          <td>极高</td>
-          <td>低</td>
-          <td>高</td>
-          <td>海量任务、内存态</td>
-      </tr>
-  </tbody>
+	<thead>
+			<tr>
+					<th>方案</th>
+					<th>精度</th>
+					<th>吞吐量</th>
+					<th>可靠性</th>
+					<th>实现复杂度</th>
+					<th>适用场景</th>
+			</tr>
+	</thead>
+	<tbody>
+			<tr>
+					<td>数据库轮询</td>
+					<td>秒级</td>
+					<td>低</td>
+					<td>高</td>
+					<td>低</td>
+					<td>任务少、强一致</td>
+			</tr>
+			<tr>
+					<td>Redis ZSet</td>
+					<td>毫秒级</td>
+					<td>高</td>
+					<td>中</td>
+					<td>中</td>
+					<td>通用首选</td>
+			</tr>
+			<tr>
+					<td>Redis + Lua</td>
+					<td>毫秒级</td>
+					<td>很高</td>
+					<td>中</td>
+					<td>中高</td>
+					<td>超高并发</td>
+			</tr>
+			<tr>
+					<td>时间轮</td>
+					<td>tick级</td>
+					<td>极高</td>
+					<td>低</td>
+					<td>高</td>
+					<td>海量任务、内存态</td>
+			</tr>
+	</tbody>
 </table>
 <h2 id="实践建议">实践建议</h2>
 <ol>
@@ -610,8 +610,8 @@
     <div class="post-info">
         <div class="post-info-line">
             <div class="post-info-mod">
-                <span>更新于 2026-07-19&nbsp;<a class="git-hash" href="https://github.com/cikichen/hugo-sync/commit/e02f299cb3d1c65a7ac989e21b702538821f2a59" target="_blank" title="commit by cikichen(cikichen@github.com) e02f299cb3d1c65a7ac989e21b702538821f2a59: Auto: 2026-07-19 - 布隆过滤器实战">
-                                    <i class="fas fa-hashtag fa-fw" aria-hidden="true"></i>e02f299c</a></span>
+                <span>更新于 2026-07-28&nbsp;<a class="git-hash" href="https://github.com/cikichen/hugo-sync/commit/5fa963e774ff6b6679cc076332d74325054e2345" target="_blank" title="commit by Hermes Bot(hermes@ithome.me) 5fa963e774ff6b6679cc076332d74325054e2345: Auto: 2026-07-29 - SwiftUI 中 @Binding 的进阶用法：自定义 Binding 与双向数据流">
+                                    <i class="fas fa-hashtag fa-fw" aria-hidden="true"></i>5fa963e</a></span>
             </div></div>
         <div class="post-info-line">
             <div class="post-info-md"></div>

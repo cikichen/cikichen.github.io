@@ -5,23 +5,23 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="robots" content="noodp" />
         <title>Go 并发原语实战：sync.Pool、sync.Once 与 sync.Cond 的正确打开方式 - 编程心语</title><meta name="Description" content="深入 Go sync 包的三个高价值原语：sync.Pool 复用对象降低 GC 压力，sync.Once 实现安全的延迟初始化，sync.Cond 精准唤醒等待协程。每个原语配完整代码示例与避坑指南。"><meta property="og:url" content="https://www.ithome.me/post/2026/07/21/go-sync-primitives-pool-once-cond/">
-  <meta property="og:site_name" content="编程心语">
-  <meta property="og:title" content="Go 并发原语实战：sync.Pool、sync.Once 与 sync.Cond 的正确打开方式">
-  <meta property="og:description" content="深入 Go sync 包的三个高价值原语：sync.Pool 复用对象降低 GC 压力，sync.Once 实现安全的延迟初始化，sync.Cond 精准唤醒等待协程。每个原语配完整代码示例与避坑指南。">
-  <meta property="og:locale" content="zh_CN">
-  <meta property="og:type" content="article">
-    <meta property="article:section" content="posts">
-    <meta property="article:published_time" content="2026-07-21T08:00:00+08:00">
-    <meta property="article:modified_time" content="2026-07-21T08:33:03+08:00">
-    <meta property="article:tag" content="Go">
-    <meta property="article:tag" content="并发编程">
-    <meta property="article:tag" content="Sync">
-    <meta property="article:tag" content="性能优化">
+	<meta property="og:site_name" content="编程心语">
+	<meta property="og:title" content="Go 并发原语实战：sync.Pool、sync.Once 与 sync.Cond 的正确打开方式">
+	<meta property="og:description" content="深入 Go sync 包的三个高价值原语：sync.Pool 复用对象降低 GC 压力，sync.Once 实现安全的延迟初始化，sync.Cond 精准唤醒等待协程。每个原语配完整代码示例与避坑指南。">
+	<meta property="og:locale" content="zh_CN">
+	<meta property="og:type" content="article">
+		<meta property="article:section" content="posts">
+		<meta property="article:published_time" content="2026-07-21T08:00:00+08:00">
+		<meta property="article:modified_time" content="2026-07-28T19:11:15+00:00">
+		<meta property="article:tag" content="Go">
+		<meta property="article:tag" content="并发编程">
+		<meta property="article:tag" content="Sync">
+		<meta property="article:tag" content="性能优化">
 
-  <meta name="twitter:card" content="summary">
-  <meta name="twitter:title" content="Go 并发原语实战：sync.Pool、sync.Once 与 sync.Cond 的正确打开方式">
-  <meta name="twitter:description" content="深入 Go sync 包的三个高价值原语：sync.Pool 复用对象降低 GC 压力，sync.Once 实现安全的延迟初始化，sync.Cond 精准唤醒等待协程。每个原语配完整代码示例与避坑指南。">
-      <meta name="twitter:site" content="@ChenCiki">
+	<meta name="twitter:card" content="summary">
+	<meta name="twitter:title" content="Go 并发原语实战：sync.Pool、sync.Once 与 sync.Cond 的正确打开方式">
+	<meta name="twitter:description" content="深入 Go sync 包的三个高价值原语：sync.Pool 复用对象降低 GC 压力，sync.Once 实现安全的延迟初始化，sync.Cond 精准唤醒等待协程。每个原语配完整代码示例与避坑指南。">
+			<meta name="twitter:site" content="@ChenCiki">
 <meta name="application-name" content="编程心语">
 <meta name="apple-mobile-web-app-title" content="编程心语"><meta name="theme-color" content="#ffffff"><meta name="msapplication-TileColor" content="#da532c"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
         <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
@@ -35,7 +35,7 @@
             "@type": "WebPage",
             "@id": "https:\/\/www.ithome.me\/post\/2026\/07\/21\/go-sync-primitives-pool-once-cond\/"
         },"image": ["https:\/\/www.ithome.me\/cover.png"],"genre": "posts","keywords": "Go, 并发编程, sync, 性能优化","wordcount":  1867 ,
-        "url": "https:\/\/www.ithome.me\/post\/2026\/07\/21\/go-sync-primitives-pool-once-cond\/","datePublished": "2026-07-21T08:00:00+08:00","dateModified": "2026-07-21T08:33:03+08:00","publisher": {
+        "url": "https:\/\/www.ithome.me\/post\/2026\/07\/21\/go-sync-primitives-pool-once-cond\/","datePublished": "2026-07-21T08:00:00+08:00","dateModified": "2026-07-28T19:11:15+00:00","publisher": {
             "@type": "Organization",
             "name": "SimonChen","logo": "https:\/\/www.ithome.me\/logo.png"},"author": {
                 "@type": "Person",
@@ -599,42 +599,42 @@
 </div>
 </div><h2 id="选型速查表">选型速查表</h2>
 <table>
-  <thead>
-      <tr>
-          <th>原语</th>
-          <th>核心能力</th>
-          <th>典型场景</th>
-          <th>替代方案</th>
-      </tr>
-  </thead>
-  <tbody>
-      <tr>
-          <td>sync.Pool</td>
-          <td>对象复用</td>
-          <td>高频临时对象分配</td>
-          <td>预分配切片</td>
-      </tr>
-      <tr>
-          <td>sync.Once</td>
-          <td>一次性初始化</td>
-          <td>单例、配置加载</td>
-          <td>init() 函数</td>
-      </tr>
-      <tr>
-          <td>sync.Cond</td>
-          <td>条件等待+唤醒</td>
-          <td>生产者-消费者</td>
-          <td>channel + select</td>
-      </tr>
-  </tbody>
+	<thead>
+			<tr>
+					<th>原语</th>
+					<th>核心能力</th>
+					<th>典型场景</th>
+					<th>替代方案</th>
+			</tr>
+	</thead>
+	<tbody>
+			<tr>
+					<td>sync.Pool</td>
+					<td>对象复用</td>
+					<td>高频临时对象分配</td>
+					<td>预分配切片</td>
+			</tr>
+			<tr>
+					<td>sync.Once</td>
+					<td>一次性初始化</td>
+					<td>单例、配置加载</td>
+					<td>init() 函数</td>
+			</tr>
+			<tr>
+					<td>sync.Cond</td>
+					<td>条件等待+唤醒</td>
+					<td>生产者-消费者</td>
+					<td>channel + select</td>
+			</tr>
+	</tbody>
 </table>
 <p>一句话总结：<strong>Pool 省内存，Once 保初始化，Cond 控时序</strong>。三个原语各自解决一个 channel 不够顺手的问题，配合 goroutine 使用，覆盖了 Go 并发编程 80% 的实战需求。</p>
 </div><div class="post-footer" id="post-footer">
     <div class="post-info">
         <div class="post-info-line">
             <div class="post-info-mod">
-                <span>更新于 2026-07-21&nbsp;<a class="git-hash" href="https://github.com/cikichen/hugo-sync/commit/b53aecea3924d2ba7965269d4d1c794ea2890aa0" target="_blank" title="commit by cikichen(cikichen@github.com) b53aecea3924d2ba7965269d4d1c794ea2890aa0: Auto: 2026-07-21 - Go 并发原语实战 sync.Pool sync.Once sync.Cond">
-                                    <i class="fas fa-hashtag fa-fw" aria-hidden="true"></i>b53aecea</a></span>
+                <span>更新于 2026-07-28&nbsp;<a class="git-hash" href="https://github.com/cikichen/hugo-sync/commit/5fa963e774ff6b6679cc076332d74325054e2345" target="_blank" title="commit by Hermes Bot(hermes@ithome.me) 5fa963e774ff6b6679cc076332d74325054e2345: Auto: 2026-07-29 - SwiftUI 中 @Binding 的进阶用法：自定义 Binding 与双向数据流">
+                                    <i class="fas fa-hashtag fa-fw" aria-hidden="true"></i>5fa963e</a></span>
             </div></div>
         <div class="post-info-line">
             <div class="post-info-md"></div>

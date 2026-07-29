@@ -5,25 +5,25 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="robots" content="noodp" />
         <title>Go 服务优雅退出实战：从信号捕获到连接排空，告别连接中断 - 编程心语</title><meta name="Description" content="深入讲解 Go HTTP 服务的优雅退出机制——信号捕获、连接排空、超时兜底，包含完整可运行的代码示例和生产环境踩坑经验，帮你彻底告别部署时的连接中断问题。"><meta property="og:url" content="https://www.ithome.me/post/2026/07/01/go-graceful-shutdown-signal-handling/">
-  <meta property="og:site_name" content="编程心语">
-  <meta property="og:title" content="Go 服务优雅退出实战：从信号捕获到连接排空，告别连接中断">
-  <meta property="og:description" content="深入讲解 Go HTTP 服务的优雅退出机制——信号捕获、连接排空、超时兜底，包含完整可运行的代码示例和生产环境踩坑经验，帮你彻底告别部署时的连接中断问题。">
-  <meta property="og:locale" content="zh_CN">
-  <meta property="og:type" content="article">
-    <meta property="article:section" content="posts">
-    <meta property="article:published_time" content="2026-07-01T09:00:00+08:00">
-    <meta property="article:modified_time" content="2026-07-01T08:33:17+08:00">
-    <meta property="article:tag" content="Go">
-    <meta property="article:tag" content="优雅退出">
-    <meta property="article:tag" content="Graceful Shutdown">
-    <meta property="article:tag" content="信号处理">
-    <meta property="article:tag" content="HTTP Server">
-    <meta property="article:tag" content="零停机部署">
+	<meta property="og:site_name" content="编程心语">
+	<meta property="og:title" content="Go 服务优雅退出实战：从信号捕获到连接排空，告别连接中断">
+	<meta property="og:description" content="深入讲解 Go HTTP 服务的优雅退出机制——信号捕获、连接排空、超时兜底，包含完整可运行的代码示例和生产环境踩坑经验，帮你彻底告别部署时的连接中断问题。">
+	<meta property="og:locale" content="zh_CN">
+	<meta property="og:type" content="article">
+		<meta property="article:section" content="posts">
+		<meta property="article:published_time" content="2026-07-01T09:00:00+08:00">
+		<meta property="article:modified_time" content="2026-07-28T19:11:15+00:00">
+		<meta property="article:tag" content="Go">
+		<meta property="article:tag" content="优雅退出">
+		<meta property="article:tag" content="Graceful Shutdown">
+		<meta property="article:tag" content="信号处理">
+		<meta property="article:tag" content="HTTP Server">
+		<meta property="article:tag" content="零停机部署">
 
-  <meta name="twitter:card" content="summary">
-  <meta name="twitter:title" content="Go 服务优雅退出实战：从信号捕获到连接排空，告别连接中断">
-  <meta name="twitter:description" content="深入讲解 Go HTTP 服务的优雅退出机制——信号捕获、连接排空、超时兜底，包含完整可运行的代码示例和生产环境踩坑经验，帮你彻底告别部署时的连接中断问题。">
-      <meta name="twitter:site" content="@ChenCiki">
+	<meta name="twitter:card" content="summary">
+	<meta name="twitter:title" content="Go 服务优雅退出实战：从信号捕获到连接排空，告别连接中断">
+	<meta name="twitter:description" content="深入讲解 Go HTTP 服务的优雅退出机制——信号捕获、连接排空、超时兜底，包含完整可运行的代码示例和生产环境踩坑经验，帮你彻底告别部署时的连接中断问题。">
+			<meta name="twitter:site" content="@ChenCiki">
 <meta name="application-name" content="编程心语">
 <meta name="apple-mobile-web-app-title" content="编程心语"><meta name="theme-color" content="#ffffff"><meta name="msapplication-TileColor" content="#da532c"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
         <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
@@ -37,7 +37,7 @@
             "@type": "WebPage",
             "@id": "https:\/\/www.ithome.me\/post\/2026\/07\/01\/go-graceful-shutdown-signal-handling\/"
         },"image": ["https:\/\/www.ithome.me\/cover.png"],"genre": "posts","keywords": "Go, 优雅退出, Graceful Shutdown, 信号处理, HTTP Server, 零停机部署","wordcount":  2203 ,
-        "url": "https:\/\/www.ithome.me\/post\/2026\/07\/01\/go-graceful-shutdown-signal-handling\/","datePublished": "2026-07-01T09:00:00+08:00","dateModified": "2026-07-01T08:33:17+08:00","publisher": {
+        "url": "https:\/\/www.ithome.me\/post\/2026\/07\/01\/go-graceful-shutdown-signal-handling\/","datePublished": "2026-07-01T09:00:00+08:00","dateModified": "2026-07-28T19:11:15+00:00","publisher": {
             "@type": "Organization",
             "name": "SimonChen","logo": "https:\/\/www.ithome.me\/logo.png"},"author": {
                 "@type": "Person",
@@ -529,8 +529,8 @@
     <div class="post-info">
         <div class="post-info-line">
             <div class="post-info-mod">
-                <span>更新于 2026-07-01&nbsp;<a class="git-hash" href="https://github.com/cikichen/hugo-sync/commit/cc27f39e0a8576ec57aa7e11c2703d6c4a41a575" target="_blank" title="commit by cikichen(cikichen@github.com) cc27f39e0a8576ec57aa7e11c2703d6c4a41a575: 发布文章: Go 服务优雅退出实战——从信号捕获到连接排空">
-                                    <i class="fas fa-hashtag fa-fw" aria-hidden="true"></i>cc27f39e</a></span>
+                <span>更新于 2026-07-28&nbsp;<a class="git-hash" href="https://github.com/cikichen/hugo-sync/commit/5fa963e774ff6b6679cc076332d74325054e2345" target="_blank" title="commit by Hermes Bot(hermes@ithome.me) 5fa963e774ff6b6679cc076332d74325054e2345: Auto: 2026-07-29 - SwiftUI 中 @Binding 的进阶用法：自定义 Binding 与双向数据流">
+                                    <i class="fas fa-hashtag fa-fw" aria-hidden="true"></i>5fa963e</a></span>
             </div><div class="post-info-license">
                 <span>https://creativecommons.org/licenses/by-nc-nd/4.0/</span>
             </div></div>

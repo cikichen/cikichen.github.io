@@ -5,24 +5,24 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="robots" content="noodp" />
         <title>推理模式：ReAct与Plan-and-Execute - 编程心语</title><meta name="Description" content="深入对比ReAct和Plan-and-Execute两种核心推理模式，用纯Python实现完整的智能体推理引擎"><meta property="og:url" content="https://www.ithome.me/post/2026/07/05/ai%E6%99%BA%E8%83%BD%E4%BD%93%E5%BC%80%E5%8F%91-%E7%AC%AC6%E7%AB%A0-%E6%8E%A8%E7%90%86%E6%A8%A1%E5%BC%8F/">
-  <meta property="og:site_name" content="编程心语">
-  <meta property="og:title" content="推理模式：ReAct与Plan-and-Execute">
-  <meta property="og:description" content="深入对比ReAct和Plan-and-Execute两种核心推理模式，用纯Python实现完整的智能体推理引擎">
-  <meta property="og:locale" content="zh_CN">
-  <meta property="og:type" content="article">
-    <meta property="article:section" content="posts">
-    <meta property="article:published_time" content="2026-07-05T08:00:00+08:00">
-    <meta property="article:modified_time" content="2026-07-05T08:00:00+08:00">
-    <meta property="article:tag" content="AI Agent">
-    <meta property="article:tag" content="ReAct">
-    <meta property="article:tag" content="Plan-and-Execute">
-    <meta property="article:tag" content="推理模式">
-    <meta property="article:tag" content="AI智能体开发实战">
+	<meta property="og:site_name" content="编程心语">
+	<meta property="og:title" content="推理模式：ReAct与Plan-and-Execute">
+	<meta property="og:description" content="深入对比ReAct和Plan-and-Execute两种核心推理模式，用纯Python实现完整的智能体推理引擎">
+	<meta property="og:locale" content="zh_CN">
+	<meta property="og:type" content="article">
+		<meta property="article:section" content="posts">
+		<meta property="article:published_time" content="2026-07-05T08:00:00+08:00">
+		<meta property="article:modified_time" content="2026-07-05T08:00:00+08:00">
+		<meta property="article:tag" content="AI Agent">
+		<meta property="article:tag" content="ReAct">
+		<meta property="article:tag" content="Plan-and-Execute">
+		<meta property="article:tag" content="推理模式">
+		<meta property="article:tag" content="AI智能体开发实战">
 
-  <meta name="twitter:card" content="summary">
-  <meta name="twitter:title" content="推理模式：ReAct与Plan-and-Execute">
-  <meta name="twitter:description" content="深入对比ReAct和Plan-and-Execute两种核心推理模式，用纯Python实现完整的智能体推理引擎">
-      <meta name="twitter:site" content="@ChenCiki">
+	<meta name="twitter:card" content="summary">
+	<meta name="twitter:title" content="推理模式：ReAct与Plan-and-Execute">
+	<meta name="twitter:description" content="深入对比ReAct和Plan-and-Execute两种核心推理模式，用纯Python实现完整的智能体推理引擎">
+			<meta name="twitter:site" content="@ChenCiki">
 <meta name="application-name" content="编程心语">
 <meta name="apple-mobile-web-app-title" content="编程心语"><meta name="theme-color" content="#ffffff"><meta name="msapplication-TileColor" content="#da532c"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
         <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
@@ -929,70 +929,70 @@
 <h2 id="64-两种模式对比">6.4 两种模式对比</h2>
 <p>为了让你直观感受两种模式的差异，我们用一个详细表格对比：</p>
 <table>
-  <thead>
-      <tr>
-          <th>维度</th>
-          <th>ReAct</th>
-          <th>Plan-and-Execute</th>
-      </tr>
-  </thead>
-  <tbody>
-      <tr>
-          <td><strong>决策方式</strong></td>
-          <td>每步实时决策，走一步看一步</td>
-          <td>先全局规划，再按计划执行</td>
-      </tr>
-      <tr>
-          <td><strong>思考粒度</strong></td>
-          <td>局部（只看当前观察）</td>
-          <td>全局（看整体任务和进度）</td>
-      </tr>
-      <tr>
-          <td><strong>适用任务</strong></td>
-          <td>探索性、动态、不可预测的任务</td>
-          <td>结构化、多步骤、有依赖的任务</td>
-      </tr>
-      <tr>
-          <td><strong>Token消耗</strong></td>
-          <td>较高（每步都要塞完整轨迹）</td>
-          <td>较低（Planner一次性输出，Executor上下文短）</td>
-      </tr>
-      <tr>
-          <td><strong>延迟分布</strong></td>
-          <td>每步延迟相近，单步快</td>
-          <td>首次规划延迟高，后续每步快</td>
-      </tr>
-      <tr>
-          <td><strong>错误恢复</strong></td>
-          <td>基于单步观察纠错，反应快但可能反复</td>
-          <td>基于整体进度重规划，纠错更系统</td>
-      </tr>
-      <tr>
-          <td><strong>循环风险</strong></td>
-          <td>高（容易陷入&quot;再查一下&quot;循环）</td>
-          <td>低（计划有明确终点）</td>
-      </tr>
-      <tr>
-          <td><strong>全局一致性</strong></td>
-          <td>弱（可能走偏）</td>
-          <td>强（有计划约束）</td>
-      </tr>
-      <tr>
-          <td><strong>实现复杂度</strong></td>
-          <td>简单（一个循环）</td>
-          <td>中等（三个组件）</td>
-      </tr>
-      <tr>
-          <td><strong>可解释性</strong></td>
-          <td>Thought链路清晰</td>
-          <td>计划+执行轨迹清晰</td>
-      </tr>
-      <tr>
-          <td><strong>典型场景</strong></td>
-          <td>客服问答、实时检索、交互式调试</td>
-          <td>项目管理、数据分析流水线、复杂研究</td>
-      </tr>
-  </tbody>
+	<thead>
+			<tr>
+					<th>维度</th>
+					<th>ReAct</th>
+					<th>Plan-and-Execute</th>
+			</tr>
+	</thead>
+	<tbody>
+			<tr>
+					<td><strong>决策方式</strong></td>
+					<td>每步实时决策，走一步看一步</td>
+					<td>先全局规划，再按计划执行</td>
+			</tr>
+			<tr>
+					<td><strong>思考粒度</strong></td>
+					<td>局部（只看当前观察）</td>
+					<td>全局（看整体任务和进度）</td>
+			</tr>
+			<tr>
+					<td><strong>适用任务</strong></td>
+					<td>探索性、动态、不可预测的任务</td>
+					<td>结构化、多步骤、有依赖的任务</td>
+			</tr>
+			<tr>
+					<td><strong>Token消耗</strong></td>
+					<td>较高（每步都要塞完整轨迹）</td>
+					<td>较低（Planner一次性输出，Executor上下文短）</td>
+			</tr>
+			<tr>
+					<td><strong>延迟分布</strong></td>
+					<td>每步延迟相近，单步快</td>
+					<td>首次规划延迟高，后续每步快</td>
+			</tr>
+			<tr>
+					<td><strong>错误恢复</strong></td>
+					<td>基于单步观察纠错，反应快但可能反复</td>
+					<td>基于整体进度重规划，纠错更系统</td>
+			</tr>
+			<tr>
+					<td><strong>循环风险</strong></td>
+					<td>高（容易陷入&quot;再查一下&quot;循环）</td>
+					<td>低（计划有明确终点）</td>
+			</tr>
+			<tr>
+					<td><strong>全局一致性</strong></td>
+					<td>弱（可能走偏）</td>
+					<td>强（有计划约束）</td>
+			</tr>
+			<tr>
+					<td><strong>实现复杂度</strong></td>
+					<td>简单（一个循环）</td>
+					<td>中等（三个组件）</td>
+			</tr>
+			<tr>
+					<td><strong>可解释性</strong></td>
+					<td>Thought链路清晰</td>
+					<td>计划+执行轨迹清晰</td>
+			</tr>
+			<tr>
+					<td><strong>典型场景</strong></td>
+					<td>客服问答、实时检索、交互式调试</td>
+					<td>项目管理、数据分析流水线、复杂研究</td>
+			</tr>
+	</tbody>
 </table>
 <p>一个直观的经验：<strong>任务越能预先拆解，越适合 Plan-and-Execute；任务越需要边走边看，越适合 ReAct。</strong> 用我们前面的比喻：如果任务像&quot;出差&quot;有明确目的地和日程，就列行程单（Plan-and-Execute）；如果任务像&quot;在陌生城市找一家还开着的老字号面馆&quot;，就边走边问边调整（ReAct）。</p>
 <h2 id="65-混合模式plan-react">6.5 混合模式：Plan-ReAct</h2>
@@ -1184,55 +1184,55 @@
 </ul>
 <h3 id="664-决策表格">6.6.4 决策表格</h3>
 <table>
-  <thead>
-      <tr>
-          <th>任务特征</th>
-          <th>推荐模式</th>
-          <th>理由</th>
-      </tr>
-  </thead>
-  <tbody>
-      <tr>
-          <td>步骤≤3、不可预测</td>
-          <td>ReAct</td>
-          <td>规划开销不划算，实时适应更重要</td>
-      </tr>
-      <tr>
-          <td>步骤≤3、可预测</td>
-          <td>ReAct 或 Plan-and-Execute</td>
-          <td>都可以，ReAct 更简单</td>
-      </tr>
-      <tr>
-          <td>步骤4-6、有依赖</td>
-          <td>Plan-and-Execute</td>
-          <td>全局规划避免走弯路</td>
-      </tr>
-      <tr>
-          <td>步骤&gt;6、结构化</td>
-          <td>Plan-and-Execute</td>
-          <td>ReAct 易陷入循环</td>
-      </tr>
-      <tr>
-          <td>步骤&gt;6、部分不可预测</td>
-          <td>混合模式 Plan-ReAct</td>
-          <td>兼顾方向与灵活</td>
-      </tr>
-      <tr>
-          <td>实时对话/低延迟</td>
-          <td>ReAct</td>
-          <td>首次响应快</td>
-      </tr>
-      <tr>
-          <td>批处理/后台任务</td>
-          <td>Plan-and-Execute</td>
-          <td>总成本和一致性更优</td>
-      </tr>
-      <tr>
-          <td>研究型、开放性</td>
-          <td>混合模式 Plan-ReAct</td>
-          <td>大纲+深挖</td>
-      </tr>
-  </tbody>
+	<thead>
+			<tr>
+					<th>任务特征</th>
+					<th>推荐模式</th>
+					<th>理由</th>
+			</tr>
+	</thead>
+	<tbody>
+			<tr>
+					<td>步骤≤3、不可预测</td>
+					<td>ReAct</td>
+					<td>规划开销不划算，实时适应更重要</td>
+			</tr>
+			<tr>
+					<td>步骤≤3、可预测</td>
+					<td>ReAct 或 Plan-and-Execute</td>
+					<td>都可以，ReAct 更简单</td>
+			</tr>
+			<tr>
+					<td>步骤4-6、有依赖</td>
+					<td>Plan-and-Execute</td>
+					<td>全局规划避免走弯路</td>
+			</tr>
+			<tr>
+					<td>步骤&gt;6、结构化</td>
+					<td>Plan-and-Execute</td>
+					<td>ReAct 易陷入循环</td>
+			</tr>
+			<tr>
+					<td>步骤&gt;6、部分不可预测</td>
+					<td>混合模式 Plan-ReAct</td>
+					<td>兼顾方向与灵活</td>
+			</tr>
+			<tr>
+					<td>实时对话/低延迟</td>
+					<td>ReAct</td>
+					<td>首次响应快</td>
+			</tr>
+			<tr>
+					<td>批处理/后台任务</td>
+					<td>Plan-and-Execute</td>
+					<td>总成本和一致性更优</td>
+			</tr>
+			<tr>
+					<td>研究型、开放性</td>
+					<td>混合模式 Plan-ReAct</td>
+					<td>大纲+深挖</td>
+			</tr>
+	</tbody>
 </table>
 <p>一个实用的工程经验：<strong>从 ReAct 开始</strong>，它能用最少代码跑通 80% 的任务；当发现模型频繁陷入循环、或长任务成本失控时，再升级到 Plan-and-Execute 或混合模式。不要一上来就上复杂架构，过早优化是智能体项目的常见陷阱。</p>
 <blockquote>

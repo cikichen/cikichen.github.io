@@ -5,24 +5,24 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="robots" content="noodp" />
         <title>Go Context 机制详解：超时控制、取消传播与避坑指南 - 编程心语</title><meta name="Description" content="深入理解 Go Context 的工作机制——超时控制、取消传播、值传递的正确用法与常见陷阱，附完整可运行代码示例。"><meta property="og:url" content="https://www.ithome.me/post/2026/07/08/go-context-deep-dive/">
-  <meta property="og:site_name" content="编程心语">
-  <meta property="og:title" content="Go Context 机制详解：超时控制、取消传播与避坑指南">
-  <meta property="og:description" content="深入理解 Go Context 的工作机制——超时控制、取消传播、值传递的正确用法与常见陷阱，附完整可运行代码示例。">
-  <meta property="og:locale" content="zh_CN">
-  <meta property="og:type" content="article">
-    <meta property="article:section" content="posts">
-    <meta property="article:published_time" content="2026-07-08T08:00:00+08:00">
-    <meta property="article:modified_time" content="2026-07-19T08:32:30+08:00">
-    <meta property="article:tag" content="Go">
-    <meta property="article:tag" content="Context">
-    <meta property="article:tag" content="并发控制">
-    <meta property="article:tag" content="超时">
-    <meta property="article:tag" content="取消传播">
+	<meta property="og:site_name" content="编程心语">
+	<meta property="og:title" content="Go Context 机制详解：超时控制、取消传播与避坑指南">
+	<meta property="og:description" content="深入理解 Go Context 的工作机制——超时控制、取消传播、值传递的正确用法与常见陷阱，附完整可运行代码示例。">
+	<meta property="og:locale" content="zh_CN">
+	<meta property="og:type" content="article">
+		<meta property="article:section" content="posts">
+		<meta property="article:published_time" content="2026-07-08T08:00:00+08:00">
+		<meta property="article:modified_time" content="2026-07-28T19:11:15+00:00">
+		<meta property="article:tag" content="Go">
+		<meta property="article:tag" content="Context">
+		<meta property="article:tag" content="并发控制">
+		<meta property="article:tag" content="超时">
+		<meta property="article:tag" content="取消传播">
 
-  <meta name="twitter:card" content="summary">
-  <meta name="twitter:title" content="Go Context 机制详解：超时控制、取消传播与避坑指南">
-  <meta name="twitter:description" content="深入理解 Go Context 的工作机制——超时控制、取消传播、值传递的正确用法与常见陷阱，附完整可运行代码示例。">
-      <meta name="twitter:site" content="@ChenCiki">
+	<meta name="twitter:card" content="summary">
+	<meta name="twitter:title" content="Go Context 机制详解：超时控制、取消传播与避坑指南">
+	<meta name="twitter:description" content="深入理解 Go Context 的工作机制——超时控制、取消传播、值传递的正确用法与常见陷阱，附完整可运行代码示例。">
+			<meta name="twitter:site" content="@ChenCiki">
 <meta name="application-name" content="编程心语">
 <meta name="apple-mobile-web-app-title" content="编程心语"><meta name="theme-color" content="#ffffff"><meta name="msapplication-TileColor" content="#da532c"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
         <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
@@ -36,7 +36,7 @@
             "@type": "WebPage",
             "@id": "https:\/\/www.ithome.me\/post\/2026\/07\/08\/go-context-deep-dive\/"
         },"image": ["https:\/\/www.ithome.me\/cover.png"],"genre": "posts","keywords": "Go, Context, 并发控制, 超时, 取消传播","wordcount":  1533 ,
-        "url": "https:\/\/www.ithome.me\/post\/2026\/07\/08\/go-context-deep-dive\/","datePublished": "2026-07-08T08:00:00+08:00","dateModified": "2026-07-19T08:32:30+08:00","publisher": {
+        "url": "https:\/\/www.ithome.me\/post\/2026\/07\/08\/go-context-deep-dive\/","datePublished": "2026-07-08T08:00:00+08:00","dateModified": "2026-07-28T19:11:15+00:00","publisher": {
             "@type": "Organization",
             "name": "SimonChen","logo": "https:\/\/www.ithome.me\/logo.png"},"author": {
                 "@type": "Person",
@@ -385,40 +385,40 @@
 <p><strong>规则三：WithValue 不影响取消传播。</strong> WithValue 创建的子 Context 会继承父 Context 的取消信号，但不会创建新的取消能力——它只是携带额外数据的管道。</p>
 <h2 id="常见陷阱速查表">常见陷阱速查表</h2>
 <table>
-  <thead>
-      <tr>
-          <th>陷阱</th>
-          <th>后果</th>
-          <th>修复方式</th>
-      </tr>
-  </thead>
-  <tbody>
-      <tr>
-          <td>忘记 <code>defer cancel()</code></td>
-          <td>Context 泄漏，定时器不释放</td>
-          <td>在 <code>WithTimeout</code>/<code>WithCancel</code> 后紧跟 <code>defer cancel()</code></td>
-      </tr>
-      <tr>
-          <td>用 <code>string</code> 做 key</td>
-          <td>值被意外覆盖</td>
-          <td>用自定义类型 <code>type ctxKey string</code></td>
-      </tr>
-      <tr>
-          <td>把 Context 存进 struct</td>
-          <td>取消信号不传播</td>
-          <td>Context 只在函数间传递，绝不存储</td>
-      </tr>
-      <tr>
-          <td>不处理 <code>ctx.Done()</code></td>
-          <td>goroutine 泄漏</td>
-          <td>所有阻塞操作用 <code>select</code> 监听 <code>ctx.Done()</code></td>
-      </tr>
-      <tr>
-          <td>handler 里用 <code>context.Background()</code></td>
-          <td>无法感知客户端断开</td>
-          <td>HTTP handler 里用 <code>r.Context()</code></td>
-      </tr>
-  </tbody>
+	<thead>
+			<tr>
+					<th>陷阱</th>
+					<th>后果</th>
+					<th>修复方式</th>
+			</tr>
+	</thead>
+	<tbody>
+			<tr>
+					<td>忘记 <code>defer cancel()</code></td>
+					<td>Context 泄漏，定时器不释放</td>
+					<td>在 <code>WithTimeout</code>/<code>WithCancel</code> 后紧跟 <code>defer cancel()</code></td>
+			</tr>
+			<tr>
+					<td>用 <code>string</code> 做 key</td>
+					<td>值被意外覆盖</td>
+					<td>用自定义类型 <code>type ctxKey string</code></td>
+			</tr>
+			<tr>
+					<td>把 Context 存进 struct</td>
+					<td>取消信号不传播</td>
+					<td>Context 只在函数间传递，绝不存储</td>
+			</tr>
+			<tr>
+					<td>不处理 <code>ctx.Done()</code></td>
+					<td>goroutine 泄漏</td>
+					<td>所有阻塞操作用 <code>select</code> 监听 <code>ctx.Done()</code></td>
+			</tr>
+			<tr>
+					<td>handler 里用 <code>context.Background()</code></td>
+					<td>无法感知客户端断开</td>
+					<td>HTTP handler 里用 <code>r.Context()</code></td>
+			</tr>
+	</tbody>
 </table>
 <h2 id="总结">总结</h2>
 <p>Go Context 的设计哲学是：<strong>并发可以创建，但必须有可控的终止机制</strong>。三个能力对应三组 API：</p>
@@ -432,8 +432,8 @@
     <div class="post-info">
         <div class="post-info-line">
             <div class="post-info-mod">
-                <span>更新于 2026-07-19&nbsp;<a class="git-hash" href="https://github.com/cikichen/hugo-sync/commit/e02f299cb3d1c65a7ac989e21b702538821f2a59" target="_blank" title="commit by cikichen(cikichen@github.com) e02f299cb3d1c65a7ac989e21b702538821f2a59: Auto: 2026-07-19 - 布隆过滤器实战">
-                                    <i class="fas fa-hashtag fa-fw" aria-hidden="true"></i>e02f299c</a></span>
+                <span>更新于 2026-07-28&nbsp;<a class="git-hash" href="https://github.com/cikichen/hugo-sync/commit/5fa963e774ff6b6679cc076332d74325054e2345" target="_blank" title="commit by Hermes Bot(hermes@ithome.me) 5fa963e774ff6b6679cc076332d74325054e2345: Auto: 2026-07-29 - SwiftUI 中 @Binding 的进阶用法：自定义 Binding 与双向数据流">
+                                    <i class="fas fa-hashtag fa-fw" aria-hidden="true"></i>5fa963e</a></span>
             </div><div class="post-info-license">
                 <span>https://creativecommons.org/licenses/by-nc-nd/4.0/</span>
             </div></div>

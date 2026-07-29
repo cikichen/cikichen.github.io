@@ -5,24 +5,24 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="robots" content="noodp" />
         <title>策略模式重构实战：用Go消除代码中泛滥的if-else - 编程心语</title><meta name="Description" content="当业务逻辑被 if-else 淹没时，策略模式是最直接的重构手段。本文用 Go 从一个真实的支付路由场景出发，展示如何用策略模式&#43;注册表消除分支爆炸，让新增支付渠道只需加文件、不改老代码。"><meta property="og:url" content="https://www.ithome.me/post/2026/07/10/strategy-pattern-refactoring-in-go/">
-  <meta property="og:site_name" content="编程心语">
-  <meta property="og:title" content="策略模式重构实战：用Go消除代码中泛滥的if-else">
-  <meta property="og:description" content="当业务逻辑被 if-else 淹没时，策略模式是最直接的重构手段。本文用 Go 从一个真实的支付路由场景出发，展示如何用策略模式&#43;注册表消除分支爆炸，让新增支付渠道只需加文件、不改老代码。">
-  <meta property="og:locale" content="zh_CN">
-  <meta property="og:type" content="article">
-    <meta property="article:section" content="posts">
-    <meta property="article:published_time" content="2026-07-10T08:00:00+08:00">
-    <meta property="article:modified_time" content="2026-07-19T08:32:30+08:00">
-    <meta property="article:tag" content="Go">
-    <meta property="article:tag" content="策略模式">
-    <meta property="article:tag" content="重构">
-    <meta property="article:tag" content="设计模式">
-    <meta property="article:tag" content="SOLID">
+	<meta property="og:site_name" content="编程心语">
+	<meta property="og:title" content="策略模式重构实战：用Go消除代码中泛滥的if-else">
+	<meta property="og:description" content="当业务逻辑被 if-else 淹没时，策略模式是最直接的重构手段。本文用 Go 从一个真实的支付路由场景出发，展示如何用策略模式&#43;注册表消除分支爆炸，让新增支付渠道只需加文件、不改老代码。">
+	<meta property="og:locale" content="zh_CN">
+	<meta property="og:type" content="article">
+		<meta property="article:section" content="posts">
+		<meta property="article:published_time" content="2026-07-10T08:00:00+08:00">
+		<meta property="article:modified_time" content="2026-07-28T19:11:15+00:00">
+		<meta property="article:tag" content="Go">
+		<meta property="article:tag" content="策略模式">
+		<meta property="article:tag" content="重构">
+		<meta property="article:tag" content="设计模式">
+		<meta property="article:tag" content="SOLID">
 
-  <meta name="twitter:card" content="summary">
-  <meta name="twitter:title" content="策略模式重构实战：用Go消除代码中泛滥的if-else">
-  <meta name="twitter:description" content="当业务逻辑被 if-else 淹没时，策略模式是最直接的重构手段。本文用 Go 从一个真实的支付路由场景出发，展示如何用策略模式&#43;注册表消除分支爆炸，让新增支付渠道只需加文件、不改老代码。">
-      <meta name="twitter:site" content="@ChenCiki">
+	<meta name="twitter:card" content="summary">
+	<meta name="twitter:title" content="策略模式重构实战：用Go消除代码中泛滥的if-else">
+	<meta name="twitter:description" content="当业务逻辑被 if-else 淹没时，策略模式是最直接的重构手段。本文用 Go 从一个真实的支付路由场景出发，展示如何用策略模式&#43;注册表消除分支爆炸，让新增支付渠道只需加文件、不改老代码。">
+			<meta name="twitter:site" content="@ChenCiki">
 <meta name="application-name" content="编程心语">
 <meta name="apple-mobile-web-app-title" content="编程心语"><meta name="theme-color" content="#ffffff"><meta name="msapplication-TileColor" content="#da532c"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
         <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
@@ -36,7 +36,7 @@
             "@type": "WebPage",
             "@id": "https:\/\/www.ithome.me\/post\/2026\/07\/10\/strategy-pattern-refactoring-in-go\/"
         },"image": ["https:\/\/www.ithome.me\/cover.png"],"genre": "posts","keywords": "Go, 策略模式, 重构, 设计模式, SOLID","wordcount":  2129 ,
-        "url": "https:\/\/www.ithome.me\/post\/2026\/07\/10\/strategy-pattern-refactoring-in-go\/","datePublished": "2026-07-10T08:00:00+08:00","dateModified": "2026-07-19T08:32:30+08:00","publisher": {
+        "url": "https:\/\/www.ithome.me\/post\/2026\/07\/10\/strategy-pattern-refactoring-in-go\/","datePublished": "2026-07-10T08:00:00+08:00","dateModified": "2026-07-28T19:11:15+00:00","publisher": {
             "@type": "Organization",
             "name": "SimonChen","logo": "https:\/\/www.ithome.me\/logo.png"},"author": {
                 "@type": "Person",
@@ -602,43 +602,43 @@
 <p>记住设计模式的核心准则：<strong>先有重复，再消除重复</strong>。等你真的因为加渠道而改了三次 if-else，再重构不迟。</p>
 <h2 id="总结">总结</h2>
 <table>
-  <thead>
-      <tr>
-          <th>场景</th>
-          <th>if-else</th>
-          <th>策略模式</th>
-      </tr>
-  </thead>
-  <tbody>
-      <tr>
-          <td>渠道数 &lt; 3</td>
-          <td>✅ 够用</td>
-          <td>❌ 过度设计</td>
-      </tr>
-      <tr>
-          <td>渠道数 ≥ 3 且会增长</td>
-          <td>❌ 改不停</td>
-          <td>✅ 开闭原则</td>
-      </tr>
-      <tr>
-          <td>各渠道逻辑差异大</td>
-          <td>❌ 巨型函数</td>
-          <td>✅ 独立测试</td>
-      </tr>
-      <tr>
-          <td>需要运行时动态切换</td>
-          <td>❌ 不可能</td>
-          <td>✅ 注册表查找</td>
-      </tr>
-  </tbody>
+	<thead>
+			<tr>
+					<th>场景</th>
+					<th>if-else</th>
+					<th>策略模式</th>
+			</tr>
+	</thead>
+	<tbody>
+			<tr>
+					<td>渠道数 &lt; 3</td>
+					<td>✅ 够用</td>
+					<td>❌ 过度设计</td>
+			</tr>
+			<tr>
+					<td>渠道数 ≥ 3 且会增长</td>
+					<td>❌ 改不停</td>
+					<td>✅ 开闭原则</td>
+			</tr>
+			<tr>
+					<td>各渠道逻辑差异大</td>
+					<td>❌ 巨型函数</td>
+					<td>✅ 独立测试</td>
+			</tr>
+			<tr>
+					<td>需要运行时动态切换</td>
+					<td>❌ 不可能</td>
+					<td>✅ 注册表查找</td>
+			</tr>
+	</tbody>
 </table>
 <p>重构的核心收获不是&quot;用了策略模式&quot;，而是<strong>让每个渠道成为一个独立单元</strong>——独立开发、独立测试、独立部署。下次产品再提&quot;加个渠道&quot;时，你只需要 <code>git checkout -b feature/new-channel</code>，而不用战战兢兢地去碰那个巨型函数。</p>
 </div><div class="post-footer" id="post-footer">
     <div class="post-info">
         <div class="post-info-line">
             <div class="post-info-mod">
-                <span>更新于 2026-07-19&nbsp;<a class="git-hash" href="https://github.com/cikichen/hugo-sync/commit/e02f299cb3d1c65a7ac989e21b702538821f2a59" target="_blank" title="commit by cikichen(cikichen@github.com) e02f299cb3d1c65a7ac989e21b702538821f2a59: Auto: 2026-07-19 - 布隆过滤器实战">
-                                    <i class="fas fa-hashtag fa-fw" aria-hidden="true"></i>e02f299c</a></span>
+                <span>更新于 2026-07-28&nbsp;<a class="git-hash" href="https://github.com/cikichen/hugo-sync/commit/5fa963e774ff6b6679cc076332d74325054e2345" target="_blank" title="commit by Hermes Bot(hermes@ithome.me) 5fa963e774ff6b6679cc076332d74325054e2345: Auto: 2026-07-29 - SwiftUI 中 @Binding 的进阶用法：自定义 Binding 与双向数据流">
+                                    <i class="fas fa-hashtag fa-fw" aria-hidden="true"></i>5fa963e</a></span>
             </div></div>
         <div class="post-info-line">
             <div class="post-info-md"></div>

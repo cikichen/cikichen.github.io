@@ -5,25 +5,25 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="robots" content="noodp" />
         <title>App 升级系统设计实战：从版本管理到增量更新与热修复 - 编程心语</title><meta name="Description" content="深入剖析 App 升级系统的完整架构设计——版本管理、更新检查、全量更新与增量差分、热修复机制、断点续传下载、安全校验与灰度回滚，附 Swift/Kotlin 代码实现。"><meta property="og:url" content="https://www.ithome.me/post/2026/07/09/app-upgrade-system-design/">
-  <meta property="og:site_name" content="编程心语">
-  <meta property="og:title" content="App 升级系统设计实战：从版本管理到增量更新与热修复">
-  <meta property="og:description" content="深入剖析 App 升级系统的完整架构设计——版本管理、更新检查、全量更新与增量差分、热修复机制、断点续传下载、安全校验与灰度回滚，附 Swift/Kotlin 代码实现。">
-  <meta property="og:locale" content="zh_CN">
-  <meta property="og:type" content="article">
-    <meta property="article:section" content="posts">
-    <meta property="article:published_time" content="2026-07-09T08:00:00+08:00">
-    <meta property="article:modified_time" content="2026-07-19T08:32:30+08:00">
-    <meta property="article:tag" content="App架构">
-    <meta property="article:tag" content="升级系统">
-    <meta property="article:tag" content="增量更新">
-    <meta property="article:tag" content="热修复">
-    <meta property="article:tag" content="Ios">
-    <meta property="article:tag" content="Android">
+	<meta property="og:site_name" content="编程心语">
+	<meta property="og:title" content="App 升级系统设计实战：从版本管理到增量更新与热修复">
+	<meta property="og:description" content="深入剖析 App 升级系统的完整架构设计——版本管理、更新检查、全量更新与增量差分、热修复机制、断点续传下载、安全校验与灰度回滚，附 Swift/Kotlin 代码实现。">
+	<meta property="og:locale" content="zh_CN">
+	<meta property="og:type" content="article">
+		<meta property="article:section" content="posts">
+		<meta property="article:published_time" content="2026-07-09T08:00:00+08:00">
+		<meta property="article:modified_time" content="2026-07-28T19:11:15+00:00">
+		<meta property="article:tag" content="App架构">
+		<meta property="article:tag" content="升级系统">
+		<meta property="article:tag" content="增量更新">
+		<meta property="article:tag" content="热修复">
+		<meta property="article:tag" content="Ios">
+		<meta property="article:tag" content="Android">
 
-  <meta name="twitter:card" content="summary">
-  <meta name="twitter:title" content="App 升级系统设计实战：从版本管理到增量更新与热修复">
-  <meta name="twitter:description" content="深入剖析 App 升级系统的完整架构设计——版本管理、更新检查、全量更新与增量差分、热修复机制、断点续传下载、安全校验与灰度回滚，附 Swift/Kotlin 代码实现。">
-      <meta name="twitter:site" content="@ChenCiki">
+	<meta name="twitter:card" content="summary">
+	<meta name="twitter:title" content="App 升级系统设计实战：从版本管理到增量更新与热修复">
+	<meta name="twitter:description" content="深入剖析 App 升级系统的完整架构设计——版本管理、更新检查、全量更新与增量差分、热修复机制、断点续传下载、安全校验与灰度回滚，附 Swift/Kotlin 代码实现。">
+			<meta name="twitter:site" content="@ChenCiki">
 <meta name="application-name" content="编程心语">
 <meta name="apple-mobile-web-app-title" content="编程心语"><meta name="theme-color" content="#ffffff"><meta name="msapplication-TileColor" content="#da532c"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
         <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
@@ -37,7 +37,7 @@
             "@type": "WebPage",
             "@id": "https:\/\/www.ithome.me\/post\/2026\/07\/09\/app-upgrade-system-design\/"
         },"image": ["https:\/\/www.ithome.me\/cover.png"],"genre": "posts","keywords": "App架构, 升级系统, 增量更新, 热修复, iOS, Android","wordcount":  7212 ,
-        "url": "https:\/\/www.ithome.me\/post\/2026\/07\/09\/app-upgrade-system-design\/","datePublished": "2026-07-09T08:00:00+08:00","dateModified": "2026-07-19T08:32:30+08:00","publisher": {
+        "url": "https:\/\/www.ithome.me\/post\/2026\/07\/09\/app-upgrade-system-design\/","datePublished": "2026-07-09T08:00:00+08:00","dateModified": "2026-07-28T19:11:15+00:00","publisher": {
             "@type": "Organization",
             "name": "SimonChen","logo": "https:\/\/www.ithome.me\/logo.png"},"author": {
                 "@type": "Person",
@@ -304,35 +304,35 @@
 </div>
 </div><p><strong>这段配置做了什么</strong>：服务端告诉客户端三件事——最新版本是什么（version）、最低不能低于哪个版本（minRequiredVersion，低于就强制升级）、这次更新是可选还是强制（updateMode）。灰度配置控制只有 10% 的用户收到这个版本，白名单设备可以直接体验。</p>
 <table>
-  <thead>
-      <tr>
-          <th>字段</th>
-          <th>作用</th>
-          <th>示例</th>
-      </tr>
-  </thead>
-  <tbody>
-      <tr>
-          <td><code>minRequiredVersion</code></td>
-          <td>低于此版本 → 强制升级</td>
-          <td><code>2.0.0</code>，当前 1.9.0 就必须升级</td>
-      </tr>
-      <tr>
-          <td><code>updateMode</code></td>
-          <td>optional / forced / silent</td>
-          <td>silent 用于静默热修复</td>
-      </tr>
-      <tr>
-          <td><code>grayConfig</code></td>
-          <td>灰度发布控制</td>
-          <td>先放 10% 用户，没问题再加量</td>
-      </tr>
-      <tr>
-          <td><code>patchUrl</code></td>
-          <td>增量差分包地址</td>
-          <td>有则走增量，无则走全量</td>
-      </tr>
-  </tbody>
+	<thead>
+			<tr>
+					<th>字段</th>
+					<th>作用</th>
+					<th>示例</th>
+			</tr>
+	</thead>
+	<tbody>
+			<tr>
+					<td><code>minRequiredVersion</code></td>
+					<td>低于此版本 → 强制升级</td>
+					<td><code>2.0.0</code>，当前 1.9.0 就必须升级</td>
+			</tr>
+			<tr>
+					<td><code>updateMode</code></td>
+					<td>optional / forced / silent</td>
+					<td>silent 用于静默热修复</td>
+			</tr>
+			<tr>
+					<td><code>grayConfig</code></td>
+					<td>灰度发布控制</td>
+					<td>先放 10% 用户，没问题再加量</td>
+			</tr>
+			<tr>
+					<td><code>patchUrl</code></td>
+					<td>增量差分包地址</td>
+					<td>有则走增量，无则走全量</td>
+			</tr>
+	</tbody>
 </table>
 <h2 id="二更新检查机制什么时候查怎么查">二、更新检查机制：什么时候查、怎么查</h2>
 <h3 id="三种检查时机">三种检查时机</h3>
@@ -504,35 +504,35 @@
 <h3 id="为什么需要增量更新">为什么需要增量更新</h3>
 <p>一个 50MB 的 App，改了一行代码，发了一个新版本。用户要重新下载 50MB——这浪费带宽、浪费时间、消耗用户流量。<strong>增量更新</strong>（也叫差分更新）的做法是：只下载新旧版本之间的差异部分（差分包），在本地合成新版本。</p>
 <table>
-  <thead>
-      <tr>
-          <th>对比项</th>
-          <th>全量更新</th>
-          <th>增量更新</th>
-      </tr>
-  </thead>
-  <tbody>
-      <tr>
-          <td>下载大小</td>
-          <td>完整 APK/IPA（~50MB）</td>
-          <td>差分包（~2MB）</td>
-      </tr>
-      <tr>
-          <td>服务端开销</td>
-          <td>只存一个包</td>
-          <td>每个旧版本一个差分包</td>
-      </tr>
-      <tr>
-          <td>客户端复杂度</td>
-          <td>下载即安装</td>
-          <td>下载+合成+校验</td>
-      </tr>
-      <tr>
-          <td>适用场景</td>
-          <td>大版本跨度</td>
-          <td>小版本迭代</td>
-      </tr>
-  </tbody>
+	<thead>
+			<tr>
+					<th>对比项</th>
+					<th>全量更新</th>
+					<th>增量更新</th>
+			</tr>
+	</thead>
+	<tbody>
+			<tr>
+					<td>下载大小</td>
+					<td>完整 APK/IPA（~50MB）</td>
+					<td>差分包（~2MB）</td>
+			</tr>
+			<tr>
+					<td>服务端开销</td>
+					<td>只存一个包</td>
+					<td>每个旧版本一个差分包</td>
+			</tr>
+			<tr>
+					<td>客户端复杂度</td>
+					<td>下载即安装</td>
+					<td>下载+合成+校验</td>
+			</tr>
+			<tr>
+					<td>适用场景</td>
+					<td>大版本跨度</td>
+					<td>小版本迭代</td>
+			</tr>
+	</tbody>
 </table>
 <h3 id="bsdiff-差分算法">bsdiff 差分算法</h3>
 <blockquote>
@@ -670,34 +670,34 @@
 <h3 id="android-热修复方案">Android 热修复方案</h3>
 <p>Android 热修复经历了三代方案：</p>
 <table>
-  <thead>
-      <tr>
-          <th>代际</th>
-          <th>代表方案</th>
-          <th>原理</th>
-          <th>限制</th>
-      </tr>
-  </thead>
-  <tbody>
-      <tr>
-          <td>第一代</td>
-          <td>AndFix</td>
-          <td>方法替换</td>
-          <td>兼容性差，已停更</td>
-      </tr>
-      <tr>
-          <td>第二代</td>
-          <td>Tinker（微信）</td>
-          <td>Dex 替换</td>
-          <td>需重启生效</td>
-      </tr>
-      <tr>
-          <td>第三代</td>
-          <td>Robust（美团）</td>
-          <td>方法 Hook</td>
-          <td>即时生效，但只能改方法体</td>
-      </tr>
-  </tbody>
+	<thead>
+			<tr>
+					<th>代际</th>
+					<th>代表方案</th>
+					<th>原理</th>
+					<th>限制</th>
+			</tr>
+	</thead>
+	<tbody>
+			<tr>
+					<td>第一代</td>
+					<td>AndFix</td>
+					<td>方法替换</td>
+					<td>兼容性差，已停更</td>
+			</tr>
+			<tr>
+					<td>第二代</td>
+					<td>Tinker（微信）</td>
+					<td>Dex 替换</td>
+					<td>需重启生效</td>
+			</tr>
+			<tr>
+					<td>第三代</td>
+					<td>Robust（美团）</td>
+					<td>方法 Hook</td>
+					<td>即时生效，但只能改方法体</td>
+			</tr>
+	</tbody>
 </table>
 <div class="highlight"><div class="chroma">
 <table class="lntable"><tr><td class="lntd">
@@ -974,35 +974,35 @@
 </blockquote>
 <h3 id="下载策略矩阵">下载策略矩阵</h3>
 <table>
-  <thead>
-      <tr>
-          <th>场景</th>
-          <th>策略</th>
-          <th>理由</th>
-      </tr>
-  </thead>
-  <tbody>
-      <tr>
-          <td>WiFi 环境</td>
-          <td>立即下载</td>
-          <td>不消耗用户流量</td>
-      </tr>
-      <tr>
-          <td>移动数据网络</td>
-          <td>询问用户</td>
-          <td>尊重用户流量选择</td>
-      </tr>
-      <tr>
-          <td>低电量 (&lt;20%)</td>
-          <td>延迟下载</td>
-          <td>避免下载消耗最后电量</td>
-      </tr>
-      <tr>
-          <td>强制更新</td>
-          <td>不询问，直接下载</td>
-          <td>用户没有选择权</td>
-      </tr>
-  </tbody>
+	<thead>
+			<tr>
+					<th>场景</th>
+					<th>策略</th>
+					<th>理由</th>
+			</tr>
+	</thead>
+	<tbody>
+			<tr>
+					<td>WiFi 环境</td>
+					<td>立即下载</td>
+					<td>不消耗用户流量</td>
+			</tr>
+			<tr>
+					<td>移动数据网络</td>
+					<td>询问用户</td>
+					<td>尊重用户流量选择</td>
+			</tr>
+			<tr>
+					<td>低电量 (&lt;20%)</td>
+					<td>延迟下载</td>
+					<td>避免下载消耗最后电量</td>
+			</tr>
+			<tr>
+					<td>强制更新</td>
+					<td>不询问，直接下载</td>
+					<td>用户没有选择权</td>
+			</tr>
+	</tbody>
 </table>
 <div class="highlight"><div class="chroma">
 <table class="lntable"><tr><td class="lntd">
@@ -1418,8 +1418,8 @@
     <div class="post-info">
         <div class="post-info-line">
             <div class="post-info-mod">
-                <span>更新于 2026-07-19&nbsp;<a class="git-hash" href="https://github.com/cikichen/hugo-sync/commit/e02f299cb3d1c65a7ac989e21b702538821f2a59" target="_blank" title="commit by cikichen(cikichen@github.com) e02f299cb3d1c65a7ac989e21b702538821f2a59: Auto: 2026-07-19 - 布隆过滤器实战">
-                                    <i class="fas fa-hashtag fa-fw" aria-hidden="true"></i>e02f299c</a></span>
+                <span>更新于 2026-07-28&nbsp;<a class="git-hash" href="https://github.com/cikichen/hugo-sync/commit/5fa963e774ff6b6679cc076332d74325054e2345" target="_blank" title="commit by Hermes Bot(hermes@ithome.me) 5fa963e774ff6b6679cc076332d74325054e2345: Auto: 2026-07-29 - SwiftUI 中 @Binding 的进阶用法：自定义 Binding 与双向数据流">
+                                    <i class="fas fa-hashtag fa-fw" aria-hidden="true"></i>5fa963e</a></span>
             </div></div>
         <div class="post-info-line">
             <div class="post-info-md"></div>

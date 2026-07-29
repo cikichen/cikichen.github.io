@@ -5,23 +5,23 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="robots" content="noodp" />
         <title>Go 1.22 标准库路由实战：用 net/http 构建 REST API - 编程心语</title><meta name="Description" content="Go 1.22 为 net/http 带来了增强路由——支持 HTTP 方法匹配、路径参数和通配符。本文通过一个完整的 CRUD API 示例，展示如何告别 gin/chi，直接用标准库构建生产级服务。"><meta property="og:url" content="https://www.ithome.me/post/2026/07/25/go122-router/">
-  <meta property="og:site_name" content="编程心语">
-  <meta property="og:title" content="Go 1.22 标准库路由实战：用 net/http 构建 REST API">
-  <meta property="og:description" content="Go 1.22 为 net/http 带来了增强路由——支持 HTTP 方法匹配、路径参数和通配符。本文通过一个完整的 CRUD API 示例，展示如何告别 gin/chi，直接用标准库构建生产级服务。">
-  <meta property="og:locale" content="zh_CN">
-  <meta property="og:type" content="article">
-    <meta property="article:section" content="posts">
-    <meta property="article:published_time" content="2026-07-25T08:00:00+08:00">
-    <meta property="article:modified_time" content="2026-07-24T19:10:01+00:00">
-    <meta property="article:tag" content="Go">
-    <meta property="article:tag" content="Backend">
-    <meta property="article:tag" content="Rest-Api">
-    <meta property="article:tag" content="Net/Http">
+	<meta property="og:site_name" content="编程心语">
+	<meta property="og:title" content="Go 1.22 标准库路由实战：用 net/http 构建 REST API">
+	<meta property="og:description" content="Go 1.22 为 net/http 带来了增强路由——支持 HTTP 方法匹配、路径参数和通配符。本文通过一个完整的 CRUD API 示例，展示如何告别 gin/chi，直接用标准库构建生产级服务。">
+	<meta property="og:locale" content="zh_CN">
+	<meta property="og:type" content="article">
+		<meta property="article:section" content="posts">
+		<meta property="article:published_time" content="2026-07-25T08:00:00+08:00">
+		<meta property="article:modified_time" content="2026-07-28T19:11:15+00:00">
+		<meta property="article:tag" content="Go">
+		<meta property="article:tag" content="Backend">
+		<meta property="article:tag" content="Rest-Api">
+		<meta property="article:tag" content="Net/Http">
 
-  <meta name="twitter:card" content="summary">
-  <meta name="twitter:title" content="Go 1.22 标准库路由实战：用 net/http 构建 REST API">
-  <meta name="twitter:description" content="Go 1.22 为 net/http 带来了增强路由——支持 HTTP 方法匹配、路径参数和通配符。本文通过一个完整的 CRUD API 示例，展示如何告别 gin/chi，直接用标准库构建生产级服务。">
-      <meta name="twitter:site" content="@ChenCiki">
+	<meta name="twitter:card" content="summary">
+	<meta name="twitter:title" content="Go 1.22 标准库路由实战：用 net/http 构建 REST API">
+	<meta name="twitter:description" content="Go 1.22 为 net/http 带来了增强路由——支持 HTTP 方法匹配、路径参数和通配符。本文通过一个完整的 CRUD API 示例，展示如何告别 gin/chi，直接用标准库构建生产级服务。">
+			<meta name="twitter:site" content="@ChenCiki">
 <meta name="application-name" content="编程心语">
 <meta name="apple-mobile-web-app-title" content="编程心语"><meta name="theme-color" content="#ffffff"><meta name="msapplication-TileColor" content="#da532c"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
         <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
@@ -35,7 +35,7 @@
             "@type": "WebPage",
             "@id": "https:\/\/www.ithome.me\/post\/2026\/07\/25\/go122-router\/"
         },"image": ["https:\/\/www.ithome.me\/cover.png"],"genre": "posts","keywords": "go, backend, rest-api, net\/http","wordcount":  1266 ,
-        "url": "https:\/\/www.ithome.me\/post\/2026\/07\/25\/go122-router\/","datePublished": "2026-07-25T08:00:00+08:00","dateModified": "2026-07-24T19:10:01+00:00","publisher": {
+        "url": "https:\/\/www.ithome.me\/post\/2026\/07\/25\/go122-router\/","datePublished": "2026-07-25T08:00:00+08:00","dateModified": "2026-07-28T19:11:15+00:00","publisher": {
             "@type": "Organization",
             "name": "SimonChen","logo": "https:\/\/www.ithome.me\/logo.png"},"author": {
                 "@type": "Person",
@@ -512,26 +512,26 @@
 </div>
 </div><h2 id="是否该告别-ginchi">是否该告别 gin/chi？</h2>
 <table>
-  <thead>
-      <tr>
-          <th>场景</th>
-          <th>推荐方案</th>
-      </tr>
-  </thead>
-  <tbody>
-      <tr>
-          <td>小型 API / 微服务</td>
-          <td>标准库足够 ✅</td>
-      </tr>
-      <tr>
-          <td>复杂路由（正则、自定义匹配器）</td>
-          <td>仍需要 chi / httprouter</td>
-      </tr>
-      <tr>
-          <td>超大项目（100+ 路由）</td>
-          <td>gin 的 group 和 binding 更省事</td>
-      </tr>
-  </tbody>
+	<thead>
+			<tr>
+					<th>场景</th>
+					<th>推荐方案</th>
+			</tr>
+	</thead>
+	<tbody>
+			<tr>
+					<td>小型 API / 微服务</td>
+					<td>标准库足够 ✅</td>
+			</tr>
+			<tr>
+					<td>复杂路由（正则、自定义匹配器）</td>
+					<td>仍需要 chi / httprouter</td>
+			</tr>
+			<tr>
+					<td>超大项目（100+ 路由）</td>
+					<td>gin 的 group 和 binding 更省事</td>
+			</tr>
+	</tbody>
 </table>
 <p><strong>建议</strong>：新项目<strong>先用标准库</strong>。当 <code>HandleFunc</code> 不够用、路由数量膨胀时再引入第三方库。Go 标准库的设计哲学是足够好——对 80% 的项目来说，它确实够了。</p>
 <h2 id="踩坑提醒">踩坑提醒</h2>
@@ -558,8 +558,8 @@
     <div class="post-info">
         <div class="post-info-line">
             <div class="post-info-mod">
-                <span>更新于 2026-07-24&nbsp;<a class="git-hash" href="https://github.com/cikichen/hugo-sync/commit/cabc05c5da1523899045eee6e55a6b7233b9491c" target="_blank" title="commit by Hermes Bot(hermes@ithome.me) cabc05c5da1523899045eee6e55a6b7233b9491c: 新文章: Go 1.22 标准库路由实战">
-                                    <i class="fas fa-hashtag fa-fw" aria-hidden="true"></i>cabc05c5</a></span>
+                <span>更新于 2026-07-28&nbsp;<a class="git-hash" href="https://github.com/cikichen/hugo-sync/commit/5fa963e774ff6b6679cc076332d74325054e2345" target="_blank" title="commit by Hermes Bot(hermes@ithome.me) 5fa963e774ff6b6679cc076332d74325054e2345: Auto: 2026-07-29 - SwiftUI 中 @Binding 的进阶用法：自定义 Binding 与双向数据流">
+                                    <i class="fas fa-hashtag fa-fw" aria-hidden="true"></i>5fa963e</a></span>
             </div></div>
         <div class="post-info-line">
             <div class="post-info-md"></div>

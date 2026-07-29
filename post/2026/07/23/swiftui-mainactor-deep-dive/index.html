@@ -5,24 +5,24 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="robots" content="noodp" />
         <title>SwiftUI @MainActor 深入理解：告别主线程崩溃与 UI 无响应 - 编程心语</title><meta name="Description" content="深入理解 Swift 6 中 @MainActor 的工作原理、全局 actor 隔离机制，以及 SwiftUI 中正确使用主线程的最佳实践，附带 5 个常见坑点与代码修复方案。"><meta property="og:url" content="https://www.ithome.me/post/2026/07/23/swiftui-mainactor-deep-dive/">
-  <meta property="og:site_name" content="编程心语">
-  <meta property="og:title" content="SwiftUI @MainActor 深入理解：告别主线程崩溃与 UI 无响应">
-  <meta property="og:description" content="深入理解 Swift 6 中 @MainActor 的工作原理、全局 actor 隔离机制，以及 SwiftUI 中正确使用主线程的最佳实践，附带 5 个常见坑点与代码修复方案。">
-  <meta property="og:locale" content="zh_CN">
-  <meta property="og:type" content="article">
-    <meta property="article:section" content="posts">
-    <meta property="article:published_time" content="2026-07-23T08:00:00+08:00">
-    <meta property="article:modified_time" content="2026-07-23T00:45:10+00:00">
-    <meta property="article:tag" content="Swift">
-    <meta property="article:tag" content="SwiftUI">
-    <meta property="article:tag" content="@MainActor">
-    <meta property="article:tag" content="并发编程">
-    <meta property="article:tag" content="IOS开发">
+	<meta property="og:site_name" content="编程心语">
+	<meta property="og:title" content="SwiftUI @MainActor 深入理解：告别主线程崩溃与 UI 无响应">
+	<meta property="og:description" content="深入理解 Swift 6 中 @MainActor 的工作原理、全局 actor 隔离机制，以及 SwiftUI 中正确使用主线程的最佳实践，附带 5 个常见坑点与代码修复方案。">
+	<meta property="og:locale" content="zh_CN">
+	<meta property="og:type" content="article">
+		<meta property="article:section" content="posts">
+		<meta property="article:published_time" content="2026-07-23T08:00:00+08:00">
+		<meta property="article:modified_time" content="2026-07-28T19:11:15+00:00">
+		<meta property="article:tag" content="Swift">
+		<meta property="article:tag" content="SwiftUI">
+		<meta property="article:tag" content="@MainActor">
+		<meta property="article:tag" content="并发编程">
+		<meta property="article:tag" content="IOS开发">
 
-  <meta name="twitter:card" content="summary">
-  <meta name="twitter:title" content="SwiftUI @MainActor 深入理解：告别主线程崩溃与 UI 无响应">
-  <meta name="twitter:description" content="深入理解 Swift 6 中 @MainActor 的工作原理、全局 actor 隔离机制，以及 SwiftUI 中正确使用主线程的最佳实践，附带 5 个常见坑点与代码修复方案。">
-      <meta name="twitter:site" content="@ChenCiki">
+	<meta name="twitter:card" content="summary">
+	<meta name="twitter:title" content="SwiftUI @MainActor 深入理解：告别主线程崩溃与 UI 无响应">
+	<meta name="twitter:description" content="深入理解 Swift 6 中 @MainActor 的工作原理、全局 actor 隔离机制，以及 SwiftUI 中正确使用主线程的最佳实践，附带 5 个常见坑点与代码修复方案。">
+			<meta name="twitter:site" content="@ChenCiki">
 <meta name="application-name" content="编程心语">
 <meta name="apple-mobile-web-app-title" content="编程心语"><meta name="theme-color" content="#ffffff"><meta name="msapplication-TileColor" content="#da532c"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
         <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
@@ -36,7 +36,7 @@
             "@type": "WebPage",
             "@id": "https:\/\/www.ithome.me\/post\/2026\/07\/23\/swiftui-mainactor-deep-dive\/"
         },"image": ["https:\/\/www.ithome.me\/cover.png"],"genre": "posts","keywords": "Swift, SwiftUI, @MainActor, 并发编程, iOS开发","wordcount":  1810 ,
-        "url": "https:\/\/www.ithome.me\/post\/2026\/07\/23\/swiftui-mainactor-deep-dive\/","datePublished": "2026-07-23T08:00:00+08:00","dateModified": "2026-07-23T00:45:10+00:00","publisher": {
+        "url": "https:\/\/www.ithome.me\/post\/2026\/07\/23\/swiftui-mainactor-deep-dive\/","datePublished": "2026-07-23T08:00:00+08:00","dateModified": "2026-07-28T19:11:15+00:00","publisher": {
             "@type": "Organization",
             "name": "SimonChen","logo": "https:\/\/www.ithome.me\/logo.png"},"author": {
                 "@type": "Person",
@@ -558,34 +558,34 @@
 </ul>
 <h2 id="总结什么时候应该用-mainactor">总结：什么时候应该用 @MainActor？</h2>
 <table>
-  <thead>
-      <tr>
-          <th>场景</th>
-          <th>推荐做法</th>
-      </tr>
-  </thead>
-  <tbody>
-      <tr>
-          <td>ObservableObject 类</td>
-          <td>整个类标记 <code>@MainActor</code></td>
-      </tr>
-      <tr>
-          <td>SwiftUI View 的私有方法</td>
-          <td>默认可不用标，View 自身就是 MainActor</td>
-      </tr>
-      <tr>
-          <td>异步加载数据后更新 UI</td>
-          <td>用 <code>Task { @MainActor in }</code> 包裹</td>
-      </tr>
-      <tr>
-          <td>Delegate/回调方法</td>
-          <td>显式加 <code>@MainActor</code></td>
-      </tr>
-      <tr>
-          <td>与 UIKit 桥接的代码</td>
-          <td>必须加 <code>@MainActor</code></td>
-      </tr>
-  </tbody>
+	<thead>
+			<tr>
+					<th>场景</th>
+					<th>推荐做法</th>
+			</tr>
+	</thead>
+	<tbody>
+			<tr>
+					<td>ObservableObject 类</td>
+					<td>整个类标记 <code>@MainActor</code></td>
+			</tr>
+			<tr>
+					<td>SwiftUI View 的私有方法</td>
+					<td>默认可不用标，View 自身就是 MainActor</td>
+			</tr>
+			<tr>
+					<td>异步加载数据后更新 UI</td>
+					<td>用 <code>Task { @MainActor in }</code> 包裹</td>
+			</tr>
+			<tr>
+					<td>Delegate/回调方法</td>
+					<td>显式加 <code>@MainActor</code></td>
+			</tr>
+			<tr>
+					<td>与 UIKit 桥接的代码</td>
+					<td>必须加 <code>@MainActor</code></td>
+			</tr>
+	</tbody>
 </table>
 <p><strong>一句话记住</strong>：所有直接或间接操作 UI 的代码，都让 <code>@MainActor</code> 给你兜底。编译器替你检查，比靠程序员记住靠谱一万倍。</p>
 <blockquote>
@@ -595,8 +595,8 @@
     <div class="post-info">
         <div class="post-info-line">
             <div class="post-info-mod">
-                <span>更新于 2026-07-23&nbsp;<a class="git-hash" href="https://github.com/cikichen/hugo-sync/commit/5333d3aeaa2379e4560d5d373ccd3cb635cbe561" target="_blank" title="commit by Hermes Bot(hermes@ithome.me) 5333d3aeaa2379e4560d5d373ccd3cb635cbe561: Auto: 2026-07-23 - SwiftUI @MainActor 深入理解">
-                                    <i class="fas fa-hashtag fa-fw" aria-hidden="true"></i>5333d3ae</a></span>
+                <span>更新于 2026-07-28&nbsp;<a class="git-hash" href="https://github.com/cikichen/hugo-sync/commit/5fa963e774ff6b6679cc076332d74325054e2345" target="_blank" title="commit by Hermes Bot(hermes@ithome.me) 5fa963e774ff6b6679cc076332d74325054e2345: Auto: 2026-07-29 - SwiftUI 中 @Binding 的进阶用法：自定义 Binding 与双向数据流">
+                                    <i class="fas fa-hashtag fa-fw" aria-hidden="true"></i>5fa963e</a></span>
             </div><div class="post-info-license">
                 <span>https://creativecommons.org/licenses/by-nc-nd/4.0/</span>
             </div></div>

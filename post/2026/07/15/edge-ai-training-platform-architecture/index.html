@@ -5,24 +5,24 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="robots" content="noodp" />
         <title>从勘智云平台拆解：如何自建一套端到端AI模型训练与部署平台 - 编程心语</title><meta name="Description" content="以嘉楠勘智云训练平台为蓝本，拆解从数据标注到边缘部署的完整架构设计，包含开源替代方案与核心代码实现"><meta property="og:url" content="https://www.ithome.me/post/2026/07/15/edge-ai-training-platform-architecture/">
-  <meta property="og:site_name" content="编程心语">
-  <meta property="og:title" content="从勘智云平台拆解：如何自建一套端到端AI模型训练与部署平台">
-  <meta property="og:description" content="以嘉楠勘智云训练平台为蓝本，拆解从数据标注到边缘部署的完整架构设计，包含开源替代方案与核心代码实现">
-  <meta property="og:locale" content="zh_CN">
-  <meta property="og:type" content="article">
-    <meta property="article:section" content="posts">
-    <meta property="article:published_time" content="2026-07-15T08:00:00+08:00">
-    <meta property="article:modified_time" content="2026-07-15T11:13:56+08:00">
-    <meta property="article:tag" content="AI">
-    <meta property="article:tag" content="边缘计算">
-    <meta property="article:tag" content="架构设计">
-    <meta property="article:tag" content="MLOps">
-    <meta property="article:tag" content="计算机视觉">
+	<meta property="og:site_name" content="编程心语">
+	<meta property="og:title" content="从勘智云平台拆解：如何自建一套端到端AI模型训练与部署平台">
+	<meta property="og:description" content="以嘉楠勘智云训练平台为蓝本，拆解从数据标注到边缘部署的完整架构设计，包含开源替代方案与核心代码实现">
+	<meta property="og:locale" content="zh_CN">
+	<meta property="og:type" content="article">
+		<meta property="article:section" content="posts">
+		<meta property="article:published_time" content="2026-07-15T08:00:00+08:00">
+		<meta property="article:modified_time" content="2026-07-28T19:11:15+00:00">
+		<meta property="article:tag" content="AI">
+		<meta property="article:tag" content="边缘计算">
+		<meta property="article:tag" content="架构设计">
+		<meta property="article:tag" content="MLOps">
+		<meta property="article:tag" content="计算机视觉">
 
-  <meta name="twitter:card" content="summary">
-  <meta name="twitter:title" content="从勘智云平台拆解：如何自建一套端到端AI模型训练与部署平台">
-  <meta name="twitter:description" content="以嘉楠勘智云训练平台为蓝本，拆解从数据标注到边缘部署的完整架构设计，包含开源替代方案与核心代码实现">
-      <meta name="twitter:site" content="@ChenCiki">
+	<meta name="twitter:card" content="summary">
+	<meta name="twitter:title" content="从勘智云平台拆解：如何自建一套端到端AI模型训练与部署平台">
+	<meta name="twitter:description" content="以嘉楠勘智云训练平台为蓝本，拆解从数据标注到边缘部署的完整架构设计，包含开源替代方案与核心代码实现">
+			<meta name="twitter:site" content="@ChenCiki">
 <meta name="application-name" content="编程心语">
 <meta name="apple-mobile-web-app-title" content="编程心语"><meta name="theme-color" content="#ffffff"><meta name="msapplication-TileColor" content="#da532c"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
         <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
@@ -36,7 +36,7 @@
             "@type": "WebPage",
             "@id": "https:\/\/www.ithome.me\/post\/2026\/07\/15\/edge-ai-training-platform-architecture\/"
         },"image": ["https:\/\/www.ithome.me\/cover.png"],"genre": "posts","keywords": "AI, 边缘计算, 架构设计, MLOps, 计算机视觉","wordcount":  17660 ,
-        "url": "https:\/\/www.ithome.me\/post\/2026\/07\/15\/edge-ai-training-platform-architecture\/","datePublished": "2026-07-15T08:00:00+08:00","dateModified": "2026-07-15T11:13:56+08:00","publisher": {
+        "url": "https:\/\/www.ithome.me\/post\/2026\/07\/15\/edge-ai-training-platform-architecture\/","datePublished": "2026-07-15T08:00:00+08:00","dateModified": "2026-07-28T19:11:15+00:00","publisher": {
             "@type": "Organization",
             "name": "SimonChen","logo": "https:\/\/www.ithome.me\/logo.png"},"author": {
                 "@type": "Person",
@@ -199,58 +199,58 @@
 </div><h3 id="七种cv任务类型">七种CV任务类型</h3>
 <p>勘智云支持七种计算机视觉任务，覆盖了边缘设备最常见的需求：</p>
 <table>
-  <thead>
-      <tr>
-          <th>任务</th>
-          <th>输入</th>
-          <th>输出</th>
-          <th>典型场景</th>
-      </tr>
-  </thead>
-  <tbody>
-      <tr>
-          <td>图像分类</td>
-          <td>图片</td>
-          <td>类别+分数</td>
-          <td>垃圾分类、缺陷检测</td>
-      </tr>
-      <tr>
-          <td>图像检测</td>
-          <td>图片</td>
-          <td>位置框+类别+分数</td>
-          <td>人脸检测、安防监控</td>
-      </tr>
-      <tr>
-          <td>语义分割</td>
-          <td>图片</td>
-          <td>像素级标签图</td>
-          <td>自动驾驶可行驶区域</td>
-      </tr>
-      <tr>
-          <td>OCR检测</td>
-          <td>图片</td>
-          <td>文本区域位置</td>
-          <td>车牌定位、表单提取</td>
-      </tr>
-      <tr>
-          <td>OCR识别</td>
-          <td>图片</td>
-          <td>文本内容</td>
-          <td>车牌识别、文档数字化</td>
-      </tr>
-      <tr>
-          <td>度量学习</td>
-          <td>图片</td>
-          <td>特征向量</td>
-          <td>商品比对、人脸比对</td>
-      </tr>
-      <tr>
-          <td>多标签分类</td>
-          <td>图片</td>
-          <td>多个类别标签</td>
-          <td>场景识别（可同时有山+水+天）</td>
-      </tr>
-  </tbody>
+	<thead>
+			<tr>
+					<th>任务</th>
+					<th>输入</th>
+					<th>输出</th>
+					<th>典型场景</th>
+			</tr>
+	</thead>
+	<tbody>
+			<tr>
+					<td>图像分类</td>
+					<td>图片</td>
+					<td>类别+分数</td>
+					<td>垃圾分类、缺陷检测</td>
+			</tr>
+			<tr>
+					<td>图像检测</td>
+					<td>图片</td>
+					<td>位置框+类别+分数</td>
+					<td>人脸检测、安防监控</td>
+			</tr>
+			<tr>
+					<td>语义分割</td>
+					<td>图片</td>
+					<td>像素级标签图</td>
+					<td>自动驾驶可行驶区域</td>
+			</tr>
+			<tr>
+					<td>OCR检测</td>
+					<td>图片</td>
+					<td>文本区域位置</td>
+					<td>车牌定位、表单提取</td>
+			</tr>
+			<tr>
+					<td>OCR识别</td>
+					<td>图片</td>
+					<td>文本内容</td>
+					<td>车牌识别、文档数字化</td>
+			</tr>
+			<tr>
+					<td>度量学习</td>
+					<td>图片</td>
+					<td>特征向量</td>
+					<td>商品比对、人脸比对</td>
+			</tr>
+			<tr>
+					<td>多标签分类</td>
+					<td>图片</td>
+					<td>多个类别标签</td>
+					<td>场景识别（可同时有山+水+天）</td>
+			</tr>
+	</tbody>
 </table>
 <blockquote>
 <p><strong>小贴士</strong>：度量学习是七种任务里最容易被忽视的。它不直接分类，而是学一个&quot;特征提取器&quot;——把图片变成向量，再通过向量距离比较相似度。好处是新增类别不需要重新训练，只要往特征库里加新样本就行。这在实际业务中非常实用。</p>
@@ -482,46 +482,46 @@
 <p><strong>2. 训练脚本封装</strong></p>
 <p>勘智云针对每种任务类型封装了训练脚本。但写训练循环是重复劳动，先看现成的训练框架：</p>
 <table>
-  <thead>
-      <tr>
-          <th>开源项目</th>
-          <th>GitHub</th>
-          <th>覆盖任务</th>
-          <th>特点</th>
-      </tr>
-  </thead>
-  <tbody>
-      <tr>
-          <td><strong>OpenMMLab系列</strong></td>
-          <td><code>github.com/open-mmlab</code></td>
-          <td>分类(MMClassification)/检测(MMDetection)/分割(MMSegmentation)</td>
-          <td>全套CV训练流水线，配置文件驱动，不用写训练代码</td>
-      </tr>
-      <tr>
-          <td><strong>Ultralytics YOLO</strong></td>
-          <td><code>github.com/ultralytics/ultralytics</code></td>
-          <td>目标检测、分割、姿态估计</td>
-          <td>一行命令训练：<code>yolo train model=yolov8n.pt data=coco.yaml</code></td>
-      </tr>
-      <tr>
-          <td><strong>PyTorch Lightning</strong></td>
-          <td><code>github.com/Lightning-AI/pytorch-lightning</code></td>
-          <td>通用PyTorch训练</td>
-          <td>把训练循环、验证、日志、checkpoint全封装好</td>
-      </tr>
-      <tr>
-          <td><strong>Detectron2</strong></td>
-          <td><code>github.com/facebookresearch/detectron2</code></td>
-          <td>检测、分割、姿态估计</td>
-          <td>Meta出品，预置大量模型和配置，适合研究型用户</td>
-      </tr>
-      <tr>
-          <td>** segmentation_models_pytorch**</td>
-          <td><code>github.com/qubvel/segmentation_models.pytorch</code></td>
-          <td>图像分割</td>
-          <td>专注分割，几十种骨干网络+解码器组合</td>
-      </tr>
-  </tbody>
+	<thead>
+			<tr>
+					<th>开源项目</th>
+					<th>GitHub</th>
+					<th>覆盖任务</th>
+					<th>特点</th>
+			</tr>
+	</thead>
+	<tbody>
+			<tr>
+					<td><strong>OpenMMLab系列</strong></td>
+					<td><code>github.com/open-mmlab</code></td>
+					<td>分类(MMClassification)/检测(MMDetection)/分割(MMSegmentation)</td>
+					<td>全套CV训练流水线，配置文件驱动，不用写训练代码</td>
+			</tr>
+			<tr>
+					<td><strong>Ultralytics YOLO</strong></td>
+					<td><code>github.com/ultralytics/ultralytics</code></td>
+					<td>目标检测、分割、姿态估计</td>
+					<td>一行命令训练：<code>yolo train model=yolov8n.pt data=coco.yaml</code></td>
+			</tr>
+			<tr>
+					<td><strong>PyTorch Lightning</strong></td>
+					<td><code>github.com/Lightning-AI/pytorch-lightning</code></td>
+					<td>通用PyTorch训练</td>
+					<td>把训练循环、验证、日志、checkpoint全封装好</td>
+			</tr>
+			<tr>
+					<td><strong>Detectron2</strong></td>
+					<td><code>github.com/facebookresearch/detectron2</code></td>
+					<td>检测、分割、姿态估计</td>
+					<td>Meta出品，预置大量模型和配置，适合研究型用户</td>
+			</tr>
+			<tr>
+					<td>** segmentation_models_pytorch**</td>
+					<td><code>github.com/qubvel/segmentation_models.pytorch</code></td>
+					<td>图像分割</td>
+					<td>专注分割，几十种骨干网络+解码器组合</td>
+			</tr>
+	</tbody>
 </table>
 <blockquote>
 <p><strong>怎么选？</strong> 如果只做目标检测，Ultralytics YOLO 是最省事的——一行命令完成训练，自动输出模型。如果要做分类+检测+分割全任务类型平台，用 OpenMMLab 系列——三个库覆盖三种任务，配置文件统一，适合标准化。下面代码展示的是原理（自己写训练循环），实际生产环境用上面这些框架能省掉80%的训练代码。</p>
@@ -790,58 +790,58 @@
 <p><strong>开源方案推荐（量化转换不用自己写）</strong></p>
 <p>模型量化是门槛最高的环节，涉及算子融合、校准、精度对齐等复杂操作。好在有多种成熟的开源工具覆盖不同硬件目标：</p>
 <table>
-  <thead>
-      <tr>
-          <th>开源项目</th>
-          <th>GitHub</th>
-          <th>量化目标硬件</th>
-          <th>适用场景</th>
-      </tr>
-  </thead>
-  <tbody>
-      <tr>
-          <td><strong>ONNX Runtime</strong></td>
-          <td><code>github.com/microsoft/onnxruntime</code></td>
-          <td>CPU/GPU通用</td>
-          <td>跨平台推理+量化，最通用</td>
-      </tr>
-      <tr>
-          <td><strong>TensorRT</strong></td>
-          <td>NVIDIA官方</td>
-          <td>NVIDIA GPU</td>
-          <td>Jetson Nano/AGX等NVIDIA设备，推理最快</td>
-      </tr>
-      <tr>
-          <td><strong>OpenVINO</strong></td>
-          <td><code>github.com/openvinotoolkit/openvino</code></td>
-          <td>Intel CPU/iGPU/VPU</td>
-          <td>树莓派、Intel NUC、Movidius</td>
-      </tr>
-      <tr>
-          <td><strong>TFLite Converter</strong></td>
-          <td><code>github.com/tensorflow/tensorflow</code></td>
-          <td>Android/MCU</td>
-          <td>手机、ESP32-S3、微控制器</td>
-      </tr>
-      <tr>
-          <td><strong>NCNN</strong></td>
-          <td><code>github.com/Tencent/ncnn</code></td>
-          <td>ARM移动端</td>
-          <td>Android/iOS应用内推理</td>
-      </tr>
-      <tr>
-          <td><strong>Brevitas</strong></td>
-          <td><code>github.com/Xilinx/brevitas</code></td>
-          <td>通用（PyTorch原生量化）</td>
-          <td>量化感知训练（QAT），精度更高</td>
-      </tr>
-      <tr>
-          <td><strong>Paddle-Lite</strong></td>
-          <td><code>github.com/PaddlePaddle/Paddle-Lite</code></td>
-          <td>多硬件</td>
-          <td>百度的边缘推理框架，支持ARM/GPU/NPU</td>
-      </tr>
-  </tbody>
+	<thead>
+			<tr>
+					<th>开源项目</th>
+					<th>GitHub</th>
+					<th>量化目标硬件</th>
+					<th>适用场景</th>
+			</tr>
+	</thead>
+	<tbody>
+			<tr>
+					<td><strong>ONNX Runtime</strong></td>
+					<td><code>github.com/microsoft/onnxruntime</code></td>
+					<td>CPU/GPU通用</td>
+					<td>跨平台推理+量化，最通用</td>
+			</tr>
+			<tr>
+					<td><strong>TensorRT</strong></td>
+					<td>NVIDIA官方</td>
+					<td>NVIDIA GPU</td>
+					<td>Jetson Nano/AGX等NVIDIA设备，推理最快</td>
+			</tr>
+			<tr>
+					<td><strong>OpenVINO</strong></td>
+					<td><code>github.com/openvinotoolkit/openvino</code></td>
+					<td>Intel CPU/iGPU/VPU</td>
+					<td>树莓派、Intel NUC、Movidius</td>
+			</tr>
+			<tr>
+					<td><strong>TFLite Converter</strong></td>
+					<td><code>github.com/tensorflow/tensorflow</code></td>
+					<td>Android/MCU</td>
+					<td>手机、ESP32-S3、微控制器</td>
+			</tr>
+			<tr>
+					<td><strong>NCNN</strong></td>
+					<td><code>github.com/Tencent/ncnn</code></td>
+					<td>ARM移动端</td>
+					<td>Android/iOS应用内推理</td>
+			</tr>
+			<tr>
+					<td><strong>Brevitas</strong></td>
+					<td><code>github.com/Xilinx/brevitas</code></td>
+					<td>通用（PyTorch原生量化）</td>
+					<td>量化感知训练（QAT），精度更高</td>
+			</tr>
+			<tr>
+					<td><strong>Paddle-Lite</strong></td>
+					<td><code>github.com/PaddlePaddle/Paddle-Lite</code></td>
+					<td>多硬件</td>
+					<td>百度的边缘推理框架，支持ARM/GPU/NPU</td>
+			</tr>
+	</tbody>
 </table>
 <blockquote>
 <p><strong>怎么选？</strong> 看你的目标硬件。如果只面向一种硬件，直接用对应的工具链（比如Jetson就用TensorRT，树莓派就用OpenVINO）。如果想做&quot;一次训练到处部署&quot;的多硬件平台，以ONNX为中间格式，再分别转成各目标格式——这是最通用的路径。下面代码演示的就是这条 ONNX → TFLite 的转换链路。</p>
@@ -1023,46 +1023,46 @@
 </ul>
 <p><strong>开源方案推荐（打包分发不用自己写）</strong></p>
 <table>
-  <thead>
-      <tr>
-          <th>开源项目</th>
-          <th>GitHub</th>
-          <th>能力</th>
-          <th>适用场景</th>
-      </tr>
-  </thead>
-  <tbody>
-      <tr>
-          <td><strong>BentoML</strong></td>
-          <td><code>github.com/bentoml/BentoML</code></td>
-          <td>模型+依赖+推理代码打包成一个&quot;Bento&quot;</td>
-          <td>把训练好的模型打包成可分发的服务</td>
-      </tr>
-      <tr>
-          <td><strong>MLflow Model Registry</strong></td>
-          <td><code>github.com/mlflow/mlflow</code></td>
-          <td>模型版本管理 + 阶段管理（staging/production）</td>
-          <td>管理多个版本的模型，支持回滚</td>
-      </tr>
-      <tr>
-          <td><strong>TorchServe</strong></td>
-          <td><code>github.com/pytorch/serve</code></td>
-          <td>PyTorch官方模型服务框架</td>
-          <td>对接PyTorch模型，提供REST/gRPC推理API</td>
-      </tr>
-      <tr>
-          <td><strong>MinIO</strong></td>
-          <td><code>github.com/minio/minio</code></td>
-          <td>S3兼容对象存储</td>
-          <td>存储和分发模型文件，支持预签名URL下载</td>
-      </tr>
-      <tr>
-          <td><strong>ONNX Runtime Web</strong></td>
-          <td><code>github.com/microsoft/onnxruntime</code></td>
-          <td>浏览器端推理</td>
-          <td>直接在网页里跑模型，不需要服务器</td>
-      </tr>
-  </tbody>
+	<thead>
+			<tr>
+					<th>开源项目</th>
+					<th>GitHub</th>
+					<th>能力</th>
+					<th>适用场景</th>
+			</tr>
+	</thead>
+	<tbody>
+			<tr>
+					<td><strong>BentoML</strong></td>
+					<td><code>github.com/bentoml/BentoML</code></td>
+					<td>模型+依赖+推理代码打包成一个&quot;Bento&quot;</td>
+					<td>把训练好的模型打包成可分发的服务</td>
+			</tr>
+			<tr>
+					<td><strong>MLflow Model Registry</strong></td>
+					<td><code>github.com/mlflow/mlflow</code></td>
+					<td>模型版本管理 + 阶段管理（staging/production）</td>
+					<td>管理多个版本的模型，支持回滚</td>
+			</tr>
+			<tr>
+					<td><strong>TorchServe</strong></td>
+					<td><code>github.com/pytorch/serve</code></td>
+					<td>PyTorch官方模型服务框架</td>
+					<td>对接PyTorch模型，提供REST/gRPC推理API</td>
+			</tr>
+			<tr>
+					<td><strong>MinIO</strong></td>
+					<td><code>github.com/minio/minio</code></td>
+					<td>S3兼容对象存储</td>
+					<td>存储和分发模型文件，支持预签名URL下载</td>
+			</tr>
+			<tr>
+					<td><strong>ONNX Runtime Web</strong></td>
+					<td><code>github.com/microsoft/onnxruntime</code></td>
+					<td>浏览器端推理</td>
+					<td>直接在网页里跑模型，不需要服务器</td>
+			</tr>
+	</tbody>
 </table>
 <blockquote>
 <p><strong>怎么选？</strong> 如果目标是&quot;用户下载模型文件，自己部署到设备&quot;（勘智云模式），用 MinIO 做存储 + BentoML 做打包。如果目标是&quot;平台直接提供推理API&quot;（云端推理模式），用 TorchServe 或 BentoML 部署为在线服务。下面代码演示的是勘智云模式——打包成ZIP发给用户。</p>
@@ -2817,82 +2817,82 @@
 </div><h2 id="自建方案技术选型清单">自建方案：技术选型清单</h2>
 <p>如果你要搭一套类似的平台，这是完整的选型参考：</p>
 <table>
-  <thead>
-      <tr>
-          <th>模块</th>
-          <th>勘智云方案</th>
-          <th>开源自建方案</th>
-          <th>备注</th>
-      </tr>
-  </thead>
-  <tbody>
-      <tr>
-          <td>前端</td>
-          <td>自研</td>
-          <td>Vue3 + Element Plus</td>
-          <td>或React+AntDesign</td>
-      </tr>
-      <tr>
-          <td>后端API</td>
-          <td>自研</td>
-          <td>FastAPI (Python)</td>
-          <td>天然适合ML场景</td>
-      </tr>
-      <tr>
-          <td>数据标注</td>
-          <td>自研</td>
-          <td>CVAT (Docker)</td>
-          <td>Intel开源，功能完善</td>
-      </tr>
-      <tr>
-          <td>数据存储</td>
-          <td>自建</td>
-          <td>MinIO (S3兼容)</td>
-          <td>或直接用本地NAS</td>
-      </tr>
-      <tr>
-          <td>任务队列</td>
-          <td>自建</td>
-          <td>Redis + Celery</td>
-          <td>简单场景Redis够用</td>
-      </tr>
-      <tr>
-          <td>训练框架</td>
-          <td>自研脚本</td>
-          <td>PyTorch + torchvision</td>
-          <td>主流CV框架</td>
-      </tr>
-      <tr>
-          <td>GPU调度</td>
-          <td>自建</td>
-          <td>Docker + NVIDIA Container</td>
-          <td>或Kubernetes</td>
-      </tr>
-      <tr>
-          <td>模型量化</td>
-          <td>自研(KModel)</td>
-          <td>ONNX → TFLite int8</td>
-          <td>通用性更强</td>
-      </tr>
-      <tr>
-          <td>部署格式</td>
-          <td>.kmodel</td>
-          <td>.tflite / .onnx</td>
-          <td>看目标硬件</td>
-      </tr>
-      <tr>
-          <td>通知</td>
-          <td>邮件</td>
-          <td>邮件 + Webhook</td>
-          <td>可加Telegram Bot</td>
-      </tr>
-      <tr>
-          <td>日志监控</td>
-          <td>自研</td>
-          <td>ELK / Grafana</td>
-          <td>训练日志收集</td>
-      </tr>
-  </tbody>
+	<thead>
+			<tr>
+					<th>模块</th>
+					<th>勘智云方案</th>
+					<th>开源自建方案</th>
+					<th>备注</th>
+			</tr>
+	</thead>
+	<tbody>
+			<tr>
+					<td>前端</td>
+					<td>自研</td>
+					<td>Vue3 + Element Plus</td>
+					<td>或React+AntDesign</td>
+			</tr>
+			<tr>
+					<td>后端API</td>
+					<td>自研</td>
+					<td>FastAPI (Python)</td>
+					<td>天然适合ML场景</td>
+			</tr>
+			<tr>
+					<td>数据标注</td>
+					<td>自研</td>
+					<td>CVAT (Docker)</td>
+					<td>Intel开源，功能完善</td>
+			</tr>
+			<tr>
+					<td>数据存储</td>
+					<td>自建</td>
+					<td>MinIO (S3兼容)</td>
+					<td>或直接用本地NAS</td>
+			</tr>
+			<tr>
+					<td>任务队列</td>
+					<td>自建</td>
+					<td>Redis + Celery</td>
+					<td>简单场景Redis够用</td>
+			</tr>
+			<tr>
+					<td>训练框架</td>
+					<td>自研脚本</td>
+					<td>PyTorch + torchvision</td>
+					<td>主流CV框架</td>
+			</tr>
+			<tr>
+					<td>GPU调度</td>
+					<td>自建</td>
+					<td>Docker + NVIDIA Container</td>
+					<td>或Kubernetes</td>
+			</tr>
+			<tr>
+					<td>模型量化</td>
+					<td>自研(KModel)</td>
+					<td>ONNX → TFLite int8</td>
+					<td>通用性更强</td>
+			</tr>
+			<tr>
+					<td>部署格式</td>
+					<td>.kmodel</td>
+					<td>.tflite / .onnx</td>
+					<td>看目标硬件</td>
+			</tr>
+			<tr>
+					<td>通知</td>
+					<td>邮件</td>
+					<td>邮件 + Webhook</td>
+					<td>可加Telegram Bot</td>
+			</tr>
+			<tr>
+					<td>日志监控</td>
+					<td>自研</td>
+					<td>ELK / Grafana</td>
+					<td>训练日志收集</td>
+			</tr>
+	</tbody>
 </table>
 <h2 id="关键设计决策与权衡">关键设计决策与权衡</h2>
 <h3 id="1-限制1000张图片这是聪明的取舍">1. 限制1000张图片：这是聪明的取舍</h3>
@@ -2922,34 +2922,34 @@
 <p>搭一套AI训练平台，硬件核心就三块：<strong>GPU算力、存储、网络</strong>。</p>
 <p><strong>GPU服务器选型：</strong></p>
 <table>
-  <thead>
-      <tr>
-          <th>方案</th>
-          <th>配置</th>
-          <th>适用阶段</th>
-          <th>月成本估算</th>
-      </tr>
-  </thead>
-  <tbody>
-      <tr>
-          <td>入门：单机</td>
-          <td>1×RTX 3090 (24GB) + 64GB RAM</td>
-          <td>MVP/开发验证</td>
-          <td>租~$300，自购~$2500</td>
-      </tr>
-      <tr>
-          <td>标准：单机</td>
-          <td>2×V100 (32GB) + 128GB RAM</td>
-          <td>小规模商用</td>
-          <td>租~$800，自购~$8000</td>
-      </tr>
-      <tr>
-          <td>规模化：集群</td>
-          <td>4×A100 (40GB) + 256GB RAM</td>
-          <td>多用户并发</td>
-          <td>租~$3000，自购~$30000</td>
-      </tr>
-  </tbody>
+	<thead>
+			<tr>
+					<th>方案</th>
+					<th>配置</th>
+					<th>适用阶段</th>
+					<th>月成本估算</th>
+			</tr>
+	</thead>
+	<tbody>
+			<tr>
+					<td>入门：单机</td>
+					<td>1×RTX 3090 (24GB) + 64GB RAM</td>
+					<td>MVP/开发验证</td>
+					<td>租~$300，自购~$2500</td>
+			</tr>
+			<tr>
+					<td>标准：单机</td>
+					<td>2×V100 (32GB) + 128GB RAM</td>
+					<td>小规模商用</td>
+					<td>租~$800，自购~$8000</td>
+			</tr>
+			<tr>
+					<td>规模化：集群</td>
+					<td>4×A100 (40GB) + 256GB RAM</td>
+					<td>多用户并发</td>
+					<td>租~$3000，自购~$30000</td>
+			</tr>
+	</tbody>
 </table>
 <blockquote>
 <p><strong>关键决策：租还是买？</strong> GPU降价很快，A100两年前$10000/张，现在二手$6000。如果刚开始做，建议租云GPU（AutoDL、Lambda Cloud、Vast.ai）验证模式，模式跑通了再买。勘智云用8块V100，说明它的峰值并发是8个训练任务。</p>
@@ -3021,64 +3021,64 @@
 <p>所有服务用 Docker Compose 统一编排，一个 <code>docker-compose.yml</code> 拉起整个平台。不需要 Kubernetes——单机阶段 Docker Compose 足够。</p>
 <p>核心服务清单：</p>
 <table>
-  <thead>
-      <tr>
-          <th>服务名</th>
-          <th>镜像</th>
-          <th>端口</th>
-          <th>职责</th>
-      </tr>
-  </thead>
-  <tbody>
-      <tr>
-          <td><code>nginx</code></td>
-          <td>nginx:alpine</td>
-          <td>80/443</td>
-          <td>反向代理、SSL终止、静态资源</td>
-      </tr>
-      <tr>
-          <td><code>frontend</code></td>
-          <td>自构建（Vue3→Nginx）</td>
-          <td>8080</td>
-          <td>Web前端</td>
-      </tr>
-      <tr>
-          <td><code>api</code></td>
-          <td>自构建（FastAPI+Uvicorn）</td>
-          <td>8000</td>
-          <td>REST API + WebSocket</td>
-      </tr>
-      <tr>
-          <td><code>cvat</code></td>
-          <td>cvat/server:latest</td>
-          <td>8081</td>
-          <td>在线标注工具</td>
-      </tr>
-      <tr>
-          <td><code>redis</code></td>
-          <td>redis:7-alpine</td>
-          <td>6379</td>
-          <td>任务队列 + 缓存</td>
-      </tr>
-      <tr>
-          <td><code>postgres</code></td>
-          <td>postgres:16</td>
-          <td>5432</td>
-          <td>用户/任务/数据集元数据</td>
-      </tr>
-      <tr>
-          <td><code>minio</code></td>
-          <td>minio/minio:latest</td>
-          <td>9000</td>
-          <td>对象存储（数据集/模型文件）</td>
-      </tr>
-      <tr>
-          <td><code>gpu-worker</code></td>
-          <td>自构建（PyTorch+CUDA）</td>
-          <td>无</td>
-          <td>GPU训练工作进程</td>
-      </tr>
-  </tbody>
+	<thead>
+			<tr>
+					<th>服务名</th>
+					<th>镜像</th>
+					<th>端口</th>
+					<th>职责</th>
+			</tr>
+	</thead>
+	<tbody>
+			<tr>
+					<td><code>nginx</code></td>
+					<td>nginx:alpine</td>
+					<td>80/443</td>
+					<td>反向代理、SSL终止、静态资源</td>
+			</tr>
+			<tr>
+					<td><code>frontend</code></td>
+					<td>自构建（Vue3→Nginx）</td>
+					<td>8080</td>
+					<td>Web前端</td>
+			</tr>
+			<tr>
+					<td><code>api</code></td>
+					<td>自构建（FastAPI+Uvicorn）</td>
+					<td>8000</td>
+					<td>REST API + WebSocket</td>
+			</tr>
+			<tr>
+					<td><code>cvat</code></td>
+					<td>cvat/server:latest</td>
+					<td>8081</td>
+					<td>在线标注工具</td>
+			</tr>
+			<tr>
+					<td><code>redis</code></td>
+					<td>redis:7-alpine</td>
+					<td>6379</td>
+					<td>任务队列 + 缓存</td>
+			</tr>
+			<tr>
+					<td><code>postgres</code></td>
+					<td>postgres:16</td>
+					<td>5432</td>
+					<td>用户/任务/数据集元数据</td>
+			</tr>
+			<tr>
+					<td><code>minio</code></td>
+					<td>minio/minio:latest</td>
+					<td>9000</td>
+					<td>对象存储（数据集/模型文件）</td>
+			</tr>
+			<tr>
+					<td><code>gpu-worker</code></td>
+					<td>自构建（PyTorch+CUDA）</td>
+					<td>无</td>
+					<td>GPU训练工作进程</td>
+			</tr>
+	</tbody>
 </table>
 <blockquote>
 <p><strong>为什么不用Kubernetes？</strong> K8s的学习成本和运维成本远超Docker Compose。当你的GPU节点超过3台、需要自动扩缩容时再上K8s。在此之前，Docker Compose + SSH部署到多台机器是更务实的选择。</p>
@@ -3087,184 +3087,184 @@
 <p>平台需要管理的核心数据有四类：用户、数据集、训练任务、训练结果。核心表结构如下：</p>
 <p><strong>users（用户表）</strong></p>
 <table>
-  <thead>
-      <tr>
-          <th>字段</th>
-          <th>类型</th>
-          <th>说明</th>
-      </tr>
-  </thead>
-  <tbody>
-      <tr>
-          <td>id</td>
-          <td>UUID</td>
-          <td>主键</td>
-      </tr>
-      <tr>
-          <td>email</td>
-          <td>VARCHAR</td>
-          <td>登录邮箱</td>
-      </tr>
-      <tr>
-          <td>password_hash</td>
-          <td>VARCHAR</td>
-          <td>bcrypt哈希</td>
-      </tr>
-      <tr>
-          <td>plan</td>
-          <td>ENUM</td>
-          <td>free / pro / enterprise</td>
-      </tr>
-      <tr>
-          <td>quota_remaining</td>
-          <td>INT</td>
-          <td>剩余训练次数</td>
-      </tr>
-      <tr>
-          <td>created_at</td>
-          <td>TIMESTAMP</td>
-          <td>注册时间</td>
-      </tr>
-  </tbody>
+	<thead>
+			<tr>
+					<th>字段</th>
+					<th>类型</th>
+					<th>说明</th>
+			</tr>
+	</thead>
+	<tbody>
+			<tr>
+					<td>id</td>
+					<td>UUID</td>
+					<td>主键</td>
+			</tr>
+			<tr>
+					<td>email</td>
+					<td>VARCHAR</td>
+					<td>登录邮箱</td>
+			</tr>
+			<tr>
+					<td>password_hash</td>
+					<td>VARCHAR</td>
+					<td>bcrypt哈希</td>
+			</tr>
+			<tr>
+					<td>plan</td>
+					<td>ENUM</td>
+					<td>free / pro / enterprise</td>
+			</tr>
+			<tr>
+					<td>quota_remaining</td>
+					<td>INT</td>
+					<td>剩余训练次数</td>
+			</tr>
+			<tr>
+					<td>created_at</td>
+					<td>TIMESTAMP</td>
+					<td>注册时间</td>
+			</tr>
+	</tbody>
 </table>
 <p><strong>datasets（数据集表）</strong></p>
 <table>
-  <thead>
-      <tr>
-          <th>字段</th>
-          <th>类型</th>
-          <th>说明</th>
-      </tr>
-  </thead>
-  <tbody>
-      <tr>
-          <td>id</td>
-          <td>UUID</td>
-          <td>主键</td>
-      </tr>
-      <tr>
-          <td>user_id</td>
-          <td>UUID</td>
-          <td>外键→users</td>
-      </tr>
-      <tr>
-          <td>name</td>
-          <td>VARCHAR</td>
-          <td>数据集名称</td>
-      </tr>
-      <tr>
-          <td>task_type</td>
-          <td>ENUM</td>
-          <td>classification/detection/segmentation</td>
-      </tr>
-      <tr>
-          <td>num_images</td>
-          <td>INT</td>
-          <td>图片数量</td>
-      </tr>
-      <tr>
-          <td>num_classes</td>
-          <td>INT</td>
-          <td>类别数</td>
-      </tr>
-      <tr>
-          <td>classes</td>
-          <td>JSON</td>
-          <td>类别名称列表</td>
-      </tr>
-      <tr>
-          <td>storage_path</td>
-          <td>VARCHAR</td>
-          <td>MinIO中的对象路径</td>
-      </tr>
-      <tr>
-          <td>status</td>
-          <td>ENUM</td>
-          <td>extracting/ready/error</td>
-      </tr>
-      <tr>
-          <td>created_at</td>
-          <td>TIMESTAMP</td>
-          <td>上传时间</td>
-      </tr>
-  </tbody>
+	<thead>
+			<tr>
+					<th>字段</th>
+					<th>类型</th>
+					<th>说明</th>
+			</tr>
+	</thead>
+	<tbody>
+			<tr>
+					<td>id</td>
+					<td>UUID</td>
+					<td>主键</td>
+			</tr>
+			<tr>
+					<td>user_id</td>
+					<td>UUID</td>
+					<td>外键→users</td>
+			</tr>
+			<tr>
+					<td>name</td>
+					<td>VARCHAR</td>
+					<td>数据集名称</td>
+			</tr>
+			<tr>
+					<td>task_type</td>
+					<td>ENUM</td>
+					<td>classification/detection/segmentation</td>
+			</tr>
+			<tr>
+					<td>num_images</td>
+					<td>INT</td>
+					<td>图片数量</td>
+			</tr>
+			<tr>
+					<td>num_classes</td>
+					<td>INT</td>
+					<td>类别数</td>
+			</tr>
+			<tr>
+					<td>classes</td>
+					<td>JSON</td>
+					<td>类别名称列表</td>
+			</tr>
+			<tr>
+					<td>storage_path</td>
+					<td>VARCHAR</td>
+					<td>MinIO中的对象路径</td>
+			</tr>
+			<tr>
+					<td>status</td>
+					<td>ENUM</td>
+					<td>extracting/ready/error</td>
+			</tr>
+			<tr>
+					<td>created_at</td>
+					<td>TIMESTAMP</td>
+					<td>上传时间</td>
+			</tr>
+	</tbody>
 </table>
 <p><strong>training_tasks（训练任务表）</strong></p>
 <table>
-  <thead>
-      <tr>
-          <th>字段</th>
-          <th>类型</th>
-          <th>说明</th>
-      </tr>
-  </thead>
-  <tbody>
-      <tr>
-          <td>id</td>
-          <td>UUID</td>
-          <td>主键</td>
-      </tr>
-      <tr>
-          <td>user_id</td>
-          <td>UUID</td>
-          <td>外键→users</td>
-      </tr>
-      <tr>
-          <td>dataset_id</td>
-          <td>UUID</td>
-          <td>外键→datasets</td>
-      </tr>
-      <tr>
-          <td>task_type</td>
-          <td>ENUM</td>
-          <td>任务类型</td>
-      </tr>
-      <tr>
-          <td>config</td>
-          <td>JSON</td>
-          <td>训练参数（epochs/lr/backbone等）</td>
-      </tr>
-      <tr>
-          <td>status</td>
-          <td>ENUM</td>
-          <td>queued/preparing_data/training/evaluating/converting/packaging/completed/failed</td>
-      </tr>
-      <tr>
-          <td>gpu_id</td>
-          <td>VARCHAR</td>
-          <td>分配的GPU编号</td>
-      </tr>
-      <tr>
-          <td>best_metric</td>
-          <td>FLOAT</td>
-          <td>最佳准确率/mAP/mIoU</td>
-      </tr>
-      <tr>
-          <td>model_path</td>
-          <td>VARCHAR</td>
-          <td>部署包在MinIO中的路径</td>
-      </tr>
-      <tr>
-          <td>eval_report</td>
-          <td>JSON</td>
-          <td>评估报告（混淆矩阵等）</td>
-      </tr>
-      <tr>
-          <td>started_at</td>
-          <td>TIMESTAMP</td>
-          <td>开始训练时间</td>
-      </tr>
-      <tr>
-          <td>completed_at</td>
-          <td>TIMESTAMP</td>
-          <td>完成时间</td>
-      </tr>
-      <tr>
-          <td>error_msg</td>
-          <td>TEXT</td>
-          <td>失败原因（如有）</td>
-      </tr>
-  </tbody>
+	<thead>
+			<tr>
+					<th>字段</th>
+					<th>类型</th>
+					<th>说明</th>
+			</tr>
+	</thead>
+	<tbody>
+			<tr>
+					<td>id</td>
+					<td>UUID</td>
+					<td>主键</td>
+			</tr>
+			<tr>
+					<td>user_id</td>
+					<td>UUID</td>
+					<td>外键→users</td>
+			</tr>
+			<tr>
+					<td>dataset_id</td>
+					<td>UUID</td>
+					<td>外键→datasets</td>
+			</tr>
+			<tr>
+					<td>task_type</td>
+					<td>ENUM</td>
+					<td>任务类型</td>
+			</tr>
+			<tr>
+					<td>config</td>
+					<td>JSON</td>
+					<td>训练参数（epochs/lr/backbone等）</td>
+			</tr>
+			<tr>
+					<td>status</td>
+					<td>ENUM</td>
+					<td>queued/preparing_data/training/evaluating/converting/packaging/completed/failed</td>
+			</tr>
+			<tr>
+					<td>gpu_id</td>
+					<td>VARCHAR</td>
+					<td>分配的GPU编号</td>
+			</tr>
+			<tr>
+					<td>best_metric</td>
+					<td>FLOAT</td>
+					<td>最佳准确率/mAP/mIoU</td>
+			</tr>
+			<tr>
+					<td>model_path</td>
+					<td>VARCHAR</td>
+					<td>部署包在MinIO中的路径</td>
+			</tr>
+			<tr>
+					<td>eval_report</td>
+					<td>JSON</td>
+					<td>评估报告（混淆矩阵等）</td>
+			</tr>
+			<tr>
+					<td>started_at</td>
+					<td>TIMESTAMP</td>
+					<td>开始训练时间</td>
+			</tr>
+			<tr>
+					<td>completed_at</td>
+					<td>TIMESTAMP</td>
+					<td>完成时间</td>
+			</tr>
+			<tr>
+					<td>error_msg</td>
+					<td>TEXT</td>
+					<td>失败原因（如有）</td>
+			</tr>
+	</tbody>
 </table>
 <blockquote>
 <p><strong>设计要点</strong>：<code>config</code> 和 <code>eval_report</code> 用 JSON 字段而非拆成多列。因为训练参数会随任务类型变化（分类要 epochs，检测要 anchor_size），用 JSON 更灵活。<code>status</code> 用枚举类型而非字符串，防止脏数据。PostgreSQL 对 JSON 字段有原生查询支持（<code>config-&gt;&gt;'backbone' = 'resnet18'</code>），不用担心灵活性损失。</p>
@@ -3272,42 +3272,42 @@
 <h3 id="四用户体系与配额管理">四、用户体系与配额管理</h3>
 <p>勘智云免费提供训练，但限制&quot;每用户1个并发任务&quot;。如果做商业平台，需要一个多级配额体系：</p>
 <table>
-  <thead>
-      <tr>
-          <th>套餐</th>
-          <th>月费</th>
-          <th>并发任务</th>
-          <th>单次图片上限</th>
-          <th>单次训练轮数</th>
-          <th>模型保留期</th>
-      </tr>
-  </thead>
-  <tbody>
-      <tr>
-          <td>免费</td>
-          <td>$0</td>
-          <td>1</td>
-          <td>500</td>
-          <td>30</td>
-          <td>7天</td>
-      </tr>
-      <tr>
-          <td>专业</td>
-          <td>$29/月</td>
-          <td>3</td>
-          <td>5000</td>
-          <td>100</td>
-          <td>90天</td>
-      </tr>
-      <tr>
-          <td>企业</td>
-          <td>$199/月</td>
-          <td>10</td>
-          <td>50000</td>
-          <td>不限</td>
-          <td>永久</td>
-      </tr>
-  </tbody>
+	<thead>
+			<tr>
+					<th>套餐</th>
+					<th>月费</th>
+					<th>并发任务</th>
+					<th>单次图片上限</th>
+					<th>单次训练轮数</th>
+					<th>模型保留期</th>
+			</tr>
+	</thead>
+	<tbody>
+			<tr>
+					<td>免费</td>
+					<td>$0</td>
+					<td>1</td>
+					<td>500</td>
+					<td>30</td>
+					<td>7天</td>
+			</tr>
+			<tr>
+					<td>专业</td>
+					<td>$29/月</td>
+					<td>3</td>
+					<td>5000</td>
+					<td>100</td>
+					<td>90天</td>
+			</tr>
+			<tr>
+					<td>企业</td>
+					<td>$199/月</td>
+					<td>10</td>
+					<td>50000</td>
+					<td>不限</td>
+					<td>永久</td>
+			</tr>
+	</tbody>
 </table>
 <p><strong>配额执行逻辑：</strong></p>
 <ul>
@@ -3348,79 +3348,79 @@
 <p>搭一套最小可用平台（MVP）的成本：</p>
 <p><strong>一次性成本：</strong></p>
 <table>
-  <thead>
-      <tr>
-          <th>项目</th>
-          <th>费用</th>
-      </tr>
-  </thead>
-  <tbody>
-      <tr>
-          <td>域名</td>
-          <td>~$10/年</td>
-      </tr>
-      <tr>
-          <td>SSL证书</td>
-          <td>免费（Let&rsquo;s Encrypt）</td>
-      </tr>
-      <tr>
-          <td>前端开发</td>
-          <td>1人×2周</td>
-      </tr>
-      <tr>
-          <td>后端开发</td>
-          <td>1人×3周</td>
-      </tr>
-      <tr>
-          <td>GPU Worker开发</td>
-          <td>1人×2周</td>
-      </tr>
-      <tr>
-          <td>DevOps部署</td>
-          <td>1人×1周</td>
-      </tr>
-      <tr>
-          <td><strong>合计人力</strong></td>
-          <td><strong>约8周（1人）或2周（3人团队）</strong></td>
-      </tr>
-  </tbody>
+	<thead>
+			<tr>
+					<th>项目</th>
+					<th>费用</th>
+			</tr>
+	</thead>
+	<tbody>
+			<tr>
+					<td>域名</td>
+					<td>~$10/年</td>
+			</tr>
+			<tr>
+					<td>SSL证书</td>
+					<td>免费（Let&rsquo;s Encrypt）</td>
+			</tr>
+			<tr>
+					<td>前端开发</td>
+					<td>1人×2周</td>
+			</tr>
+			<tr>
+					<td>后端开发</td>
+					<td>1人×3周</td>
+			</tr>
+			<tr>
+					<td>GPU Worker开发</td>
+					<td>1人×2周</td>
+			</tr>
+			<tr>
+					<td>DevOps部署</td>
+					<td>1人×1周</td>
+			</tr>
+			<tr>
+					<td><strong>合计人力</strong></td>
+					<td><strong>约8周（1人）或2周（3人团队）</strong></td>
+			</tr>
+	</tbody>
 </table>
 <p><strong>月运营成本（MVP阶段）：</strong></p>
 <table>
-  <thead>
-      <tr>
-          <th>项目</th>
-          <th>方案</th>
-          <th>月成本</th>
-      </tr>
-  </thead>
-  <tbody>
-      <tr>
-          <td>GPU服务器</td>
-          <td>租1×RTX 3090（AutoDL/腾讯云）</td>
-          <td>~$300</td>
-      </tr>
-      <tr>
-          <td>Web服务器</td>
-          <td>4核8G云主机</td>
-          <td>~$40</td>
-      </tr>
-      <tr>
-          <td>存储</td>
-          <td>1TB NVMe + 500GB对象存储</td>
-          <td>~$30</td>
-      </tr>
-      <tr>
-          <td>带宽</td>
-          <td>5Mbps（训练数据上传用）</td>
-          <td>~$20</td>
-      </tr>
-      <tr>
-          <td><strong>合计</strong></td>
-          <td></td>
-          <td><strong>~$390/月</strong></td>
-      </tr>
-  </tbody>
+	<thead>
+			<tr>
+					<th>项目</th>
+					<th>方案</th>
+					<th>月成本</th>
+			</tr>
+	</thead>
+	<tbody>
+			<tr>
+					<td>GPU服务器</td>
+					<td>租1×RTX 3090（AutoDL/腾讯云）</td>
+					<td>~$300</td>
+			</tr>
+			<tr>
+					<td>Web服务器</td>
+					<td>4核8G云主机</td>
+					<td>~$40</td>
+			</tr>
+			<tr>
+					<td>存储</td>
+					<td>1TB NVMe + 500GB对象存储</td>
+					<td>~$30</td>
+			</tr>
+			<tr>
+					<td>带宽</td>
+					<td>5Mbps（训练数据上传用）</td>
+					<td>~$20</td>
+			</tr>
+			<tr>
+					<td><strong>合计</strong></td>
+					<td></td>
+					<td><strong>~$390/月</strong></td>
+			</tr>
+	</tbody>
 </table>
 <blockquote>
 <p><strong>关键数字</strong>：RTX 3090租用约$0.4/小时。一个分类训练任务平均跑1小时（1000张图片，50轮），GPU成本$0.4。如果免费套餐每月给用户50次训练额度，单用户GPU成本$20/月。月费$29的专业套餐就能覆盖。这意味着<strong>10个付费用户就能覆盖GPU成本</strong>。</p>
@@ -3494,8 +3494,8 @@
     <div class="post-info">
         <div class="post-info-line">
             <div class="post-info-mod">
-                <span>更新于 2026-07-15&nbsp;<a class="git-hash" href="https://github.com/cikichen/hugo-sync/commit/a15c89260bf2e284911850ff9176f31e0b9edef3" target="_blank" title="commit by cikichen(cikichen@github.com) a15c89260bf2e284911850ff9176f31e0b9edef3: 补充四大模块开源方案推荐：训练框架/任务调度/量化转换/打包分发">
-                                    <i class="fas fa-hashtag fa-fw" aria-hidden="true"></i>a15c8926</a></span>
+                <span>更新于 2026-07-28&nbsp;<a class="git-hash" href="https://github.com/cikichen/hugo-sync/commit/5fa963e774ff6b6679cc076332d74325054e2345" target="_blank" title="commit by Hermes Bot(hermes@ithome.me) 5fa963e774ff6b6679cc076332d74325054e2345: Auto: 2026-07-29 - SwiftUI 中 @Binding 的进阶用法：自定义 Binding 与双向数据流">
+                                    <i class="fas fa-hashtag fa-fw" aria-hidden="true"></i>5fa963e</a></span>
             </div></div>
         <div class="post-info-line">
             <div class="post-info-md"></div>

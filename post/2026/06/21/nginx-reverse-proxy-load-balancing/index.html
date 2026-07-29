@@ -5,24 +5,24 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="robots" content="noodp" />
         <title>Nginx 反向代理、负载均衡与 HTTPS 配置实战 - 编程心语</title><meta name="Description" content="从零配置 Nginx 反向代理到生产级负载均衡，含 HTTPS、健康检查、限流完整实战"><meta property="og:url" content="https://www.ithome.me/post/2026/06/21/nginx-reverse-proxy-load-balancing/">
-  <meta property="og:site_name" content="编程心语">
-  <meta property="og:title" content="Nginx 反向代理、负载均衡与 HTTPS 配置实战">
-  <meta property="og:description" content="从零配置 Nginx 反向代理到生产级负载均衡，含 HTTPS、健康检查、限流完整实战">
-  <meta property="og:locale" content="zh_CN">
-  <meta property="og:type" content="article">
-    <meta property="article:section" content="posts">
-    <meta property="article:published_time" content="2026-06-21T08:00:00+08:00">
-    <meta property="article:modified_time" content="2026-06-21T09:01:41+08:00">
-    <meta property="article:tag" content="Nginx">
-    <meta property="article:tag" content="反向代理">
-    <meta property="article:tag" content="负载均衡">
-    <meta property="article:tag" content="HTTPS">
-    <meta property="article:tag" content="运维">
+	<meta property="og:site_name" content="编程心语">
+	<meta property="og:title" content="Nginx 反向代理、负载均衡与 HTTPS 配置实战">
+	<meta property="og:description" content="从零配置 Nginx 反向代理到生产级负载均衡，含 HTTPS、健康检查、限流完整实战">
+	<meta property="og:locale" content="zh_CN">
+	<meta property="og:type" content="article">
+		<meta property="article:section" content="posts">
+		<meta property="article:published_time" content="2026-06-21T08:00:00+08:00">
+		<meta property="article:modified_time" content="2026-07-28T19:11:15+00:00">
+		<meta property="article:tag" content="Nginx">
+		<meta property="article:tag" content="反向代理">
+		<meta property="article:tag" content="负载均衡">
+		<meta property="article:tag" content="HTTPS">
+		<meta property="article:tag" content="运维">
 
-  <meta name="twitter:card" content="summary">
-  <meta name="twitter:title" content="Nginx 反向代理、负载均衡与 HTTPS 配置实战">
-  <meta name="twitter:description" content="从零配置 Nginx 反向代理到生产级负载均衡，含 HTTPS、健康检查、限流完整实战">
-      <meta name="twitter:site" content="@ChenCiki">
+	<meta name="twitter:card" content="summary">
+	<meta name="twitter:title" content="Nginx 反向代理、负载均衡与 HTTPS 配置实战">
+	<meta name="twitter:description" content="从零配置 Nginx 反向代理到生产级负载均衡，含 HTTPS、健康检查、限流完整实战">
+			<meta name="twitter:site" content="@ChenCiki">
 <meta name="application-name" content="编程心语">
 <meta name="apple-mobile-web-app-title" content="编程心语"><meta name="theme-color" content="#ffffff"><meta name="msapplication-TileColor" content="#da532c"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
         <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
@@ -36,7 +36,7 @@
             "@type": "WebPage",
             "@id": "https:\/\/www.ithome.me\/post\/2026\/06\/21\/nginx-reverse-proxy-load-balancing\/"
         },"image": ["https:\/\/www.ithome.me\/cover.png"],"genre": "posts","keywords": "Nginx, 反向代理, 负载均衡, HTTPS, 运维","wordcount":  2004 ,
-        "url": "https:\/\/www.ithome.me\/post\/2026\/06\/21\/nginx-reverse-proxy-load-balancing\/","datePublished": "2026-06-21T08:00:00+08:00","dateModified": "2026-06-21T09:01:41+08:00","publisher": {
+        "url": "https:\/\/www.ithome.me\/post\/2026\/06\/21\/nginx-reverse-proxy-load-balancing\/","datePublished": "2026-06-21T08:00:00+08:00","dateModified": "2026-07-28T19:11:15+00:00","publisher": {
             "@type": "Organization",
             "name": "SimonChen","logo": "https:\/\/www.ithome.me\/logo.png"},"author": {
                 "@type": "Person",
@@ -538,30 +538,30 @@
 </div>
 </div><p><strong>限流参数说明</strong>：</p>
 <table>
-  <thead>
-      <tr>
-          <th>参数</th>
-          <th>含义</th>
-      </tr>
-  </thead>
-  <tbody>
-      <tr>
-          <td><code>rate=10r/s</code></td>
-          <td>每秒允许 10 个请求（即每 100ms 一个）</td>
-      </tr>
-      <tr>
-          <td><code>burst=20</code></td>
-          <td>突发容量，队列中最多排队 20 个请求</td>
-      </tr>
-      <tr>
-          <td><code>nodelay</code></td>
-          <td>突发请求不排队，直接处理（超过 burst 立即返回 529）</td>
-      </tr>
-      <tr>
-          <td><code>zone=api_limit:10m</code></td>
-          <td>共享内存区域，10MB 可存储约 16 万个 IP</td>
-      </tr>
-  </tbody>
+	<thead>
+			<tr>
+					<th>参数</th>
+					<th>含义</th>
+			</tr>
+	</thead>
+	<tbody>
+			<tr>
+					<td><code>rate=10r/s</code></td>
+					<td>每秒允许 10 个请求（即每 100ms 一个）</td>
+			</tr>
+			<tr>
+					<td><code>burst=20</code></td>
+					<td>突发容量，队列中最多排队 20 个请求</td>
+			</tr>
+			<tr>
+					<td><code>nodelay</code></td>
+					<td>突发请求不排队，直接处理（超过 burst 立即返回 529）</td>
+			</tr>
+			<tr>
+					<td><code>zone=api_limit:10m</code></td>
+					<td>共享内存区域，10MB 可存储约 16 万个 IP</td>
+			</tr>
+	</tbody>
 </table>
 <h2 id="五实战完整生产配置">五、实战：完整生产配置</h2>
 <p>将以上所有配置整合成一个可直接使用的模板：</p>
@@ -750,35 +750,35 @@
 </div>
 </div><h3 id="常见问题排查">常见问题排查</h3>
 <table>
-  <thead>
-      <tr>
-          <th>现象</th>
-          <th>原因</th>
-          <th>解决方案</th>
-      </tr>
-  </thead>
-  <tbody>
-      <tr>
-          <td>502 Bad Gateway</td>
-          <td>后端服务未启动或端口不对</td>
-          <td>检查后端进程：<code>curl localhost:3001</code></td>
-      </tr>
-      <tr>
-          <td>504 Gateway Timeout</td>
-          <td>后端处理太慢</td>
-          <td>增大 <code>proxy_read_timeout</code>，或优化后端</td>
-      </tr>
-      <tr>
-          <td>413 Request Entity Too Large</td>
-          <td>请求体超过限制</td>
-          <td>添加 <code>client_max_body_size 50m;</code></td>
-      </tr>
-      <tr>
-          <td>SSL 证书警告</td>
-          <td>证书过期或配置错误</td>
-          <td><code>certbot renew</code>，检查证书路径</td>
-      </tr>
-  </tbody>
+	<thead>
+			<tr>
+					<th>现象</th>
+					<th>原因</th>
+					<th>解决方案</th>
+			</tr>
+	</thead>
+	<tbody>
+			<tr>
+					<td>502 Bad Gateway</td>
+					<td>后端服务未启动或端口不对</td>
+					<td>检查后端进程：<code>curl localhost:3001</code></td>
+			</tr>
+			<tr>
+					<td>504 Gateway Timeout</td>
+					<td>后端处理太慢</td>
+					<td>增大 <code>proxy_read_timeout</code>，或优化后端</td>
+			</tr>
+			<tr>
+					<td>413 Request Entity Too Large</td>
+					<td>请求体超过限制</td>
+					<td>添加 <code>client_max_body_size 50m;</code></td>
+			</tr>
+			<tr>
+					<td>SSL 证书警告</td>
+					<td>证书过期或配置错误</td>
+					<td><code>certbot renew</code>，检查证书路径</td>
+			</tr>
+	</tbody>
 </table>
 <h2 id="总结">总结</h2>
 <p>Nginx 作为反向代理的核心能力可以总结为：</p>
@@ -794,8 +794,8 @@
     <div class="post-info">
         <div class="post-info-line">
             <div class="post-info-mod">
-                <span>更新于 2026-06-21&nbsp;<a class="git-hash" href="https://github.com/cikichen/hugo-sync/commit/19f9974f29666e0836c3bf5c660d6f2ee3995839" target="_blank" title="commit by cikichen(cikichen@github.com) 19f9974f29666e0836c3bf5c660d6f2ee3995839: Auto: 2026-06-21 - Nginx 反向代理、负载均衡与 HTTPS 配置实战">
-                                    <i class="fas fa-hashtag fa-fw" aria-hidden="true"></i>19f9974f</a></span>
+                <span>更新于 2026-07-28&nbsp;<a class="git-hash" href="https://github.com/cikichen/hugo-sync/commit/5fa963e774ff6b6679cc076332d74325054e2345" target="_blank" title="commit by Hermes Bot(hermes@ithome.me) 5fa963e774ff6b6679cc076332d74325054e2345: Auto: 2026-07-29 - SwiftUI 中 @Binding 的进阶用法：自定义 Binding 与双向数据流">
+                                    <i class="fas fa-hashtag fa-fw" aria-hidden="true"></i>5fa963e</a></span>
             </div></div>
         <div class="post-info-line">
             <div class="post-info-md"></div>
