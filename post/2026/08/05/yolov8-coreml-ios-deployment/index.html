@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="robots" content="noodp" />
+        <title>端侧目标检测实战：YOLOv8 导出 Core ML 部署到 iPhone - 编程心语</title><meta name="Description" content="从 YOLOv8 到 Core ML 再到 Vision 框架，一条龙把目标检测模型跑进 iOS 应用，附导出命令、Swift 代码与性能实测"><meta property="og:url" content="https://www.ithome.me/post/2026/08/05/yolov8-coreml-ios-deployment/">
+	<meta property="og:site_name" content="编程心语">
+	<meta property="og:title" content="端侧目标检测实战：YOLOv8 导出 Core ML 部署到 iPhone">
+	<meta property="og:description" content="从 YOLOv8 到 Core ML 再到 Vision 框架，一条龙把目标检测模型跑进 iOS 应用，附导出命令、Swift 代码与性能实测">
+	<meta property="og:locale" content="zh_CN">
+	<meta property="og:type" content="article">
+		<meta property="article:section" content="posts">
+		<meta property="article:published_time" content="2026-08-05T08:00:00+08:00">
+		<meta property="article:modified_time" content="2026-08-05T08:00:00+08:00">
+		<meta property="article:tag" content="端侧AI">
+		<meta property="article:tag" content="YOLOv8">
+		<meta property="article:tag" content="Core ML">
+		<meta property="article:tag" content="目标检测">
+		<meta property="article:tag" content="Ios">
+
+	<meta name="twitter:card" content="summary">
+	<meta name="twitter:title" content="端侧目标检测实战：YOLOv8 导出 Core ML 部署到 iPhone">
+	<meta name="twitter:description" content="从 YOLOv8 到 Core ML 再到 Vision 框架，一条龙把目标检测模型跑进 iOS 应用，附导出命令、Swift 代码与性能实测">
+			<meta name="twitter:site" content="@ChenCiki">
+<meta name="application-name" content="编程心语">
+<meta name="apple-mobile-web-app-title" content="编程心语"><meta name="theme-color" content="#ffffff"><meta name="msapplication-TileColor" content="#da532c"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5"><link rel="manifest" href="/site.webmanifest"><link rel="canonical" href="https://www.ithome.me/post/2026/08/05/yolov8-coreml-ios-deployment/" /><link rel="prev" href="https://www.ithome.me/post/2026/08/04/llm-api-cache-practical-guide/" /><link rel="next" href="https://www.ithome.me/post/2026/08/05/mobile-llm-guide/" /><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/normalize.css@8.0.1/normalize.min.css"><link rel="stylesheet" href="/css/style.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css"><script type="application/ld+json">
+    {
+        "@context": "http://schema.org",
+        "@type": "BlogPosting",
+        "headline": "端侧目标检测实战：YOLOv8 导出 Core ML 部署到 iPhone",
+        "inLanguage": "zh-CN",
+        "mainEntityOfPage": {
+            "@type": "WebPage",
+            "@id": "https:\/\/www.ithome.me\/post\/2026\/08\/05\/yolov8-coreml-ios-deployment\/"
+        },"image": ["https:\/\/www.ithome.me\/cover.png"],"genre": "posts","keywords": "端侧AI, YOLOv8, Core ML, 目标检测, iOS","wordcount":  1430 ,
+        "url": "https:\/\/www.ithome.me\/post\/2026\/08\/05\/yolov8-coreml-ios-deployment\/","datePublished": "2026-08-05T08:00:00+08:00","dateModified": "2026-08-05T08:00:00+08:00","publisher": {
+            "@type": "Organization",
+            "name": "SimonChen","logo": "https:\/\/www.ithome.me\/logo.png"},"author": {
+                "@type": "Person",
+                "name": "Simon"
+            },"description": "从 YOLOv8 到 Core ML 再到 Vision 框架，一条龙把目标检测模型跑进 iOS 应用，附导出命令、Swift 代码与性能实测"
+    }
+    </script><script async src="https://www.googletagmanager.com/gtag/js?id=G-H1Q5563VR8"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-H1Q5563VR8', { 'anonymize_ip': true });
+</script></head>
+    <body data-header-desktop="fixed" data-header-mobile="auto"><script type="text/javascript">(window.localStorage && localStorage.getItem('theme') ? localStorage.getItem('theme') === 'dark' : ('auto' === 'auto' ? window.matchMedia('(prefers-color-scheme: dark)').matches : 'auto' === 'dark')) && document.body.setAttribute('theme', 'dark');</script>
+
+        <div id="mask"></div><div class="wrapper"><header class="desktop" id="header-desktop">
+    <div class="header-wrapper">
+        <div class="header-title">
+            <a href="/" title="编程心语">编程心语</a>
+        </div>
+        <div class="menu">
+            <div class="menu-inner"><a class="menu-item" href="/posts/"> 文章 </a><a class="menu-item" href="/categories/"> 分类 </a><a class="menu-item" href="/tags/"> 标签 </a><a class="menu-item" href="/about-me/"> 关于 </a><span class="menu-item delimiter"></span><span class="menu-item search" id="search-desktop">
+                        <input type="text" placeholder="搜索文章..." id="search-input-desktop">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-desktop" title="搜索">
+                            <i class="fas fa-search fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-desktop" title="清空">
+                            <i class="fas fa-times-circle fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-desktop">
+                            <i class="fas fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+                        </span>
+                    </span><a href="javascript:void(0);" class="menu-item theme-switch" title="切换主题">
+                    <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</header><header class="mobile" id="header-mobile">
+    <div class="header-container">
+        <div class="header-wrapper">
+            <div class="header-title">
+                <a href="/" title="编程心语">编程心语</a>
+            </div>
+            <div class="menu-toggle" id="menu-toggle-mobile">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+        <div class="menu" id="menu-mobile"><div class="search-wrapper">
+                    <div class="search mobile" id="search-mobile">
+                        <input type="text" placeholder="搜索文章..." id="search-input-mobile">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-mobile" title="搜索">
+                            <i class="fas fa-search fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-mobile" title="清空">
+                            <i class="fas fa-times-circle fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-mobile">
+                            <i class="fas fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+                        </span>
+                    </div>
+                    <a href="javascript:void(0);" class="search-cancel" id="search-cancel-mobile">
+                        取消
+                    </a>
+                </div><a class="menu-item" href="/posts/" title="">文章</a><a class="menu-item" href="/categories/" title="">分类</a><a class="menu-item" href="/tags/" title="">标签</a><a class="menu-item" href="/about-me/" title="">关于</a><a href="javascript:void(0);" class="menu-item theme-switch" title="切换主题">
+                <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
+            </a></div>
+    </div>
+</header><div class="search-dropdown desktop">
+        <div id="search-dropdown-desktop"></div>
+    </div>
+    <div class="search-dropdown mobile">
+        <div id="search-dropdown-mobile"></div>
+    </div><main class="main">
+                <div class="container"><div class="toc" id="toc-auto">
+            <h2 class="toc-title">目录</h2>
+            <div class="toc-content" id="toc-content-auto"></div>
+        </div><article class="page single"><h1 class="single-title animate__animated animate__flipInX">端侧目标检测实战：YOLOv8 导出 Core ML 部署到 iPhone</h1><div class="post-meta">
+            <div class="post-meta-line"><span class="post-author"><a href="https://www.ithome.me/" title="Author" target="_blank" rel="noopener noreferrer author" class="author"><i class="fas fa-user-circle fa-fw" aria-hidden="true"></i>Simon</a>
+</span>&nbsp;<span class="post-category">收录于 <a href="/categories/ai/"><i class="far fa-folder fa-fw" aria-hidden="true"></i>Ai</a></span></div>
+            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw" aria-hidden="true"></i>&nbsp;<time datetime="2026-08-05">2026-08-05</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden="true"></i>&nbsp;约 1430 字&nbsp;
+                <i class="far fa-clock fa-fw" aria-hidden="true"></i>&nbsp;预计阅读 3 分钟&nbsp;</div>
+        </div><div class="details toc" id="toc-static"  data-kept="true">
+                <div class="details-summary toc-title">
+                    <span>目录</span>
+                    <span><i class="details-icon fas fa-angle-right" aria-hidden="true"></i></span>
+                </div>
+                <div class="details-content toc-content" id="toc-content-static"><nav id="TableOfContents">
+  <ul>
+    <li><a href="#为什么让手机自己看">为什么让手机自己&quot;看&quot;</a></li>
+    <li><a href="#选模型yolov8n-是性价比起点">选模型：YOLOv8n 是性价比起点</a></li>
+    <li><a href="#第一步导出-core-ml-模型">第一步：导出 Core ML 模型</a></li>
+    <li><a href="#第二步vision-框架集成swift-代码-30-行">第二步：Vision 框架集成，Swift 代码 30 行</a></li>
+    <li><a href="#性能数据够不够实时">性能数据：够不够实时？</a></li>
+    <li><a href="#跨平台备选一张表选框架">跨平台备选：一张表选框架</a></li>
+    <li><a href="#踩坑记录">踩坑记录</a></li>
+    <li><a href="#下一步">下一步</a></li>
+  </ul>
+</nav></div>
+            </div><div class="content" id="content"><h2 id="为什么让手机自己看">为什么让手机自己&quot;看&quot;</h2>
+<p>云端识别 API 成熟好用，但三个痛点始终绕不开：<strong>隐私</strong>——画面要上传到别人服务器；<strong>时延</strong>——往返一次网络 200-500ms，实时视频流根本扛不住；<strong>成本</strong>——按次计费，摄像头一直开着就是烧钱。端侧部署把模型塞进手机，推理不出设备，隐私、时延、成本一次解决。这也是智能安防、工业质检、AR 应用的主流做法。</p>
+<h2 id="选模型yolov8n-是性价比起点">选模型：YOLOv8n 是性价比起点</h2>
+<p>Ultralytics YOLOv8 是当前落地最广的目标检测家族。模型命名规则很直白：字母越小越轻量。端侧部署首选 <strong>YOLOv8n</strong>（nano）：</p>
+<table>
+	<thead>
+			<tr>
+					<th>模型</th>
+					<th>参数量</th>
+					<th>权重大小</th>
+					<th>COCO mAP50-95</th>
+					<th>定位</th>
+			</tr>
+	</thead>
+	<tbody>
+			<tr>
+					<td>YOLOv8n</td>
+					<td>3.2M</td>
+					<td>~6MB</td>
+					<td>37.3</td>
+					<td>手机端首选，实时</td>
+			</tr>
+			<tr>
+					<td>YOLOv8s</td>
+					<td>11.2M</td>
+					<td>~22MB</td>
+					<td>44.9</td>
+					<td>平衡精度与速度</td>
+			</tr>
+			<tr>
+					<td>YOLOv8m</td>
+					<td>25.9M</td>
+					<td>~52MB</td>
+					<td>50.2</td>
+					<td>追求精度，平板/桌面</td>
+			</tr>
+	</tbody>
+</table>
+<p>以上为 Ultralytics 官方 COCO 预训练数据。3.2M 参数对 NPU/GPU 来说毫无压力，实测阶段再按帧率需求往上升级即可。</p>
+<h2 id="第一步导出-core-ml-模型">第一步：导出 Core ML 模型</h2>
+<p>Apple 的推理格式是 <code>.mlpackage</code>（Core ML 模型包）。用 ultralytics 一行命令导出：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">pip install ultralytics coremltools
+</span></span><span class="line"><span class="cl">yolo <span class="nb">export</span> <span class="nv">model</span><span class="o">=</span>yolov8n.pt <span class="nv">format</span><span class="o">=</span>coreml <span class="nv">imgsz</span><span class="o">=</span><span class="m">640</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>输出 <code>yolov8n.mlpackage</code>，默认 FP32。想更小更快，用 coremltools 转成 FP16（精度损失可忽略）：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">coremltools</span> <span class="k">as</span> <span class="nn">ct</span>
+</span></span><span class="line"><span class="cl"><span class="n">model</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">MLModel</span><span class="p">(</span><span class="s2">&#34;yolov8n.mlpackage&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">model</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">neural_network</span><span class="o">.</span><span class="n">quantization_utils</span><span class="o">.</span><span class="n">quantize_weights</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">nbits</span><span class="o">=</span><span class="mi">16</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">model</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s2">&#34;yolov8n_fp16.mlpackage&#34;</span><span class="p">)</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>FP16 版本体积砍半（约 3MB），A 系列芯片的 ANE（神经网络引擎）原生支持 FP16，推理速度反而更快。INT8 量化能再压一半，但目标检测对精度敏感，mAP 会掉 2-4 个点，建议先跑 FP16。</p>
+<h2 id="第二步vision-框架集成swift-代码-30-行">第二步：Vision 框架集成，Swift 代码 30 行</h2>
+<p>Xcode 里把 <code>.mlpackage</code> 拖进工程，勾选 Target Membership，系统自动生成 <code>YOLOv8n</code> 类。然后交给 Vision 框架，它会自动调度 ANE：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-swift" data-lang="swift"><span class="line"><span class="cl"><span class="kd">import</span> <span class="nc">Vision</span>
+</span></span><span class="line"><span class="cl"><span class="kd">import</span> <span class="nc">UIKit</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kd">func</span> <span class="nf">detectObjects</span><span class="p">(</span><span class="k">in</span> <span class="n">image</span><span class="p">:</span> <span class="n">UIImage</span><span class="p">)</span> <span class="kr">throws</span> <span class="p">-&gt;</span> <span class="p">[</span><span class="n">VNRecognizedObjectObservation</span><span class="p">]</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">guard</span> <span class="kd">let</span> <span class="nv">model</span> <span class="p">=</span> <span class="k">try</span><span class="p">?</span> <span class="n">VNCoreMLModel</span><span class="p">(</span><span class="k">for</span><span class="p">:</span> <span class="n">YOLOv8n</span><span class="p">().</span><span class="n">model</span><span class="p">)</span> <span class="k">else</span> <span class="p">{</span> <span class="k">return</span> <span class="p">[]</span> <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="kd">let</span> <span class="nv">request</span> <span class="p">=</span> <span class="n">VNCoreMLRequest</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="n">model</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="n">request</span><span class="p">.</span><span class="n">imageCropAndScaleOption</span> <span class="p">=</span> <span class="p">.</span><span class="n">scaleFit</span>  <span class="c1">// 保持宽高比缩放</span>
+</span></span><span class="line"><span class="cl">    <span class="kd">let</span> <span class="nv">handler</span> <span class="p">=</span> <span class="n">VNImageRequestHandler</span><span class="p">(</span><span class="n">cgImage</span><span class="p">:</span> <span class="n">image</span><span class="p">.</span><span class="n">cgImage</span><span class="p">!)</span>
+</span></span><span class="line"><span class="cl">    <span class="k">try</span> <span class="n">handler</span><span class="p">.</span><span class="n">perform</span><span class="p">([</span><span class="n">request</span><span class="p">])</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">request</span><span class="p">.</span><span class="n">results</span> <span class="k">as</span><span class="p">?</span> <span class="p">[</span><span class="n">VNRecognizedObjectObservation</span><span class="p">]</span> <span class="p">??</span> <span class="p">[]</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>核心优势：<strong>NMS（非极大值抑制）由 Vision 帮你做了</strong>。YOLO 原始输出是 8400 个候选框（640x640 输入），直接在 Core ML 层做 NMS 很痛苦；而 <code>VNRecognizedObjectObservation</code> 直接给你去重后的结果，每个框带 <code>boundingBox</code>（归一化坐标）和 <code>labels</code>。画框时记得把归一化坐标乘回图片实际尺寸。</p>
+<h2 id="性能数据够不够实时">性能数据：够不够实时？</h2>
+<p>社区实测（640x640 输入、FP16、iPhone 真机）：</p>
+<table>
+	<thead>
+			<tr>
+					<th>设备</th>
+					<th>芯片</th>
+					<th>单帧推理耗时</th>
+			</tr>
+	</thead>
+	<tbody>
+			<tr>
+					<td>iPhone 12</td>
+					<td>A14 Bionic</td>
+					<td>~35ms</td>
+			</tr>
+			<tr>
+					<td>iPhone 13</td>
+					<td>A15</td>
+					<td>~25ms</td>
+			</tr>
+			<tr>
+					<td>iPhone 15 Pro</td>
+					<td>A17 Pro</td>
+					<td>~18ms</td>
+			</tr>
+	</tbody>
+</table>
+<p>这是社区公开实测区间，不同 iOS 版本和 thermal 状态会有波动。30fps 视频流要求单帧 33ms 以内，也就是说 A14 以上跑 YOLOv8n 都能达到实时；想留出余量，可以把输入降到 480x480（耗时约降 40%），或改用更小的 YOLOv8n 蒸馏版。</p>
+<h2 id="跨平台备选一张表选框架">跨平台备选：一张表选框架</h2>
+<table>
+	<thead>
+			<tr>
+					<th>框架</th>
+					<th>平台</th>
+					<th>适用场景</th>
+			</tr>
+	</thead>
+	<tbody>
+			<tr>
+					<td>Core ML</td>
+					<td>Apple 全家桶</td>
+					<td>Vision 无缝集成，自动用 ANE</td>
+			</tr>
+			<tr>
+					<td>TensorFlow Lite</td>
+					<td>Android/iOS</td>
+					<td>生态最大，量化工具成熟</td>
+			</tr>
+			<tr>
+					<td>ONNX Runtime Mobile</td>
+					<td>跨平台</td>
+					<td>模型来源广，易切换</td>
+			</tr>
+			<tr>
+					<td>NCNN</td>
+					<td>Android 为主</td>
+					<td>腾讯开源，国内适配好</td>
+			</tr>
+			<tr>
+					<td>MNN</td>
+					<td>Android 为主</td>
+					<td>阿里开源，端侧推理快</td>
+			</tr>
+	</tbody>
+</table>
+<p>只做 iOS 就 Core ML；要一套代码覆盖双端，优先 TFLite 或 ONNX Runtime Mobile。</p>
+<h2 id="踩坑记录">踩坑记录</h2>
+<ol>
+<li><strong>输入 shape 必须匹配</strong>：导出时 <code>imgsz=640</code>，推理前图片要等比缩放再补边，否则 Vision 会静默输出空结果。<code>scaleFit</code> 就是干这个的。</li>
+<li><strong>不要在 Core ML 层自己写 NMS</strong>：YOLOv8 导出 Core ML 默认不带 NMS，直接读原始输出会得到 8400 个候选框。要么用 Vision 自动 NMS，要么在导出时加 <code>nms=True</code> 参数。</li>
+<li><strong>双精度输入不支持</strong>：Core ML 模型输入要求 Float32，喂 Double 数组会直接报错。</li>
+<li><strong>真机 vs 模拟器性能差 10 倍</strong>：ANE 只在真机可用，模拟器走 CPU，别用模拟器测帧率。</li>
+</ol>
+<h2 id="下一步">下一步</h2>
+<p>模型跑通后，可以接 AVFoundation 实时摄像头流（<code>AVCaptureVideoDataOutput</code> 每帧回调送 Vision 检测），配合 SwiftUI 画框覆盖层，就是一个完整的实时目标检测 App。端侧视觉的想象空间很大，从车牌识别到宠物监控都能落地，趁端侧 AI 这波红利，值得一试。</p>
+</div><div class="post-footer" id="post-footer">
+    <div class="post-info">
+        <div class="post-info-line">
+            <div class="post-info-mod">
+                <span>更新于 2026-08-05</span>
+            </div></div>
+        <div class="post-info-line">
+            <div class="post-info-md"></div>
+            <div class="post-info-share">
+                <span><a href="javascript:void(0);" title="分享到 Twitter" data-sharer="twitter" data-url="https://www.ithome.me/post/2026/08/05/yolov8-coreml-ios-deployment/" data-title="端侧目标检测实战：YOLOv8 导出 Core ML 部署到 iPhone" data-via="ChenCiki" data-hashtags="端侧AI,YOLOv8,Core ML,目标检测,iOS"><i class="fab fa-twitter fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="分享到 Linkedin" data-sharer="linkedin" data-url="https://www.ithome.me/post/2026/08/05/yolov8-coreml-ios-deployment/"><i class="fab fa-linkedin fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="分享到 微博" data-sharer="weibo" data-url="https://www.ithome.me/post/2026/08/05/yolov8-coreml-ios-deployment/" data-title="端侧目标检测实战：YOLOv8 导出 Core ML 部署到 iPhone" data-ralateuid="xxx"><i class="fab fa-weibo fa-fw" aria-hidden="true"></i></a></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="post-info-more">
+        <section class="post-tags"><i class="fas fa-tags fa-fw" aria-hidden="true"></i>&nbsp;<a href="/tags/%E7%AB%AF%E4%BE%A7ai/">端侧AI</a>,&nbsp;<a href="/tags/yolov8/">YOLOv8</a>,&nbsp;<a href="/tags/core-ml/">Core ML</a>,&nbsp;<a href="/tags/%E7%9B%AE%E6%A0%87%E6%A3%80%E6%B5%8B/">目标检测</a>,&nbsp;<a href="/tags/ios/">Ios</a></section>
+        <section>
+            <span><a href="javascript:void(0);" onclick="window.history.back();">返回</a></span>&nbsp;|&nbsp;<span><a href="/">主页</a></span>
+        </section>
+    </div>
+
+    <div class="post-nav"><a href="/post/2026/08/04/llm-api-cache-practical-guide/" class="prev" rel="prev" title="LLM API 缓存实战：三层缓存把大模型调用成本打下来"><i class="fas fa-angle-left fa-fw" aria-hidden="true"></i>LLM API 缓存实战：三层缓存把大模型调用成本打下来</a>
+            <a href="/post/2026/08/05/mobile-llm-guide/" class="next" rel="next" title="手机也能跑大模型？从模型选择到部署的完整指南">手机也能跑大模型？从模型选择到部署的完整指南<i class="fas fa-angle-right fa-fw" aria-hidden="true"></i></a></div>
+</div>
+<div id="comments"><div id="gitalk" class="comment"></div><noscript>
+                Please enable JavaScript to view the comments powered by <a href="https://github.com/gitalk/gitalk"></a>Gitalk</a>.
+            </noscript></div></article></div>
+            </main><footer class="footer">
+        <div class="footer-container"><div class="footer-line" itemscope itemtype="http://schema.org/CreativeWork"><i class="far fa-copyright fa-fw" aria-hidden="true"></i><span itemprop="copyrightYear">2011 - 2026</span><span class="author" itemprop="copyrightHolder">&nbsp;<a href="https://www.ithome.me/" target="_blank">Simon Chen</a></span>&nbsp;|&nbsp;<span class="license"><a rel="license external nofollow noopener noreferrer" href="https://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank">CC BY-NC-ND 4.0</a></span></div>
+        </div>
+    </footer></div>
+
+        <div id="fixed-buttons"><a href="#" id="back-to-top" class="fixed-button" title="回到顶部">
+                <i class="fas fa-arrow-up fa-fw" aria-hidden="true"></i>
+            </a><a href="#" id="view-comments" class="fixed-button" title="查看评论">
+                <i class="fas fa-comment fa-fw" aria-hidden="true"></i>
+            </a>
+        </div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1.7.2/dist/gitalk.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/css/lightgallery-bundle.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/katex.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/copy-tex.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.css"><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/gitalk@1.7.2/dist/gitalk.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/autocomplete.js@0.38.1/dist/autocomplete.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lunr@2.3.9/lunr.min.js"></script><script type="text/javascript" src="/lib/lunr/lunr.stemmer.support.min.js"></script><script type="text/javascript" src="/lib/lunr/lunr.zh.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lazysizes@5.3.1/lazysizes.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/lightgallery.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/plugins/thumbnail/lg-thumbnail.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/plugins/zoom/lg-zoom.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/clipboard@2.0.11/dist/clipboard.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/sharer.js@0.5.1/sharer.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/katex.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/auto-render.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/copy-tex.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/mhchem.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.js"></script><script type="text/javascript">window.config={"code":{"copyTitle":"复制到剪贴板","maxShownLines":50},"comment":{"gitalk":{"admin":["cikichen"],"clientID":"be0f52370ed1285b6c7c","clientSecret":"734a7d8d0ded346ca7a3d565d57de3f8eeb2850b","id":"2026-08-05T00:00:00Z","owner":"cikichen","repo":"gitalk","title":"端侧目标检测实战：YOLOv8 导出 Core ML 部署到 iPhone"}},"cookieconsent":{"content":{"dismiss":"我知道了","link":"了解更多","message":"本网站使用 Cookies 来改善您的浏览体验."},"enable":true,"palette":{"button":{"background":"#f0f0f0"},"popup":{"background":"#1aa3ff"}},"theme":"edgeless"},"lightgallery":true,"math":{"delimiters":[{"display":true,"left":"$$","right":"$$"},{"display":true,"left":"\\[","right":"\\]"},{"display":true,"left":"\\begin{equation}","right":"\\end{equation}"},{"display":true,"left":"\\begin{equation*}","right":"\\end{equation*}"},{"display":true,"left":"\\begin{align}","right":"\\end{align}"},{"display":true,"left":"\\begin{align*}","right":"\\end{align*}"},{"display":true,"left":"\\begin{alignat}","right":"\\end{alignat}"},{"display":true,"left":"\\begin{alignat*}","right":"\\end{alignat*}"},{"display":true,"left":"\\begin{gather}","right":"\\end{gather}"},{"display":true,"left":"\\begin{CD}","right":"\\end{CD}"},{"display":false,"left":"$","right":"$"},{"display":false,"left":"\\(","right":"\\)"}],"strict":false},"search":{"highlightTag":"em","lunrIndexURL":"/index.json","lunrLanguageCode":"zh","lunrSegmentitURL":"/lib/lunr/lunr.segmentit.js","maxResultLength":10,"noResultsFound":"没有找到结果","snippetLength":50,"type":"lunr"}};</script><script type="text/javascript" src="/js/theme.min.js"></script></body>
+</html>
