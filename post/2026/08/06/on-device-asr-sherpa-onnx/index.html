@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="robots" content="noodp" />
+        <title>端侧语音识别实战：用 sherpa-onnx 让应用离线听懂中文 - 编程心语</title><meta name="Description" content="实测 sherpa-onnx 1.13.4 流式 Zipformer 模型：24MB 的 int8 模型在 Intel N100 上单线程 RTF 0.05，10 行 Python 代码搞定离线中文语音识别。"><meta property="og:url" content="https://www.ithome.me/post/2026/08/06/on-device-asr-sherpa-onnx/">
+	<meta property="og:site_name" content="编程心语">
+	<meta property="og:title" content="端侧语音识别实战：用 sherpa-onnx 让应用离线听懂中文">
+	<meta property="og:description" content="实测 sherpa-onnx 1.13.4 流式 Zipformer 模型：24MB 的 int8 模型在 Intel N100 上单线程 RTF 0.05，10 行 Python 代码搞定离线中文语音识别。">
+	<meta property="og:locale" content="zh_CN">
+	<meta property="og:type" content="article">
+		<meta property="article:section" content="posts">
+		<meta property="article:published_time" content="2026-08-06T08:00:00+08:00">
+		<meta property="article:modified_time" content="2026-08-06T08:00:00+08:00">
+		<meta property="article:tag" content="端侧AI">
+		<meta property="article:tag" content="语音识别">
+		<meta property="article:tag" content="Sherpa-Onnx">
+		<meta property="article:tag" content="ASR">
+		<meta property="article:tag" content="Onnx">
+
+	<meta name="twitter:card" content="summary">
+	<meta name="twitter:title" content="端侧语音识别实战：用 sherpa-onnx 让应用离线听懂中文">
+	<meta name="twitter:description" content="实测 sherpa-onnx 1.13.4 流式 Zipformer 模型：24MB 的 int8 模型在 Intel N100 上单线程 RTF 0.05，10 行 Python 代码搞定离线中文语音识别。">
+			<meta name="twitter:site" content="@ChenCiki">
+<meta name="application-name" content="编程心语">
+<meta name="apple-mobile-web-app-title" content="编程心语"><meta name="theme-color" content="#ffffff"><meta name="msapplication-TileColor" content="#da532c"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5"><link rel="manifest" href="/site.webmanifest"><link rel="canonical" href="https://www.ithome.me/post/2026/08/06/on-device-asr-sherpa-onnx/" /><link rel="prev" href="https://www.ithome.me/post/2026/08/05/mobile-llm-guide/" /><link rel="next" href="https://www.ithome.me/post/2026/08/06/mcp-practical-guide/" /><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/normalize.css@8.0.1/normalize.min.css"><link rel="stylesheet" href="/css/style.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css"><script type="application/ld+json">
+    {
+        "@context": "http://schema.org",
+        "@type": "BlogPosting",
+        "headline": "端侧语音识别实战：用 sherpa-onnx 让应用离线听懂中文",
+        "inLanguage": "zh-CN",
+        "mainEntityOfPage": {
+            "@type": "WebPage",
+            "@id": "https:\/\/www.ithome.me\/post\/2026\/08\/06\/on-device-asr-sherpa-onnx\/"
+        },"image": ["https:\/\/www.ithome.me\/cover.png"],"genre": "posts","keywords": "端侧AI, 语音识别, sherpa-onnx, ASR, onnx","wordcount":  1476 ,
+        "url": "https:\/\/www.ithome.me\/post\/2026\/08\/06\/on-device-asr-sherpa-onnx\/","datePublished": "2026-08-06T08:00:00+08:00","dateModified": "2026-08-06T08:00:00+08:00","publisher": {
+            "@type": "Organization",
+            "name": "SimonChen","logo": "https:\/\/www.ithome.me\/logo.png"},"author": {
+                "@type": "Person",
+                "name": "Simon Chen"
+            },"description": "实测 sherpa-onnx 1.13.4 流式 Zipformer 模型：24MB 的 int8 模型在 Intel N100 上单线程 RTF 0.05，10 行 Python 代码搞定离线中文语音识别。"
+    }
+    </script><script async src="https://www.googletagmanager.com/gtag/js?id=G-H1Q5563VR8"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-H1Q5563VR8', { 'anonymize_ip': true });
+</script></head>
+    <body data-header-desktop="fixed" data-header-mobile="auto"><script type="text/javascript">(window.localStorage && localStorage.getItem('theme') ? localStorage.getItem('theme') === 'dark' : ('auto' === 'auto' ? window.matchMedia('(prefers-color-scheme: dark)').matches : 'auto' === 'dark')) && document.body.setAttribute('theme', 'dark');</script>
+
+        <div id="mask"></div><div class="wrapper"><header class="desktop" id="header-desktop">
+    <div class="header-wrapper">
+        <div class="header-title">
+            <a href="/" title="编程心语">编程心语</a>
+        </div>
+        <div class="menu">
+            <div class="menu-inner"><a class="menu-item" href="/posts/"> 文章 </a><a class="menu-item" href="/categories/"> 分类 </a><a class="menu-item" href="/tags/"> 标签 </a><a class="menu-item" href="/about-me/"> 关于 </a><span class="menu-item delimiter"></span><span class="menu-item search" id="search-desktop">
+                        <input type="text" placeholder="搜索文章..." id="search-input-desktop">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-desktop" title="搜索">
+                            <i class="fas fa-search fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-desktop" title="清空">
+                            <i class="fas fa-times-circle fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-desktop">
+                            <i class="fas fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+                        </span>
+                    </span><a href="javascript:void(0);" class="menu-item theme-switch" title="切换主题">
+                    <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</header><header class="mobile" id="header-mobile">
+    <div class="header-container">
+        <div class="header-wrapper">
+            <div class="header-title">
+                <a href="/" title="编程心语">编程心语</a>
+            </div>
+            <div class="menu-toggle" id="menu-toggle-mobile">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+        <div class="menu" id="menu-mobile"><div class="search-wrapper">
+                    <div class="search mobile" id="search-mobile">
+                        <input type="text" placeholder="搜索文章..." id="search-input-mobile">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-mobile" title="搜索">
+                            <i class="fas fa-search fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-mobile" title="清空">
+                            <i class="fas fa-times-circle fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-mobile">
+                            <i class="fas fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+                        </span>
+                    </div>
+                    <a href="javascript:void(0);" class="search-cancel" id="search-cancel-mobile">
+                        取消
+                    </a>
+                </div><a class="menu-item" href="/posts/" title="">文章</a><a class="menu-item" href="/categories/" title="">分类</a><a class="menu-item" href="/tags/" title="">标签</a><a class="menu-item" href="/about-me/" title="">关于</a><a href="javascript:void(0);" class="menu-item theme-switch" title="切换主题">
+                <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
+            </a></div>
+    </div>
+</header><div class="search-dropdown desktop">
+        <div id="search-dropdown-desktop"></div>
+    </div>
+    <div class="search-dropdown mobile">
+        <div id="search-dropdown-mobile"></div>
+    </div><main class="main">
+                <div class="container"><div class="toc" id="toc-auto">
+            <h2 class="toc-title">目录</h2>
+            <div class="toc-content" id="toc-content-auto"></div>
+        </div><article class="page single"><h1 class="single-title animate__animated animate__flipInX">端侧语音识别实战：用 sherpa-onnx 让应用离线听懂中文</h1><div class="post-meta">
+            <div class="post-meta-line"><span class="post-author"><a href="https://www.ithome.me/" title="Author" target="_blank" rel="noopener noreferrer author" class="author"><i class="fas fa-user-circle fa-fw" aria-hidden="true"></i>Simon Chen</a>
+</span>&nbsp;<span class="post-category">收录于 <a href="/categories/ai/"><i class="far fa-folder fa-fw" aria-hidden="true"></i>Ai</a></span></div>
+            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw" aria-hidden="true"></i>&nbsp;<time datetime="2026-08-06">2026-08-06</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden="true"></i>&nbsp;约 1476 字&nbsp;
+                <i class="far fa-clock fa-fw" aria-hidden="true"></i>&nbsp;预计阅读 3 分钟&nbsp;</div>
+        </div><div class="details toc" id="toc-static"  data-kept="true">
+                <div class="details-summary toc-title">
+                    <span>目录</span>
+                    <span><i class="details-icon fas fa-angle-right" aria-hidden="true"></i></span>
+                </div>
+                <div class="details-content toc-content" id="toc-content-static"><nav id="TableOfContents">
+  <ul>
+    <li><a href="#为什么要在端侧跑语音识别">为什么要在端侧跑语音识别</a></li>
+    <li><a href="#开源方案怎么选">开源方案怎么选</a></li>
+    <li><a href="#10-行代码跑通中文识别">10 行代码跑通中文识别</a></li>
+    <li><a href="#流式模型实测小模型--单线程才是最优解">流式模型实测：小模型 + 单线程才是最优解</a></li>
+    <li><a href="#集成到设备">集成到设备</a></li>
+    <li><a href="#小结">小结</a></li>
+  </ul>
+</nav></div>
+            </div><div class="content" id="content"><h2 id="为什么要在端侧跑语音识别">为什么要在端侧跑语音识别</h2>
+<p>智能音箱、会议纪要工具、车载语音助手、儿童故事机——这些场景的语音输入都有一个共同痛点：把音频上传云端识别，既慢又贵，还涉及隐私。端侧语音识别（On-Device ASR）把模型直接跑在设备 CPU 上，离线可用、零延迟感、音频不出设备。</p>
+<p>过去端侧 ASR 门槛很高，但 2026 年的今天，一个 14M 参数、24MB 的 int8 模型就能在普通 CPU 上做到<strong>快于实时 20 倍</strong>的中文识别。这篇文章用 sherpa-onnx 完整跑通一遍，附真实性能实测。</p>
+<h2 id="开源方案怎么选">开源方案怎么选</h2>
+<table>
+	<thead>
+			<tr>
+					<th>项目</th>
+					<th>适用场景</th>
+					<th>特点</th>
+			</tr>
+	</thead>
+	<tbody>
+			<tr>
+					<td><a href="https://github.com/k2-fsa/sherpa-onnx" target="_blank" rel="noopener noreferrer">sherpa-onnx</a>
+（k2-fsa）</td>
+					<td>生产级端侧 ASR/TTS/唤醒词全栈</td>
+					<td>支持 Zipformer/Paraformer/Whisper 等 20+ 模型，提供 C++/Python/iOS/Android 全套 API，本文主角</td>
+			</tr>
+			<tr>
+					<td><a href="https://github.com/ggml-org/whisper.cpp" target="_blank" rel="noopener noreferrer">whisper.cpp</a>
+</td>
+					<td>追求最强离线识别精度</td>
+					<td>OpenAI Whisper 的 GGML 移植，多语言通用，但模型偏大、流式支持弱</td>
+			</tr>
+			<tr>
+					<td><a href="https://github.com/alphacep/vosk-api" target="_blank" rel="noopener noreferrer">Vosk</a>
+（alphacep）</td>
+					<td>快速原型、小语种</td>
+					<td>Kaldi 系轻量模型，API 极简，中文模型约 40MB</td>
+			</tr>
+			<tr>
+					<td><a href="https://github.com/dscripka/openWakeWord" target="_blank" rel="noopener noreferrer">openWakeWord</a>
+</td>
+					<td>自定义唤醒词</td>
+					<td>纯 PyTorch 训练自己的唤醒词，轻量</td>
+			</tr>
+			<tr>
+					<td>Porcupine（Picovoice）</td>
+					<td>商用唤醒词/语音控制</td>
+					<td>精度高但模型不透明，免费额度有限</td>
+			</tr>
+	</tbody>
+</table>
+<p><strong>怎么选</strong>：要全流程生产化选 sherpa-onnx；只看重离线转写精度选 whisper.cpp；只是想快速验证想法选 Vosk。端侧项目优先考虑模型体积与推理框架的绑定成本，sherpa-onnx 的 ONNX 生态迁移成本最低。</p>
+<h2 id="10-行代码跑通中文识别">10 行代码跑通中文识别</h2>
+<p>安装只需一个 pip 包（1.13.x 已内置全部模型格式支持）：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">pip install sherpa-onnx soundfile
+</span></span><span class="line"><span class="cl"><span class="c1"># 下载官方预转好的 int8 离线中文模型（287MB 压缩包，内含 int8 量化模型与测试音频）</span>
+</span></span><span class="line"><span class="cl">wget https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-zipformer-ctc-zh-int8-2025-07-03.tar.bz2
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>识别代码（离线模式，整段音频一次转写）：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">sherpa_onnx</span>
+</span></span><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">soundfile</span> <span class="k">as</span> <span class="nn">sf</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 加载 int8 量化模型（Zipformer CTC 架构）</span>
+</span></span><span class="line"><span class="cl"><span class="n">recognizer</span> <span class="o">=</span> <span class="n">sherpa_onnx</span><span class="o">.</span><span class="n">OfflineRecognizer</span><span class="o">.</span><span class="n">from_zipformer_ctc</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">    <span class="n">model</span><span class="o">=</span><span class="s2">&#34;./sherpa-onnx-zipformer-ctc-zh-int8-2025-07-03/model.int8.onnx&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="n">tokens</span><span class="o">=</span><span class="s2">&#34;./sherpa-onnx-zipformer-ctc-zh-int8-2025-07-03/tokens.txt&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl"><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">audio</span><span class="p">,</span> <span class="n">sample_rate</span> <span class="o">=</span> <span class="n">sf</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="s2">&#34;test.wav&#34;</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">&#34;float32&#34;</span><span class="p">,</span> <span class="n">always_2d</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">stream</span> <span class="o">=</span> <span class="n">recognizer</span><span class="o">.</span><span class="n">create_stream</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl"><span class="n">stream</span><span class="o">.</span><span class="n">accept_waveform</span><span class="p">(</span><span class="n">sample_rate</span><span class="p">,</span> <span class="n">audio</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">])</span>  <span class="c1"># 单声道</span>
+</span></span><span class="line"><span class="cl"><span class="n">recognizer</span><span class="o">.</span><span class="n">decode_stream</span><span class="p">(</span><span class="n">stream</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="n">stream</span><span class="o">.</span><span class="n">result</span><span class="o">.</span><span class="n">text</span><span class="p">)</span>  <span class="c1"># 输出转写文本</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>不需要对齐采样率：sherpa-onnx 内部会自动把 8kHz 电话音频重采样到 16kHz。这个模型是 2025-07-03 发布的 Zipformer CTC 架构，官方 WER 数据（字错误率）：AISHELL 测试集 1.74%，WenetSpeech test_net 5.92%，日常口语场景完全够用。</p>
+<h2 id="流式模型实测小模型--单线程才是最优解">流式模型实测：小模型 + 单线程才是最优解</h2>
+<p>流式（边录音边出字）才是语音助手的日常形态。实测选用官方最小的中文流式模型 <code>sherpa-onnx-streaming-zipformer-zh-14M</code>，14M 参数，int8 量化后三件套（encoder/decoder/joiner）总大小：</p>
+<ul>
+<li>encoder int8：20.6MB（fp32 为 39.1MB）</li>
+<li>decoder + joiner int8：3.5MB</li>
+<li><strong>合计约 24MB，比 fp32 省 55%</strong></li>
+</ul>
+<p>测试环境：Intel N100 处理器（4 个 E-core）、容器内 Linux、sherpa-onnx 1.13.4、CPU 推理。用官方 test_wavs（15.3 秒中文音频）实测：</p>
+<table>
+	<thead>
+			<tr>
+					<th>线程数</th>
+					<th>计算耗时</th>
+					<th>RTF（实时率）</th>
+					<th>结论</th>
+			</tr>
+	</thead>
+	<tbody>
+			<tr>
+					<td>1</td>
+					<td>0.71s</td>
+					<td><strong>0.046</strong></td>
+					<td>快于实时 20 倍</td>
+			</tr>
+			<tr>
+					<td>4</td>
+					<td>3.44s</td>
+					<td>0.225</td>
+					<td>反而慢 5 倍</td>
+			</tr>
+	</tbody>
+</table>
+<p><strong>反直觉但真实的结论</strong>：对这种 14M 小模型，多线程是负优化——线程同步开销远超并行收益，N100 的 E-core 还共享 L2 缓存。<strong>端侧小模型请从 num_threads=1 起步</strong>，别学服务器大模型的调参套路。</p>
+<h2 id="集成到设备">集成到设备</h2>
+<ul>
+<li><strong>iOS</strong>：官方提供 xcframework 与 Swift Package Manager 支持，配合 AudioKit 采集麦克风即可离线转写</li>
+<li><strong>Android</strong>：提供 AAR 包，Java/Kotlin API 与 Python 完全对齐</li>
+<li><strong>嵌入式</strong>：C API 无依赖，树莓派 Zero 级别硬件可跑 zh-14M 模型（官方标注适合 Cortex A7 CPU）</li>
+</ul>
+<p>配合 silero-vad 做静音检测、sherpa-onnx 自带的 KWS 唤醒词功能，一套代码就能做出完整的离线语音交互链路。模型下载全部走 GitHub Releases，无闭源依赖，商用无忧。</p>
+<h2 id="小结">小结</h2>
+<p>端侧语音识别已经不是「能不能做」的问题，而是「怎么选模型」的问题。14M 参数的 int8 模型 + 单线程，普通 CPU 上 RTF 0.05 的实测说明：<strong>大多数设备端语音场景，一个 24MB 的模型就够了</strong>。从 sherpa-onnx 的官方模型库挑一个合适大小的模型开始，比从零训练划算得多。</p>
+</div><div class="post-footer" id="post-footer">
+    <div class="post-info">
+        <div class="post-info-line">
+            <div class="post-info-mod">
+                <span>更新于 2026-08-06</span>
+            </div></div>
+        <div class="post-info-line">
+            <div class="post-info-md"></div>
+            <div class="post-info-share">
+                <span><a href="javascript:void(0);" title="分享到 Twitter" data-sharer="twitter" data-url="https://www.ithome.me/post/2026/08/06/on-device-asr-sherpa-onnx/" data-title="端侧语音识别实战：用 sherpa-onnx 让应用离线听懂中文" data-via="ChenCiki" data-hashtags="端侧AI,语音识别,sherpa-onnx,ASR,onnx"><i class="fab fa-twitter fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="分享到 Linkedin" data-sharer="linkedin" data-url="https://www.ithome.me/post/2026/08/06/on-device-asr-sherpa-onnx/"><i class="fab fa-linkedin fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="分享到 微博" data-sharer="weibo" data-url="https://www.ithome.me/post/2026/08/06/on-device-asr-sherpa-onnx/" data-title="端侧语音识别实战：用 sherpa-onnx 让应用离线听懂中文" data-ralateuid="xxx"><i class="fab fa-weibo fa-fw" aria-hidden="true"></i></a></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="post-info-more">
+        <section class="post-tags"><i class="fas fa-tags fa-fw" aria-hidden="true"></i>&nbsp;<a href="/tags/%E7%AB%AF%E4%BE%A7ai/">端侧AI</a>,&nbsp;<a href="/tags/%E8%AF%AD%E9%9F%B3%E8%AF%86%E5%88%AB/">语音识别</a>,&nbsp;<a href="/tags/sherpa-onnx/">Sherpa-Onnx</a>,&nbsp;<a href="/tags/asr/">ASR</a>,&nbsp;<a href="/tags/onnx/">Onnx</a></section>
+        <section>
+            <span><a href="javascript:void(0);" onclick="window.history.back();">返回</a></span>&nbsp;|&nbsp;<span><a href="/">主页</a></span>
+        </section>
+    </div>
+
+    <div class="post-nav"><a href="/post/2026/08/05/mobile-llm-guide/" class="prev" rel="prev" title="手机也能跑大模型？从模型选择到部署的完整指南"><i class="fas fa-angle-left fa-fw" aria-hidden="true"></i>手机也能跑大模型？从模型选择到部署的完整指南</a>
+            <a href="/post/2026/08/06/mcp-practical-guide/" class="next" rel="next" title="MCP 实战：把你的本地服务变成 AI Agent 的工具">MCP 实战：把你的本地服务变成 AI Agent 的工具<i class="fas fa-angle-right fa-fw" aria-hidden="true"></i></a></div>
+</div>
+<div id="comments"><div id="gitalk" class="comment"></div><noscript>
+                Please enable JavaScript to view the comments powered by <a href="https://github.com/gitalk/gitalk"></a>Gitalk</a>.
+            </noscript></div></article></div>
+            </main><footer class="footer">
+        <div class="footer-container"><div class="footer-line" itemscope itemtype="http://schema.org/CreativeWork"><i class="far fa-copyright fa-fw" aria-hidden="true"></i><span itemprop="copyrightYear">2011 - 2026</span><span class="author" itemprop="copyrightHolder">&nbsp;<a href="https://www.ithome.me/" target="_blank">Simon Chen</a></span>&nbsp;|&nbsp;<span class="license"><a rel="license external nofollow noopener noreferrer" href="https://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank">CC BY-NC-ND 4.0</a></span></div>
+        </div>
+    </footer></div>
+
+        <div id="fixed-buttons"><a href="#" id="back-to-top" class="fixed-button" title="回到顶部">
+                <i class="fas fa-arrow-up fa-fw" aria-hidden="true"></i>
+            </a><a href="#" id="view-comments" class="fixed-button" title="查看评论">
+                <i class="fas fa-comment fa-fw" aria-hidden="true"></i>
+            </a>
+        </div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1.7.2/dist/gitalk.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/css/lightgallery-bundle.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/katex.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/copy-tex.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.css"><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/gitalk@1.7.2/dist/gitalk.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/autocomplete.js@0.38.1/dist/autocomplete.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lunr@2.3.9/lunr.min.js"></script><script type="text/javascript" src="/lib/lunr/lunr.stemmer.support.min.js"></script><script type="text/javascript" src="/lib/lunr/lunr.zh.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lazysizes@5.3.1/lazysizes.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/lightgallery.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/plugins/thumbnail/lg-thumbnail.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/plugins/zoom/lg-zoom.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/clipboard@2.0.11/dist/clipboard.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/sharer.js@0.5.1/sharer.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/katex.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/auto-render.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/copy-tex.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/mhchem.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.js"></script><script type="text/javascript">window.config={"code":{"copyTitle":"复制到剪贴板","maxShownLines":50},"comment":{"gitalk":{"admin":["cikichen"],"clientID":"be0f52370ed1285b6c7c","clientSecret":"734a7d8d0ded346ca7a3d565d57de3f8eeb2850b","id":"2026-08-06T00:00:00Z","owner":"cikichen","repo":"gitalk","title":"端侧语音识别实战：用 sherpa-onnx 让应用离线听懂中文"}},"cookieconsent":{"content":{"dismiss":"我知道了","link":"了解更多","message":"本网站使用 Cookies 来改善您的浏览体验."},"enable":true,"palette":{"button":{"background":"#f0f0f0"},"popup":{"background":"#1aa3ff"}},"theme":"edgeless"},"lightgallery":true,"math":{"delimiters":[{"display":true,"left":"$$","right":"$$"},{"display":true,"left":"\\[","right":"\\]"},{"display":true,"left":"\\begin{equation}","right":"\\end{equation}"},{"display":true,"left":"\\begin{equation*}","right":"\\end{equation*}"},{"display":true,"left":"\\begin{align}","right":"\\end{align}"},{"display":true,"left":"\\begin{align*}","right":"\\end{align*}"},{"display":true,"left":"\\begin{alignat}","right":"\\end{alignat}"},{"display":true,"left":"\\begin{alignat*}","right":"\\end{alignat*}"},{"display":true,"left":"\\begin{gather}","right":"\\end{gather}"},{"display":true,"left":"\\begin{CD}","right":"\\end{CD}"},{"display":false,"left":"$","right":"$"},{"display":false,"left":"\\(","right":"\\)"}],"strict":false},"search":{"highlightTag":"em","lunrIndexURL":"/index.json","lunrLanguageCode":"zh","lunrSegmentitURL":"/lib/lunr/lunr.segmentit.js","maxResultLength":10,"noResultsFound":"没有找到结果","snippetLength":50,"type":"lunr"}};</script><script type="text/javascript" src="/js/theme.min.js"></script></body>
+</html>
