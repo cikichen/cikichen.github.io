@@ -12,7 +12,7 @@
 	<meta property="og:type" content="article">
 		<meta property="article:section" content="posts">
 		<meta property="article:published_time" content="2026-08-06T08:00:00+08:00">
-		<meta property="article:modified_time" content="2026-08-06T08:00:00+08:00">
+		<meta property="article:modified_time" content="2026-08-06T03:20:11+08:00">
 		<meta property="article:tag" content="端侧AI">
 		<meta property="article:tag" content="语音识别">
 		<meta property="article:tag" content="Sherpa-Onnx">
@@ -35,8 +35,8 @@
         "mainEntityOfPage": {
             "@type": "WebPage",
             "@id": "https:\/\/www.ithome.me\/post\/2026\/08\/06\/on-device-asr-sherpa-onnx\/"
-        },"image": ["https:\/\/www.ithome.me\/cover.png"],"genre": "posts","keywords": "端侧AI, 语音识别, sherpa-onnx, ASR, onnx","wordcount":  1476 ,
-        "url": "https:\/\/www.ithome.me\/post\/2026\/08\/06\/on-device-asr-sherpa-onnx\/","datePublished": "2026-08-06T08:00:00+08:00","dateModified": "2026-08-06T08:00:00+08:00","publisher": {
+        },"image": ["https:\/\/www.ithome.me\/cover.png"],"genre": "posts","keywords": "端侧AI, 语音识别, sherpa-onnx, ASR, onnx","wordcount":  1479 ,
+        "url": "https:\/\/www.ithome.me\/post\/2026\/08\/06\/on-device-asr-sherpa-onnx\/","datePublished": "2026-08-06T08:00:00+08:00","dateModified": "2026-08-06T03:20:11+08:00","publisher": {
             "@type": "Organization",
             "name": "SimonChen","logo": "https:\/\/www.ithome.me\/logo.png"},"author": {
                 "@type": "Person",
@@ -117,7 +117,7 @@
         </div><article class="page single"><h1 class="single-title animate__animated animate__flipInX">端侧语音识别实战：用 sherpa-onnx 让应用离线听懂中文</h1><div class="post-meta">
             <div class="post-meta-line"><span class="post-author"><a href="https://www.ithome.me/" title="Author" target="_blank" rel="noopener noreferrer author" class="author"><i class="fas fa-user-circle fa-fw" aria-hidden="true"></i>Simon Chen</a>
 </span>&nbsp;<span class="post-category">收录于 <a href="/categories/ai/"><i class="far fa-folder fa-fw" aria-hidden="true"></i>Ai</a></span></div>
-            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw" aria-hidden="true"></i>&nbsp;<time datetime="2026-08-06">2026-08-06</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden="true"></i>&nbsp;约 1476 字&nbsp;
+            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw" aria-hidden="true"></i>&nbsp;<time datetime="2026-08-06">2026-08-06</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden="true"></i>&nbsp;约 1479 字&nbsp;
                 <i class="far fa-clock fa-fw" aria-hidden="true"></i>&nbsp;预计阅读 3 分钟&nbsp;</div>
         </div><div class="details toc" id="toc-static"  data-kept="true">
                 <div class="details-summary toc-title">
@@ -228,7 +228,7 @@
 </span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="n">stream</span><span class="o">.</span><span class="n">result</span><span class="o">.</span><span class="n">text</span><span class="p">)</span>  <span class="c1"># 输出转写文本</span>
 </span></span></code></pre></td></tr></table>
 </div>
-</div><p>不需要对齐采样率：sherpa-onnx 内部会自动把 8kHz 电话音频重采样到 16kHz。这个模型是 2025-07-03 发布的 Zipformer CTC 架构，官方 WER 数据（字错误率）：AISHELL 测试集 1.74%，WenetSpeech test_net 5.92%，日常口语场景完全够用。</p>
+</div><p>不需要对齐采样率：sherpa-onnx 内部会自动把 8kHz 电话音频重采样到 16kHz。这个模型是 2025-07-03 发布的 Zipformer CTC 架构，官方 WER 数据（字错误率）：AISHELL 测试集 1.74%，WenetSpeech <code>test_net</code> 测试集 5.92%，日常口语场景完全够用。</p>
 <h2 id="流式模型实测小模型--单线程才是最优解">流式模型实测：小模型 + 单线程才是最优解</h2>
 <p>流式（边录音边出字）才是语音助手的日常形态。实测选用官方最小的中文流式模型 <code>sherpa-onnx-streaming-zipformer-zh-14M</code>，14M 参数，int8 量化后三件套（encoder/decoder/joiner）总大小：</p>
 <ul>
@@ -236,7 +236,7 @@
 <li>decoder + joiner int8：3.5MB</li>
 <li><strong>合计约 24MB，比 fp32 省 55%</strong></li>
 </ul>
-<p>测试环境：Intel N100 处理器（4 个 E-core）、容器内 Linux、sherpa-onnx 1.13.4、CPU 推理。用官方 test_wavs（15.3 秒中文音频）实测：</p>
+<p>测试环境：Intel N100 处理器（4 个 E-core）、容器内 Linux、sherpa-onnx 1.13.4、CPU 推理。用官方 <code>test_wavs</code>（15.3 秒中文音频）实测：</p>
 <table>
 	<thead>
 			<tr>
@@ -261,7 +261,7 @@
 			</tr>
 	</tbody>
 </table>
-<p><strong>反直觉但真实的结论</strong>：对这种 14M 小模型，多线程是负优化——线程同步开销远超并行收益，N100 的 E-core 还共享 L2 缓存。<strong>端侧小模型请从 num_threads=1 起步</strong>，别学服务器大模型的调参套路。</p>
+<p><strong>反直觉但真实的结论</strong>：对这种 14M 小模型，多线程是负优化——线程同步开销远超并行收益，N100 的 E-core 还共享 L2 缓存。<strong>端侧小模型请从</strong> <code>num_threads=1</code> <strong>起步</strong>，别学服务器大模型的调参套路。</p>
 <h2 id="集成到设备">集成到设备</h2>
 <ul>
 <li><strong>iOS</strong>：官方提供 xcframework 与 Swift Package Manager 支持，配合 AudioKit 采集麦克风即可离线转写</li>
@@ -275,7 +275,8 @@
     <div class="post-info">
         <div class="post-info-line">
             <div class="post-info-mod">
-                <span>更新于 2026-08-06</span>
+                <span>更新于 2026-08-06&nbsp;<a class="git-hash" href="https://github.com/cikichen/hugo-sync/commit/283963068fb5d4381e8fa73a3e759bd804eed928" target="_blank" title="commit by Hermes Bot(hermes@ithome.me) 283963068fb5d4381e8fa73a3e759bd804eed928: Auto: 2026-08-06">
+                                    <i class="fas fa-hashtag fa-fw" aria-hidden="true"></i>28396306</a></span>
             </div></div>
         <div class="post-info-line">
             <div class="post-info-md"></div>
