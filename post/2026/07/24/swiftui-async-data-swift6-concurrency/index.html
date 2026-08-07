@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="robots" content="noodp" />
+        <title>SwiftUI 异步数据加载与 Swift 6 严格并发检查实战 - 编程心语</title><meta name="Description" content="技术博客，Android，iOS，Html5, Java, Kotlin, 后端, Flutter, Python"><meta property="og:url" content="https://www.ithome.me/post/2026/07/24/swiftui-async-data-swift6-concurrency/">
+	<meta property="og:site_name" content="编程心语">
+	<meta property="og:title" content="SwiftUI 异步数据加载与 Swift 6 严格并发检查实战">
+	<meta property="og:description" content="为什么需要关心严格并发检查？ Swift 5.5 引入了 async/await 和 Actor，但那时检查是&#34;选择加入&#34;的——编译器不会强制你遵守线程安全规则。到了 Swift 6，严格并发检查（Strict Concurrency Checking）默认全开。这意味着过去能编译的代码，现在可能直接报红。">
+	<meta property="og:locale" content="zh_CN">
+	<meta property="og:type" content="article">
+		<meta property="article:section" content="posts">
+		<meta property="article:published_time" content="2026-07-24T08:00:00+08:00">
+		<meta property="article:modified_time" content="2026-08-04T14:59:27+08:00">
+		<meta property="article:tag" content="Swiftui">
+		<meta property="article:tag" content="Swift 6">
+		<meta property="article:tag" content="Concurrency">
+		<meta property="article:tag" content="IOS开发">
+		<meta property="article:tag" content="Async/Await">
+
+	<meta name="twitter:card" content="summary">
+	<meta name="twitter:title" content="SwiftUI 异步数据加载与 Swift 6 严格并发检查实战">
+	<meta name="twitter:description" content="为什么需要关心严格并发检查？ Swift 5.5 引入了 async/await 和 Actor，但那时检查是&#34;选择加入&#34;的——编译器不会强制你遵守线程安全规则。到了 Swift 6，严格并发检查（Strict Concurrency Checking）默认全开。这意味着过去能编译的代码，现在可能直接报红。">
+			<meta name="twitter:site" content="@ChenCiki">
+<meta name="application-name" content="编程心语">
+<meta name="apple-mobile-web-app-title" content="编程心语"><meta name="theme-color" content="#ffffff"><meta name="msapplication-TileColor" content="#da532c"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5"><link rel="manifest" href="/site.webmanifest"><link rel="canonical" href="https://www.ithome.me/post/2026/07/24/swiftui-async-data-swift6-concurrency/" /><link rel="prev" href="https://www.ithome.me/post/2026/07/23/swiftui-mainactor-deep-dive/" /><link rel="next" href="https://www.ithome.me/post/2026/07/25/go122-router/" /><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/normalize.css@8.0.1/normalize.min.css"><link rel="stylesheet" href="/css/style.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css"><script type="application/ld+json">
+    {
+        "@context": "http://schema.org",
+        "@type": "BlogPosting",
+        "headline": "SwiftUI 异步数据加载与 Swift 6 严格并发检查实战",
+        "inLanguage": "zh-CN",
+        "mainEntityOfPage": {
+            "@type": "WebPage",
+            "@id": "https:\/\/www.ithome.me\/post\/2026\/07\/24\/swiftui-async-data-swift6-concurrency\/"
+        },"image": ["https:\/\/www.ithome.me\/cover.png"],"genre": "posts","keywords": "SwiftUI, Swift 6, Concurrency, iOS开发, async\/await","wordcount":  1485 ,
+        "url": "https:\/\/www.ithome.me\/post\/2026\/07\/24\/swiftui-async-data-swift6-concurrency\/","datePublished": "2026-07-24T08:00:00+08:00","dateModified": "2026-08-04T14:59:27+08:00","publisher": {
+            "@type": "Organization",
+            "name": "SimonChen","logo": "https:\/\/www.ithome.me\/logo.png"},"author": {
+                "@type": "Person",
+                "name": "Simon Chen"
+            },"description": ""
+    }
+    </script><script async src="https://www.googletagmanager.com/gtag/js?id=G-H1Q5563VR8"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-H1Q5563VR8', { 'anonymize_ip': true });
+</script></head>
+    <body data-header-desktop="fixed" data-header-mobile="auto"><script type="text/javascript">(window.localStorage && localStorage.getItem('theme') ? localStorage.getItem('theme') === 'dark' : ('auto' === 'auto' ? window.matchMedia('(prefers-color-scheme: dark)').matches : 'auto' === 'dark')) && document.body.setAttribute('theme', 'dark');</script>
+
+        <div id="mask"></div><div class="wrapper"><header class="desktop" id="header-desktop">
+    <div class="header-wrapper">
+        <div class="header-title">
+            <a href="/" title="编程心语">编程心语</a>
+        </div>
+        <div class="menu">
+            <div class="menu-inner"><a class="menu-item" href="/posts/"> 文章 </a><a class="menu-item" href="/categories/"> 分类 </a><a class="menu-item" href="/tags/"> 标签 </a><a class="menu-item" href="/about-me/"> 关于 </a><span class="menu-item delimiter"></span><span class="menu-item search" id="search-desktop">
+                        <input type="text" placeholder="搜索文章..." id="search-input-desktop">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-desktop" title="搜索">
+                            <i class="fas fa-search fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-desktop" title="清空">
+                            <i class="fas fa-times-circle fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-desktop">
+                            <i class="fas fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+                        </span>
+                    </span><a href="javascript:void(0);" class="menu-item theme-switch" title="切换主题">
+                    <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</header><header class="mobile" id="header-mobile">
+    <div class="header-container">
+        <div class="header-wrapper">
+            <div class="header-title">
+                <a href="/" title="编程心语">编程心语</a>
+            </div>
+            <div class="menu-toggle" id="menu-toggle-mobile">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+        <div class="menu" id="menu-mobile"><div class="search-wrapper">
+                    <div class="search mobile" id="search-mobile">
+                        <input type="text" placeholder="搜索文章..." id="search-input-mobile">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-mobile" title="搜索">
+                            <i class="fas fa-search fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-mobile" title="清空">
+                            <i class="fas fa-times-circle fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-mobile">
+                            <i class="fas fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+                        </span>
+                    </div>
+                    <a href="javascript:void(0);" class="search-cancel" id="search-cancel-mobile">
+                        取消
+                    </a>
+                </div><a class="menu-item" href="/posts/" title="">文章</a><a class="menu-item" href="/categories/" title="">分类</a><a class="menu-item" href="/tags/" title="">标签</a><a class="menu-item" href="/about-me/" title="">关于</a><a href="javascript:void(0);" class="menu-item theme-switch" title="切换主题">
+                <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
+            </a></div>
+    </div>
+</header><div class="search-dropdown desktop">
+        <div id="search-dropdown-desktop"></div>
+    </div>
+    <div class="search-dropdown mobile">
+        <div id="search-dropdown-mobile"></div>
+    </div><main class="main">
+                <div class="container"><div class="toc" id="toc-auto">
+            <h2 class="toc-title">目录</h2>
+            <div class="toc-content" id="toc-content-auto"></div>
+        </div><article class="page single"><h1 class="single-title animate__animated animate__flipInX">SwiftUI 异步数据加载与 Swift 6 严格并发检查实战</h1><div class="post-meta">
+            <div class="post-meta-line"><span class="post-author"><a href="https://www.ithome.me/" title="Author" target="_blank" rel="noopener noreferrer author" class="author"><i class="fas fa-user-circle fa-fw" aria-hidden="true"></i>Simon Chen</a>
+</span>&nbsp;<span class="post-category">收录于 <a href="/categories/ios/"><i class="far fa-folder fa-fw" aria-hidden="true"></i>Ios</a></span></div>
+            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw" aria-hidden="true"></i>&nbsp;<time datetime="2026-07-24">2026-07-24</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden="true"></i>&nbsp;约 1485 字&nbsp;
+                <i class="far fa-clock fa-fw" aria-hidden="true"></i>&nbsp;预计阅读 3 分钟&nbsp;</div>
+        </div><div class="details toc" id="toc-static"  data-kept="true">
+                <div class="details-summary toc-title">
+                    <span>目录</span>
+                    <span><i class="details-icon fas fa-angle-right" aria-hidden="true"></i></span>
+                </div>
+                <div class="details-content toc-content" id="toc-content-static"><nav id="TableOfContents">
+  <ul>
+    <li><a href="#为什么需要关心严格并发检查">为什么需要关心严格并发检查？</a></li>
+    <li><a href="#基础版task--mainactor">基础版：Task + @MainActor</a></li>
+    <li><a href="#进阶版结构化并发">进阶版：结构化并发</a></li>
+    <li><a href="#高阶版分页加载">高阶版：分页加载</a></li>
+    <li><a href="#view-端如何使用">View 端如何使用</a></li>
+    <li><a href="#swift-6-下常见的编译错误">Swift 6 下常见的编译错误</a></li>
+    <li><a href="#实用模式mainactorrun-桥接">实用模式：MainActor.run 桥接</a></li>
+    <li><a href="#总结">总结</a></li>
+  </ul>
+</nav></div>
+            </div><div class="content" id="content"><h2 id="为什么需要关心严格并发检查">为什么需要关心严格并发检查？</h2>
+<p>Swift 5.5 引入了 <code>async/await</code> 和 <code>Actor</code>，但那时检查是&quot;选择加入&quot;的——编译器不会强制你遵守线程安全规则。到了 <strong>Swift 6</strong>，严格并发检查（Strict Concurrency Checking）<strong>默认全开</strong>。这意味着过去能编译的代码，现在可能直接报红。</p>
+<p>对 SwiftUI 开发者来说，最典型的场景就是<strong>在视图中加载异步数据</strong>。你会遇到类似这样的错误：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">Main actor-isolated property &#39;users&#39; cannot be passed
+</span></span><span class="line"><span class="cl">to non-isolated async function
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>别慌。这篇文章会带你从零搭建一套<strong>既安全又优雅</strong>的 SwiftUI 异步数据加载方案，并解释背后的原理。</p>
+<h2 id="基础版task--mainactor">基础版：Task + @MainActor</h2>
+<p>先从最直觉的方式开始。假设我们要从 API 加载用户列表：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-swift" data-lang="swift"><span class="line"><span class="cl"><span class="p">@</span><span class="n">MainActor</span>
+</span></span><span class="line"><span class="cl"><span class="kr">final</span> <span class="kd">class</span> <span class="nc">UserViewModel</span><span class="p">:</span> <span class="n">ObservableObject</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="p">@</span><span class="n">Published</span> <span class="kd">var</span> <span class="nv">users</span><span class="p">:</span> <span class="p">[</span><span class="n">User</span><span class="p">]</span> <span class="p">=</span> <span class="p">[]</span>
+</span></span><span class="line"><span class="cl">    <span class="p">@</span><span class="n">Published</span> <span class="kd">var</span> <span class="nv">isLoading</span> <span class="p">=</span> <span class="kc">false</span>
+</span></span><span class="line"><span class="cl">    <span class="p">@</span><span class="n">Published</span> <span class="kd">var</span> <span class="nv">error</span><span class="p">:</span> <span class="n">Error</span><span class="p">?</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="kd">func</span> <span class="nf">loadUsers</span><span class="p">()</span> <span class="n">async</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="n">isLoading</span> <span class="p">=</span> <span class="kc">true</span>
+</span></span><span class="line"><span class="cl">        <span class="k">defer</span> <span class="p">{</span> <span class="n">isLoading</span> <span class="p">=</span> <span class="kc">false</span> <span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">        <span class="k">do</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">            <span class="kd">let</span> <span class="nv">data</span> <span class="p">=</span> <span class="k">try</span> <span class="n">await</span> <span class="n">fetchUsersFromAPI</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">            <span class="n">users</span> <span class="p">=</span> <span class="n">data</span>
+</span></span><span class="line"><span class="cl">        <span class="p">}</span> <span class="k">catch</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">            <span class="kc">self</span><span class="p">.</span><span class="n">error</span> <span class="p">=</span> <span class="n">error</span>
+</span></span><span class="line"><span class="cl">        <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p><strong>关键点</strong>：<code>@MainActor</code> 修饰的类，所有属性和方法都在主线程执行。<code>await</code> 暂停时让出主线程，恢复时自动回到主线程——这是 Swift 6 下最安全的做法。</p>
+<h2 id="进阶版结构化并发">进阶版：结构化并发</h2>
+<p>基础版有一个问题：如果用户快速切换页面，旧请求可能和新请求打架。加一个 Task 引用管理生命周期：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-swift" data-lang="swift"><span class="line"><span class="cl"><span class="p">@</span><span class="n">MainActor</span>
+</span></span><span class="line"><span class="cl"><span class="kr">final</span> <span class="kd">class</span> <span class="nc">UserViewModel</span><span class="p">:</span> <span class="n">ObservableObject</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="p">@</span><span class="n">Published</span> <span class="kd">var</span> <span class="nv">users</span><span class="p">:</span> <span class="p">[</span><span class="n">User</span><span class="p">]</span> <span class="p">=</span> <span class="p">[]</span>
+</span></span><span class="line"><span class="cl">    <span class="p">@</span><span class="n">Published</span> <span class="kd">var</span> <span class="nv">isLoading</span> <span class="p">=</span> <span class="kc">false</span>
+</span></span><span class="line"><span class="cl">    <span class="p">@</span><span class="n">Published</span> <span class="kd">var</span> <span class="nv">error</span><span class="p">:</span> <span class="n">Error</span><span class="p">?</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="kd">private</span> <span class="kd">var</span> <span class="nv">loadTask</span><span class="p">:</span> <span class="n">Task</span><span class="p">&lt;</span><span class="nb">Void</span><span class="p">,</span> <span class="n">Never</span><span class="p">&gt;?</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="kd">func</span> <span class="nf">loadUsers</span><span class="p">()</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="c1">// 取消上一次请求</span>
+</span></span><span class="line"><span class="cl">        <span class="n">loadTask</span><span class="p">?.</span><span class="n">cancel</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">        <span class="n">loadTask</span> <span class="p">=</span> <span class="n">Task</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">            <span class="n">isLoading</span> <span class="p">=</span> <span class="kc">true</span>
+</span></span><span class="line"><span class="cl">            <span class="k">defer</span> <span class="p">{</span> <span class="n">isLoading</span> <span class="p">=</span> <span class="kc">false</span> <span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">            <span class="k">do</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">                <span class="kd">let</span> <span class="nv">data</span> <span class="p">=</span> <span class="k">try</span> <span class="n">await</span> <span class="n">fetchUsersFromAPI</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">                <span class="c1">// 检查任务是否已被取消</span>
+</span></span><span class="line"><span class="cl">                <span class="k">try</span> <span class="n">Task</span><span class="p">.</span><span class="n">checkCancellation</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">                <span class="n">users</span> <span class="p">=</span> <span class="n">data</span>
+</span></span><span class="line"><span class="cl">            <span class="p">}</span> <span class="k">catch</span> <span class="k">is</span> <span class="n">CancellationError</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">                <span class="c1">// 被取消时不视为错误</span>
+</span></span><span class="line"><span class="cl">                <span class="bp">print</span><span class="p">(</span><span class="s">&#34;请求被取消&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">            <span class="p">}</span> <span class="k">catch</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">                <span class="kc">self</span><span class="p">.</span><span class="n">error</span> <span class="p">=</span> <span class="n">error</span>
+</span></span><span class="line"><span class="cl">            <span class="p">}</span>
+</span></span><span class="line"><span class="cl">        <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="kd">deinit</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="n">loadTask</span><span class="p">?.</span><span class="n">cancel</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p><strong>这段代码做了什么</strong>：</p>
+<ul>
+<li>用 <code>Task</code> 引用管理异步操作，新请求自动取消旧的</li>
+<li><code>Task.checkCancellation()</code> 在每次 <code>await</code> 后检查是否被取消</li>
+<li><code>deinit</code> 时自动取消，避免 ViewModel 销毁后回调还在执行</li>
+</ul>
+<h2 id="高阶版分页加载">高阶版：分页加载</h2>
+<p>真实项目少不了分页。分页需要处理<strong>追加</strong>而非替换数据：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-swift" data-lang="swift"><span class="line"><span class="cl"><span class="p">@</span><span class="n">MainActor</span>
+</span></span><span class="line"><span class="cl"><span class="kr">final</span> <span class="kd">class</span> <span class="nc">PaginatedListViewModel</span><span class="p">:</span> <span class="n">ObservableObject</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="p">@</span><span class="n">Published</span> <span class="kd">var</span> <span class="nv">items</span><span class="p">:</span> <span class="p">[</span><span class="n">Item</span><span class="p">]</span> <span class="p">=</span> <span class="p">[]</span>
+</span></span><span class="line"><span class="cl">    <span class="p">@</span><span class="n">Published</span> <span class="kd">var</span> <span class="nv">isLoadingPage</span> <span class="p">=</span> <span class="kc">false</span>
+</span></span><span class="line"><span class="cl">    <span class="p">@</span><span class="n">Published</span> <span class="kd">var</span> <span class="nv">hasMore</span> <span class="p">=</span> <span class="kc">true</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="kd">private</span> <span class="kd">var</span> <span class="nv">currentCursor</span><span class="p">:</span> <span class="nb">String</span><span class="p">?</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="kd">func</span> <span class="nf">loadNextPage</span><span class="p">()</span> <span class="n">async</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="k">guard</span> <span class="o">!</span><span class="n">isLoadingPage</span><span class="p">,</span> <span class="n">hasMore</span> <span class="k">else</span> <span class="p">{</span> <span class="k">return</span> <span class="p">}</span>
+</span></span><span class="line"><span class="cl">        <span class="n">isLoadingPage</span> <span class="p">=</span> <span class="kc">true</span>
+</span></span><span class="line"><span class="cl">        <span class="k">defer</span> <span class="p">{</span> <span class="n">isLoadingPage</span> <span class="p">=</span> <span class="kc">false</span> <span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">        <span class="k">do</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">            <span class="kd">let</span> <span class="nv">response</span><span class="p">:</span> <span class="n">PaginatedResponse</span><span class="p">&lt;</span><span class="n">Item</span><span class="p">&gt;</span> <span class="p">=</span> <span class="k">try</span> <span class="n">await</span> <span class="n">API</span>
+</span></span><span class="line"><span class="cl">                <span class="p">.</span><span class="n">fetchItems</span><span class="p">(</span><span class="n">cursor</span><span class="p">:</span> <span class="n">currentCursor</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">            <span class="n">items</span><span class="p">.</span><span class="n">append</span><span class="p">(</span><span class="n">contentsOf</span><span class="p">:</span> <span class="n">response</span><span class="p">.</span><span class="n">items</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">            <span class="n">hasMore</span> <span class="p">=</span> <span class="n">response</span><span class="p">.</span><span class="n">hasMore</span>
+</span></span><span class="line"><span class="cl">            <span class="n">currentCursor</span> <span class="p">=</span> <span class="n">response</span><span class="p">.</span><span class="n">cursor</span>
+</span></span><span class="line"><span class="cl">        <span class="p">}</span> <span class="k">catch</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">            <span class="bp">print</span><span class="p">(</span><span class="s">&#34;分页加载失败&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="kd">func</span> <span class="nf">refresh</span><span class="p">()</span> <span class="n">async</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="n">currentCursor</span> <span class="p">=</span> <span class="kc">nil</span>
+</span></span><span class="line"><span class="cl">        <span class="n">items</span> <span class="p">=</span> <span class="p">[]</span>
+</span></span><span class="line"><span class="cl">        <span class="n">hasMore</span> <span class="p">=</span> <span class="kc">true</span>
+</span></span><span class="line"><span class="cl">        <span class="n">await</span> <span class="n">loadNextPage</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h2 id="view-端如何使用">View 端如何使用</h2>
+<p>视图层的写法非常简洁直观：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-swift" data-lang="swift"><span class="line"><span class="cl"><span class="kd">struct</span> <span class="nc">UserListView</span><span class="p">:</span> <span class="n">View</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="p">@</span><span class="n">StateObject</span> <span class="kd">private</span> <span class="kd">var</span> <span class="nv">viewModel</span> <span class="p">=</span> <span class="n">UserViewModel</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="kd">var</span> <span class="nv">body</span><span class="p">:</span> <span class="n">some</span> <span class="n">View</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="n">Group</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">            <span class="k">if</span> <span class="n">viewModel</span><span class="p">.</span><span class="n">isLoading</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">                <span class="n">ProgressView</span><span class="p">(</span><span class="s">&#34;加载中...&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">            <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="kd">let</span> <span class="nv">error</span> <span class="p">=</span> <span class="n">viewModel</span><span class="p">.</span><span class="n">error</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">                <span class="n">VStack</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">                    <span class="n">Text</span><span class="p">(</span><span class="s">&#34;加载失败: &#34;</span> <span class="o">+</span> <span class="n">error</span><span class="p">.</span><span class="n">localizedDescription</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">                    <span class="n">Button</span><span class="p">(</span><span class="s">&#34;重试&#34;</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">                        <span class="n">Task</span> <span class="p">{</span> <span class="n">await</span> <span class="n">viewModel</span><span class="p">.</span><span class="n">loadUsers</span><span class="p">()</span> <span class="p">}</span>
+</span></span><span class="line"><span class="cl">                    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">                <span class="p">}</span>
+</span></span><span class="line"><span class="cl">            <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">                <span class="n">List</span><span class="p">(</span><span class="n">viewModel</span><span class="p">.</span><span class="n">users</span><span class="p">)</span> <span class="p">{</span> <span class="n">user</span> <span class="k">in</span>
+</span></span><span class="line"><span class="cl">                    <span class="n">Text</span><span class="p">(</span><span class="n">user</span><span class="p">.</span><span class="n">name</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">                <span class="p">}</span>
+</span></span><span class="line"><span class="cl">                <span class="p">.</span><span class="n">refreshable</span> <span class="p">{</span> <span class="n">await</span> <span class="n">viewModel</span><span class="p">.</span><span class="n">loadUsers</span><span class="p">()</span> <span class="p">}</span>
+</span></span><span class="line"><span class="cl">            <span class="p">}</span>
+</span></span><span class="line"><span class="cl">        <span class="p">}</span>
+</span></span><span class="line"><span class="cl">        <span class="p">.</span><span class="n">task</span> <span class="p">{</span> <span class="n">await</span> <span class="n">viewModel</span><span class="p">.</span><span class="n">loadUsers</span><span class="p">()</span> <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p><strong>为什么不用 <code>.onAppear</code> 调用异步？</strong> <code>.task</code> 是 SwiftUI 专门为异步操作设计的修饰器——它会在视图消失时<strong>自动取消</strong>任务，不会有悬垂回调问题。而 <code>.onAppear</code> 触发的 fire-and-forget Task 在视图消失后依然在跑。</p>
+<h2 id="swift-6-下常见的编译错误">Swift 6 下常见的编译错误</h2>
+<table>
+	<thead>
+			<tr>
+					<th>错误信息</th>
+					<th>原因</th>
+					<th>解决方案</th>
+			</tr>
+	</thead>
+	<tbody>
+			<tr>
+					<td><code>Main actor-isolated property ...</code></td>
+					<td>从非隔离上下文修改 @Published</td>
+					<td>给 ViewModel 加 @MainActor</td>
+			</tr>
+			<tr>
+					<td><code>Capture of self with non-sendable type</code></td>
+					<td>闭包捕获非 Sendable 的 self</td>
+					<td>声明 @unchecked Sendable 或重构</td>
+			</tr>
+			<tr>
+					<td><code>Reference to var is not concurrency-safe</code></td>
+					<td>跨 actor 共享可变状态</td>
+					<td>用 Actor 封装或加 @MainActor</td>
+			</tr>
+	</tbody>
+</table>
+<h2 id="实用模式mainactorrun-桥接">实用模式：MainActor.run 桥接</h2>
+<p>有时无法给整个类加 <code>@MainActor</code>（比如它需要遵循某个非 MainActor 协议），这时可以手动切到主线程：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-swift" data-lang="swift"><span class="line"><span class="cl"><span class="kd">class</span> <span class="nc">MixedViewModel</span><span class="p">:</span> <span class="n">SomeNonIsolatedProtocol</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="kd">var</span> <span class="nv">results</span><span class="p">:</span> <span class="p">[</span><span class="nb">String</span><span class="p">]</span> <span class="p">=</span> <span class="p">[]</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="kd">func</span> <span class="nf">updateResults</span><span class="p">(</span><span class="kc">_</span> <span class="n">newData</span><span class="p">:</span> <span class="p">[</span><span class="nb">String</span><span class="p">])</span> <span class="n">async</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="kd">let</span> <span class="nv">processed</span> <span class="p">=</span> <span class="n">await</span> <span class="n">processData</span><span class="p">(</span><span class="n">newData</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">        <span class="n">await</span> <span class="n">MainActor</span><span class="p">.</span><span class="n">run</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">            <span class="kc">self</span><span class="p">.</span><span class="n">results</span> <span class="p">=</span> <span class="n">processed</span>
+</span></span><span class="line"><span class="cl">        <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="n">nonisolated</span> <span class="kd">func</span> <span class="nf">processData</span><span class="p">(</span><span class="kc">_</span> <span class="n">data</span><span class="p">:</span> <span class="p">[</span><span class="nb">String</span><span class="p">])</span> <span class="n">async</span> <span class="p">-&gt;</span> <span class="p">[</span><span class="nb">String</span><span class="p">]</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="n">data</span><span class="p">.</span><span class="bp">map</span> <span class="p">{</span> <span class="nv">$0</span><span class="p">.</span><span class="n">uppercased</span><span class="p">()</span> <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h2 id="总结">总结</h2>
+<p>Swift 6 的严格并发检查是帮你在<strong>编译期</strong>就发现线程安全问题。对于 SwiftUI 开发，遵循三条原则就能避开 90% 的问题：</p>
+<ol>
+<li><strong>ViewModel 加 <code>@MainActor</code></strong>，让 SwiftUI 相关操作自动在主线程执行</li>
+<li><strong>使用 <code>.task</code> 而非 <code>.onAppear</code> + <code>Task</code></strong>，让 SwiftUI 管理生命周期</li>
+<li><strong>每个 View 只用少量 ViewModel</strong>，通过 <code>@Observable</code> 或 <code>ObservableObject</code> 绑定数据</li>
+</ol>
+<p>以上代码在 Swift 6 + iOS 18 环境下测试通过。如果你的项目还在迁移中，可以在 Build Settings 中将 Strict Concurrency Checking 设为 Minimal 逐步过渡，但建议尽快全开——越早适应，踩坑越少。</p>
+</div><div class="post-footer" id="post-footer">
+    <div class="post-info">
+        <div class="post-info-line">
+            <div class="post-info-mod">
+                <span>更新于 2026-08-04&nbsp;<a class="git-hash" href="https://github.com/cikichen/hugo-sync/commit/7b9d58ed973cf300536747c32e65fb8f54a8bf5b" target="_blank" title="commit by Hermes Bot(hermes@ithome.me) 7b9d58ed973cf300536747c32e65fb8f54a8bf5b: Auto: 2026-08-04">
+                                    <i class="fas fa-hashtag fa-fw" aria-hidden="true"></i>7b9d58ed</a></span>
+            </div></div>
+        <div class="post-info-line">
+            <div class="post-info-md"></div>
+            <div class="post-info-share">
+                <span><a href="javascript:void(0);" title="分享到 Twitter" data-sharer="twitter" data-url="https://www.ithome.me/post/2026/07/24/swiftui-async-data-swift6-concurrency/" data-title="SwiftUI 异步数据加载与 Swift 6 严格并发检查实战" data-via="ChenCiki" data-hashtags="SwiftUI,Swift 6,Concurrency,iOS开发,async/await"><i class="fab fa-twitter fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="分享到 Linkedin" data-sharer="linkedin" data-url="https://www.ithome.me/post/2026/07/24/swiftui-async-data-swift6-concurrency/"><i class="fab fa-linkedin fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="分享到 微博" data-sharer="weibo" data-url="https://www.ithome.me/post/2026/07/24/swiftui-async-data-swift6-concurrency/" data-title="SwiftUI 异步数据加载与 Swift 6 严格并发检查实战" data-ralateuid="xxx"><i class="fab fa-weibo fa-fw" aria-hidden="true"></i></a></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="post-info-more">
+        <section class="post-tags"><i class="fas fa-tags fa-fw" aria-hidden="true"></i>&nbsp;<a href="/tags/swiftui/">Swiftui</a>,&nbsp;<a href="/tags/swift-6/">Swift 6</a>,&nbsp;<a href="/tags/concurrency/">Concurrency</a>,&nbsp;<a href="/tags/ios%E5%BC%80%E5%8F%91/">IOS开发</a>,&nbsp;<a href="/tags/async/await/">Async/Await</a></section>
+        <section>
+            <span><a href="javascript:void(0);" onclick="window.history.back();">返回</a></span>&nbsp;|&nbsp;<span><a href="/">主页</a></span>
+        </section>
+    </div>
+
+    <div class="post-nav"><a href="/post/2026/07/23/swiftui-mainactor-deep-dive/" class="prev" rel="prev" title="SwiftUI @MainActor 深入理解：告别主线程崩溃与 UI 无响应"><i class="fas fa-angle-left fa-fw" aria-hidden="true"></i>SwiftUI @MainActor 深入理解：告别主线程崩溃与 UI 无响应</a>
+            <a href="/post/2026/07/25/go122-router/" class="next" rel="next" title="Go 1.22 标准库路由实战：用 net/http 构建 REST API">Go 1.22 标准库路由实战：用 net/http 构建 REST API<i class="fas fa-angle-right fa-fw" aria-hidden="true"></i></a></div>
+</div>
+<div id="comments"><div id="gitalk" class="comment"></div><noscript>
+                Please enable JavaScript to view the comments powered by <a href="https://github.com/gitalk/gitalk"></a>Gitalk</a>.
+            </noscript></div></article></div>
+            </main><footer class="footer">
+        <div class="footer-container"><div class="footer-line" itemscope itemtype="http://schema.org/CreativeWork"><i class="far fa-copyright fa-fw" aria-hidden="true"></i><span itemprop="copyrightYear">2011 - 2026</span><span class="author" itemprop="copyrightHolder">&nbsp;<a href="https://www.ithome.me/" target="_blank">Simon Chen</a></span>&nbsp;|&nbsp;<span class="license"><a rel="license external nofollow noopener noreferrer" href="https://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank">CC BY-NC-ND 4.0</a></span></div>
+        </div>
+    </footer></div>
+
+        <div id="fixed-buttons"><a href="#" id="back-to-top" class="fixed-button" title="回到顶部">
+                <i class="fas fa-arrow-up fa-fw" aria-hidden="true"></i>
+            </a><a href="#" id="view-comments" class="fixed-button" title="查看评论">
+                <i class="fas fa-comment fa-fw" aria-hidden="true"></i>
+            </a>
+        </div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1.7.2/dist/gitalk.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/css/lightgallery-bundle.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/katex.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/copy-tex.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.css"><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/gitalk@1.7.2/dist/gitalk.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/autocomplete.js@0.38.1/dist/autocomplete.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lunr@2.3.9/lunr.min.js"></script><script type="text/javascript" src="/lib/lunr/lunr.stemmer.support.min.js"></script><script type="text/javascript" src="/lib/lunr/lunr.zh.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lazysizes@5.3.1/lazysizes.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/lightgallery.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/plugins/thumbnail/lg-thumbnail.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/plugins/zoom/lg-zoom.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/clipboard@2.0.11/dist/clipboard.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/sharer.js@0.5.1/sharer.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/katex.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/auto-render.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/copy-tex.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/mhchem.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.js"></script><script type="text/javascript">window.config={"code":{"copyTitle":"复制到剪贴板","maxShownLines":50},"comment":{"gitalk":{"admin":["cikichen"],"clientID":"be0f52370ed1285b6c7c","clientSecret":"734a7d8d0ded346ca7a3d565d57de3f8eeb2850b","id":"2026-07-24T00:00:00Z","owner":"cikichen","repo":"gitalk","title":"SwiftUI 异步数据加载与 Swift 6 严格并发检查实战"}},"cookieconsent":{"content":{"dismiss":"我知道了","link":"了解更多","message":"本网站使用 Cookies 来改善您的浏览体验."},"enable":true,"palette":{"button":{"background":"#f0f0f0"},"popup":{"background":"#1aa3ff"}},"theme":"edgeless"},"lightgallery":true,"math":{"delimiters":[{"display":true,"left":"$$","right":"$$"},{"display":true,"left":"\\[","right":"\\]"},{"display":true,"left":"\\begin{equation}","right":"\\end{equation}"},{"display":true,"left":"\\begin{equation*}","right":"\\end{equation*}"},{"display":true,"left":"\\begin{align}","right":"\\end{align}"},{"display":true,"left":"\\begin{align*}","right":"\\end{align*}"},{"display":true,"left":"\\begin{alignat}","right":"\\end{alignat}"},{"display":true,"left":"\\begin{alignat*}","right":"\\end{alignat*}"},{"display":true,"left":"\\begin{gather}","right":"\\end{gather}"},{"display":true,"left":"\\begin{CD}","right":"\\end{CD}"},{"display":false,"left":"$","right":"$"},{"display":false,"left":"\\(","right":"\\)"}],"strict":false},"search":{"highlightTag":"em","lunrIndexURL":"/index.json","lunrLanguageCode":"zh","lunrSegmentitURL":"/lib/lunr/lunr.segmentit.js","maxResultLength":10,"noResultsFound":"没有找到结果","snippetLength":50,"type":"lunr"}};</script><script type="text/javascript" src="/js/theme.min.js"></script></body>
+</html>

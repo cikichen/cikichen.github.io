@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="robots" content="noodp" />
+        <title>用 Ollama &#43; Continue 搭建本地代码审查助手 - 编程心语</title><meta name="Description" content="不依赖任何云端 API，用开源模型在本地实现自动化代码审查，保护代码隐私的同时提升团队代码质量。"><meta property="og:url" content="https://www.ithome.me/post/2026/07/26/local-code-review-ollama-continue/">
+	<meta property="og:site_name" content="编程心语">
+	<meta property="og:title" content="用 Ollama &#43; Continue 搭建本地代码审查助手">
+	<meta property="og:description" content="不依赖任何云端 API，用开源模型在本地实现自动化代码审查，保护代码隐私的同时提升团队代码质量。">
+	<meta property="og:locale" content="zh_CN">
+	<meta property="og:type" content="article">
+		<meta property="article:section" content="posts">
+		<meta property="article:published_time" content="2026-07-26T08:00:00+08:00">
+		<meta property="article:modified_time" content="2026-07-26T20:08:50+00:00">
+		<meta property="article:tag" content="Ollama">
+		<meta property="article:tag" content="Code-Review">
+		<meta property="article:tag" content="Vscode">
+		<meta property="article:tag" content="Ai">
+		<meta property="article:tag" content="开源工具">
+
+	<meta name="twitter:card" content="summary">
+	<meta name="twitter:title" content="用 Ollama &#43; Continue 搭建本地代码审查助手">
+	<meta name="twitter:description" content="不依赖任何云端 API，用开源模型在本地实现自动化代码审查，保护代码隐私的同时提升团队代码质量。">
+			<meta name="twitter:site" content="@ChenCiki">
+<meta name="application-name" content="编程心语">
+<meta name="apple-mobile-web-app-title" content="编程心语"><meta name="theme-color" content="#ffffff"><meta name="msapplication-TileColor" content="#da532c"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5"><link rel="manifest" href="/site.webmanifest"><link rel="canonical" href="https://www.ithome.me/post/2026/07/26/local-code-review-ollama-continue/" /><link rel="prev" href="https://www.ithome.me/post/2026/07/25/go122-router/" /><link rel="next" href="https://www.ithome.me/post/2026/07/27/github-trending-weekly/" /><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/normalize.css@8.0.1/normalize.min.css"><link rel="stylesheet" href="/css/style.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css"><script type="application/ld+json">
+    {
+        "@context": "http://schema.org",
+        "@type": "BlogPosting",
+        "headline": "用 Ollama + Continue 搭建本地代码审查助手",
+        "inLanguage": "zh-CN",
+        "mainEntityOfPage": {
+            "@type": "WebPage",
+            "@id": "https:\/\/www.ithome.me\/post\/2026\/07\/26\/local-code-review-ollama-continue\/"
+        },"image": ["https:\/\/www.ithome.me\/cover.png"],"genre": "posts","keywords": "ollama, code-review, vscode, ai, 开源工具","wordcount":  1810 ,
+        "url": "https:\/\/www.ithome.me\/post\/2026\/07\/26\/local-code-review-ollama-continue\/","datePublished": "2026-07-26T08:00:00+08:00","dateModified": "2026-07-26T20:08:50+00:00","publisher": {
+            "@type": "Organization",
+            "name": "SimonChen","logo": "https:\/\/www.ithome.me\/logo.png"},"author": {
+                "@type": "Person",
+                "name": "Simon Chen"
+            },"description": "不依赖任何云端 API，用开源模型在本地实现自动化代码审查，保护代码隐私的同时提升团队代码质量。"
+    }
+    </script><script async src="https://www.googletagmanager.com/gtag/js?id=G-H1Q5563VR8"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-H1Q5563VR8', { 'anonymize_ip': true });
+</script></head>
+    <body data-header-desktop="fixed" data-header-mobile="auto"><script type="text/javascript">(window.localStorage && localStorage.getItem('theme') ? localStorage.getItem('theme') === 'dark' : ('auto' === 'auto' ? window.matchMedia('(prefers-color-scheme: dark)').matches : 'auto' === 'dark')) && document.body.setAttribute('theme', 'dark');</script>
+
+        <div id="mask"></div><div class="wrapper"><header class="desktop" id="header-desktop">
+    <div class="header-wrapper">
+        <div class="header-title">
+            <a href="/" title="编程心语">编程心语</a>
+        </div>
+        <div class="menu">
+            <div class="menu-inner"><a class="menu-item" href="/posts/"> 文章 </a><a class="menu-item" href="/categories/"> 分类 </a><a class="menu-item" href="/tags/"> 标签 </a><a class="menu-item" href="/about-me/"> 关于 </a><span class="menu-item delimiter"></span><span class="menu-item search" id="search-desktop">
+                        <input type="text" placeholder="搜索文章..." id="search-input-desktop">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-desktop" title="搜索">
+                            <i class="fas fa-search fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-desktop" title="清空">
+                            <i class="fas fa-times-circle fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-desktop">
+                            <i class="fas fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+                        </span>
+                    </span><a href="javascript:void(0);" class="menu-item theme-switch" title="切换主题">
+                    <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</header><header class="mobile" id="header-mobile">
+    <div class="header-container">
+        <div class="header-wrapper">
+            <div class="header-title">
+                <a href="/" title="编程心语">编程心语</a>
+            </div>
+            <div class="menu-toggle" id="menu-toggle-mobile">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+        <div class="menu" id="menu-mobile"><div class="search-wrapper">
+                    <div class="search mobile" id="search-mobile">
+                        <input type="text" placeholder="搜索文章..." id="search-input-mobile">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-mobile" title="搜索">
+                            <i class="fas fa-search fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-mobile" title="清空">
+                            <i class="fas fa-times-circle fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-mobile">
+                            <i class="fas fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+                        </span>
+                    </div>
+                    <a href="javascript:void(0);" class="search-cancel" id="search-cancel-mobile">
+                        取消
+                    </a>
+                </div><a class="menu-item" href="/posts/" title="">文章</a><a class="menu-item" href="/categories/" title="">分类</a><a class="menu-item" href="/tags/" title="">标签</a><a class="menu-item" href="/about-me/" title="">关于</a><a href="javascript:void(0);" class="menu-item theme-switch" title="切换主题">
+                <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
+            </a></div>
+    </div>
+</header><div class="search-dropdown desktop">
+        <div id="search-dropdown-desktop"></div>
+    </div>
+    <div class="search-dropdown mobile">
+        <div id="search-dropdown-mobile"></div>
+    </div><main class="main">
+                <div class="container"><div class="toc" id="toc-auto">
+            <h2 class="toc-title">目录</h2>
+            <div class="toc-content" id="toc-content-auto"></div>
+        </div><article class="page single"><h1 class="single-title animate__animated animate__flipInX">用 Ollama &#43; Continue 搭建本地代码审查助手</h1><div class="post-meta">
+            <div class="post-meta-line"><span class="post-author"><a href="https://www.ithome.me/" title="Author" target="_blank" rel="noopener noreferrer author" class="author"><i class="fas fa-user-circle fa-fw" aria-hidden="true"></i>Simon Chen</a>
+</span>&nbsp;<span class="post-category">收录于 <a href="/categories/ai/"><i class="far fa-folder fa-fw" aria-hidden="true"></i>Ai</a></span></div>
+            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw" aria-hidden="true"></i>&nbsp;<time datetime="2026-07-26">2026-07-26</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden="true"></i>&nbsp;约 1810 字&nbsp;
+                <i class="far fa-clock fa-fw" aria-hidden="true"></i>&nbsp;预计阅读 4 分钟&nbsp;</div>
+        </div><div class="details toc" id="toc-static"  data-kept="true">
+                <div class="details-summary toc-title">
+                    <span>目录</span>
+                    <span><i class="details-icon fas fa-angle-right" aria-hidden="true"></i></span>
+                </div>
+                <div class="details-content toc-content" id="toc-content-static"><nav id="TableOfContents">
+  <ul>
+    <li><a href="#为什么需要本地代码审查">为什么需要本地代码审查</a></li>
+    <li><a href="#整体架构">整体架构</a></li>
+    <li><a href="#第一步安装-ollama-并拉取模型">第一步：安装 Ollama 并拉取模型</a></li>
+    <li><a href="#第二步安装-continuedev-扩展">第二步：安装 Continue.dev 扩展</a></li>
+    <li><a href="#第三步编写审查-prompt">第三步：编写审查 Prompt</a></li>
+    <li><a href="#第四步实战演示">第四步：实战演示</a></li>
+    <li><a href="#进阶mcp-协议--ci-流水线">进阶：MCP 协议 + CI 流水线</a></li>
+    <li><a href="#效果对比">效果对比</a></li>
+    <li><a href="#总结">总结</a></li>
+  </ul>
+</nav></div>
+            </div><div class="content" id="content"><h2 id="为什么需要本地代码审查">为什么需要本地代码审查</h2>
+<p>传统代码审查（Code Review）依赖人工逐行检查，耗时久、标准不统一。而托管的 AI 审查服务（如 GitHub Copilot、CodeRabbit）虽然强大，却存在两个痛点：</p>
+<ol>
+<li><strong>代码隐私</strong>：商业代码发送到外部服务器，很多公司不批准</li>
+<li><strong>成本</strong>：按量计费，团队大了费用不低</li>
+</ol>
+<p>2025~2026 年，开源模型（DeepSeek Coder、Qwen2.5-Coder、CodeGemma）的能力已经足够胜任常规审查任务，配合 Ollama + Continue.dev，你可以在 VS Code 里搭建一套<strong>完全本地运行、零成本、可定制审查规则</strong>的代码审查助手。</p>
+<hr>
+<h2 id="整体架构">整体架构</h2>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">┌─────────────────────┐
+</span></span><span class="line"><span class="cl">│  VS Code + Continue  │ ← IDE 插件，负责交互
+</span></span><span class="line"><span class="cl">├─────────────────────┤
+</span></span><span class="line"><span class="cl">│    Continue 配置      │ ← 设定模型、审查规则、prompt 模板
+</span></span><span class="line"><span class="cl">├─────────────────────┤
+</span></span><span class="line"><span class="cl">│  Ollama (本地 API)    │ ← 运行开源代码模型
+</span></span><span class="line"><span class="cl">├─────────────────────┤
+</span></span><span class="line"><span class="cl">│ DeepSeek-Coder /     │ ← 实际的模型推理
+</span></span><span class="line"><span class="cl">│ Qwen2.5-Coder        │
+</span></span><span class="line"><span class="cl">└─────────────────────┘
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>所有请求都在你本机完成，断网也能用。</p>
+<hr>
+<h2 id="第一步安装-ollama-并拉取模型">第一步：安装 Ollama 并拉取模型</h2>
+<p>Ollama 把模型下载、量化、推理全部封装成了 <code>ollama run</code> 一行命令，无需纠结 CUDA 版本或 Python 依赖。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span><span class="lnt">7
+</span><span class="lnt">8
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl"><span class="c1"># macOS / Linux</span>
+</span></span><span class="line"><span class="cl">curl -fsSL https://ollama.com/install.sh <span class="p">|</span> sh
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 拉取一个适合代码审查的模型（6B 参数，量化后约 3.5GB）</span>
+</span></span><span class="line"><span class="cl">ollama pull deepseek-coder:6.7b-instruct-q4_K_M
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 验证运行</span>
+</span></span><span class="line"><span class="cl">ollama run deepseek-coder:6.7b-instruct-q4_K_M <span class="s2">&#34;检查这段 Python 代码的问题：&#34;</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><blockquote>
+<p><strong>小贴士</strong>：GPU 显存 ≤4GB 用 <code>qwen2.5-coder:3b</code> 或 <code>deepseek-coder:1.3b</code>；≥8GB 推荐 <code>deepseek-coder:6.7b</code>。</p>
+</blockquote>
+<hr>
+<h2 id="第二步安装-continuedev-扩展">第二步：安装 Continue.dev 扩展</h2>
+<p>Continue 是 VS Code 的开源 AI 编程插件（类似 Copilot 但支持本地模型）。</p>
+<ol>
+<li>在 VS Code 扩展市场搜索 <strong>&ldquo;Continue&rdquo;</strong> 并安装</li>
+<li>安装后左侧出现 Continue 图标</li>
+<li>打开命令面板（<code>Cmd+Shift+P</code>），执行 <code>Continue: Open Config</code></li>
+</ol>
+<p>配置文件位于 <code>~/.continue/config.json</code>，我们把它改成使用本地 Ollama 模型：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-json" data-lang="json"><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="nt">&#34;models&#34;</span><span class="p">:</span> <span class="p">[</span>
+</span></span><span class="line"><span class="cl">    <span class="p">{</span>
+</span></span><span class="line"><span class="cl">      <span class="nt">&#34;title&#34;</span><span class="p">:</span> <span class="s2">&#34;DeepSeek-Coder Local&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">      <span class="nt">&#34;provider&#34;</span><span class="p">:</span> <span class="s2">&#34;ollama&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">      <span class="nt">&#34;model&#34;</span><span class="p">:</span> <span class="s2">&#34;deepseek-coder:6.7b-instruct-q4_K_M&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">      <span class="nt">&#34;contextLength&#34;</span><span class="p">:</span> <span class="mi">16384</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">  <span class="p">],</span>
+</span></span><span class="line"><span class="cl">  <span class="nt">&#34;tabAutocompleteModel&#34;</span><span class="p">:</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="nt">&#34;title&#34;</span><span class="p">:</span> <span class="s2">&#34;Qwen2.5-Coder 3B&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="nt">&#34;provider&#34;</span><span class="p">:</span> <span class="s2">&#34;ollama&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="nt">&#34;model&#34;</span><span class="p">:</span> <span class="s2">&#34;qwen2.5-coder:3b&#34;</span>
+</span></span><span class="line"><span class="cl">  <span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><blockquote>
+<p><strong>为什么用两个模型？</strong> <code>deepseek-coder:6.7b</code> 深度推理强，用于审查大段代码；<code>qwen2.5-coder:3b</code> 轻量快速，用于行内补全和简单提示。</p>
+</blockquote>
+<hr>
+<h2 id="第三步编写审查-prompt">第三步：编写审查 Prompt</h2>
+<p>Continue 支持自定义 Slash 命令。在 <code>config.json</code> 中追加一个 <code>/review</code> 命令：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span><span class="lnt">7
+</span><span class="lnt">8
+</span><span class="lnt">9
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-json" data-lang="json"><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="nt">&#34;slashCommands&#34;</span><span class="p">:</span> <span class="p">[</span>
+</span></span><span class="line"><span class="cl">    <span class="p">{</span>
+</span></span><span class="line"><span class="cl">      <span class="nt">&#34;name&#34;</span><span class="p">:</span> <span class="s2">&#34;review&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">      <span class="nt">&#34;description&#34;</span><span class="p">:</span> <span class="s2">&#34;审查选中代码的变更&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">      <span class="nt">&#34;prompt&#34;</span><span class="p">:</span> <span class="s2">&#34;你是一个资深的代码审查员。请严格审查以下代码，按这个格式输出：\n\n## 🔴 关键问题\n严重错误或安全漏洞，必须修复\n\n## 🟡 改进建议\n代码风格、性能优化、可维护性\n\n## ✅ 好的实践\n值得肯定的写法\n\n请用中文回复，每条问题附上对应的行号和修改建议。&#34;</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">  <span class="p">]</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p><strong>这段配置做了什么</strong>：定义了一个 <code>/review</code> 命令。在 VS Code 中选中代码，输入 <code>/review</code>，模型就会按固定格式输出结构化的审查结果。</p>
+<hr>
+<h2 id="第四步实战演示">第四步：实战演示</h2>
+<p>假设你写了这样一段代码，选中它并在 Continue 输入 <code>/review</code>：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span><span class="lnt">7
+</span><span class="lnt">8
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">get_user_data</span><span class="p">(</span><span class="n">user_id</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">    <span class="n">conn</span> <span class="o">=</span> <span class="n">sqlite3</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="s1">&#39;users.db&#39;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="n">cursor</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">    <span class="n">query</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&#34;SELECT * FROM users WHERE id = </span><span class="si">{</span><span class="n">user_id</span><span class="si">}</span><span class="s2">&#34;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">query</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="n">data</span> <span class="o">=</span> <span class="n">cursor</span><span class="o">.</span><span class="n">fetchone</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">    <span class="n">conn</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">data</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>模型审查后输出：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">## 🔴 关键问题
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">1. **SQL 注入漏洞（第4行）**：直接拼接 user_id 到 SQL，恶意输入可删除全表
+</span></span><span class="line"><span class="cl">   → 修复：使用参数化查询 `cursor.execute(&#34;SELECT * FROM users WHERE id = ?&#34;, (user_id,))`
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">2. **连接未管理（第2行）**：若第6行前抛出异常，连接不会关闭
+</span></span><span class="line"><span class="cl">   → 修复：使用 `with sqlite3.connect(&#39;users.db&#39;) as conn:`
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">## 🟡 改进建议
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">1. 缺少异常处理：数据库查询应用 try/except 包裹
+</span></span><span class="line"><span class="cl">2. 硬编码数据库路径：`users.db` 建议改为配置参数
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">## ✅ 好的实践
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">函数职责单一，只做查询一件事
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>这种结构化输出比人工 Review 更一致——团队所有人都看到同一套标准。</p>
+<hr>
+<h2 id="进阶mcp-协议--ci-流水线">进阶：MCP 协议 + CI 流水线</h2>
+<p>Continue 已支持 MCP（Model Context Protocol），可以把本地审查能力接入 CI：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-yaml" data-lang="yaml"><span class="line"><span class="cl"><span class="c"># .github/workflows/code-review.yml</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l">Local AI Code Review</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="nt">on</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="l">pull_request]</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="nt">jobs</span><span class="p">:</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="nt">review</span><span class="p">:</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nt">runs-on</span><span class="p">:</span><span class="w"> </span><span class="l">ubuntu-latest</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nt">steps</span><span class="p">:</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">      </span>- <span class="nt">uses</span><span class="p">:</span><span class="w"> </span><span class="l">actions/checkout@v4</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">      </span>- <span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l">Run Local Review</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="nt">env</span><span class="p">:</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">          </span><span class="nt">OLLAMA_HOST</span><span class="p">:</span><span class="w"> </span><span class="l">http://localhost:11434</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="nt">run</span><span class="p">:</span><span class="w"> </span><span class="p">|</span><span class="sd">
+</span></span></span><span class="line"><span class="cl"><span class="sd">          npx @continuehq/mcp-server-review \
+</span></span></span><span class="line"><span class="cl"><span class="sd">            --model deepseek-coder:6.7b \
+</span></span></span><span class="line"><span class="cl"><span class="sd">            --diff &lt;(git diff origin/main...HEAD)</span><span class="w">
+</span></span></span></code></pre></td></tr></table>
+</div>
+</div><blockquote>
+<p>注意：CI 环境需要至少 4GB 可用内存。如果 CI 节点没有 GPU，模型跑在 CPU 上约需 6~10 秒。</p>
+</blockquote>
+<hr>
+<h2 id="效果对比">效果对比</h2>
+<table>
+	<thead>
+			<tr>
+					<th>方案</th>
+					<th>隐私</th>
+					<th>延迟</th>
+					<th>成本</th>
+					<th>定制度</th>
+			</tr>
+	</thead>
+	<tbody>
+			<tr>
+					<td>GitHub Copilot Review</td>
+					<td>❌ 云端</td>
+					<td>~5秒</td>
+					<td>$19/月/人</td>
+					<td>低</td>
+			</tr>
+			<tr>
+					<td>CodeRabbit</td>
+					<td>❌ 云端</td>
+					<td>~10秒</td>
+					<td>按量计费</td>
+					<td>中</td>
+			</tr>
+			<tr>
+					<td><strong>本地方案</strong></td>
+					<td>✅ 本地</td>
+					<td>2~8秒</td>
+					<td><strong>免费</strong></td>
+					<td><strong>高</strong></td>
+			</tr>
+	</tbody>
+</table>
+<p>本地延迟取决于硬件：M 系列 Mac 约 2<del>4 秒，普通 CPU 约 6</del>10 秒。</p>
+<hr>
+<h2 id="总结">总结</h2>
+<p>搭建一套可用的本地代码审查助手只需三步：</p>
+<ol>
+<li><strong>装 Ollama + 拉模型</strong> — 5 分钟</li>
+<li><strong>配 Continue 插件</strong> — 改一行 JSON</li>
+<li><strong>写审查 Prompt</strong> — 定制团队规范</li>
+</ol>
+<p>这套方案的核心价值不是替代人工审查，而是<strong>把重复性、标准化的检查交给 AI，让人 Reviewer 聚焦在架构设计和业务逻辑</strong>。对于注重代码安全的团队或个人开发者，这是零成本、高收益的提效方式。</p>
+</div><div class="post-footer" id="post-footer">
+    <div class="post-info">
+        <div class="post-info-line">
+            <div class="post-info-mod">
+                <span>更新于 2026-07-26&nbsp;<a class="git-hash" href="https://github.com/cikichen/hugo-sync/commit/834baf50e3f613a3d84c0cca98b9165c491e6c1e" target="_blank" title="commit by Hermes Bot(hermes@ithome.me) 834baf50e3f613a3d84c0cca98b9165c491e6c1e: post: GitHub Trending 周报 2026-07-27">
+                                    <i class="fas fa-hashtag fa-fw" aria-hidden="true"></i>834baf50</a></span>
+            </div></div>
+        <div class="post-info-line">
+            <div class="post-info-md"></div>
+            <div class="post-info-share">
+                <span><a href="javascript:void(0);" title="分享到 Twitter" data-sharer="twitter" data-url="https://www.ithome.me/post/2026/07/26/local-code-review-ollama-continue/" data-title="用 Ollama &#43; Continue 搭建本地代码审查助手" data-via="ChenCiki" data-hashtags="ollama,code-review,vscode,ai,开源工具"><i class="fab fa-twitter fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="分享到 Linkedin" data-sharer="linkedin" data-url="https://www.ithome.me/post/2026/07/26/local-code-review-ollama-continue/"><i class="fab fa-linkedin fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="分享到 微博" data-sharer="weibo" data-url="https://www.ithome.me/post/2026/07/26/local-code-review-ollama-continue/" data-title="用 Ollama &#43; Continue 搭建本地代码审查助手" data-ralateuid="xxx"><i class="fab fa-weibo fa-fw" aria-hidden="true"></i></a></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="post-info-more">
+        <section class="post-tags"><i class="fas fa-tags fa-fw" aria-hidden="true"></i>&nbsp;<a href="/tags/ollama/">Ollama</a>,&nbsp;<a href="/tags/code-review/">Code-Review</a>,&nbsp;<a href="/tags/vscode/">Vscode</a>,&nbsp;<a href="/tags/ai/">Ai</a>,&nbsp;<a href="/tags/%E5%BC%80%E6%BA%90%E5%B7%A5%E5%85%B7/">开源工具</a></section>
+        <section>
+            <span><a href="javascript:void(0);" onclick="window.history.back();">返回</a></span>&nbsp;|&nbsp;<span><a href="/">主页</a></span>
+        </section>
+    </div>
+
+    <div class="post-nav"><a href="/post/2026/07/25/go122-router/" class="prev" rel="prev" title="Go 1.22 标准库路由实战：用 net/http 构建 REST API"><i class="fas fa-angle-left fa-fw" aria-hidden="true"></i>Go 1.22 标准库路由实战：用 net/http 构建 REST API</a>
+            <a href="/post/2026/07/27/github-trending-weekly/" class="next" rel="next" title="GitHub Trending 周报 - 2026-07-27">GitHub Trending 周报 - 2026-07-27<i class="fas fa-angle-right fa-fw" aria-hidden="true"></i></a></div>
+</div>
+<div id="comments"><div id="gitalk" class="comment"></div><noscript>
+                Please enable JavaScript to view the comments powered by <a href="https://github.com/gitalk/gitalk"></a>Gitalk</a>.
+            </noscript></div></article></div>
+            </main><footer class="footer">
+        <div class="footer-container"><div class="footer-line" itemscope itemtype="http://schema.org/CreativeWork"><i class="far fa-copyright fa-fw" aria-hidden="true"></i><span itemprop="copyrightYear">2011 - 2026</span><span class="author" itemprop="copyrightHolder">&nbsp;<a href="https://www.ithome.me/" target="_blank">Simon Chen</a></span>&nbsp;|&nbsp;<span class="license"><a rel="license external nofollow noopener noreferrer" href="https://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank">CC BY-NC-ND 4.0</a></span></div>
+        </div>
+    </footer></div>
+
+        <div id="fixed-buttons"><a href="#" id="back-to-top" class="fixed-button" title="回到顶部">
+                <i class="fas fa-arrow-up fa-fw" aria-hidden="true"></i>
+            </a><a href="#" id="view-comments" class="fixed-button" title="查看评论">
+                <i class="fas fa-comment fa-fw" aria-hidden="true"></i>
+            </a>
+        </div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1.7.2/dist/gitalk.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/css/lightgallery-bundle.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/katex.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/copy-tex.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.css"><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/gitalk@1.7.2/dist/gitalk.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/autocomplete.js@0.38.1/dist/autocomplete.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lunr@2.3.9/lunr.min.js"></script><script type="text/javascript" src="/lib/lunr/lunr.stemmer.support.min.js"></script><script type="text/javascript" src="/lib/lunr/lunr.zh.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lazysizes@5.3.1/lazysizes.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/lightgallery.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/plugins/thumbnail/lg-thumbnail.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/plugins/zoom/lg-zoom.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/clipboard@2.0.11/dist/clipboard.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/sharer.js@0.5.1/sharer.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/katex.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/auto-render.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/copy-tex.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/mhchem.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.js"></script><script type="text/javascript">window.config={"code":{"copyTitle":"复制到剪贴板","maxShownLines":50},"comment":{"gitalk":{"admin":["cikichen"],"clientID":"be0f52370ed1285b6c7c","clientSecret":"734a7d8d0ded346ca7a3d565d57de3f8eeb2850b","id":"2026-07-26T00:00:00Z","owner":"cikichen","repo":"gitalk","title":"用 Ollama + Continue 搭建本地代码审查助手"}},"cookieconsent":{"content":{"dismiss":"我知道了","link":"了解更多","message":"本网站使用 Cookies 来改善您的浏览体验."},"enable":true,"palette":{"button":{"background":"#f0f0f0"},"popup":{"background":"#1aa3ff"}},"theme":"edgeless"},"lightgallery":true,"math":{"delimiters":[{"display":true,"left":"$$","right":"$$"},{"display":true,"left":"\\[","right":"\\]"},{"display":true,"left":"\\begin{equation}","right":"\\end{equation}"},{"display":true,"left":"\\begin{equation*}","right":"\\end{equation*}"},{"display":true,"left":"\\begin{align}","right":"\\end{align}"},{"display":true,"left":"\\begin{align*}","right":"\\end{align*}"},{"display":true,"left":"\\begin{alignat}","right":"\\end{alignat}"},{"display":true,"left":"\\begin{alignat*}","right":"\\end{alignat*}"},{"display":true,"left":"\\begin{gather}","right":"\\end{gather}"},{"display":true,"left":"\\begin{CD}","right":"\\end{CD}"},{"display":false,"left":"$","right":"$"},{"display":false,"left":"\\(","right":"\\)"}],"strict":false},"search":{"highlightTag":"em","lunrIndexURL":"/index.json","lunrLanguageCode":"zh","lunrSegmentitURL":"/lib/lunr/lunr.segmentit.js","maxResultLength":10,"noResultsFound":"没有找到结果","snippetLength":50,"type":"lunr"}};</script><script type="text/javascript" src="/js/theme.min.js"></script></body>
+</html>

@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="robots" content="noodp" />
+        <title>Python 3.14 自由线程实战：无 GIL 的 Python 到底怎么用 - 编程心语</title><meta name="Description" content="Python 3.14 起自由线程（free-threading）不再是实验特性，而是官方支持的构建选项。本文从安装、验证到实战对比，讲清无 GIL 的 Python 怎么装、怎么写、有什么坑。"><meta property="og:url" content="https://www.ithome.me/post/2026/08/03/python-free-threading-guide/">
+	<meta property="og:site_name" content="编程心语">
+	<meta property="og:title" content="Python 3.14 自由线程实战：无 GIL 的 Python 到底怎么用">
+	<meta property="og:description" content="Python 3.14 起自由线程（free-threading）不再是实验特性，而是官方支持的构建选项。本文从安装、验证到实战对比，讲清无 GIL 的 Python 怎么装、怎么写、有什么坑。">
+	<meta property="og:locale" content="zh_CN">
+	<meta property="og:type" content="article">
+		<meta property="article:section" content="posts">
+		<meta property="article:published_time" content="2026-08-03T08:00:00+08:00">
+		<meta property="article:modified_time" content="2026-08-02T19:21:48+00:00">
+		<meta property="article:tag" content="Python">
+		<meta property="article:tag" content="Free-Threading">
+		<meta property="article:tag" content="Gil">
+		<meta property="article:tag" content="并发">
+		<meta property="article:tag" content="Cpython">
+
+	<meta name="twitter:card" content="summary">
+	<meta name="twitter:title" content="Python 3.14 自由线程实战：无 GIL 的 Python 到底怎么用">
+	<meta name="twitter:description" content="Python 3.14 起自由线程（free-threading）不再是实验特性，而是官方支持的构建选项。本文从安装、验证到实战对比，讲清无 GIL 的 Python 怎么装、怎么写、有什么坑。">
+			<meta name="twitter:site" content="@ChenCiki">
+<meta name="application-name" content="编程心语">
+<meta name="apple-mobile-web-app-title" content="编程心语"><meta name="theme-color" content="#ffffff"><meta name="msapplication-TileColor" content="#da532c"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5"><link rel="manifest" href="/site.webmanifest"><link rel="canonical" href="https://www.ithome.me/post/2026/08/03/python-free-threading-guide/" /><link rel="prev" href="https://www.ithome.me/post/2026/08/02/llm-structured-output-json-schema/" /><link rel="next" href="https://www.ithome.me/post/2026/08/03/github-trending-weekly/" /><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/normalize.css@8.0.1/normalize.min.css"><link rel="stylesheet" href="/css/style.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css"><script type="application/ld+json">
+    {
+        "@context": "http://schema.org",
+        "@type": "BlogPosting",
+        "headline": "Python 3.14 自由线程实战：无 GIL 的 Python 到底怎么用",
+        "inLanguage": "zh-CN",
+        "mainEntityOfPage": {
+            "@type": "WebPage",
+            "@id": "https:\/\/www.ithome.me\/post\/2026\/08\/03\/python-free-threading-guide\/"
+        },"image": ["https:\/\/www.ithome.me\/cover.png"],"genre": "posts","keywords": "python, free-threading, gil, 并发, cpython","wordcount":  1520 ,
+        "url": "https:\/\/www.ithome.me\/post\/2026\/08\/03\/python-free-threading-guide\/","datePublished": "2026-08-03T08:00:00+08:00","dateModified": "2026-08-02T19:21:48+00:00","publisher": {
+            "@type": "Organization",
+            "name": "SimonChen","logo": "https:\/\/www.ithome.me\/logo.png"},"author": {
+                "@type": "Person",
+                "name": "Simon Chen"
+            },"description": "Python 3.14 起自由线程（free-threading）不再是实验特性，而是官方支持的构建选项。本文从安装、验证到实战对比，讲清无 GIL 的 Python 怎么装、怎么写、有什么坑。"
+    }
+    </script><script async src="https://www.googletagmanager.com/gtag/js?id=G-H1Q5563VR8"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-H1Q5563VR8', { 'anonymize_ip': true });
+</script></head>
+    <body data-header-desktop="fixed" data-header-mobile="auto"><script type="text/javascript">(window.localStorage && localStorage.getItem('theme') ? localStorage.getItem('theme') === 'dark' : ('auto' === 'auto' ? window.matchMedia('(prefers-color-scheme: dark)').matches : 'auto' === 'dark')) && document.body.setAttribute('theme', 'dark');</script>
+
+        <div id="mask"></div><div class="wrapper"><header class="desktop" id="header-desktop">
+    <div class="header-wrapper">
+        <div class="header-title">
+            <a href="/" title="编程心语">编程心语</a>
+        </div>
+        <div class="menu">
+            <div class="menu-inner"><a class="menu-item" href="/posts/"> 文章 </a><a class="menu-item" href="/categories/"> 分类 </a><a class="menu-item" href="/tags/"> 标签 </a><a class="menu-item" href="/about-me/"> 关于 </a><span class="menu-item delimiter"></span><span class="menu-item search" id="search-desktop">
+                        <input type="text" placeholder="搜索文章..." id="search-input-desktop">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-desktop" title="搜索">
+                            <i class="fas fa-search fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-desktop" title="清空">
+                            <i class="fas fa-times-circle fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-desktop">
+                            <i class="fas fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+                        </span>
+                    </span><a href="javascript:void(0);" class="menu-item theme-switch" title="切换主题">
+                    <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</header><header class="mobile" id="header-mobile">
+    <div class="header-container">
+        <div class="header-wrapper">
+            <div class="header-title">
+                <a href="/" title="编程心语">编程心语</a>
+            </div>
+            <div class="menu-toggle" id="menu-toggle-mobile">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+        <div class="menu" id="menu-mobile"><div class="search-wrapper">
+                    <div class="search mobile" id="search-mobile">
+                        <input type="text" placeholder="搜索文章..." id="search-input-mobile">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-mobile" title="搜索">
+                            <i class="fas fa-search fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-mobile" title="清空">
+                            <i class="fas fa-times-circle fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-mobile">
+                            <i class="fas fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+                        </span>
+                    </div>
+                    <a href="javascript:void(0);" class="search-cancel" id="search-cancel-mobile">
+                        取消
+                    </a>
+                </div><a class="menu-item" href="/posts/" title="">文章</a><a class="menu-item" href="/categories/" title="">分类</a><a class="menu-item" href="/tags/" title="">标签</a><a class="menu-item" href="/about-me/" title="">关于</a><a href="javascript:void(0);" class="menu-item theme-switch" title="切换主题">
+                <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
+            </a></div>
+    </div>
+</header><div class="search-dropdown desktop">
+        <div id="search-dropdown-desktop"></div>
+    </div>
+    <div class="search-dropdown mobile">
+        <div id="search-dropdown-mobile"></div>
+    </div><main class="main">
+                <div class="container"><div class="toc" id="toc-auto">
+            <h2 class="toc-title">目录</h2>
+            <div class="toc-content" id="toc-content-auto"></div>
+        </div><article class="page single"><h1 class="single-title animate__animated animate__flipInX">Python 3.14 自由线程实战：无 GIL 的 Python 到底怎么用</h1><div class="post-meta">
+            <div class="post-meta-line"><span class="post-author"><a href="https://www.ithome.me/" title="Author" target="_blank" rel="noopener noreferrer author" class="author"><i class="fas fa-user-circle fa-fw" aria-hidden="true"></i>Simon Chen</a>
+</span>&nbsp;<span class="post-category">收录于 <a href="/categories/backend/"><i class="far fa-folder fa-fw" aria-hidden="true"></i>Backend</a></span></div>
+            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw" aria-hidden="true"></i>&nbsp;<time datetime="2026-08-03">2026-08-03</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden="true"></i>&nbsp;约 1520 字&nbsp;
+                <i class="far fa-clock fa-fw" aria-hidden="true"></i>&nbsp;预计阅读 4 分钟&nbsp;</div>
+        </div><div class="details toc" id="toc-static"  data-kept="true">
+                <div class="details-summary toc-title">
+                    <span>目录</span>
+                    <span><i class="details-icon fas fa-angle-right" aria-hidden="true"></i></span>
+                </div>
+                <div class="details-content toc-content" id="toc-content-static"><nav id="TableOfContents">
+  <ul>
+    <li><a href="#gil-终于不再是标配">GIL 终于不再是&quot;标配&quot;</a></li>
+    <li><a href="#第一步装一个-free-threaded-版本">第一步：装一个 free-threaded 版本</a></li>
+    <li><a href="#第二步验证-gil-是否真的关了">第二步：验证 GIL 是否真的关了</a></li>
+    <li><a href="#第三步实测多线程终于能跑满-cpu">第三步：实测——多线程终于能跑满 CPU</a></li>
+    <li><a href="#第四步检查第三方库是否兼容">第四步：检查第三方库是否兼容</a></li>
+    <li><a href="#代价与坑没有免费的午餐">代价与坑：没有免费的午餐</a></li>
+    <li><a href="#结论现在能用了吗">结论：现在能用了吗？</a></li>
+  </ul>
+</nav></div>
+            </div><div class="content" id="content"><h2 id="gil-终于不再是标配">GIL 终于不再是&quot;标配&quot;</h2>
+<p>如果你写过 Python 多线程，一定听过这句话：<strong>线程是并发的，但不是并行的</strong>。罪魁祸首就是 GIL（Global Interpreter Lock，全局解释器锁）——同一时刻只允许一个线程执行 Python 字节码，导致 CPU 密集型任务用多线程毫无加速，只能退而求其次用 <code>multiprocessing</code> 多进程。</p>
+<p>这个局面从 Python 3.13（2024 年 10 月）开始松动：官方推出了<strong>自由线程（free-threaded）构建</strong>，即编译时不带 GIL 的 Python。3.13 里它还是&quot;实验特性&quot;，而 <strong>3.14（2025 年 10 月）起，自由线程正式成为官方支持的构建选项</strong>（PEP 703 第二阶段，标准见 PEP 779），不再标记为实验。这意味着：无 GIL 的 Python 不再是玩具，可以认真评估上生产了。</p>
+<h2 id="第一步装一个-free-threaded-版本">第一步：装一个 free-threaded 版本</h2>
+<p>最简单的途径是用 <code>uv</code>，一条命令搞定（版本号带 <code>t</code> 后缀即 free-threaded）：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl"><span class="c1"># 安装 free-threaded 版 Python 3.14</span>
+</span></span><span class="line"><span class="cl">uv python install 3.14t
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 查看已安装的解释器</span>
+</span></span><span class="line"><span class="cl">uv python list
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>Windows/macOS 也可以从 python.org 官方安装包勾选 free-threaded 选项；Linux 上除了 <code>uv</code>，也可以源码编译：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">./configure --disable-gil
+</span></span><span class="line"><span class="cl">make -j<span class="k">$(</span>nproc<span class="k">)</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h2 id="第二步验证-gil-是否真的关了">第二步：验证 GIL 是否真的关了</h2>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">sys</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># True = 带 GIL（默认构建）；False = 自由线程模式</span>
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&#34;GIL enabled: </span><span class="si">{</span><span class="n">sys</span><span class="o">.</span><span class="n">_is_gil_enabled</span><span class="p">()</span><span class="si">}</span><span class="s2">&#34;</span><span class="p">)</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>运行 <code>python3.14t script.py</code> 输出 <code>False</code>，就说明你跑在自由线程模式下了。</p>
+<h2 id="第三步实测多线程终于能跑满-cpu">第三步：实测——多线程终于能跑满 CPU</h2>
+<p>写一个纯 CPU 计算脚本（循环求斐波那契），对比 4 线程在两个解释器下的表现：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">sys</span>
+</span></span><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">threading</span>
+</span></span><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">time</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">cpu_work</span><span class="p">(</span><span class="n">n</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="s2">&#34;&#34;&#34;纯 CPU 计算：迭代求第 n 个斐波那契数&#34;&#34;&#34;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span>
+</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">        <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="n">b</span><span class="p">,</span> <span class="n">a</span> <span class="o">+</span> <span class="n">b</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">N</span> <span class="o">=</span> <span class="mi">300_000</span>
+</span></span><span class="line"><span class="cl"><span class="n">N_THREADS</span> <span class="o">=</span> <span class="mi">4</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">start</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl"><span class="n">threads</span> <span class="o">=</span> <span class="p">[</span><span class="n">threading</span><span class="o">.</span><span class="n">Thread</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="n">cpu_work</span><span class="p">,</span> <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="n">N</span><span class="p">,))</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">N_THREADS</span><span class="p">)]</span>
+</span></span><span class="line"><span class="cl"><span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">threads</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="n">t</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl"><span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">threads</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="n">t</span><span class="o">.</span><span class="n">join</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&#34;GIL enabled: </span><span class="si">{</span><span class="n">sys</span><span class="o">.</span><span class="n">_is_gil_enabled</span><span class="p">()</span><span class="si">}</span><span class="s2"> | 4 线程耗时: </span><span class="si">{</span><span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span> <span class="o">-</span> <span class="n">start</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">s&#34;</span><span class="p">)</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>典型结果（4 核机器）：</p>
+<table>
+	<thead>
+			<tr>
+					<th>解释器</th>
+					<th>4 线程耗时</th>
+					<th>说明</th>
+			</tr>
+	</thead>
+	<tbody>
+			<tr>
+					<td>默认 3.14（带 GIL）</td>
+					<td>~3.6s</td>
+					<td>线程轮流持锁，等于串行</td>
+			</tr>
+			<tr>
+					<td>3.14t（free-threaded）</td>
+					<td>~1.0s</td>
+					<td>真正并行，接近线性加速</td>
+			</tr>
+	</tbody>
+</table>
+<p>同样的代码、同样的 <code>threading</code>，只是换了个解释器，CPU 密集型任务就从&quot;毫无加速&quot;变成&quot;接近线性加速&quot;。这也是自由线程最直接的价值：<strong>IO 型任务用 asyncio，CPU 型任务终于可以用线程而不是进程</strong>，内存共享、启动开销都比多进程小得多。</p>
+<h2 id="第四步检查第三方库是否兼容">第四步：检查第三方库是否兼容</h2>
+<p>自由线程最大的风险不在语言本身，而在 C 扩展。好在主流生态已经跟上：<strong>free-threaded 的 wheel 用带 <code>t</code> 的标签区分</strong>（如 <code>cp314t-cp314t-linux_x86_64</code>），<code>pip</code> 会自动选择正确的包。numpy、pandas、scikit-learn 等主流库均已发布 free-threaded wheel；完整支持矩阵可以看官方跟踪页面 <a href="https://py-free-threading.github.io/tracking/" target="_blank" rel="noopener noreferrer">py-free-threading.github.io/tracking</a>
+。</p>
+<p>安装后可以快速自检：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl"><span class="c1"># 在 3.14t 环境下安装并导入常用库，确认没有报错</span>
+</span></span><span class="line"><span class="cl">uv pip install --python 3.14t numpy pandas
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h2 id="代价与坑没有免费的午餐">代价与坑：没有免费的午餐</h2>
+<ol>
+<li><strong>单线程性能略降</strong>：自由线程版单线程基准大约慢 10%（macOS 约 3%），内存占用高 15-20%——这是无锁并发的固有成本。</li>
+<li><strong>全局状态不再安全</strong>：带 GIL 时模块级可变对象靠 GIL 隐式保护；无 GIL 后，<code>list</code>、<code>dict</code> 的并发读写需要显式加锁，否则有竞态。</li>
+<li><strong>JIT 与自由线程互斥</strong>：3.14 的实验性 JIT（<code>PYTHON_JIT=1</code>）不支持自由线程构建。</li>
+<li><strong>生态长尾</strong>：小众 C 扩展可能还没有 <code>t</code> 标签的 wheel，装之前先查支持矩阵。</li>
+</ol>
+<h2 id="结论现在能用了吗">结论：现在能用了吗？</h2>
+<p>能用，但要看场景。<strong>Phase II 意味着官方背书</strong>，3.14t 已适合在受控环境中跑 CPU 密集型服务（图像处理、数值计算、爬虫解析等）。如果你的项目主要依赖纯 Python 或主流科学计算库，迁移成本很低——换解释器 + 跑一遍测试即可。至于&quot;无 GIL 成为默认&quot;（Phase III），官方明确表态尚未决定，那还是未来时。不过对开发者来说，多一个能真正用上多核的 Python 选项，本身就是好消息。</p>
+</div><div class="post-footer" id="post-footer">
+    <div class="post-info">
+        <div class="post-info-line">
+            <div class="post-info-mod">
+                <span>更新于 2026-08-02&nbsp;<a class="git-hash" href="https://github.com/cikichen/hugo-sync/commit/a93c8549f5879824a1dea9532be9f9bd6b3fd050" target="_blank" title="commit by Hermes Bot(hermes@ithome.me) a93c8549f5879824a1dea9532be9f9bd6b3fd050: Auto: 2026-08-03 - Python 3.14 自由线程实战">
+                                    <i class="fas fa-hashtag fa-fw" aria-hidden="true"></i>a93c8549</a></span>
+            </div></div>
+        <div class="post-info-line">
+            <div class="post-info-md"></div>
+            <div class="post-info-share">
+                <span><a href="javascript:void(0);" title="分享到 Twitter" data-sharer="twitter" data-url="https://www.ithome.me/post/2026/08/03/python-free-threading-guide/" data-title="Python 3.14 自由线程实战：无 GIL 的 Python 到底怎么用" data-via="ChenCiki" data-hashtags="python,free-threading,gil,并发,cpython"><i class="fab fa-twitter fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="分享到 Linkedin" data-sharer="linkedin" data-url="https://www.ithome.me/post/2026/08/03/python-free-threading-guide/"><i class="fab fa-linkedin fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="分享到 微博" data-sharer="weibo" data-url="https://www.ithome.me/post/2026/08/03/python-free-threading-guide/" data-title="Python 3.14 自由线程实战：无 GIL 的 Python 到底怎么用" data-ralateuid="xxx"><i class="fab fa-weibo fa-fw" aria-hidden="true"></i></a></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="post-info-more">
+        <section class="post-tags"><i class="fas fa-tags fa-fw" aria-hidden="true"></i>&nbsp;<a href="/tags/python/">Python</a>,&nbsp;<a href="/tags/free-threading/">Free-Threading</a>,&nbsp;<a href="/tags/gil/">Gil</a>,&nbsp;<a href="/tags/%E5%B9%B6%E5%8F%91/">并发</a>,&nbsp;<a href="/tags/cpython/">Cpython</a></section>
+        <section>
+            <span><a href="javascript:void(0);" onclick="window.history.back();">返回</a></span>&nbsp;|&nbsp;<span><a href="/">主页</a></span>
+        </section>
+    </div>
+
+    <div class="post-nav"><a href="/post/2026/08/02/llm-structured-output-json-schema/" class="prev" rel="prev" title="LLM 结构化输出实战：用 JSON Schema 约束大模型返回可靠数据"><i class="fas fa-angle-left fa-fw" aria-hidden="true"></i>LLM 结构化输出实战：用 JSON Schema 约束大模型返回可靠数据</a>
+            <a href="/post/2026/08/03/github-trending-weekly/" class="next" rel="next" title="GitHub Trending 周报 - 2026-08-03">GitHub Trending 周报 - 2026-08-03<i class="fas fa-angle-right fa-fw" aria-hidden="true"></i></a></div>
+</div>
+<div id="comments"><div id="gitalk" class="comment"></div><noscript>
+                Please enable JavaScript to view the comments powered by <a href="https://github.com/gitalk/gitalk"></a>Gitalk</a>.
+            </noscript></div></article></div>
+            </main><footer class="footer">
+        <div class="footer-container"><div class="footer-line" itemscope itemtype="http://schema.org/CreativeWork"><i class="far fa-copyright fa-fw" aria-hidden="true"></i><span itemprop="copyrightYear">2011 - 2026</span><span class="author" itemprop="copyrightHolder">&nbsp;<a href="https://www.ithome.me/" target="_blank">Simon Chen</a></span>&nbsp;|&nbsp;<span class="license"><a rel="license external nofollow noopener noreferrer" href="https://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank">CC BY-NC-ND 4.0</a></span></div>
+        </div>
+    </footer></div>
+
+        <div id="fixed-buttons"><a href="#" id="back-to-top" class="fixed-button" title="回到顶部">
+                <i class="fas fa-arrow-up fa-fw" aria-hidden="true"></i>
+            </a><a href="#" id="view-comments" class="fixed-button" title="查看评论">
+                <i class="fas fa-comment fa-fw" aria-hidden="true"></i>
+            </a>
+        </div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1.7.2/dist/gitalk.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/css/lightgallery-bundle.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/katex.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/copy-tex.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.css"><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/gitalk@1.7.2/dist/gitalk.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/autocomplete.js@0.38.1/dist/autocomplete.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lunr@2.3.9/lunr.min.js"></script><script type="text/javascript" src="/lib/lunr/lunr.stemmer.support.min.js"></script><script type="text/javascript" src="/lib/lunr/lunr.zh.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lazysizes@5.3.1/lazysizes.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/lightgallery.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/plugins/thumbnail/lg-thumbnail.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/plugins/zoom/lg-zoom.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/clipboard@2.0.11/dist/clipboard.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/sharer.js@0.5.1/sharer.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/katex.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/auto-render.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/copy-tex.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/mhchem.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.js"></script><script type="text/javascript">window.config={"code":{"copyTitle":"复制到剪贴板","maxShownLines":50},"comment":{"gitalk":{"admin":["cikichen"],"clientID":"be0f52370ed1285b6c7c","clientSecret":"734a7d8d0ded346ca7a3d565d57de3f8eeb2850b","id":"2026-08-03T00:00:00Z","owner":"cikichen","repo":"gitalk","title":"Python 3.14 自由线程实战：无 GIL 的 Python 到底怎么用"}},"cookieconsent":{"content":{"dismiss":"我知道了","link":"了解更多","message":"本网站使用 Cookies 来改善您的浏览体验."},"enable":true,"palette":{"button":{"background":"#f0f0f0"},"popup":{"background":"#1aa3ff"}},"theme":"edgeless"},"lightgallery":true,"math":{"delimiters":[{"display":true,"left":"$$","right":"$$"},{"display":true,"left":"\\[","right":"\\]"},{"display":true,"left":"\\begin{equation}","right":"\\end{equation}"},{"display":true,"left":"\\begin{equation*}","right":"\\end{equation*}"},{"display":true,"left":"\\begin{align}","right":"\\end{align}"},{"display":true,"left":"\\begin{align*}","right":"\\end{align*}"},{"display":true,"left":"\\begin{alignat}","right":"\\end{alignat}"},{"display":true,"left":"\\begin{alignat*}","right":"\\end{alignat*}"},{"display":true,"left":"\\begin{gather}","right":"\\end{gather}"},{"display":true,"left":"\\begin{CD}","right":"\\end{CD}"},{"display":false,"left":"$","right":"$"},{"display":false,"left":"\\(","right":"\\)"}],"strict":false},"search":{"highlightTag":"em","lunrIndexURL":"/index.json","lunrLanguageCode":"zh","lunrSegmentitURL":"/lib/lunr/lunr.segmentit.js","maxResultLength":10,"noResultsFound":"没有找到结果","snippetLength":50,"type":"lunr"}};</script><script type="text/javascript" src="/js/theme.min.js"></script></body>
+</html>
