@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="robots" content="noodp" />
+        <title>端侧姿态估计实战：用 MediaPipe Pose Landmarker 给应用装上骨架追踪 - 编程心语</title><meta name="Description" content="从 BlazePose 架构到 MediaPipe Pose Landmarker 落地：模型选型对比、Python 推理代码、关键点角度计算与深蹲计数实战，附官方模型体积与端侧性能数据"><meta property="og:url" content="https://www.ithome.me/post/2026/08/08/on-device-ai-pose-estimation/">
+	<meta property="og:site_name" content="编程心语">
+	<meta property="og:title" content="端侧姿态估计实战：用 MediaPipe Pose Landmarker 给应用装上骨架追踪">
+	<meta property="og:description" content="从 BlazePose 架构到 MediaPipe Pose Landmarker 落地：模型选型对比、Python 推理代码、关键点角度计算与深蹲计数实战，附官方模型体积与端侧性能数据">
+	<meta property="og:locale" content="zh_CN">
+	<meta property="og:type" content="article">
+		<meta property="article:section" content="posts">
+		<meta property="article:published_time" content="2026-08-08T08:00:00+08:00">
+		<meta property="article:modified_time" content="2026-08-08T08:00:00+08:00">
+		<meta property="article:tag" content="端侧AI">
+		<meta property="article:tag" content="姿态估计">
+		<meta property="article:tag" content="MediaPipe">
+		<meta property="article:tag" content="Pose Landmarker">
+		<meta property="article:tag" content="BlazePose">
+
+	<meta name="twitter:card" content="summary">
+	<meta name="twitter:title" content="端侧姿态估计实战：用 MediaPipe Pose Landmarker 给应用装上骨架追踪">
+	<meta name="twitter:description" content="从 BlazePose 架构到 MediaPipe Pose Landmarker 落地：模型选型对比、Python 推理代码、关键点角度计算与深蹲计数实战，附官方模型体积与端侧性能数据">
+			<meta name="twitter:site" content="@ChenCiki">
+<meta name="application-name" content="编程心语">
+<meta name="apple-mobile-web-app-title" content="编程心语"><meta name="theme-color" content="#ffffff"><meta name="msapplication-TileColor" content="#da532c"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5"><link rel="manifest" href="/site.webmanifest"><link rel="canonical" href="https://www.ithome.me/post/2026/08/08/on-device-ai-pose-estimation/" /><link rel="prev" href="https://www.ithome.me/post/2026/08/07/edge-embedding-models-comparison/" /><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/normalize.css@8.0.1/normalize.min.css"><link rel="stylesheet" href="/css/style.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css"><script type="application/ld+json">
+    {
+        "@context": "http://schema.org",
+        "@type": "BlogPosting",
+        "headline": "端侧姿态估计实战：用 MediaPipe Pose Landmarker 给应用装上骨架追踪",
+        "inLanguage": "zh-CN",
+        "mainEntityOfPage": {
+            "@type": "WebPage",
+            "@id": "https:\/\/www.ithome.me\/post\/2026\/08\/08\/on-device-ai-pose-estimation\/"
+        },"image": ["https:\/\/www.ithome.me\/cover.png"],"genre": "posts","keywords": "端侧AI, 姿态估计, MediaPipe, Pose Landmarker, BlazePose","wordcount":  1626 ,
+        "url": "https:\/\/www.ithome.me\/post\/2026\/08\/08\/on-device-ai-pose-estimation\/","datePublished": "2026-08-08T08:00:00+08:00","dateModified": "2026-08-08T08:00:00+08:00","publisher": {
+            "@type": "Organization",
+            "name": "SimonChen","logo": "https:\/\/www.ithome.me\/logo.png"},"author": {
+                "@type": "Person",
+                "name": "Simon"
+            },"description": "从 BlazePose 架构到 MediaPipe Pose Landmarker 落地：模型选型对比、Python 推理代码、关键点角度计算与深蹲计数实战，附官方模型体积与端侧性能数据"
+    }
+    </script><script async src="https://www.googletagmanager.com/gtag/js?id=G-H1Q5563VR8"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-H1Q5563VR8', { 'anonymize_ip': true });
+</script></head>
+    <body data-header-desktop="fixed" data-header-mobile="auto"><script type="text/javascript">(window.localStorage && localStorage.getItem('theme') ? localStorage.getItem('theme') === 'dark' : ('auto' === 'auto' ? window.matchMedia('(prefers-color-scheme: dark)').matches : 'auto' === 'dark')) && document.body.setAttribute('theme', 'dark');</script>
+
+        <div id="mask"></div><div class="wrapper"><header class="desktop" id="header-desktop">
+    <div class="header-wrapper">
+        <div class="header-title">
+            <a href="/" title="编程心语">编程心语</a>
+        </div>
+        <div class="menu">
+            <div class="menu-inner"><a class="menu-item" href="/posts/"> 文章 </a><a class="menu-item" href="/categories/"> 分类 </a><a class="menu-item" href="/tags/"> 标签 </a><a class="menu-item" href="/about-me/"> 关于 </a><span class="menu-item delimiter"></span><span class="menu-item search" id="search-desktop">
+                        <input type="text" placeholder="搜索文章..." id="search-input-desktop">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-desktop" title="搜索">
+                            <i class="fas fa-search fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-desktop" title="清空">
+                            <i class="fas fa-times-circle fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-desktop">
+                            <i class="fas fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+                        </span>
+                    </span><a href="javascript:void(0);" class="menu-item theme-switch" title="切换主题">
+                    <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</header><header class="mobile" id="header-mobile">
+    <div class="header-container">
+        <div class="header-wrapper">
+            <div class="header-title">
+                <a href="/" title="编程心语">编程心语</a>
+            </div>
+            <div class="menu-toggle" id="menu-toggle-mobile">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+        <div class="menu" id="menu-mobile"><div class="search-wrapper">
+                    <div class="search mobile" id="search-mobile">
+                        <input type="text" placeholder="搜索文章..." id="search-input-mobile">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-mobile" title="搜索">
+                            <i class="fas fa-search fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-mobile" title="清空">
+                            <i class="fas fa-times-circle fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-mobile">
+                            <i class="fas fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+                        </span>
+                    </div>
+                    <a href="javascript:void(0);" class="search-cancel" id="search-cancel-mobile">
+                        取消
+                    </a>
+                </div><a class="menu-item" href="/posts/" title="">文章</a><a class="menu-item" href="/categories/" title="">分类</a><a class="menu-item" href="/tags/" title="">标签</a><a class="menu-item" href="/about-me/" title="">关于</a><a href="javascript:void(0);" class="menu-item theme-switch" title="切换主题">
+                <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
+            </a></div>
+    </div>
+</header><div class="search-dropdown desktop">
+        <div id="search-dropdown-desktop"></div>
+    </div>
+    <div class="search-dropdown mobile">
+        <div id="search-dropdown-mobile"></div>
+    </div><main class="main">
+                <div class="container"><div class="toc" id="toc-auto">
+            <h2 class="toc-title">目录</h2>
+            <div class="toc-content" id="toc-content-auto"></div>
+        </div><article class="page single"><h1 class="single-title animate__animated animate__flipInX">端侧姿态估计实战：用 MediaPipe Pose Landmarker 给应用装上骨架追踪</h1><div class="post-meta">
+            <div class="post-meta-line"><span class="post-author"><a href="https://www.ithome.me/" title="Author" target="_blank" rel="noopener noreferrer author" class="author"><i class="fas fa-user-circle fa-fw" aria-hidden="true"></i>Simon</a>
+</span>&nbsp;<span class="post-category">收录于 <a href="/categories/ai/"><i class="far fa-folder fa-fw" aria-hidden="true"></i>Ai</a></span></div>
+            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw" aria-hidden="true"></i>&nbsp;<time datetime="2026-08-08">2026-08-08</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden="true"></i>&nbsp;约 1626 字&nbsp;
+                <i class="far fa-clock fa-fw" aria-hidden="true"></i>&nbsp;预计阅读 4 分钟&nbsp;</div>
+        </div><div class="details toc" id="toc-static"  data-kept="true">
+                <div class="details-summary toc-title">
+                    <span>目录</span>
+                    <span><i class="details-icon fas fa-angle-right" aria-hidden="true"></i></span>
+                </div>
+                <div class="details-content toc-content" id="toc-content-static"><nav id="TableOfContents">
+  <ul>
+    <li><a href="#为什么要在端侧做姿态估计">为什么要在端侧做姿态估计</a></li>
+    <li><a href="#方案选型movenet-还是-pose-landmarker">方案选型：MoveNet 还是 Pose Landmarker</a></li>
+    <li><a href="#实战python-十分钟跑通">实战：Python 十分钟跑通</a></li>
+    <li><a href="#应用实战深蹲计数">应用实战：深蹲计数</a></li>
+    <li><a href="#端侧性能与集成建议">端侧性能与集成建议</a></li>
+    <li><a href="#开源方案推荐">开源方案推荐</a></li>
+    <li><a href="#小结">小结</a></li>
+  </ul>
+</nav></div>
+            </div><div class="content" id="content"><h2 id="为什么要在端侧做姿态估计">为什么要在端侧做姿态估计</h2>
+<p>健身 App 的深蹲计数、体感游戏的角色控制、运动康复的关节角度分析、儿童体态监测——这些场景的共同点是需要实时追踪人体骨架，而画面里全是敏感的身体信息。把姿态估计模型跑在设备端，视频不出手机，延迟低到能跟上 30fps 的视频流，还不用为每次推理付云服务费。这就是端侧姿态估计（On-Device Pose Estimation）的价值。</p>
+<p>过去这类能力门槛很高，但 2026 年的今天，一个 <strong>5.8MB 的模型</strong>就能在普通手机上实时输出人体 33 个关键点坐标。这篇文章带你从模型选型到完整代码跑通全流程。</p>
+<h2 id="方案选型movenet-还是-pose-landmarker">方案选型：MoveNet 还是 Pose Landmarker</h2>
+<p>端侧单人姿态估计有两大主流开源方案，都是 Google 出品：</p>
+<table>
+	<thead>
+			<tr>
+					<th>方案</th>
+					<th>关键点</th>
+					<th>模型体积</th>
+					<th>输入尺寸</th>
+					<th>特点</th>
+			</tr>
+	</thead>
+	<tbody>
+			<tr>
+					<td>MoveNet Lightning</td>
+					<td>17 点</td>
+					<td>约 4.5MB</td>
+					<td>192x192</td>
+					<td>轻量优先，帧率高</td>
+			</tr>
+			<tr>
+					<td>MoveNet Thunder</td>
+					<td>17 点</td>
+					<td>约 12.6MB</td>
+					<td>256x256</td>
+					<td>精度优先</td>
+			</tr>
+			<tr>
+					<td>Pose Landmarker Lite</td>
+					<td>33 点</td>
+					<td>5.8MB</td>
+					<td>256x256</td>
+					<td>含脸部 6 点，轻量</td>
+			</tr>
+			<tr>
+					<td>Pose Landmarker Full</td>
+					<td>33 点</td>
+					<td>9.4MB</td>
+					<td>256x256</td>
+					<td>精度/速度均衡</td>
+			</tr>
+			<tr>
+					<td>Pose Landmarker Heavy</td>
+					<td>33 点</td>
+					<td>30.7MB</td>
+					<td>256x256</td>
+					<td>最高精度，桌面端</td>
+			</tr>
+	</tbody>
+</table>
+<p>MoveNet 只有 17 个关键点（躯干加四肢），而 Pose Landmarker 基于 BlazePose 架构输出 <strong>33 个关键点</strong>，多了眼睛、耳朵、嘴巴等面部点位，还附带每个点的可见度和世界坐标，做健身计数、动作比对都更从容。体积只差 1MB，我推荐直接用 Pose Landmarker，三个档位按设备性能挑。</p>
+<p>以上体积数据来自 Google 官方模型仓库（storage.googleapis.com 的 float16 版本），实测下载确认。</p>
+<h2 id="实战python-十分钟跑通">实战：Python 十分钟跑通</h2>
+<p>先安装依赖并下载 Lite 模型：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">pip install mediapipe
+</span></span><span class="line"><span class="cl">wget https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>推理代码只有二十几行：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">cv2</span>
+</span></span><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">mediapipe</span> <span class="k">as</span> <span class="nn">mp</span>
+</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">mediapipe.tasks</span> <span class="kn">import</span> <span class="n">python</span>
+</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">mediapipe.tasks.python</span> <span class="kn">import</span> <span class="n">vision</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 加载模型</span>
+</span></span><span class="line"><span class="cl"><span class="n">base_options</span> <span class="o">=</span> <span class="n">python</span><span class="o">.</span><span class="n">BaseOptions</span><span class="p">(</span><span class="n">model_asset_path</span><span class="o">=</span><span class="s2">&#34;pose_landmarker_lite.task&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">options</span> <span class="o">=</span> <span class="n">vision</span><span class="o">.</span><span class="n">PoseLandmarkerOptions</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">    <span class="n">base_options</span><span class="o">=</span><span class="n">base_options</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="n">running_mode</span><span class="o">=</span><span class="n">vision</span><span class="o">.</span><span class="n">RunningMode</span><span class="o">.</span><span class="n">VIDEO</span><span class="p">,</span>   <span class="c1"># 视频流模式</span>
+</span></span><span class="line"><span class="cl">    <span class="n">num_poses</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="n">min_pose_detection_confidence</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl"><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">landmarker</span> <span class="o">=</span> <span class="n">vision</span><span class="o">.</span><span class="n">PoseLandmarker</span><span class="o">.</span><span class="n">create_from_options</span><span class="p">(</span><span class="n">options</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">cap</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">VideoCapture</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="n">ret</span><span class="p">,</span> <span class="n">frame</span> <span class="o">=</span> <span class="n">cap</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">    <span class="n">mp_image</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">Image</span><span class="p">(</span><span class="n">image_format</span><span class="o">=</span><span class="n">mp</span><span class="o">.</span><span class="n">ImageFormat</span><span class="o">.</span><span class="n">SRGB</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">frame</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="n">result</span> <span class="o">=</span> <span class="n">landmarker</span><span class="o">.</span><span class="n">detect_for_video</span><span class="p">(</span><span class="n">mp_image</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">cap</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">cv2</span><span class="o">.</span><span class="n">CAP_PROP_POS_MSEC</span><span class="p">)))</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">pose_landmarks</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="c1"># 每个关键点: x, y, z, visibility（归一化坐标 0-1）</span>
+</span></span><span class="line"><span class="cl">        <span class="n">lm</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">pose_landmarks</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl">        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&#34;左肩: (</span><span class="si">{</span><span class="n">lm</span><span class="p">[</span><span class="mi">11</span><span class="p">]</span><span class="o">.</span><span class="n">x</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">lm</span><span class="p">[</span><span class="mi">11</span><span class="p">]</span><span class="o">.</span><span class="n">y</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">) 可见度 </span><span class="si">{</span><span class="n">lm</span><span class="p">[</span><span class="mi">11</span><span class="p">]</span><span class="o">.</span><span class="n">visibility</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="n">cv2</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="s2">&#34;pose&#34;</span><span class="p">,</span> <span class="n">frame</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="n">cv2</span><span class="o">.</span><span class="n">waitKey</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="o">==</span> <span class="mi">27</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="k">break</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>关键点索引是固定枚举：0 鼻子、11 左肩、12 右肩、13 左肘、14 右肘、15 左腕、16 右腕、23 左髋、24 右髋、25 左膝、26 右膝、27 左踝、28 右踝。坐标全部归一化到 0-1，乘以画面宽高即得像素位置。</p>
+<h2 id="应用实战深蹲计数">应用实战：深蹲计数</h2>
+<p>有了关键点坐标，做健身计数就只剩三角函数。深蹲的核心特征是<strong>髋膝踝三点夹角</strong>小于某个阈值：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">math</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">angle</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">    <span class="s2">&#34;&#34;&#34;计算三点夹角（度），b 为顶点&#34;&#34;&#34;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">ab</span> <span class="o">=</span> <span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">x</span> <span class="o">-</span> <span class="n">b</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="n">a</span><span class="o">.</span><span class="n">y</span> <span class="o">-</span> <span class="n">b</span><span class="o">.</span><span class="n">y</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="n">bc</span> <span class="o">=</span> <span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">x</span> <span class="o">-</span> <span class="n">b</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="n">c</span><span class="o">.</span><span class="n">y</span> <span class="o">-</span> <span class="n">b</span><span class="o">.</span><span class="n">y</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="n">dot</span> <span class="o">=</span> <span class="n">ab</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="n">bc</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">ab</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">*</span><span class="n">bc</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl">    <span class="n">mag</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">hypot</span><span class="p">(</span><span class="o">*</span><span class="n">ab</span><span class="p">)</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">hypot</span><span class="p">(</span><span class="o">*</span><span class="n">bc</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">math</span><span class="o">.</span><span class="n">degrees</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">acos</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="nb">min</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">dot</span> <span class="o">/</span> <span class="n">mag</span><span class="p">))))</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 每帧调用：右髋(24)、右膝(26)、右踝(28)</span>
+</span></span><span class="line"><span class="cl"><span class="n">knee</span> <span class="o">=</span> <span class="n">angle</span><span class="p">(</span><span class="n">lm</span><span class="p">[</span><span class="mi">24</span><span class="p">],</span> <span class="n">lm</span><span class="p">[</span><span class="mi">26</span><span class="p">],</span> <span class="n">lm</span><span class="p">[</span><span class="mi">28</span><span class="p">])</span>
+</span></span><span class="line"><span class="cl"><span class="c1"># 膝盖夹角 &lt; 100 度 记为下蹲，恢复 &gt; 160 度 记为站起，状态机计数</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>配合一个简单的状态机（下蹲-站起翻转一次计一个数），50 行代码就能做出可用的深蹲计数器，全程本地推理、无网络依赖。</p>
+<h2 id="端侧性能与集成建议">端侧性能与集成建议</h2>
+<p>按 Google 官方文档数据，Pose Landmarker 在移动 GPU 上：Lite 模型可达 <strong>100fps 以上</strong>，Full 模型 60fps 左右，Heavy 模型约 30fps（手机 CPU 上会明显下降）。实际体验中，中端 Android 手机跑 Lite 用 CPU delegate 也能稳定 30fps，完全满足实时视频流需求。</p>
+<p>集成到不同端侧框架：</p>
+<ul>
+<li><strong>Android</strong>：官方 AAR 包，<code>PoseLandmarker.createFromFile</code> 一行加载，支持 CPU/GPU delegate</li>
+<li><strong>iOS</strong>：MediaPipe Tasks Swift API，模型转 Core ML 后可配合 Vision 框架（参考本站 YOLOv8 转 Core ML 一文的方法）</li>
+<li><strong>桌面/树莓派</strong>：Python API 开箱即用，Heavy 模型在桌面 CPU 约 15-25fps</li>
+</ul>
+<h2 id="开源方案推荐">开源方案推荐</h2>
+<table>
+	<thead>
+			<tr>
+					<th>项目</th>
+					<th>适用场景</th>
+			</tr>
+	</thead>
+	<tbody>
+			<tr>
+					<td>MediaPipe Tasks（官方）</td>
+					<td>跨端生产级方案，Android/iOS/Python/Web 全覆盖</td>
+			</tr>
+			<tr>
+					<td>MoveNet（TFLite）</td>
+					<td>极致轻量，低端设备首选</td>
+			</tr>
+			<tr>
+					<td>mmpose（OpenMMLab）</td>
+					<td>学术研究、自定义训练，精度上限高</td>
+			</tr>
+			<tr>
+					<td>Ultralytics YOLOv8-pose</td>
+					<td>想用 YOLO 统一检测+姿态管线时</td>
+			</tr>
+	</tbody>
+</table>
+<h2 id="小结">小结</h2>
+<p>端侧姿态估计已经不是高不可攀的算法题，而是一个<strong>下载模型、二十行代码</strong>就能落地的工程活。选 Pose Landmarker Lite 起步，用关键点夹角做业务逻辑，Android 直接集成官方 SDK，iOS 走 Core ML 转换——这套路径从原型到上线都走得通。下一篇可以聊聊用姿态关键点序列训练动作分类模型，把&quot;计数&quot;升级成&quot;动作识别&quot;。</p>
+</div><div class="post-footer" id="post-footer">
+    <div class="post-info">
+        <div class="post-info-line">
+            <div class="post-info-mod">
+                <span>更新于 2026-08-08</span>
+            </div></div>
+        <div class="post-info-line">
+            <div class="post-info-md"></div>
+            <div class="post-info-share">
+                <span><a href="javascript:void(0);" title="分享到 Twitter" data-sharer="twitter" data-url="https://www.ithome.me/post/2026/08/08/on-device-ai-pose-estimation/" data-title="端侧姿态估计实战：用 MediaPipe Pose Landmarker 给应用装上骨架追踪" data-via="ChenCiki" data-hashtags="端侧AI,姿态估计,MediaPipe,Pose Landmarker,BlazePose"><i class="fab fa-twitter fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="分享到 Linkedin" data-sharer="linkedin" data-url="https://www.ithome.me/post/2026/08/08/on-device-ai-pose-estimation/"><i class="fab fa-linkedin fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="分享到 微博" data-sharer="weibo" data-url="https://www.ithome.me/post/2026/08/08/on-device-ai-pose-estimation/" data-title="端侧姿态估计实战：用 MediaPipe Pose Landmarker 给应用装上骨架追踪" data-ralateuid="xxx"><i class="fab fa-weibo fa-fw" aria-hidden="true"></i></a></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="post-info-more">
+        <section class="post-tags"><i class="fas fa-tags fa-fw" aria-hidden="true"></i>&nbsp;<a href="/tags/%E7%AB%AF%E4%BE%A7ai/">端侧AI</a>,&nbsp;<a href="/tags/%E5%A7%BF%E6%80%81%E4%BC%B0%E8%AE%A1/">姿态估计</a>,&nbsp;<a href="/tags/mediapipe/">MediaPipe</a>,&nbsp;<a href="/tags/pose-landmarker/">Pose Landmarker</a>,&nbsp;<a href="/tags/blazepose/">BlazePose</a></section>
+        <section>
+            <span><a href="javascript:void(0);" onclick="window.history.back();">返回</a></span>&nbsp;|&nbsp;<span><a href="/">主页</a></span>
+        </section>
+    </div>
+
+    <div class="post-nav"><a href="/post/2026/08/07/edge-embedding-models-comparison/" class="prev" rel="prev" title="端侧 Embedding 模型实战：为本地 RAG 选对编码器"><i class="fas fa-angle-left fa-fw" aria-hidden="true"></i>端侧 Embedding 模型实战：为本地 RAG 选对编码器</a></div>
+</div>
+<div id="comments"><div id="gitalk" class="comment"></div><noscript>
+                Please enable JavaScript to view the comments powered by <a href="https://github.com/gitalk/gitalk"></a>Gitalk</a>.
+            </noscript></div></article></div>
+            </main><footer class="footer">
+        <div class="footer-container"><div class="footer-line" itemscope itemtype="http://schema.org/CreativeWork"><i class="far fa-copyright fa-fw" aria-hidden="true"></i><span itemprop="copyrightYear">2011 - 2026</span><span class="author" itemprop="copyrightHolder">&nbsp;<a href="https://www.ithome.me/" target="_blank">Simon Chen</a></span>&nbsp;|&nbsp;<span class="license"><a rel="license external nofollow noopener noreferrer" href="https://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank">CC BY-NC-ND 4.0</a></span></div>
+        </div>
+    </footer></div>
+
+        <div id="fixed-buttons"><a href="#" id="back-to-top" class="fixed-button" title="回到顶部">
+                <i class="fas fa-arrow-up fa-fw" aria-hidden="true"></i>
+            </a><a href="#" id="view-comments" class="fixed-button" title="查看评论">
+                <i class="fas fa-comment fa-fw" aria-hidden="true"></i>
+            </a>
+        </div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1.7.2/dist/gitalk.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/css/lightgallery-bundle.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/katex.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/copy-tex.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.css"><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/gitalk@1.7.2/dist/gitalk.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/autocomplete.js@0.38.1/dist/autocomplete.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lunr@2.3.9/lunr.min.js"></script><script type="text/javascript" src="/lib/lunr/lunr.stemmer.support.min.js"></script><script type="text/javascript" src="/lib/lunr/lunr.zh.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lazysizes@5.3.1/lazysizes.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/lightgallery.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/plugins/thumbnail/lg-thumbnail.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/plugins/zoom/lg-zoom.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/clipboard@2.0.11/dist/clipboard.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/sharer.js@0.5.1/sharer.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/katex.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/auto-render.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/copy-tex.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/mhchem.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.js"></script><script type="text/javascript">window.config={"code":{"copyTitle":"复制到剪贴板","maxShownLines":50},"comment":{"gitalk":{"admin":["cikichen"],"clientID":"be0f52370ed1285b6c7c","clientSecret":"734a7d8d0ded346ca7a3d565d57de3f8eeb2850b","id":"2026-08-08T00:00:00Z","owner":"cikichen","repo":"gitalk","title":"端侧姿态估计实战：用 MediaPipe Pose Landmarker 给应用装上骨架追踪"}},"cookieconsent":{"content":{"dismiss":"我知道了","link":"了解更多","message":"本网站使用 Cookies 来改善您的浏览体验."},"enable":true,"palette":{"button":{"background":"#f0f0f0"},"popup":{"background":"#1aa3ff"}},"theme":"edgeless"},"lightgallery":true,"math":{"delimiters":[{"display":true,"left":"$$","right":"$$"},{"display":true,"left":"\\[","right":"\\]"},{"display":true,"left":"\\begin{equation}","right":"\\end{equation}"},{"display":true,"left":"\\begin{equation*}","right":"\\end{equation*}"},{"display":true,"left":"\\begin{align}","right":"\\end{align}"},{"display":true,"left":"\\begin{align*}","right":"\\end{align*}"},{"display":true,"left":"\\begin{alignat}","right":"\\end{alignat}"},{"display":true,"left":"\\begin{alignat*}","right":"\\end{alignat*}"},{"display":true,"left":"\\begin{gather}","right":"\\end{gather}"},{"display":true,"left":"\\begin{CD}","right":"\\end{CD}"},{"display":false,"left":"$","right":"$"},{"display":false,"left":"\\(","right":"\\)"}],"strict":false},"search":{"highlightTag":"em","lunrIndexURL":"/index.json","lunrLanguageCode":"zh","lunrSegmentitURL":"/lib/lunr/lunr.segmentit.js","maxResultLength":10,"noResultsFound":"没有找到结果","snippetLength":50,"type":"lunr"}};</script><script type="text/javascript" src="/js/theme.min.js"></script></body>
+</html>
