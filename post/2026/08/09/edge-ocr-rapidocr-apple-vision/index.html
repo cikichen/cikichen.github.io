@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="robots" content="noodp" />
+        <title>端侧 OCR 实战：RapidOCR 与 Apple Vision 让应用离线读懂图片文字 - 编程心语</title><meta name="Description" content="RapidOCR 与 Apple Vision 端侧 OCR 实战：模型体积、推理耗时与可运行代码，让应用完全离线识别图片文字"><meta property="og:url" content="https://www.ithome.me/post/2026/08/09/edge-ocr-rapidocr-apple-vision/">
+	<meta property="og:site_name" content="编程心语">
+	<meta property="og:title" content="端侧 OCR 实战：RapidOCR 与 Apple Vision 让应用离线读懂图片文字">
+	<meta property="og:description" content="RapidOCR 与 Apple Vision 端侧 OCR 实战：模型体积、推理耗时与可运行代码，让应用完全离线识别图片文字">
+	<meta property="og:locale" content="zh_CN">
+	<meta property="og:type" content="article">
+		<meta property="article:section" content="posts">
+		<meta property="article:published_time" content="2026-08-09T08:00:00+08:00">
+		<meta property="article:modified_time" content="2026-08-09T08:00:00+08:00">
+		<meta property="article:tag" content="端侧AI">
+		<meta property="article:tag" content="OCR">
+		<meta property="article:tag" content="RapidOCR">
+		<meta property="article:tag" content="Apple Vision">
+		<meta property="article:tag" content="Onnxruntime">
+
+	<meta name="twitter:card" content="summary">
+	<meta name="twitter:title" content="端侧 OCR 实战：RapidOCR 与 Apple Vision 让应用离线读懂图片文字">
+	<meta name="twitter:description" content="RapidOCR 与 Apple Vision 端侧 OCR 实战：模型体积、推理耗时与可运行代码，让应用完全离线识别图片文字">
+			<meta name="twitter:site" content="@ChenCiki">
+<meta name="application-name" content="编程心语">
+<meta name="apple-mobile-web-app-title" content="编程心语"><meta name="theme-color" content="#ffffff"><meta name="msapplication-TileColor" content="#da532c"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5"><link rel="manifest" href="/site.webmanifest"><link rel="canonical" href="https://www.ithome.me/post/2026/08/09/edge-ocr-rapidocr-apple-vision/" /><link rel="prev" href="https://www.ithome.me/post/2026/08/08/on-device-ai-pose-estimation/" /><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/normalize.css@8.0.1/normalize.min.css"><link rel="stylesheet" href="/css/style.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css"><script type="application/ld+json">
+    {
+        "@context": "http://schema.org",
+        "@type": "BlogPosting",
+        "headline": "端侧 OCR 实战：RapidOCR 与 Apple Vision 让应用离线读懂图片文字",
+        "inLanguage": "zh-CN",
+        "mainEntityOfPage": {
+            "@type": "WebPage",
+            "@id": "https:\/\/www.ithome.me\/post\/2026\/08\/09\/edge-ocr-rapidocr-apple-vision\/"
+        },"image": ["https:\/\/www.ithome.me\/cover.png"],"genre": "posts","keywords": "端侧AI, OCR, RapidOCR, Apple Vision, onnxruntime","wordcount":  1284 ,
+        "url": "https:\/\/www.ithome.me\/post\/2026\/08\/09\/edge-ocr-rapidocr-apple-vision\/","datePublished": "2026-08-09T08:00:00+08:00","dateModified": "2026-08-09T08:00:00+08:00","publisher": {
+            "@type": "Organization",
+            "name": "SimonChen","logo": "https:\/\/www.ithome.me\/logo.png"},"author": {
+                "@type": "Person",
+                "name": "Simon Chen"
+            },"description": "RapidOCR 与 Apple Vision 端侧 OCR 实战：模型体积、推理耗时与可运行代码，让应用完全离线识别图片文字"
+    }
+    </script><script async src="https://www.googletagmanager.com/gtag/js?id=G-H1Q5563VR8"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-H1Q5563VR8', { 'anonymize_ip': true });
+</script></head>
+    <body data-header-desktop="fixed" data-header-mobile="auto"><script type="text/javascript">(window.localStorage && localStorage.getItem('theme') ? localStorage.getItem('theme') === 'dark' : ('auto' === 'auto' ? window.matchMedia('(prefers-color-scheme: dark)').matches : 'auto' === 'dark')) && document.body.setAttribute('theme', 'dark');</script>
+
+        <div id="mask"></div><div class="wrapper"><header class="desktop" id="header-desktop">
+    <div class="header-wrapper">
+        <div class="header-title">
+            <a href="/" title="编程心语">编程心语</a>
+        </div>
+        <div class="menu">
+            <div class="menu-inner"><a class="menu-item" href="/posts/"> 文章 </a><a class="menu-item" href="/categories/"> 分类 </a><a class="menu-item" href="/tags/"> 标签 </a><a class="menu-item" href="/about-me/"> 关于 </a><span class="menu-item delimiter"></span><span class="menu-item search" id="search-desktop">
+                        <input type="text" placeholder="搜索文章..." id="search-input-desktop">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-desktop" title="搜索">
+                            <i class="fas fa-search fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-desktop" title="清空">
+                            <i class="fas fa-times-circle fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-desktop">
+                            <i class="fas fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+                        </span>
+                    </span><a href="javascript:void(0);" class="menu-item theme-switch" title="切换主题">
+                    <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</header><header class="mobile" id="header-mobile">
+    <div class="header-container">
+        <div class="header-wrapper">
+            <div class="header-title">
+                <a href="/" title="编程心语">编程心语</a>
+            </div>
+            <div class="menu-toggle" id="menu-toggle-mobile">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+        <div class="menu" id="menu-mobile"><div class="search-wrapper">
+                    <div class="search mobile" id="search-mobile">
+                        <input type="text" placeholder="搜索文章..." id="search-input-mobile">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-mobile" title="搜索">
+                            <i class="fas fa-search fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-mobile" title="清空">
+                            <i class="fas fa-times-circle fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-mobile">
+                            <i class="fas fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+                        </span>
+                    </div>
+                    <a href="javascript:void(0);" class="search-cancel" id="search-cancel-mobile">
+                        取消
+                    </a>
+                </div><a class="menu-item" href="/posts/" title="">文章</a><a class="menu-item" href="/categories/" title="">分类</a><a class="menu-item" href="/tags/" title="">标签</a><a class="menu-item" href="/about-me/" title="">关于</a><a href="javascript:void(0);" class="menu-item theme-switch" title="切换主题">
+                <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
+            </a></div>
+    </div>
+</header><div class="search-dropdown desktop">
+        <div id="search-dropdown-desktop"></div>
+    </div>
+    <div class="search-dropdown mobile">
+        <div id="search-dropdown-mobile"></div>
+    </div><main class="main">
+                <div class="container"><div class="toc" id="toc-auto">
+            <h2 class="toc-title">目录</h2>
+            <div class="toc-content" id="toc-content-auto"></div>
+        </div><article class="page single"><h1 class="single-title animate__animated animate__flipInX">端侧 OCR 实战：RapidOCR 与 Apple Vision 让应用离线读懂图片文字</h1><div class="post-meta">
+            <div class="post-meta-line"><span class="post-author"><a href="https://www.ithome.me/" title="Author" target="_blank" rel="noopener noreferrer author" class="author"><i class="fas fa-user-circle fa-fw" aria-hidden="true"></i>Simon Chen</a>
+</span>&nbsp;<span class="post-category">收录于 <a href="/categories/ai/"><i class="far fa-folder fa-fw" aria-hidden="true"></i>Ai</a></span></div>
+            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw" aria-hidden="true"></i>&nbsp;<time datetime="2026-08-09">2026-08-09</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden="true"></i>&nbsp;约 1284 字&nbsp;
+                <i class="far fa-clock fa-fw" aria-hidden="true"></i>&nbsp;预计阅读 3 分钟&nbsp;</div>
+        </div><div class="details toc" id="toc-static"  data-kept="true">
+                <div class="details-summary toc-title">
+                    <span>目录</span>
+                    <span><i class="details-icon fas fa-angle-right" aria-hidden="true"></i></span>
+                </div>
+                <div class="details-content toc-content" id="toc-content-static"><nav id="TableOfContents">
+  <ul>
+    <li><a href="#开源方案怎么选">开源方案怎么选</a></li>
+    <li><a href="#rapidocr-实战四行代码接入">RapidOCR 实战：四行代码接入</a></li>
+    <li><a href="#apple-vision-实战ios-端零依赖">Apple Vision 实战：iOS 端零依赖</a></li>
+    <li><a href="#性能与体积数据">性能与体积数据</a></li>
+    <li><a href="#实战踩坑记录">实战踩坑记录</a></li>
+    <li><a href="#总结">总结</a></li>
+  </ul>
+</nav></div>
+            </div><div class="content" id="content"><h1 id="端侧-ocr-实战rapidocr-与-apple-vision-让应用离线读懂图片文字">端侧 OCR 实战：RapidOCR 与 Apple Vision 让应用离线读懂图片文字</h1>
+<p>OCR（光学字符识别）是把图片里的文字变成可编辑文本的技术，证件识别、票据录入、截图翻译、扫码枪背后都是它。过去主流做法是调云端 API，但端侧 OCR 有三个硬优势：</p>
+<ol>
+<li><strong>隐私</strong>：身份证、合同、聊天截图不出设备</li>
+<li><strong>离线可用</strong>：飞机、地铁、弱网环境照常工作</li>
+<li><strong>零边际成本</strong>：云 API 按次计费，端侧一次部署永久免费，还省掉了网络往返延迟</li>
+</ol>
+<h2 id="开源方案怎么选">开源方案怎么选</h2>
+<table>
+	<thead>
+			<tr>
+					<th>方案</th>
+					<th>模型体积</th>
+					<th>语言生态</th>
+					<th>适用场景</th>
+			</tr>
+	</thead>
+	<tbody>
+			<tr>
+					<td>RapidOCR</td>
+					<td>约 20MB（INT8 量化后约 10MB）</td>
+					<td>Python / C++ / Android / iOS</td>
+					<td>跨端统一逻辑，离线部署首选</td>
+			</tr>
+			<tr>
+					<td>PaddleOCR</td>
+					<td>30MB 起，可剪枝量化</td>
+					<td>Python 为主</td>
+					<td>追求极致精度，接受较大体积</td>
+			</tr>
+			<tr>
+					<td>Tesseract</td>
+					<td>中文语言包约 40MB</td>
+					<td>C++ 生态</td>
+					<td>老牌方案，中文准确率一般</td>
+			</tr>
+			<tr>
+					<td>Apple Vision</td>
+					<td>系统内置，零体积</td>
+					<td>Swift（iOS 13+）</td>
+					<td>iOS 原生 App 零集成成本</td>
+			</tr>
+	</tbody>
+</table>
+<h2 id="rapidocr-实战四行代码接入">RapidOCR 实战：四行代码接入</h2>
+<p>RapidOCR 是百度 PP-OCR 模型的 ONNX 移植版（RapidAI 开源），检测（det）、方向分类（cls）、识别（rec）三个模型全部转成 ONNX，用 onnxruntime 推理，不依赖 Paddle 框架，体积小、跨端部署简单：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span><span class="lnt">7
+</span><span class="lnt">8
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="c1"># pip install rapidocr-onnxruntime</span>
+</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">rapidocr_onnxruntime</span> <span class="kn">import</span> <span class="n">RapidOCR</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">engine</span> <span class="o">=</span> <span class="n">RapidOCR</span><span class="p">()</span>  <span class="c1"># 首次调用自动加载三个 ONNX 模型</span>
+</span></span><span class="line"><span class="cl"><span class="n">result</span><span class="p">,</span> <span class="n">elapse</span> <span class="o">=</span> <span class="n">engine</span><span class="p">(</span><span class="s2">&#34;receipt.jpg&#34;</span><span class="p">)</span>  <span class="c1"># 支持路径、bytes、numpy 数组</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">for</span> <span class="n">box</span><span class="p">,</span> <span class="n">text</span><span class="p">,</span> <span class="n">score</span> <span class="ow">in</span> <span class="n">result</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="nb">print</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="nb">round</span><span class="p">(</span><span class="n">score</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p><code>result</code> 中每个元素是 [坐标框, 识别文本, 置信度]，<code>elapse</code> 是本次推理耗时（秒）。把它包成 HTTP 服务给前端用，也就十几行：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">fastapi</span> <span class="kn">import</span> <span class="n">FastAPI</span><span class="p">,</span> <span class="n">UploadFile</span>
+</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">rapidocr_onnxruntime</span> <span class="kn">import</span> <span class="n">RapidOCR</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">app</span> <span class="o">=</span> <span class="n">FastAPI</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl"><span class="n">engine</span> <span class="o">=</span> <span class="n">RapidOCR</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="nd">@app.post</span><span class="p">(</span><span class="s2">&#34;/ocr&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="k">async</span> <span class="k">def</span> <span class="nf">ocr</span><span class="p">(</span><span class="n">file</span><span class="p">:</span> <span class="n">UploadFile</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">    <span class="n">data</span> <span class="o">=</span> <span class="k">await</span> <span class="n">file</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">    <span class="n">result</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">engine</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>          <span class="c1"># bytes 直接喂给引擎</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="p">{</span><span class="s2">&#34;texts&#34;</span><span class="p">:</span> <span class="p">[</span><span class="n">t</span> <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">result</span><span class="p">]}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h2 id="apple-vision-实战ios-端零依赖">Apple Vision 实战：iOS 端零依赖</h2>
+<p>如果只做 iOS 端，Apple 的 Vision framework 性价比最高——系统自带、跑在 Neural Engine 上，不需要集成任何第三方模型：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-swift" data-lang="swift"><span class="line"><span class="cl"><span class="kd">import</span> <span class="nc">Vision</span>
+</span></span><span class="line"><span class="cl"><span class="kd">import</span> <span class="nc">UIKit</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kd">func</span> <span class="nf">recognizeText</span><span class="p">(</span><span class="k">in</span> <span class="n">image</span><span class="p">:</span> <span class="n">UIImage</span><span class="p">)</span> <span class="p">-&gt;</span> <span class="p">[</span><span class="nb">String</span><span class="p">]</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">guard</span> <span class="kd">let</span> <span class="nv">cgImage</span> <span class="p">=</span> <span class="n">image</span><span class="p">.</span><span class="n">cgImage</span> <span class="k">else</span> <span class="p">{</span> <span class="k">return</span> <span class="p">[]</span> <span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="kd">let</span> <span class="nv">request</span> <span class="p">=</span> <span class="n">VNRecognizeTextRequest</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">    <span class="n">request</span><span class="p">.</span><span class="n">recognitionLevel</span> <span class="p">=</span> <span class="p">.</span><span class="n">accurate</span>          <span class="c1">// 精确模式走神经网络</span>
+</span></span><span class="line"><span class="cl">    <span class="n">request</span><span class="p">.</span><span class="n">recognitionLanguages</span> <span class="p">=</span> <span class="p">[</span><span class="s">&#34;zh-Hans&#34;</span><span class="p">,</span> <span class="s">&#34;en-US&#34;</span><span class="p">]</span> <span class="c1">// 中英混排</span>
+</span></span><span class="line"><span class="cl">    <span class="n">request</span><span class="p">.</span><span class="n">usesLanguageCorrection</span> <span class="p">=</span> <span class="kc">true</span>         <span class="c1">// 语言模型纠错</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="kd">let</span> <span class="nv">handler</span> <span class="p">=</span> <span class="n">VNImageRequestHandler</span><span class="p">(</span><span class="n">cgImage</span><span class="p">:</span> <span class="n">cgImage</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="k">try</span><span class="p">?</span> <span class="n">handler</span><span class="p">.</span><span class="n">perform</span><span class="p">([</span><span class="n">request</span><span class="p">])</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">request</span><span class="p">.</span><span class="n">results</span><span class="p">?.</span><span class="n">compactMap</span> <span class="p">{</span> <span class="nv">$0</span><span class="p">.</span><span class="n">topCandidates</span><span class="p">(</span><span class="mi">1</span><span class="p">).</span><span class="bp">first</span><span class="p">?.</span><span class="n">string</span> <span class="p">}</span> <span class="p">??</span> <span class="p">[]</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>识别结果按从上到下、从左到右排序，<code>topCandidates(1)</code> 取置信度最高的候选文本。<code>recognitionLanguages</code> 在 iOS 15 之后支持任意语言组合，iOS 16 之后对中文的识别稳定性更好。</p>
+<h2 id="性能与体积数据">性能与体积数据</h2>
+<ul>
+<li><strong>RapidOCR</strong>：det 模型约 4.7MB、cls 约 1.4MB、rec 约 15MB（PP-OCRv4 官方 ONNX 导出），合计约 20MB；INT8 量化后 10MB 以内。CPU 上单张普通图片推理约 100-500ms（官方标注与社区实测，随分辨率和设备浮动）</li>
+<li><strong>Apple Vision</strong>：系统级框架，单张 1080p 图片在 iPhone 上通常几十毫秒级（实测结论），不占 App 包体积</li>
+</ul>
+<h2 id="实战踩坑记录">实战踩坑记录</h2>
+<ol>
+<li><strong>超大图先缩放</strong>：长边超过 2000px 的截图先等比缩放，速度提升明显、精度几乎不降</li>
+<li><strong>竖排文字</strong>：RapidOCR 内置 cls 方向分类模型自动纠正旋转；Apple Vision 对横竖排混合场景建议分区域识别</li>
+<li><strong>清晰度优先于滤镜</strong>：端侧识别对低照度鲁棒，但运动模糊是杀手，拍摄类 App 建议加抖动检测</li>
+<li><strong>长文档分块</strong>：A4 整页识别容易漏字，按行高切块并行识别更稳</li>
+</ol>
+<h2 id="总结">总结</h2>
+<p>端侧 OCR 的技术栈已经非常成熟：跨端统一逻辑选 RapidOCR（ONNX 运行时、约 20MB），iOS 原生选 Apple Vision（零成本、NPU 加速）。两者都支持中文、都能完全离线，配合端侧 INT8 量化技术，识别模型还能再瘦身一半。下一个版本，给你的 App 装上眼睛吧。</p>
+</div><div class="post-footer" id="post-footer">
+    <div class="post-info">
+        <div class="post-info-line">
+            <div class="post-info-mod">
+                <span>更新于 2026-08-09</span>
+            </div></div>
+        <div class="post-info-line">
+            <div class="post-info-md"></div>
+            <div class="post-info-share">
+                <span><a href="javascript:void(0);" title="分享到 Twitter" data-sharer="twitter" data-url="https://www.ithome.me/post/2026/08/09/edge-ocr-rapidocr-apple-vision/" data-title="端侧 OCR 实战：RapidOCR 与 Apple Vision 让应用离线读懂图片文字" data-via="ChenCiki" data-hashtags="端侧AI,OCR,RapidOCR,Apple Vision,onnxruntime"><i class="fab fa-twitter fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="分享到 Linkedin" data-sharer="linkedin" data-url="https://www.ithome.me/post/2026/08/09/edge-ocr-rapidocr-apple-vision/"><i class="fab fa-linkedin fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="分享到 微博" data-sharer="weibo" data-url="https://www.ithome.me/post/2026/08/09/edge-ocr-rapidocr-apple-vision/" data-title="端侧 OCR 实战：RapidOCR 与 Apple Vision 让应用离线读懂图片文字" data-ralateuid="xxx"><i class="fab fa-weibo fa-fw" aria-hidden="true"></i></a></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="post-info-more">
+        <section class="post-tags"><i class="fas fa-tags fa-fw" aria-hidden="true"></i>&nbsp;<a href="/tags/%E7%AB%AF%E4%BE%A7ai/">端侧AI</a>,&nbsp;<a href="/tags/ocr/">OCR</a>,&nbsp;<a href="/tags/rapidocr/">RapidOCR</a>,&nbsp;<a href="/tags/apple-vision/">Apple Vision</a>,&nbsp;<a href="/tags/onnxruntime/">Onnxruntime</a></section>
+        <section>
+            <span><a href="javascript:void(0);" onclick="window.history.back();">返回</a></span>&nbsp;|&nbsp;<span><a href="/">主页</a></span>
+        </section>
+    </div>
+
+    <div class="post-nav"><a href="/post/2026/08/08/on-device-ai-pose-estimation/" class="prev" rel="prev" title="端侧姿态估计实战：用 MediaPipe Pose Landmarker 给应用装上骨架追踪"><i class="fas fa-angle-left fa-fw" aria-hidden="true"></i>端侧姿态估计实战：用 MediaPipe Pose Landmarker 给应用装上骨架追踪</a></div>
+</div>
+<div id="comments"><div id="gitalk" class="comment"></div><noscript>
+                Please enable JavaScript to view the comments powered by <a href="https://github.com/gitalk/gitalk"></a>Gitalk</a>.
+            </noscript></div></article></div>
+            </main><footer class="footer">
+        <div class="footer-container"><div class="footer-line" itemscope itemtype="http://schema.org/CreativeWork"><i class="far fa-copyright fa-fw" aria-hidden="true"></i><span itemprop="copyrightYear">2011 - 2026</span><span class="author" itemprop="copyrightHolder">&nbsp;<a href="https://www.ithome.me/" target="_blank">Simon Chen</a></span>&nbsp;|&nbsp;<span class="license"><a rel="license external nofollow noopener noreferrer" href="https://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank">CC BY-NC-ND 4.0</a></span></div>
+        </div>
+    </footer></div>
+
+        <div id="fixed-buttons"><a href="#" id="back-to-top" class="fixed-button" title="回到顶部">
+                <i class="fas fa-arrow-up fa-fw" aria-hidden="true"></i>
+            </a><a href="#" id="view-comments" class="fixed-button" title="查看评论">
+                <i class="fas fa-comment fa-fw" aria-hidden="true"></i>
+            </a>
+        </div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1.7.2/dist/gitalk.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/css/lightgallery-bundle.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/katex.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/copy-tex.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.css"><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/gitalk@1.7.2/dist/gitalk.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/autocomplete.js@0.38.1/dist/autocomplete.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lunr@2.3.9/lunr.min.js"></script><script type="text/javascript" src="/lib/lunr/lunr.stemmer.support.min.js"></script><script type="text/javascript" src="/lib/lunr/lunr.zh.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lazysizes@5.3.1/lazysizes.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/lightgallery.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/plugins/thumbnail/lg-thumbnail.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/plugins/zoom/lg-zoom.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/clipboard@2.0.11/dist/clipboard.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/sharer.js@0.5.1/sharer.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/katex.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/auto-render.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/copy-tex.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/mhchem.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.js"></script><script type="text/javascript">window.config={"code":{"copyTitle":"复制到剪贴板","maxShownLines":50},"comment":{"gitalk":{"admin":["cikichen"],"clientID":"be0f52370ed1285b6c7c","clientSecret":"734a7d8d0ded346ca7a3d565d57de3f8eeb2850b","id":"2026-08-09T00:00:00Z","owner":"cikichen","repo":"gitalk","title":"端侧 OCR 实战：RapidOCR 与 Apple Vision 让应用离线读懂图片文字"}},"cookieconsent":{"content":{"dismiss":"我知道了","link":"了解更多","message":"本网站使用 Cookies 来改善您的浏览体验."},"enable":true,"palette":{"button":{"background":"#f0f0f0"},"popup":{"background":"#1aa3ff"}},"theme":"edgeless"},"lightgallery":true,"math":{"delimiters":[{"display":true,"left":"$$","right":"$$"},{"display":true,"left":"\\[","right":"\\]"},{"display":true,"left":"\\begin{equation}","right":"\\end{equation}"},{"display":true,"left":"\\begin{equation*}","right":"\\end{equation*}"},{"display":true,"left":"\\begin{align}","right":"\\end{align}"},{"display":true,"left":"\\begin{align*}","right":"\\end{align*}"},{"display":true,"left":"\\begin{alignat}","right":"\\end{alignat}"},{"display":true,"left":"\\begin{alignat*}","right":"\\end{alignat*}"},{"display":true,"left":"\\begin{gather}","right":"\\end{gather}"},{"display":true,"left":"\\begin{CD}","right":"\\end{CD}"},{"display":false,"left":"$","right":"$"},{"display":false,"left":"\\(","right":"\\)"}],"strict":false},"search":{"highlightTag":"em","lunrIndexURL":"/index.json","lunrLanguageCode":"zh","lunrSegmentitURL":"/lib/lunr/lunr.segmentit.js","maxResultLength":10,"noResultsFound":"没有找到结果","snippetLength":50,"type":"lunr"}};</script><script type="text/javascript" src="/js/theme.min.js"></script></body>
+</html>
