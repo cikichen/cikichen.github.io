@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="robots" content="noodp" />
+        <title>端侧模型知识蒸馏实战：把大模型的本事教给手机小模型 - 编程心语</title><meta name="Description" content="知识蒸馏让手机小模型跟着大模型学软标签，精度逼近教师、体积只有几分之一。本文用 PyTorch 完整跑一遍 ResNet18 蒸馏 MobileNetV2 的流程，附开源工具箱清单和踩坑清单。"><meta property="og:url" content="https://www.ithome.me/post/2026/08/12/edge-ai-knowledge-distillation/">
+	<meta property="og:site_name" content="编程心语">
+	<meta property="og:title" content="端侧模型知识蒸馏实战：把大模型的本事教给手机小模型">
+	<meta property="og:description" content="知识蒸馏让手机小模型跟着大模型学软标签，精度逼近教师、体积只有几分之一。本文用 PyTorch 完整跑一遍 ResNet18 蒸馏 MobileNetV2 的流程，附开源工具箱清单和踩坑清单。">
+	<meta property="og:locale" content="zh_CN">
+	<meta property="og:type" content="article">
+		<meta property="article:section" content="posts">
+		<meta property="article:published_time" content="2026-08-12T08:00:00+08:00">
+		<meta property="article:modified_time" content="2026-08-12T03:07:23+08:00">
+		<meta property="article:tag" content="端侧AI">
+		<meta property="article:tag" content="知识蒸馏">
+		<meta property="article:tag" content="模型压缩">
+		<meta property="article:tag" content="PyTorch">
+		<meta property="article:tag" content="MobileNet">
+
+	<meta name="twitter:card" content="summary">
+	<meta name="twitter:title" content="端侧模型知识蒸馏实战：把大模型的本事教给手机小模型">
+	<meta name="twitter:description" content="知识蒸馏让手机小模型跟着大模型学软标签，精度逼近教师、体积只有几分之一。本文用 PyTorch 完整跑一遍 ResNet18 蒸馏 MobileNetV2 的流程，附开源工具箱清单和踩坑清单。">
+			<meta name="twitter:site" content="@ChenCiki">
+<meta name="application-name" content="编程心语">
+<meta name="apple-mobile-web-app-title" content="编程心语"><meta name="theme-color" content="#ffffff"><meta name="msapplication-TileColor" content="#da532c"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5"><link rel="manifest" href="/site.webmanifest"><link rel="canonical" href="https://www.ithome.me/post/2026/08/12/edge-ai-knowledge-distillation/" /><link rel="prev" href="https://www.ithome.me/post/2026/08/11/edge-ai-inference-framework-guide/" /><link rel="next" href="https://www.ithome.me/post/2026/08/13/on-device-ai-face-recognition/" /><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/normalize.css@8.0.1/normalize.min.css"><link rel="stylesheet" href="/css/style.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css"><script type="application/ld+json">
+    {
+        "@context": "http://schema.org",
+        "@type": "BlogPosting",
+        "headline": "端侧模型知识蒸馏实战：把大模型的本事教给手机小模型",
+        "inLanguage": "zh-CN",
+        "mainEntityOfPage": {
+            "@type": "WebPage",
+            "@id": "https:\/\/www.ithome.me\/post\/2026\/08\/12\/edge-ai-knowledge-distillation\/"
+        },"image": ["https:\/\/www.ithome.me\/cover.png"],"genre": "posts","keywords": "端侧AI, 知识蒸馏, 模型压缩, PyTorch, MobileNet","wordcount":  1650 ,
+        "url": "https:\/\/www.ithome.me\/post\/2026\/08\/12\/edge-ai-knowledge-distillation\/","datePublished": "2026-08-12T08:00:00+08:00","dateModified": "2026-08-12T03:07:23+08:00","publisher": {
+            "@type": "Organization",
+            "name": "SimonChen","logo": "https:\/\/www.ithome.me\/logo.png"},"author": {
+                "@type": "Person",
+                "name": "Simon"
+            },"description": "知识蒸馏让手机小模型跟着大模型学软标签，精度逼近教师、体积只有几分之一。本文用 PyTorch 完整跑一遍 ResNet18 蒸馏 MobileNetV2 的流程，附开源工具箱清单和踩坑清单。"
+    }
+    </script><script async src="https://www.googletagmanager.com/gtag/js?id=G-H1Q5563VR8"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-H1Q5563VR8', { 'anonymize_ip': true });
+</script></head>
+    <body data-header-desktop="fixed" data-header-mobile="auto"><script type="text/javascript">(window.localStorage && localStorage.getItem('theme') ? localStorage.getItem('theme') === 'dark' : ('auto' === 'auto' ? window.matchMedia('(prefers-color-scheme: dark)').matches : 'auto' === 'dark')) && document.body.setAttribute('theme', 'dark');</script>
+
+        <div id="mask"></div><div class="wrapper"><header class="desktop" id="header-desktop">
+    <div class="header-wrapper">
+        <div class="header-title">
+            <a href="/" title="编程心语">编程心语</a>
+        </div>
+        <div class="menu">
+            <div class="menu-inner"><a class="menu-item" href="/posts/"> 文章 </a><a class="menu-item" href="/categories/"> 分类 </a><a class="menu-item" href="/tags/"> 标签 </a><a class="menu-item" href="/about-me/"> 关于 </a><span class="menu-item delimiter"></span><span class="menu-item search" id="search-desktop">
+                        <input type="text" placeholder="搜索文章..." id="search-input-desktop">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-desktop" title="搜索">
+                            <i class="fas fa-search fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-desktop" title="清空">
+                            <i class="fas fa-times-circle fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-desktop">
+                            <i class="fas fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+                        </span>
+                    </span><a href="javascript:void(0);" class="menu-item theme-switch" title="切换主题">
+                    <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</header><header class="mobile" id="header-mobile">
+    <div class="header-container">
+        <div class="header-wrapper">
+            <div class="header-title">
+                <a href="/" title="编程心语">编程心语</a>
+            </div>
+            <div class="menu-toggle" id="menu-toggle-mobile">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+        <div class="menu" id="menu-mobile"><div class="search-wrapper">
+                    <div class="search mobile" id="search-mobile">
+                        <input type="text" placeholder="搜索文章..." id="search-input-mobile">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-mobile" title="搜索">
+                            <i class="fas fa-search fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-mobile" title="清空">
+                            <i class="fas fa-times-circle fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-mobile">
+                            <i class="fas fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+                        </span>
+                    </div>
+                    <a href="javascript:void(0);" class="search-cancel" id="search-cancel-mobile">
+                        取消
+                    </a>
+                </div><a class="menu-item" href="/posts/" title="">文章</a><a class="menu-item" href="/categories/" title="">分类</a><a class="menu-item" href="/tags/" title="">标签</a><a class="menu-item" href="/about-me/" title="">关于</a><a href="javascript:void(0);" class="menu-item theme-switch" title="切换主题">
+                <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
+            </a></div>
+    </div>
+</header><div class="search-dropdown desktop">
+        <div id="search-dropdown-desktop"></div>
+    </div>
+    <div class="search-dropdown mobile">
+        <div id="search-dropdown-mobile"></div>
+    </div><main class="main">
+                <div class="container"><div class="toc" id="toc-auto">
+            <h2 class="toc-title">目录</h2>
+            <div class="toc-content always-active" id="toc-content-auto"></div>
+        </div><article class="page single"><h1 class="single-title animate__animated animate__flipInX">端侧模型知识蒸馏实战：把大模型的本事教给手机小模型</h1><div class="post-meta">
+            <div class="post-meta-line"><span class="post-author"><a href="https://www.ithome.me/" title="Author" target="_blank" rel="noopener noreferrer author" class="author"><i class="fas fa-user-circle fa-fw" aria-hidden="true"></i>Simon</a>
+</span>&nbsp;<span class="post-category">收录于 <a href="/categories/ai/"><i class="far fa-folder fa-fw" aria-hidden="true"></i>Ai</a></span></div>
+            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw" aria-hidden="true"></i>&nbsp;<time datetime="2026-08-12">2026-08-12</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden="true"></i>&nbsp;约 1650 字&nbsp;
+                <i class="far fa-clock fa-fw" aria-hidden="true"></i>&nbsp;预计阅读 4 分钟&nbsp;</div>
+        </div><div class="details toc" id="toc-static"  data-kept="true">
+                <div class="details-summary toc-title">
+                    <span>目录</span>
+                    <span><i class="details-icon fas fa-angle-right" aria-hidden="true"></i></span>
+                </div>
+                <div class="details-content toc-content" id="toc-content-static"><nav id="TableOfContents">
+  <ul>
+    <li><a href="#蒸馏在学什么软标签与温度">蒸馏在学什么：软标签与温度</a></li>
+    <li><a href="#实战resnet18-当老师mobilenetv2-当学生">实战：ResNet18 当老师，MobileNetV2 当学生</a></li>
+    <li><a href="#效果与组合拳">效果与组合拳</a></li>
+    <li><a href="#开源工具箱">开源工具箱</a></li>
+    <li><a href="#踩坑清单">踩坑清单</a></li>
+  </ul>
+</nav></div>
+            </div><div class="content" id="content"><p>上次我们用 INT8 量化把 MobileNetV2 从 14 MB 压到 3.5 MB（见<a href="/post/2026/08/07/on-device-quantization-model/" rel="">端侧模型 INT8 量化实战</a>
+）。但量化是事后减肥：模型该多大还多大，该多笨还多笨。今天聊另一种压缩思路——<strong>知识蒸馏（Knowledge Distillation）</strong>，它发生在训练阶段：让小模型拜大模型为师，直接把大模型脑子里的判断力继承下来。</p>
+<p>一句话概括：<strong>量化管体积，蒸馏管智商</strong>。两者不冲突，先蒸馏再量化，是端侧部署的标准组合拳。</p>
+<h2 id="蒸馏在学什么软标签与温度">蒸馏在学什么：软标签与温度</h2>
+<p>2015 年 Hinton 提出蒸馏时发现一个反直觉现象：训练好的大模型（教师）除了输出&quot;这是猫&quot;的硬结论，其 softmax 概率分布里还藏着&quot;猫和老虎像、猫和卡车不像&quot;这类<strong>暗知识</strong>。普通训练只让模型看硬标签（0 或 1），把这类信息全扔了。</p>
+<p>蒸馏的做法是：把教师模型的输出除以一个温度 <code>T</code> 再做 softmax，得到&quot;放软&quot;的概率分布，作为学生的训练目标。<code>T</code> 越大分布越平，暗知识暴露得越多；<code>T=1</code> 时就退化回普通输出。损失函数是软目标 KL 散度与硬标签交叉熵的加权和，权重 <code>alpha</code> 控制两者比例。</p>
+<h2 id="实战resnet18-当老师mobilenetv2-当学生">实战：ResNet18 当老师，MobileNetV2 当学生</h2>
+<p>CIFAR-10 完整可跑代码（PyTorch）：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">torch</span>
+</span></span><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">torch.nn</span> <span class="k">as</span> <span class="nn">nn</span>
+</span></span><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">torch.nn.functional</span> <span class="k">as</span> <span class="nn">F</span>
+</span></span><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">torchvision</span>
+</span></span><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">torchvision.transforms</span> <span class="k">as</span> <span class="nn">T</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 教师：ResNet18，约 11.7M 参数，FP32 约 47 MB</span>
+</span></span><span class="line"><span class="cl"><span class="n">teacher</span> <span class="o">=</span> <span class="n">torchvision</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">resnet18</span><span class="p">(</span><span class="n">weights</span><span class="o">=</span><span class="s2">&#34;DEFAULT&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">teacher</span><span class="o">.</span><span class="n">fc</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="mi">512</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>            <span class="c1"># 换成 CIFAR-10 的 10 类</span>
+</span></span><span class="line"><span class="cl"><span class="c1"># 注意：教师要先在目标任务上微调好，软标签才准</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 学生：MobileNetV2，约 3.4M 参数，FP32 约 14 MB</span>
+</span></span><span class="line"><span class="cl"><span class="n">student</span> <span class="o">=</span> <span class="n">torchvision</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">mobilenet_v2</span><span class="p">(</span><span class="n">weights</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">student</span><span class="o">.</span><span class="n">classifier</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="mi">1280</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">kd_loss</span><span class="p">(</span><span class="n">s_logits</span><span class="p">,</span> <span class="n">t_logits</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">T</span><span class="o">=</span><span class="mf">4.0</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.7</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">    <span class="n">s_soft</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">log_softmax</span><span class="p">(</span><span class="n">s_logits</span> <span class="o">/</span> <span class="n">T</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="n">t_soft</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">softmax</span><span class="p">(</span><span class="n">t_logits</span> <span class="o">/</span> <span class="n">T</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="n">kl</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">kl_div</span><span class="p">(</span><span class="n">s_soft</span><span class="p">,</span> <span class="n">t_soft</span><span class="p">,</span> <span class="n">reduction</span><span class="o">=</span><span class="s2">&#34;batchmean&#34;</span><span class="p">)</span> <span class="o">*</span> <span class="n">T</span> <span class="o">*</span> <span class="n">T</span>
+</span></span><span class="line"><span class="cl">    <span class="n">ce</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">cross_entropy</span><span class="p">(</span><span class="n">s_logits</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">alpha</span> <span class="o">*</span> <span class="n">kl</span> <span class="o">+</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">alpha</span><span class="p">)</span> <span class="o">*</span> <span class="n">ce</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">transform</span> <span class="o">=</span> <span class="n">T</span><span class="o">.</span><span class="n">Compose</span><span class="p">([</span><span class="n">T</span><span class="o">.</span><span class="n">RandomCrop</span><span class="p">(</span><span class="mi">32</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="mi">4</span><span class="p">),</span>
+</span></span><span class="line"><span class="cl">                       <span class="n">T</span><span class="o">.</span><span class="n">RandomHorizontalFlip</span><span class="p">(),</span>
+</span></span><span class="line"><span class="cl">                       <span class="n">T</span><span class="o">.</span><span class="n">ToTensor</span><span class="p">(),</span>
+</span></span><span class="line"><span class="cl">                       <span class="n">T</span><span class="o">.</span><span class="n">Normalize</span><span class="p">((</span><span class="mf">0.4914</span><span class="p">,</span> <span class="mf">0.4822</span><span class="p">,</span> <span class="mf">0.4465</span><span class="p">),</span>
+</span></span><span class="line"><span class="cl">                                   <span class="p">(</span><span class="mf">0.2470</span><span class="p">,</span> <span class="mf">0.2435</span><span class="p">,</span> <span class="mf">0.2616</span><span class="p">))])</span>
+</span></span><span class="line"><span class="cl"><span class="n">loader</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">DataLoader</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">    <span class="n">torchvision</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">CIFAR10</span><span class="p">(</span><span class="n">root</span><span class="o">=</span><span class="s2">&#34;./data&#34;</span><span class="p">,</span> <span class="n">train</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                                 <span class="n">download</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">transform</span><span class="o">=</span><span class="n">transform</span><span class="p">),</span>
+</span></span><span class="line"><span class="cl">    <span class="n">batch_size</span><span class="o">=</span><span class="mi">128</span><span class="p">,</span> <span class="n">shuffle</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">teacher</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl"><span class="n">opt</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">optim</span><span class="o">.</span><span class="n">Adam</span><span class="p">(</span><span class="n">student</span><span class="o">.</span><span class="n">parameters</span><span class="p">(),</span> <span class="n">lr</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="k">for</span> <span class="n">images</span><span class="p">,</span> <span class="n">labels</span> <span class="ow">in</span> <span class="n">loader</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="k">with</span> <span class="n">torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">():</span>
+</span></span><span class="line"><span class="cl">        <span class="n">t_logits</span> <span class="o">=</span> <span class="n">teacher</span><span class="p">(</span><span class="n">images</span><span class="p">)</span>         <span class="c1"># 教师软标签，一次前向搞定</span>
+</span></span><span class="line"><span class="cl">    <span class="n">loss</span> <span class="o">=</span> <span class="n">kd_loss</span><span class="p">(</span><span class="n">student</span><span class="p">(</span><span class="n">images</span><span class="p">),</span> <span class="n">t_logits</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="n">opt</span><span class="o">.</span><span class="n">zero_grad</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">    <span class="n">loss</span><span class="o">.</span><span class="n">backward</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">    <span class="n">opt</span><span class="o">.</span><span class="n">step</span><span class="p">()</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>两个细节值得注意：KL 散度是在除以 <code>T</code> 之后的 logits 上算的，梯度会缩水 <code>T</code> 倍，所以要乘回 <code>T * T</code> 恢复梯度量级；教师全程 <code>no_grad</code>，只推理不出梯度，显存占用很低，手机显存不够也跑得动。</p>
+<h2 id="效果与组合拳">效果与组合拳</h2>
+<p>以 CIFAR-10 为例（参考量级，具体数值取决于你的数据）：从零硬训的 MobileNetV2 约 85%-90% 准确率，跟蒸馏后的学生通常能再涨 1-3 个点，逼近 ResNet18 的水平，而体积只有教师的四分之一、推理更快。数据越少、任务越难，蒸馏收益越明显——这正是端侧小模型偏爱蒸馏的原因。</p>
+<p>蒸馏完再走一遍 <a href="/post/2026/08/07/on-device-quantization-model/" rel="">INT8 量化流程</a>
+，14 MB 的学生模型压到 3.5 MB，且因为学生输出分布更平滑，量化掉点通常比直接量化教师更小。</p>
+<p>大模型场景同样适用：DistilBERT 用蒸馏把 BERT-base 从 1.1 亿参数减到 6600 万，保留约 97% 的性能（官方数据）。注意它的输入是文本，说明蒸馏对模态不挑，图像、语音、文本流程通用。</p>
+<h2 id="开源工具箱">开源工具箱</h2>
+<table>
+	<thead>
+			<tr>
+					<th>项目</th>
+					<th>GitHub</th>
+					<th>适用场景</th>
+			</tr>
+	</thead>
+	<tbody>
+			<tr>
+					<td>torchdistill</td>
+					<td>yoshitomo-matsubara/torchdistill</td>
+					<td>通用蒸馏框架，KD、FitNets、attention transfer 等论文方法现成可用</td>
+			</tr>
+			<tr>
+					<td>timm</td>
+					<td>huggingface/pytorch-image-models</td>
+					<td>训练脚本原生支持 <code>--teacher-model</code>，一行参数开启蒸馏</td>
+			</tr>
+			<tr>
+					<td>MMRazor</td>
+					<td>open-mmlab/mmrazor</td>
+					<td>OpenMMLab 出品，剪枝加蒸馏一体化，适合结构压缩一起做</td>
+			</tr>
+			<tr>
+					<td>Transformers</td>
+					<td>huggingface/transformers</td>
+					<td>DistilBERT 官方训练脚本，文本模型蒸馏的样板</td>
+			</tr>
+			<tr>
+					<td>TF Model Optimization</td>
+					<td>tensorflow/model-optimization</td>
+					<td>TF 侧量化感知训练加蒸馏的官方方案</td>
+			</tr>
+	</tbody>
+</table>
+<p>选型建议：PyTorch 图像任务先试 timm，够简单；要复现论文方法用 torchdistill；检测、分割这类复杂任务，MMRazor 覆盖面最全。</p>
+<h2 id="踩坑清单">踩坑清单</h2>
+<ol>
+<li><strong>教师别太强</strong>：教师与学生能力差距过大时学生学不动，梯度里全是噪声。CIFAR-10 这种小任务，ResNet18 教 MobileNetV2 刚好，没必要上 ResNet152。</li>
+<li><strong><code>T</code> 和 <code>alpha</code> 要一起调</strong>：常用区间 <code>T=3-8</code>、<code>alpha=0.5-0.9</code>。<code>T</code> 太大分布太平，暗知识稀释成噪声；太小退化回硬标签训练。</li>
+<li><strong>教师必须先微调好</strong>：直接用 ImageNet 预训练教师换任务，前几轮软标签不准，收敛慢。</li>
+<li><strong>学生小 batch 注意 BN</strong>：学生网络浅、BN 统计不稳时，攒大 batch 或用累积梯度。</li>
+<li><strong>蒸馏本质是免费监督信号</strong>：软标签相当于额外告诉学生&quot;类别之间存在相似性&quot;，和 dropout、数据增强不冲突，可以叠加。</li>
+</ol>
+<p>端侧部署的压缩三件套——蒸馏（训练期）、剪枝（结构）、量化（存储）——蒸馏是唯一能<strong>提升</strong>小模型精度的环节。先拜师，再瘦身，最后上设备，这条路比单吊量化稳健得多。</p></div><div class="post-footer" id="post-footer">
+    <div class="post-info">
+        <div class="post-info-line">
+            <div class="post-info-mod">
+                <span>更新于 2026-08-12&nbsp;<a class="git-hash" href="https://github.com/cikichen/hugo-sync/commit/b18762b78cdc553a3ed6b12b837e0cf8b3f02a13" target="_blank" title="commit by Hermes Bot(hermes@ithome.me) b18762b78cdc553a3ed6b12b837e0cf8b3f02a13: Auto: 2026-08-12 - 端侧模型知识蒸馏实战">
+                                    <i class="fas fa-hashtag fa-fw" aria-hidden="true"></i>b18762b7</a></span>
+            </div></div>
+        <div class="post-info-line">
+            <div class="post-info-md"></div>
+            <div class="post-info-share">
+                <span><a href="javascript:void(0);" title="分享到 Twitter" data-sharer="twitter" data-url="https://www.ithome.me/post/2026/08/12/edge-ai-knowledge-distillation/" data-title="端侧模型知识蒸馏实战：把大模型的本事教给手机小模型" data-via="ChenCiki" data-hashtags="端侧AI,知识蒸馏,模型压缩,PyTorch,MobileNet"><i class="fab fa-twitter fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="分享到 Linkedin" data-sharer="linkedin" data-url="https://www.ithome.me/post/2026/08/12/edge-ai-knowledge-distillation/"><i class="fab fa-linkedin fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="分享到 微博" data-sharer="weibo" data-url="https://www.ithome.me/post/2026/08/12/edge-ai-knowledge-distillation/" data-title="端侧模型知识蒸馏实战：把大模型的本事教给手机小模型" data-ralateuid="xxx"><i class="fab fa-weibo fa-fw" aria-hidden="true"></i></a></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="post-info-more">
+        <section class="post-tags"><i class="fas fa-tags fa-fw" aria-hidden="true"></i>&nbsp;<a href="/tags/%E7%AB%AF%E4%BE%A7ai/">端侧AI</a>,&nbsp;<a href="/tags/%E7%9F%A5%E8%AF%86%E8%92%B8%E9%A6%8F/">知识蒸馏</a>,&nbsp;<a href="/tags/%E6%A8%A1%E5%9E%8B%E5%8E%8B%E7%BC%A9/">模型压缩</a>,&nbsp;<a href="/tags/pytorch/">PyTorch</a>,&nbsp;<a href="/tags/mobilenet/">MobileNet</a></section>
+        <section>
+            <span><a href="javascript:void(0);" onclick="window.history.back();">返回</a></span>&nbsp;|&nbsp;<span><a href="/">主页</a></span>
+        </section>
+    </div>
+
+    <div class="post-nav"><a href="/post/2026/08/11/edge-ai-inference-framework-guide/" class="prev" rel="prev" title="端侧推理框架选型实战：Core ML、LiteRT、ONNX Runtime、NCNN、MNN 怎么选"><i class="fas fa-angle-left fa-fw" aria-hidden="true"></i>端侧推理框架选型实战：Core ML、LiteRT、ONNX Runtime、NCNN、MNN 怎么选</a>
+            <a href="/post/2026/08/13/on-device-ai-face-recognition/" class="next" rel="next" title="端侧人脸识别实战：MobileFaceNet 特征向量与 1:N 检索落地指南">端侧人脸识别实战：MobileFaceNet 特征向量与 1:N 检索落地指南<i class="fas fa-angle-right fa-fw" aria-hidden="true"></i></a></div>
+</div>
+<div id="comments"><div id="gitalk" class="comment"></div><noscript>
+                Please enable JavaScript to view the comments powered by <a href="https://github.com/gitalk/gitalk"></a>Gitalk</a>.
+            </noscript></div></article></div>
+            </main><footer class="footer">
+        <div class="footer-container"><div class="footer-line" itemscope itemtype="http://schema.org/CreativeWork"><i class="far fa-copyright fa-fw" aria-hidden="true"></i><span itemprop="copyrightYear">2011 - 2026</span><span class="author" itemprop="copyrightHolder">&nbsp;<a href="https://www.ithome.me/" target="_blank">Simon Chen</a></span>&nbsp;|&nbsp;<span class="license"><a rel="license external nofollow noopener noreferrer" href="https://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank">CC BY-NC-ND 4.0</a></span></div>
+        </div>
+    </footer></div>
+
+        <div id="fixed-buttons"><a href="#" id="back-to-top" class="fixed-button" title="回到顶部">
+                <i class="fas fa-arrow-up fa-fw" aria-hidden="true"></i>
+            </a><a href="#" id="view-comments" class="fixed-button" title="查看评论">
+                <i class="fas fa-comment fa-fw" aria-hidden="true"></i>
+            </a>
+        </div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1.7.2/dist/gitalk.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/css/lightgallery-bundle.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/katex.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/copy-tex.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.css"><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/gitalk@1.7.2/dist/gitalk.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/autocomplete.js@0.38.1/dist/autocomplete.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lunr@2.3.9/lunr.min.js"></script><script type="text/javascript" src="/lib/lunr/lunr.stemmer.support.min.js"></script><script type="text/javascript" src="/lib/lunr/lunr.zh.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lazysizes@5.3.1/lazysizes.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/lightgallery.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/plugins/thumbnail/lg-thumbnail.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/plugins/zoom/lg-zoom.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/clipboard@2.0.11/dist/clipboard.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/sharer.js@0.5.1/sharer.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/katex.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/auto-render.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/copy-tex.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/mhchem.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.js"></script><script type="text/javascript">window.config={"code":{"copyTitle":"复制到剪贴板","maxShownLines":50},"comment":{"gitalk":{"admin":["cikichen"],"clientID":"be0f52370ed1285b6c7c","clientSecret":"734a7d8d0ded346ca7a3d565d57de3f8eeb2850b","id":"2026-08-12T00:00:00Z","owner":"cikichen","repo":"gitalk","title":"端侧模型知识蒸馏实战：把大模型的本事教给手机小模型"}},"cookieconsent":{"content":{"dismiss":"我知道了","link":"了解更多","message":"本网站使用 Cookies 来改善您的浏览体验."},"enable":true,"palette":{"button":{"background":"#f0f0f0"},"popup":{"background":"#1aa3ff"}},"theme":"edgeless"},"lightgallery":true,"math":{"delimiters":[{"display":true,"left":"$$","right":"$$"},{"display":true,"left":"\\[","right":"\\]"},{"display":true,"left":"\\begin{equation}","right":"\\end{equation}"},{"display":true,"left":"\\begin{equation*}","right":"\\end{equation*}"},{"display":true,"left":"\\begin{align}","right":"\\end{align}"},{"display":true,"left":"\\begin{align*}","right":"\\end{align*}"},{"display":true,"left":"\\begin{alignat}","right":"\\end{alignat}"},{"display":true,"left":"\\begin{alignat*}","right":"\\end{alignat*}"},{"display":true,"left":"\\begin{gather}","right":"\\end{gather}"},{"display":true,"left":"\\begin{CD}","right":"\\end{CD}"},{"display":false,"left":"$","right":"$"},{"display":false,"left":"\\(","right":"\\)"}],"strict":false},"search":{"highlightTag":"em","lunrIndexURL":"/index.json","lunrLanguageCode":"zh","lunrSegmentitURL":"/lib/lunr/lunr.segmentit.js","maxResultLength":10,"noResultsFound":"没有找到结果","snippetLength":50,"type":"lunr"}};</script><script type="text/javascript" src="/js/theme.min.js"></script></body>
+</html>

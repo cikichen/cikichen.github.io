@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="robots" content="noodp" />
+        <title>端侧视觉语言模型实战：用 MiniCPM-V 4.6 给 App 装上看图能力 - 编程心语</title><meta name="Description" content="2026 年 8 月端侧 VLM 选型：1.3B 的 MiniCPM-V 4.6 如何用 Ollama 与 llama.cpp 快速跑起来，以及手机端部署路径与官方性能数据"><meta property="og:url" content="https://www.ithome.me/post/2026/08/17/edge-vlm-vision-model-guide/">
+	<meta property="og:site_name" content="编程心语">
+	<meta property="og:title" content="端侧视觉语言模型实战：用 MiniCPM-V 4.6 给 App 装上看图能力">
+	<meta property="og:description" content="2026 年 8 月端侧 VLM 选型：1.3B 的 MiniCPM-V 4.6 如何用 Ollama 与 llama.cpp 快速跑起来，以及手机端部署路径与官方性能数据">
+	<meta property="og:locale" content="zh_CN">
+	<meta property="og:type" content="article">
+		<meta property="article:section" content="posts">
+		<meta property="article:published_time" content="2026-08-17T08:00:00+08:00">
+		<meta property="article:modified_time" content="2026-08-17T03:04:23+08:00">
+		<meta property="article:tag" content="端侧AI">
+		<meta property="article:tag" content="视觉语言模型">
+		<meta property="article:tag" content="VLM">
+		<meta property="article:tag" content="MiniCPM-V">
+		<meta property="article:tag" content="Ollama">
+		<meta property="article:tag" content="Llama.cpp">
+
+	<meta name="twitter:card" content="summary">
+	<meta name="twitter:title" content="端侧视觉语言模型实战：用 MiniCPM-V 4.6 给 App 装上看图能力">
+	<meta name="twitter:description" content="2026 年 8 月端侧 VLM 选型：1.3B 的 MiniCPM-V 4.6 如何用 Ollama 与 llama.cpp 快速跑起来，以及手机端部署路径与官方性能数据">
+			<meta name="twitter:site" content="@ChenCiki">
+<meta name="application-name" content="编程心语">
+<meta name="apple-mobile-web-app-title" content="编程心语"><meta name="theme-color" content="#ffffff"><meta name="msapplication-TileColor" content="#da532c"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5"><link rel="manifest" href="/site.webmanifest"><link rel="canonical" href="https://www.ithome.me/post/2026/08/17/edge-vlm-vision-model-guide/" /><link rel="prev" href="https://www.ithome.me/post/2026/08/13/on-device-ai-face-recognition/" /><link rel="next" href="https://www.ithome.me/post/2026/08/17/github-trending-weekly/" /><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/normalize.css@8.0.1/normalize.min.css"><link rel="stylesheet" href="/css/style.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css"><script type="application/ld+json">
+    {
+        "@context": "http://schema.org",
+        "@type": "BlogPosting",
+        "headline": "端侧视觉语言模型实战：用 MiniCPM-V 4.6 给 App 装上看图能力",
+        "inLanguage": "zh-CN",
+        "mainEntityOfPage": {
+            "@type": "WebPage",
+            "@id": "https:\/\/www.ithome.me\/post\/2026\/08\/17\/edge-vlm-vision-model-guide\/"
+        },"image": ["https:\/\/www.ithome.me\/cover.png"],"genre": "posts","keywords": "端侧AI, 视觉语言模型, VLM, MiniCPM-V, Ollama, llama.cpp, 多模态","wordcount":  1346 ,
+        "url": "https:\/\/www.ithome.me\/post\/2026\/08\/17\/edge-vlm-vision-model-guide\/","datePublished": "2026-08-17T08:00:00+08:00","dateModified": "2026-08-17T03:04:23+08:00","publisher": {
+            "@type": "Organization",
+            "name": "SimonChen","logo": "https:\/\/www.ithome.me\/logo.png"},"author": {
+                "@type": "Person",
+                "name": "Simon"
+            },"description": "2026 年 8 月端侧 VLM 选型：1.3B 的 MiniCPM-V 4.6 如何用 Ollama 与 llama.cpp 快速跑起来，以及手机端部署路径与官方性能数据"
+    }
+    </script><script async src="https://www.googletagmanager.com/gtag/js?id=G-H1Q5563VR8"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-H1Q5563VR8', { 'anonymize_ip': true });
+</script></head>
+    <body data-header-desktop="fixed" data-header-mobile="auto"><script type="text/javascript">(window.localStorage && localStorage.getItem('theme') ? localStorage.getItem('theme') === 'dark' : ('auto' === 'auto' ? window.matchMedia('(prefers-color-scheme: dark)').matches : 'auto' === 'dark')) && document.body.setAttribute('theme', 'dark');</script>
+
+        <div id="mask"></div><div class="wrapper"><header class="desktop" id="header-desktop">
+    <div class="header-wrapper">
+        <div class="header-title">
+            <a href="/" title="编程心语">编程心语</a>
+        </div>
+        <div class="menu">
+            <div class="menu-inner"><a class="menu-item" href="/posts/"> 文章 </a><a class="menu-item" href="/categories/"> 分类 </a><a class="menu-item" href="/tags/"> 标签 </a><a class="menu-item" href="/about-me/"> 关于 </a><span class="menu-item delimiter"></span><span class="menu-item search" id="search-desktop">
+                        <input type="text" placeholder="搜索文章..." id="search-input-desktop">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-desktop" title="搜索">
+                            <i class="fas fa-search fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-desktop" title="清空">
+                            <i class="fas fa-times-circle fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-desktop">
+                            <i class="fas fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+                        </span>
+                    </span><a href="javascript:void(0);" class="menu-item theme-switch" title="切换主题">
+                    <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</header><header class="mobile" id="header-mobile">
+    <div class="header-container">
+        <div class="header-wrapper">
+            <div class="header-title">
+                <a href="/" title="编程心语">编程心语</a>
+            </div>
+            <div class="menu-toggle" id="menu-toggle-mobile">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+        <div class="menu" id="menu-mobile"><div class="search-wrapper">
+                    <div class="search mobile" id="search-mobile">
+                        <input type="text" placeholder="搜索文章..." id="search-input-mobile">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-mobile" title="搜索">
+                            <i class="fas fa-search fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-mobile" title="清空">
+                            <i class="fas fa-times-circle fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-mobile">
+                            <i class="fas fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+                        </span>
+                    </div>
+                    <a href="javascript:void(0);" class="search-cancel" id="search-cancel-mobile">
+                        取消
+                    </a>
+                </div><a class="menu-item" href="/posts/" title="">文章</a><a class="menu-item" href="/categories/" title="">分类</a><a class="menu-item" href="/tags/" title="">标签</a><a class="menu-item" href="/about-me/" title="">关于</a><a href="javascript:void(0);" class="menu-item theme-switch" title="切换主题">
+                <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
+            </a></div>
+    </div>
+</header><div class="search-dropdown desktop">
+        <div id="search-dropdown-desktop"></div>
+    </div>
+    <div class="search-dropdown mobile">
+        <div id="search-dropdown-mobile"></div>
+    </div><main class="main">
+                <div class="container"><div class="toc" id="toc-auto">
+            <h2 class="toc-title">目录</h2>
+            <div class="toc-content" id="toc-content-auto"></div>
+        </div><article class="page single"><h1 class="single-title animate__animated animate__flipInX">端侧视觉语言模型实战：用 MiniCPM-V 4.6 给 App 装上看图能力</h1><div class="post-meta">
+            <div class="post-meta-line"><span class="post-author"><a href="https://www.ithome.me/" title="Author" target="_blank" rel="noopener noreferrer author" class="author"><i class="fas fa-user-circle fa-fw" aria-hidden="true"></i>Simon</a>
+</span>&nbsp;<span class="post-category">收录于 <a href="/categories/ai/"><i class="far fa-folder fa-fw" aria-hidden="true"></i>Ai</a></span></div>
+            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw" aria-hidden="true"></i>&nbsp;<time datetime="2026-08-17">2026-08-17</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden="true"></i>&nbsp;约 1346 字&nbsp;
+                <i class="far fa-clock fa-fw" aria-hidden="true"></i>&nbsp;预计阅读 3 分钟&nbsp;</div>
+        </div><div class="details toc" id="toc-static"  data-kept="true">
+                <div class="details-summary toc-title">
+                    <span>目录</span>
+                    <span><i class="details-icon fas fa-angle-right" aria-hidden="true"></i></span>
+                </div>
+                <div class="details-content toc-content" id="toc-content-static"><nav id="TableOfContents">
+  <ul>
+    <li><a href="#为什么要把看图能力塞进手机">为什么要把看图能力塞进手机</a></li>
+    <li><a href="#2026-年-8-月的端侧-vlm-选型">2026 年 8 月的端侧 VLM 选型</a></li>
+    <li><a href="#vlm-为什么以前跑不动手机">VLM 为什么以前跑不动手机</a></li>
+    <li><a href="#十分钟跑起来ollama-一条命令">十分钟跑起来：Ollama 一条命令</a></li>
+    <li><a href="#手机端怎么集成">手机端怎么集成</a></li>
+    <li><a href="#什么时候不用-vlm">什么时候不用 VLM</a></li>
+  </ul>
+</nav></div>
+            </div><div class="content" id="content"><h2 id="为什么要把看图能力塞进手机">为什么要把看图能力塞进手机</h2>
+<p>相册问答、无障碍场景描述、离线扫描件转结构化信息、儿童教育里的看图说话……这些任务以前要发云端 API，现在可以整体搬到设备上。端侧视觉语言模型（VLM）的好处很直接：照片不出设备（隐私合规）、无网可用、单次推理成本为零、延迟稳定在几十到几百毫秒。</p>
+<p>上一代做法是 CNN 分类 + 云端多模态兜底（比如本博客之前的懂鸟 App 方案：BirdNET 识别 + GPT-5.4 问答）。端侧 VLM 的定位不是取代 CNN，而是把原来必须上云的那部分开放域理解（这张图里有什么、帮我读一下这张发票、这个画面危险吗）在本地解决。</p>
+<h2 id="2026-年-8-月的端侧-vlm-选型">2026 年 8 月的端侧 VLM 选型</h2>
+<p>截至 2026-08-17 验证，端侧 VLM 的主力选手如下：</p>
+<table>
+	<thead>
+			<tr>
+					<th>模型</th>
+					<th>参数量</th>
+					<th>体积</th>
+					<th>特点</th>
+					<th>适合场景</th>
+			</tr>
+	</thead>
+	<tbody>
+			<tr>
+					<td>MiniCPM-V 4.6</td>
+					<td>1.3B</td>
+					<td>Ollama 约 1.6GB，GGUF 约 2GB</td>
+					<td>2026-05 开源，SigLIP2-400M 视觉编码器 + Qwen3.5-0.8B 底座，256K 上下文</td>
+					<td>手机、平板、树莓派上的图像与视频理解</td>
+			</tr>
+			<tr>
+					<td>MiniCPM-o 4.5</td>
+					<td>9B</td>
+					<td>未量化较大</td>
+					<td>全双工全模态，流式视频与音频输入，能力接近 Gemini 2.5 Flash</td>
+					<td>Mac（M3/M4，16GB 内存以上）或 12GB 显存 GPU 上的实时多模态对话</td>
+			</tr>
+			<tr>
+					<td>老一代小 VLM</td>
+					<td>0.25B 至 3B</td>
+					<td>视量化而定</td>
+					<td>SmolVLM2、Qwen2.5-VL 等 2025 年的模型</td>
+					<td>存量项目可继续用，新项目不建议再选</td>
+			</tr>
+	</tbody>
+</table>
+<p>MiniCPM-V 4.6 是当前端侧 VLM 的标杆，以下均为官方数据：</p>
+<ul>
+<li>Artificial Analysis Intelligence Index 得分 13，超过 Qwen3.5-0.8B（10 分）和 Ministral 3 3B（11 分）</li>
+<li>在 OpenCompass、RefCOCO、HallusionBench、MUIRBench、OCRBench 等多项基准上达到 Qwen3.5 2B 级别的能力</li>
+<li>视觉编码计算量比上一代降低 50% 以上，token 吞吐是 Qwen3.5-0.8B 的 2.4 倍</li>
+</ul>
+<h2 id="vlm-为什么以前跑不动手机">VLM 为什么以前跑不动手机</h2>
+<p>VLM = 视觉编码器 + 投影层 + LLM。一张图被切成几百上千个 patch，每个 patch 编码成一个视觉 token，LLM 要逐个处理。1280x1280 的图轻松产生上千 token，比一段话还贵，这就是端侧 VLM 的算力瓶颈。</p>
+<p>MiniCPM-V 4.6 用 LLaVA-UHD v4 提出的 ViT 内提前压缩：在视觉编码器内部就做 4 倍/16 倍的混合 token 压缩，把视觉编码 FLOPs 砍掉一半以上，精度和速度可按任务切换。工程上这比先全量编码再压缩省得多，因为它直接减少了后续 LLM 要处理的 token 总数——这正是它 1.3B 参数却敢对标 2B 级能力的关键。</p>
+<h2 id="十分钟跑起来ollama-一条命令">十分钟跑起来：Ollama 一条命令</h2>
+<p>2026-06-25 起 MiniCPM-V 4.6 已进 Ollama 官方模型库，一条命令拉取运行：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">ollama run minicpm-v4.6
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>带图问答用 Python 客户端：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">base64</span>
+</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">ollama</span> <span class="kn">import</span> <span class="n">chat</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">image_to_base64</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s2">&#34;rb&#34;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="n">base64</span><span class="o">.</span><span class="n">b64encode</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">())</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">&#34;utf-8&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">response</span> <span class="o">=</span> <span class="n">chat</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">    <span class="n">model</span><span class="o">=</span><span class="s2">&#34;minicpm-v4.6&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="n">messages</span><span class="o">=</span><span class="p">[{</span>
+</span></span><span class="line"><span class="cl">        <span class="s2">&#34;role&#34;</span><span class="p">:</span> <span class="s2">&#34;user&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">        <span class="s2">&#34;content&#34;</span><span class="p">:</span> <span class="s2">&#34;描述这张照片里发生了什么&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">        <span class="s2">&#34;images&#34;</span><span class="p">:</span> <span class="p">[</span><span class="n">image_to_base64</span><span class="p">(</span><span class="s2">&#34;bird.jpg&#34;</span><span class="p">)],</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}],</span>
+</span></span><span class="line"><span class="cl"><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">message</span><span class="o">.</span><span class="n">content</span><span class="p">)</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>不走 Ollama 的话，官方发布了 GGUF 量化版（CPU 推理约 2GB 内存），llama.cpp 直接加载：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">llama-cli -m MiniCPM-V-4.6-Q4_K_M.gguf <span class="se">\
+</span></span></span><span class="line"><span class="cl">  --image bird.jpg -p <span class="s2">&#34;描述这张照片&#34;</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h2 id="手机端怎么集成">手机端怎么集成</h2>
+<p>官方把端侧适配代码全部开源在 MiniCPM-V-Apps 仓库：iOS、安卓、鸿蒙三端各有一套可直接编译的工程，下载页还有现成 App 可以先体验再动手。集成注意点：</p>
+<ol>
+<li>量化位宽优先选 Q4_K_M，内存敏感的机型再往更低位宽走</li>
+<li>首帧视觉编码最耗时，输入图先压到最长边 1024 以内收益最大</li>
+<li>图像描述类任务用 16 倍压缩档，精细 OCR 与目标定位用 4 倍档，按需切换</li>
+</ol>
+<h2 id="什么时候不用-vlm">什么时候不用 VLM</h2>
+<p>固定类别的识别（鸟种、商品、人脸）用 YOLO 或分类 CNN 更快更省电；开放域理解才轮到 VLM。合理架构是分层：CNN 兜底高频固定任务，VLM 处理长尾开放场景，云端大模型只接真正复杂的多轮对话——三层各干各的，成本最低。</p>
+<p>文中模型与性能数据均出自官方仓库与 Ollama 官方模型页，截至 2026-08-17 验证。</p>
+</div><div class="post-footer" id="post-footer">
+    <div class="post-info">
+        <div class="post-info-line">
+            <div class="post-info-mod">
+                <span>更新于 2026-08-17&nbsp;<a class="git-hash" href="https://github.com/cikichen/hugo-sync/commit/e4af817b1734fb542f37f3369efd8573baee91ff" target="_blank" title="commit by Hermes Bot(hermes@ithome.me) e4af817b1734fb542f37f3369efd8573baee91ff: Auto: 2026-08-17">
+                                    <i class="fas fa-hashtag fa-fw" aria-hidden="true"></i>e4af817b</a></span>
+            </div></div>
+        <div class="post-info-line">
+            <div class="post-info-md"></div>
+            <div class="post-info-share">
+                <span><a href="javascript:void(0);" title="分享到 Twitter" data-sharer="twitter" data-url="https://www.ithome.me/post/2026/08/17/edge-vlm-vision-model-guide/" data-title="端侧视觉语言模型实战：用 MiniCPM-V 4.6 给 App 装上看图能力" data-via="ChenCiki" data-hashtags="端侧AI,视觉语言模型,VLM,MiniCPM-V,Ollama,llama.cpp,多模态"><i class="fab fa-twitter fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="分享到 Linkedin" data-sharer="linkedin" data-url="https://www.ithome.me/post/2026/08/17/edge-vlm-vision-model-guide/"><i class="fab fa-linkedin fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="分享到 微博" data-sharer="weibo" data-url="https://www.ithome.me/post/2026/08/17/edge-vlm-vision-model-guide/" data-title="端侧视觉语言模型实战：用 MiniCPM-V 4.6 给 App 装上看图能力" data-ralateuid="xxx"><i class="fab fa-weibo fa-fw" aria-hidden="true"></i></a></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="post-info-more">
+        <section class="post-tags"><i class="fas fa-tags fa-fw" aria-hidden="true"></i>&nbsp;<a href="/tags/%E7%AB%AF%E4%BE%A7ai/">端侧AI</a>,&nbsp;<a href="/tags/%E8%A7%86%E8%A7%89%E8%AF%AD%E8%A8%80%E6%A8%A1%E5%9E%8B/">视觉语言模型</a>,&nbsp;<a href="/tags/vlm/">VLM</a>,&nbsp;<a href="/tags/minicpm-v/">MiniCPM-V</a>,&nbsp;<a href="/tags/ollama/">Ollama</a>,&nbsp;<a href="/tags/llama.cpp/">Llama.cpp</a>,&nbsp;<a href="/tags/%E5%A4%9A%E6%A8%A1%E6%80%81/">多模态</a></section>
+        <section>
+            <span><a href="javascript:void(0);" onclick="window.history.back();">返回</a></span>&nbsp;|&nbsp;<span><a href="/">主页</a></span>
+        </section>
+    </div>
+
+    <div class="post-nav"><a href="/post/2026/08/13/on-device-ai-face-recognition/" class="prev" rel="prev" title="端侧人脸识别实战：MobileFaceNet 特征向量与 1:N 检索落地指南"><i class="fas fa-angle-left fa-fw" aria-hidden="true"></i>端侧人脸识别实战：MobileFaceNet 特征向量与 1:N 检索落地指南</a>
+            <a href="/post/2026/08/17/github-trending-weekly/" class="next" rel="next" title="GitHub Trending 周报 - 2026-08-17">GitHub Trending 周报 - 2026-08-17<i class="fas fa-angle-right fa-fw" aria-hidden="true"></i></a></div>
+</div>
+<div id="comments"><div id="gitalk" class="comment"></div><noscript>
+                Please enable JavaScript to view the comments powered by <a href="https://github.com/gitalk/gitalk"></a>Gitalk</a>.
+            </noscript></div></article></div>
+            </main><footer class="footer">
+        <div class="footer-container"><div class="footer-line" itemscope itemtype="http://schema.org/CreativeWork"><i class="far fa-copyright fa-fw" aria-hidden="true"></i><span itemprop="copyrightYear">2011 - 2026</span><span class="author" itemprop="copyrightHolder">&nbsp;<a href="https://www.ithome.me/" target="_blank">Simon Chen</a></span>&nbsp;|&nbsp;<span class="license"><a rel="license external nofollow noopener noreferrer" href="https://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank">CC BY-NC-ND 4.0</a></span></div>
+        </div>
+    </footer></div>
+
+        <div id="fixed-buttons"><a href="#" id="back-to-top" class="fixed-button" title="回到顶部">
+                <i class="fas fa-arrow-up fa-fw" aria-hidden="true"></i>
+            </a><a href="#" id="view-comments" class="fixed-button" title="查看评论">
+                <i class="fas fa-comment fa-fw" aria-hidden="true"></i>
+            </a>
+        </div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1.7.2/dist/gitalk.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/css/lightgallery-bundle.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/katex.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/copy-tex.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.css"><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/gitalk@1.7.2/dist/gitalk.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/autocomplete.js@0.38.1/dist/autocomplete.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lunr@2.3.9/lunr.min.js"></script><script type="text/javascript" src="/lib/lunr/lunr.stemmer.support.min.js"></script><script type="text/javascript" src="/lib/lunr/lunr.zh.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lazysizes@5.3.1/lazysizes.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/lightgallery.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/plugins/thumbnail/lg-thumbnail.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/plugins/zoom/lg-zoom.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/clipboard@2.0.11/dist/clipboard.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/sharer.js@0.5.1/sharer.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/katex.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/auto-render.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/copy-tex.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/mhchem.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.js"></script><script type="text/javascript">window.config={"code":{"copyTitle":"复制到剪贴板","maxShownLines":50},"comment":{"gitalk":{"admin":["cikichen"],"clientID":"be0f52370ed1285b6c7c","clientSecret":"734a7d8d0ded346ca7a3d565d57de3f8eeb2850b","id":"2026-08-17T00:00:00Z","owner":"cikichen","repo":"gitalk","title":"端侧视觉语言模型实战：用 MiniCPM-V 4.6 给 App 装上看图能力"}},"cookieconsent":{"content":{"dismiss":"我知道了","link":"了解更多","message":"本网站使用 Cookies 来改善您的浏览体验."},"enable":true,"palette":{"button":{"background":"#f0f0f0"},"popup":{"background":"#1aa3ff"}},"theme":"edgeless"},"lightgallery":true,"math":{"delimiters":[{"display":true,"left":"$$","right":"$$"},{"display":true,"left":"\\[","right":"\\]"},{"display":true,"left":"\\begin{equation}","right":"\\end{equation}"},{"display":true,"left":"\\begin{equation*}","right":"\\end{equation*}"},{"display":true,"left":"\\begin{align}","right":"\\end{align}"},{"display":true,"left":"\\begin{align*}","right":"\\end{align*}"},{"display":true,"left":"\\begin{alignat}","right":"\\end{alignat}"},{"display":true,"left":"\\begin{alignat*}","right":"\\end{alignat*}"},{"display":true,"left":"\\begin{gather}","right":"\\end{gather}"},{"display":true,"left":"\\begin{CD}","right":"\\end{CD}"},{"display":false,"left":"$","right":"$"},{"display":false,"left":"\\(","right":"\\)"}],"strict":false},"search":{"highlightTag":"em","lunrIndexURL":"/index.json","lunrLanguageCode":"zh","lunrSegmentitURL":"/lib/lunr/lunr.segmentit.js","maxResultLength":10,"noResultsFound":"没有找到结果","snippetLength":50,"type":"lunr"}};</script><script type="text/javascript" src="/js/theme.min.js"></script></body>
+</html>

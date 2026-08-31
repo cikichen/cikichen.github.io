@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="robots" content="noodp" />
+        <title>端侧推理框架选型实战：Core ML、LiteRT、ONNX Runtime、NCNN、MNN 怎么选 - 编程心语</title><meta name="Description" content="五个主流端侧推理框架横向对比：适用平台、量化支持、硬件加速与选型决策树，附 ONNX Runtime Mobile 与 NCNN 的 MobileNetV2 集成代码示例"><meta property="og:url" content="https://www.ithome.me/post/2026/08/11/edge-ai-inference-framework-guide/">
+	<meta property="og:site_name" content="编程心语">
+	<meta property="og:title" content="端侧推理框架选型实战：Core ML、LiteRT、ONNX Runtime、NCNN、MNN 怎么选">
+	<meta property="og:description" content="五个主流端侧推理框架横向对比：适用平台、量化支持、硬件加速与选型决策树，附 ONNX Runtime Mobile 与 NCNN 的 MobileNetV2 集成代码示例">
+	<meta property="og:locale" content="zh_CN">
+	<meta property="og:type" content="article">
+		<meta property="article:section" content="posts">
+		<meta property="article:published_time" content="2026-08-11T08:00:00+08:00">
+		<meta property="article:modified_time" content="2026-08-11T03:15:08+08:00">
+		<meta property="article:tag" content="端侧AI">
+		<meta property="article:tag" content="推理框架">
+		<meta property="article:tag" content="Core ML">
+		<meta property="article:tag" content="ONNX Runtime">
+		<meta property="article:tag" content="NCNN">
+		<meta property="article:tag" content="MNN">
+
+	<meta name="twitter:card" content="summary">
+	<meta name="twitter:title" content="端侧推理框架选型实战：Core ML、LiteRT、ONNX Runtime、NCNN、MNN 怎么选">
+	<meta name="twitter:description" content="五个主流端侧推理框架横向对比：适用平台、量化支持、硬件加速与选型决策树，附 ONNX Runtime Mobile 与 NCNN 的 MobileNetV2 集成代码示例">
+			<meta name="twitter:site" content="@ChenCiki">
+<meta name="application-name" content="编程心语">
+<meta name="apple-mobile-web-app-title" content="编程心语"><meta name="theme-color" content="#ffffff"><meta name="msapplication-TileColor" content="#da532c"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5"><link rel="manifest" href="/site.webmanifest"><link rel="canonical" href="https://www.ithome.me/post/2026/08/11/edge-ai-inference-framework-guide/" /><link rel="prev" href="https://www.ithome.me/post/2026/08/10/github-trending-weekly/" /><link rel="next" href="https://www.ithome.me/post/2026/08/12/edge-ai-knowledge-distillation/" /><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/normalize.css@8.0.1/normalize.min.css"><link rel="stylesheet" href="/css/style.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css"><script type="application/ld+json">
+    {
+        "@context": "http://schema.org",
+        "@type": "BlogPosting",
+        "headline": "端侧推理框架选型实战：Core ML、LiteRT、ONNX Runtime、NCNN、MNN 怎么选",
+        "inLanguage": "zh-CN",
+        "mainEntityOfPage": {
+            "@type": "WebPage",
+            "@id": "https:\/\/www.ithome.me\/post\/2026\/08\/11\/edge-ai-inference-framework-guide\/"
+        },"image": ["https:\/\/www.ithome.me\/cover.png"],"genre": "posts","keywords": "端侧AI, 推理框架, Core ML, ONNX Runtime, NCNN, MNN","wordcount":  1550 ,
+        "url": "https:\/\/www.ithome.me\/post\/2026\/08\/11\/edge-ai-inference-framework-guide\/","datePublished": "2026-08-11T08:00:00+08:00","dateModified": "2026-08-11T03:15:08+08:00","publisher": {
+            "@type": "Organization",
+            "name": "SimonChen","logo": "https:\/\/www.ithome.me\/logo.png"},"author": {
+                "@type": "Person",
+                "name": "Simon"
+            },"description": "五个主流端侧推理框架横向对比：适用平台、量化支持、硬件加速与选型决策树，附 ONNX Runtime Mobile 与 NCNN 的 MobileNetV2 集成代码示例"
+    }
+    </script><script async src="https://www.googletagmanager.com/gtag/js?id=G-H1Q5563VR8"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-H1Q5563VR8', { 'anonymize_ip': true });
+</script></head>
+    <body data-header-desktop="fixed" data-header-mobile="auto"><script type="text/javascript">(window.localStorage && localStorage.getItem('theme') ? localStorage.getItem('theme') === 'dark' : ('auto' === 'auto' ? window.matchMedia('(prefers-color-scheme: dark)').matches : 'auto' === 'dark')) && document.body.setAttribute('theme', 'dark');</script>
+
+        <div id="mask"></div><div class="wrapper"><header class="desktop" id="header-desktop">
+    <div class="header-wrapper">
+        <div class="header-title">
+            <a href="/" title="编程心语">编程心语</a>
+        </div>
+        <div class="menu">
+            <div class="menu-inner"><a class="menu-item" href="/posts/"> 文章 </a><a class="menu-item" href="/categories/"> 分类 </a><a class="menu-item" href="/tags/"> 标签 </a><a class="menu-item" href="/about-me/"> 关于 </a><span class="menu-item delimiter"></span><span class="menu-item search" id="search-desktop">
+                        <input type="text" placeholder="搜索文章..." id="search-input-desktop">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-desktop" title="搜索">
+                            <i class="fas fa-search fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-desktop" title="清空">
+                            <i class="fas fa-times-circle fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-desktop">
+                            <i class="fas fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+                        </span>
+                    </span><a href="javascript:void(0);" class="menu-item theme-switch" title="切换主题">
+                    <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</header><header class="mobile" id="header-mobile">
+    <div class="header-container">
+        <div class="header-wrapper">
+            <div class="header-title">
+                <a href="/" title="编程心语">编程心语</a>
+            </div>
+            <div class="menu-toggle" id="menu-toggle-mobile">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+        <div class="menu" id="menu-mobile"><div class="search-wrapper">
+                    <div class="search mobile" id="search-mobile">
+                        <input type="text" placeholder="搜索文章..." id="search-input-mobile">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-mobile" title="搜索">
+                            <i class="fas fa-search fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-mobile" title="清空">
+                            <i class="fas fa-times-circle fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-mobile">
+                            <i class="fas fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+                        </span>
+                    </div>
+                    <a href="javascript:void(0);" class="search-cancel" id="search-cancel-mobile">
+                        取消
+                    </a>
+                </div><a class="menu-item" href="/posts/" title="">文章</a><a class="menu-item" href="/categories/" title="">分类</a><a class="menu-item" href="/tags/" title="">标签</a><a class="menu-item" href="/about-me/" title="">关于</a><a href="javascript:void(0);" class="menu-item theme-switch" title="切换主题">
+                <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
+            </a></div>
+    </div>
+</header><div class="search-dropdown desktop">
+        <div id="search-dropdown-desktop"></div>
+    </div>
+    <div class="search-dropdown mobile">
+        <div id="search-dropdown-mobile"></div>
+    </div><main class="main">
+                <div class="container"><div class="toc" id="toc-auto">
+            <h2 class="toc-title">目录</h2>
+            <div class="toc-content" id="toc-content-auto"></div>
+        </div><article class="page single"><h1 class="single-title animate__animated animate__flipInX">端侧推理框架选型实战：Core ML、LiteRT、ONNX Runtime、NCNN、MNN 怎么选</h1><div class="post-meta">
+            <div class="post-meta-line"><span class="post-author"><a href="https://www.ithome.me/" title="Author" target="_blank" rel="noopener noreferrer author" class="author"><i class="fas fa-user-circle fa-fw" aria-hidden="true"></i>Simon</a>
+</span>&nbsp;<span class="post-category">收录于 <a href="/categories/ai/"><i class="far fa-folder fa-fw" aria-hidden="true"></i>Ai</a></span></div>
+            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw" aria-hidden="true"></i>&nbsp;<time datetime="2026-08-11">2026-08-11</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden="true"></i>&nbsp;约 1550 字&nbsp;
+                <i class="far fa-clock fa-fw" aria-hidden="true"></i>&nbsp;预计阅读 4 分钟&nbsp;</div>
+        </div><div class="details toc" id="toc-static"  data-kept="true">
+                <div class="details-summary toc-title">
+                    <span>目录</span>
+                    <span><i class="details-icon fas fa-angle-right" aria-hidden="true"></i></span>
+                </div>
+                <div class="details-content toc-content" id="toc-content-static"><nav id="TableOfContents">
+  <ul>
+    <li><a href="#五个框架一句话定位">五个框架一句话定位</a></li>
+    <li><a href="#怎么选一张决策树">怎么选：一张决策树</a></li>
+    <li><a href="#实战同一模型两种框架集成">实战：同一模型，两种框架集成</a>
+      <ul>
+        <li><a href="#路径一pytorch-导出-onnx喂给-onnx-runtime-mobile">路径一：PyTorch 导出 ONNX，喂给 ONNX Runtime Mobile</a></li>
+        <li><a href="#路径二ncnn-极简接入">路径二：NCNN 极简接入</a></li>
+      </ul>
+    </li>
+    <li><a href="#三个高频踩坑">三个高频踩坑</a></li>
+    <li><a href="#结论">结论</a></li>
+  </ul>
+</nav></div>
+            </div><div class="content" id="content"><p>模型训练完只是第一步，把它塞进手机、嵌入式设备、NAS 才是真正的考验。推理框架选错，后面转换报错、性能不达标、平台不支持，全部返工。本文用一张对比表加一个决策树，帮你十分钟定下框架选型。</p>
+<h2 id="五个框架一句话定位">五个框架一句话定位</h2>
+<p>先给结论性对比（star 数为 2026-08 实测 GitHub 数据）：</p>
+<table>
+	<thead>
+			<tr>
+					<th>框架</th>
+					<th>维护方</th>
+					<th>主打平台</th>
+					<th>模型格式</th>
+					<th>量化支持</th>
+					<th>硬件加速</th>
+					<th>GitHub star</th>
+			</tr>
+	</thead>
+	<tbody>
+			<tr>
+					<td>Core ML</td>
+					<td>Apple</td>
+					<td>iOS/iPadOS/macOS</td>
+					<td>.mlpackage</td>
+					<td>FP16/INT8</td>
+					<td>神经网络引擎/GPU/CPU</td>
+					<td>5.4k</td>
+			</tr>
+			<tr>
+					<td>LiteRT（原 TensorFlow Lite）</td>
+					<td>Google</td>
+					<td>Android/iOS/Linux/单片机</td>
+					<td>.tflite</td>
+					<td>FP16/INT8</td>
+					<td>GPU 委托/NNAPI/Hexagon DSP</td>
+					<td>并入 TensorFlow 仓库</td>
+			</tr>
+			<tr>
+					<td>ONNX Runtime Mobile</td>
+					<td>微软</td>
+					<td>全平台</td>
+					<td>.onnx</td>
+					<td>INT8 动态/静态</td>
+					<td>XNNPACK/NNAPI/Core ML 执行提供程序</td>
+					<td>2.1万</td>
+			</tr>
+			<tr>
+					<td>NCNN</td>
+					<td>腾讯</td>
+					<td>Android/iOS/Linux/嵌入式</td>
+					<td>.param + .bin</td>
+					<td>INT8/FP16</td>
+					<td>Vulkan GPU/ARM NEON</td>
+					<td>2.4万</td>
+			</tr>
+			<tr>
+					<td>MNN</td>
+					<td>阿里巴巴</td>
+					<td>全平台</td>
+					<td>.mnn</td>
+					<td>INT8/FP16</td>
+					<td>Metal/Vulkan/OpenCL/NNAPI</td>
+					<td>1.6万</td>
+			</tr>
+	</tbody>
+</table>
+<p>两个容易踩的认知更新：</p>
+<ol>
+<li><strong>TensorFlow Lite 已更名 LiteRT</strong>：2024 年底 Google 官方宣布更名，老文章里的 TFLite 名词仍然通用，但新项目查文档、找依赖要搜 LiteRT，官方仓库也从 tensorflow 移到了独立的 LiteRT 仓库。</li>
+<li><strong>ONNX Runtime 不只是服务端引擎</strong>：它 star 数已超 2.1 万，Mobile 包（onnxruntime-mobile）是跨平台端侧部署的成熟选择，服务端和端侧共用同一份 ONNX 模型，省掉二次转换。</li>
+</ol>
+<h2 id="怎么选一张决策树">怎么选：一张决策树</h2>
+<p>按你的实际约束走，不用把五个框架都研究一遍：</p>
+<ol>
+<li><strong>只做 iOS 生态、不跨平台</strong>：直接 Core ML。Xcode 一键集成，Vision framework 帮你做图像预处理，神经网络引擎（ANE）加速白拿，coremltools 转换链最成熟。</li>
+<li><strong>只做 Android、或 Android 为主</strong>：LiteRT 与 NCNN 二选一。要 Google 官方生态、NNAPI 硬件加速，选 LiteRT；要极致轻量、零第三方依赖、老机器也能流畅跑，选 NCNN（纯 C++ 实现，自带 Vulkan GPU 加速）。</li>
+<li><strong>服务端与端侧共用一套模型</strong>：ONNX Runtime。训练用 PyTorch，导出 ONNX 后服务端用 onnxruntime，端侧用 onnxruntime-mobile，一套模型两端跑。</li>
+<li><strong>跨平台统一 SDK（iOS + Android + Linux 桌面）</strong>：MNN 或 ONNX Runtime Mobile。MNN 的 Metal/Vulkan/OpenCL 三套 GPU 后端覆盖最全，对 PyTorch 导出的模型兼容性好。</li>
+<li><strong>嵌入式 Linux / 树莓派 / 工控机</strong>：NCNN。无第三方依赖、可直接交叉编译，ARM NEON 优化到位，是端侧框架里对低配硬件最友好的一个。</li>
+</ol>
+<h2 id="实战同一模型两种框架集成">实战：同一模型，两种框架集成</h2>
+<p>以 MobileNetV2 图像分类为例（3.4M 参数，FP32 约 13.6MB，INT8 约 3.4MB），演示转换与推理链路。</p>
+<h3 id="路径一pytorch-导出-onnx喂给-onnx-runtime-mobile">路径一：PyTorch 导出 ONNX，喂给 ONNX Runtime Mobile</h3>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">torch</span>
+</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">torchvision.models</span> <span class="kn">import</span> <span class="n">mobilenet_v2</span><span class="p">,</span> <span class="n">MobileNet_V2_Weights</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">model</span> <span class="o">=</span> <span class="n">mobilenet_v2</span><span class="p">(</span><span class="n">weights</span><span class="o">=</span><span class="n">MobileNet_V2_Weights</span><span class="o">.</span><span class="n">IMAGENET1K_V1</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">model</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 动态 batch 维度，方便端侧按需推理</span>
+</span></span><span class="line"><span class="cl"><span class="n">dummy</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">224</span><span class="p">,</span> <span class="mi">224</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">torch</span><span class="o">.</span><span class="n">onnx</span><span class="o">.</span><span class="n">export</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">    <span class="n">model</span><span class="p">,</span> <span class="n">dummy</span><span class="p">,</span> <span class="s2">&#34;mobilenetv2.onnx&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="n">input_names</span><span class="o">=</span><span class="p">[</span><span class="s2">&#34;input&#34;</span><span class="p">],</span> <span class="n">output_names</span><span class="o">=</span><span class="p">[</span><span class="s2">&#34;output&#34;</span><span class="p">],</span>
+</span></span><span class="line"><span class="cl">    <span class="n">dynamic_axes</span><span class="o">=</span><span class="p">{</span><span class="s2">&#34;input&#34;</span><span class="p">:</span> <span class="p">{</span><span class="mi">0</span><span class="p">:</span> <span class="s2">&#34;batch&#34;</span><span class="p">},</span> <span class="s2">&#34;output&#34;</span><span class="p">:</span> <span class="p">{</span><span class="mi">0</span><span class="p">:</span> <span class="s2">&#34;batch&#34;</span><span class="p">}},</span>
+</span></span><span class="line"><span class="cl">    <span class="n">opset_version</span><span class="o">=</span><span class="mi">17</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl"><span class="p">)</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>移动端集成用 C++ API，注意在 SessionOptions 里限制线程数、开启图优化：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="line"><span class="cl"><span class="n">Ort</span><span class="o">::</span><span class="n">Env</span> <span class="n">env</span><span class="p">(</span><span class="n">ORT_LOGGING_LEVEL_WARNING</span><span class="p">,</span> <span class="s">&#34;mobile&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="n">Ort</span><span class="o">::</span><span class="n">SessionOptions</span> <span class="n">opts</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="n">opts</span><span class="p">.</span><span class="n">SetIntraOpNumThreads</span><span class="p">(</span><span class="mi">2</span><span class="p">);</span>   <span class="c1">// 移动端不是线程越多越快
+</span></span></span><span class="line"><span class="cl"><span class="n">opts</span><span class="p">.</span><span class="n">SetGraphOptimizationLevel</span><span class="p">(</span><span class="n">GraphOptimizationLevel</span><span class="o">::</span><span class="n">ORT_ENABLE_ALL</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="n">Ort</span><span class="o">::</span><span class="n">Session</span> <span class="n">session</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="s">&#34;mobilenetv2.onnx&#34;</span><span class="p">,</span> <span class="n">opts</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="c1">// input 为 224x224x3 的 float 张量，直接 Run 即可
+</span></span></span></code></pre></td></tr></table>
+</div>
+</div><h3 id="路径二ncnn-极简接入">路径二：NCNN 极简接入</h3>
+<p>NCNN 用 .param + .bin 两个文件描述模型，PyTorch 模型先导出 ONNX，再用官方工具 onnx2ncnn 转换，推理代码非常直接：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&#34;net.h&#34;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">ncnn</span><span class="o">::</span><span class="n">Net</span> <span class="n">net</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="n">net</span><span class="p">.</span><span class="n">opt</span><span class="p">.</span><span class="n">use_vulkan_compute</span> <span class="o">=</span> <span class="nb">true</span><span class="p">;</span>  <span class="c1">// 设备有 GPU 就开 Vulkan 加速
+</span></span></span><span class="line"><span class="cl"><span class="n">net</span><span class="p">.</span><span class="n">load_param</span><span class="p">(</span><span class="s">&#34;mobilenetv2.param&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="n">net</span><span class="p">.</span><span class="n">load_model</span><span class="p">(</span><span class="s">&#34;mobilenetv2.bin&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">ncnn</span><span class="o">::</span><span class="n">Mat</span> <span class="n">in</span> <span class="o">=</span> <span class="n">ncnn</span><span class="o">::</span><span class="n">Mat</span><span class="o">::</span><span class="n">from_pixels_resize</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">    <span class="n">rgb_data</span><span class="p">,</span> <span class="n">ncnn</span><span class="o">::</span><span class="n">Mat</span><span class="o">::</span><span class="n">PIXEL_RGB</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="n">h</span><span class="p">,</span> <span class="mi">224</span><span class="p">,</span> <span class="mi">224</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="c1">// 归一化后执行 forward，输出 1000 维分类得分
+</span></span></span></code></pre></td></tr></table>
+</div>
+</div><h2 id="三个高频踩坑">三个高频踩坑</h2>
+<ol>
+<li><strong>Core ML 转换失败先查算子</strong>：PyTorch 太新的算子 coremltools 可能不支持。先用 torch.onnx.export 转 ONNX，再经 onnx-coreml 走一遍，报错信息更友好，也方便定位到具体算子。</li>
+<li><strong>神经网络引擎对 INT8 不感冒</strong>：Core ML 的 ANE 对 FP16 优化最好，INT8 在 ANE 上反而可能变慢。想要小体积优先用 FP16，不要无脑 INT8。</li>
+<li><strong>INT8 量化必须做校准</strong>：直接 post-training 量化，分类模型一般掉点不到 1%，前提是给足校准集（几百张有代表性的图），否则个别类别可能崩掉。</li>
+</ol>
+<h2 id="结论">结论</h2>
+<p>选型本质是平台约束优先：Apple 生态无脑 Core ML，Android 生态 LiteRT/NCNN 二选一，跨平台统一模型选 ONNX Runtime 或 MNN。模型侧建议训练时就以 PyTorch 导出 ONNX 作为中间格式，端侧框架随时可换，不被任何一家绑死。下一个实战可以直接复用这套链路，把自家模型快速部署到目标设备上实测延迟和内存。</p>
+</div><div class="post-footer" id="post-footer">
+    <div class="post-info">
+        <div class="post-info-line">
+            <div class="post-info-mod">
+                <span>更新于 2026-08-11&nbsp;<a class="git-hash" href="https://github.com/cikichen/hugo-sync/commit/eae34a11b6b7aa4795d0466c674ad162434add53" target="_blank" title="commit by Hermes Bot(hermes@ithome.me) eae34a11b6b7aa4795d0466c674ad162434add53: Auto: 2026-08-11 - 端侧推理框架选型实战">
+                                    <i class="fas fa-hashtag fa-fw" aria-hidden="true"></i>eae34a11</a></span>
+            </div></div>
+        <div class="post-info-line">
+            <div class="post-info-md"></div>
+            <div class="post-info-share">
+                <span><a href="javascript:void(0);" title="分享到 Twitter" data-sharer="twitter" data-url="https://www.ithome.me/post/2026/08/11/edge-ai-inference-framework-guide/" data-title="端侧推理框架选型实战：Core ML、LiteRT、ONNX Runtime、NCNN、MNN 怎么选" data-via="ChenCiki" data-hashtags="端侧AI,推理框架,Core ML,ONNX Runtime,NCNN,MNN"><i class="fab fa-twitter fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="分享到 Linkedin" data-sharer="linkedin" data-url="https://www.ithome.me/post/2026/08/11/edge-ai-inference-framework-guide/"><i class="fab fa-linkedin fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="分享到 微博" data-sharer="weibo" data-url="https://www.ithome.me/post/2026/08/11/edge-ai-inference-framework-guide/" data-title="端侧推理框架选型实战：Core ML、LiteRT、ONNX Runtime、NCNN、MNN 怎么选" data-ralateuid="xxx"><i class="fab fa-weibo fa-fw" aria-hidden="true"></i></a></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="post-info-more">
+        <section class="post-tags"><i class="fas fa-tags fa-fw" aria-hidden="true"></i>&nbsp;<a href="/tags/%E7%AB%AF%E4%BE%A7ai/">端侧AI</a>,&nbsp;<a href="/tags/%E6%8E%A8%E7%90%86%E6%A1%86%E6%9E%B6/">推理框架</a>,&nbsp;<a href="/tags/core-ml/">Core ML</a>,&nbsp;<a href="/tags/onnx-runtime/">ONNX Runtime</a>,&nbsp;<a href="/tags/ncnn/">NCNN</a>,&nbsp;<a href="/tags/mnn/">MNN</a></section>
+        <section>
+            <span><a href="javascript:void(0);" onclick="window.history.back();">返回</a></span>&nbsp;|&nbsp;<span><a href="/">主页</a></span>
+        </section>
+    </div>
+
+    <div class="post-nav"><a href="/post/2026/08/10/github-trending-weekly/" class="prev" rel="prev" title="GitHub Trending 周报 - 2026-08-10"><i class="fas fa-angle-left fa-fw" aria-hidden="true"></i>GitHub Trending 周报 - 2026-08-10</a>
+            <a href="/post/2026/08/12/edge-ai-knowledge-distillation/" class="next" rel="next" title="端侧模型知识蒸馏实战：把大模型的本事教给手机小模型">端侧模型知识蒸馏实战：把大模型的本事教给手机小模型<i class="fas fa-angle-right fa-fw" aria-hidden="true"></i></a></div>
+</div>
+<div id="comments"><div id="gitalk" class="comment"></div><noscript>
+                Please enable JavaScript to view the comments powered by <a href="https://github.com/gitalk/gitalk"></a>Gitalk</a>.
+            </noscript></div></article></div>
+            </main><footer class="footer">
+        <div class="footer-container"><div class="footer-line" itemscope itemtype="http://schema.org/CreativeWork"><i class="far fa-copyright fa-fw" aria-hidden="true"></i><span itemprop="copyrightYear">2011 - 2026</span><span class="author" itemprop="copyrightHolder">&nbsp;<a href="https://www.ithome.me/" target="_blank">Simon Chen</a></span>&nbsp;|&nbsp;<span class="license"><a rel="license external nofollow noopener noreferrer" href="https://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank">CC BY-NC-ND 4.0</a></span></div>
+        </div>
+    </footer></div>
+
+        <div id="fixed-buttons"><a href="#" id="back-to-top" class="fixed-button" title="回到顶部">
+                <i class="fas fa-arrow-up fa-fw" aria-hidden="true"></i>
+            </a><a href="#" id="view-comments" class="fixed-button" title="查看评论">
+                <i class="fas fa-comment fa-fw" aria-hidden="true"></i>
+            </a>
+        </div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1.7.2/dist/gitalk.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/css/lightgallery-bundle.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/katex.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/copy-tex.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.css"><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/gitalk@1.7.2/dist/gitalk.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/autocomplete.js@0.38.1/dist/autocomplete.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lunr@2.3.9/lunr.min.js"></script><script type="text/javascript" src="/lib/lunr/lunr.stemmer.support.min.js"></script><script type="text/javascript" src="/lib/lunr/lunr.zh.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lazysizes@5.3.1/lazysizes.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/lightgallery.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/plugins/thumbnail/lg-thumbnail.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/plugins/zoom/lg-zoom.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/clipboard@2.0.11/dist/clipboard.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/sharer.js@0.5.1/sharer.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/katex.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/auto-render.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/copy-tex.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/mhchem.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.js"></script><script type="text/javascript">window.config={"code":{"copyTitle":"复制到剪贴板","maxShownLines":50},"comment":{"gitalk":{"admin":["cikichen"],"clientID":"be0f52370ed1285b6c7c","clientSecret":"734a7d8d0ded346ca7a3d565d57de3f8eeb2850b","id":"2026-08-11T00:00:00Z","owner":"cikichen","repo":"gitalk","title":"端侧推理框架选型实战：Core ML、LiteRT、ONNX Runtime、NCNN、MNN 怎么选"}},"cookieconsent":{"content":{"dismiss":"我知道了","link":"了解更多","message":"本网站使用 Cookies 来改善您的浏览体验."},"enable":true,"palette":{"button":{"background":"#f0f0f0"},"popup":{"background":"#1aa3ff"}},"theme":"edgeless"},"lightgallery":true,"math":{"delimiters":[{"display":true,"left":"$$","right":"$$"},{"display":true,"left":"\\[","right":"\\]"},{"display":true,"left":"\\begin{equation}","right":"\\end{equation}"},{"display":true,"left":"\\begin{equation*}","right":"\\end{equation*}"},{"display":true,"left":"\\begin{align}","right":"\\end{align}"},{"display":true,"left":"\\begin{align*}","right":"\\end{align*}"},{"display":true,"left":"\\begin{alignat}","right":"\\end{alignat}"},{"display":true,"left":"\\begin{alignat*}","right":"\\end{alignat*}"},{"display":true,"left":"\\begin{gather}","right":"\\end{gather}"},{"display":true,"left":"\\begin{CD}","right":"\\end{CD}"},{"display":false,"left":"$","right":"$"},{"display":false,"left":"\\(","right":"\\)"}],"strict":false},"search":{"highlightTag":"em","lunrIndexURL":"/index.json","lunrLanguageCode":"zh","lunrSegmentitURL":"/lib/lunr/lunr.segmentit.js","maxResultLength":10,"noResultsFound":"没有找到结果","snippetLength":50,"type":"lunr"}};</script><script type="text/javascript" src="/js/theme.min.js"></script></body>
+</html>

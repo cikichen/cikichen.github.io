@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="robots" content="noodp" />
+        <title>端侧人脸识别实战：MobileFaceNet 特征向量与 1:N 检索落地指南 - 编程心语</title><meta name="Description" content="从 SCRFD 检测到 MobileFaceNet 特征提取，再到 1:1 验证与 1:N 检索：端侧人脸识别全流程代码实战，附 INT8 量化方法与模型体积延迟数据"><meta property="og:url" content="https://www.ithome.me/post/2026/08/13/on-device-ai-face-recognition/">
+	<meta property="og:site_name" content="编程心语">
+	<meta property="og:title" content="端侧人脸识别实战：MobileFaceNet 特征向量与 1:N 检索落地指南">
+	<meta property="og:description" content="从 SCRFD 检测到 MobileFaceNet 特征提取，再到 1:1 验证与 1:N 检索：端侧人脸识别全流程代码实战，附 INT8 量化方法与模型体积延迟数据">
+	<meta property="og:locale" content="zh_CN">
+	<meta property="og:type" content="article">
+		<meta property="article:section" content="posts">
+		<meta property="article:published_time" content="2026-08-13T08:00:00+08:00">
+		<meta property="article:modified_time" content="2026-08-13T03:04:06+08:00">
+		<meta property="article:tag" content="端侧AI">
+		<meta property="article:tag" content="人脸识别">
+		<meta property="article:tag" content="度量学习">
+		<meta property="article:tag" content="ONNX Runtime">
+		<meta property="article:tag" content="MobileFaceNet">
+		<meta property="article:tag" content="模型量化">
+
+	<meta name="twitter:card" content="summary">
+	<meta name="twitter:title" content="端侧人脸识别实战：MobileFaceNet 特征向量与 1:N 检索落地指南">
+	<meta name="twitter:description" content="从 SCRFD 检测到 MobileFaceNet 特征提取，再到 1:1 验证与 1:N 检索：端侧人脸识别全流程代码实战，附 INT8 量化方法与模型体积延迟数据">
+			<meta name="twitter:site" content="@ChenCiki">
+<meta name="application-name" content="编程心语">
+<meta name="apple-mobile-web-app-title" content="编程心语"><meta name="theme-color" content="#ffffff"><meta name="msapplication-TileColor" content="#da532c"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5"><link rel="manifest" href="/site.webmanifest"><link rel="canonical" href="https://www.ithome.me/post/2026/08/13/on-device-ai-face-recognition/" /><link rel="prev" href="https://www.ithome.me/post/2026/08/12/edge-ai-knowledge-distillation/" /><link rel="next" href="https://www.ithome.me/post/2026/08/17/edge-vlm-vision-model-guide/" /><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/normalize.css@8.0.1/normalize.min.css"><link rel="stylesheet" href="/css/style.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css"><script type="application/ld+json">
+    {
+        "@context": "http://schema.org",
+        "@type": "BlogPosting",
+        "headline": "端侧人脸识别实战：MobileFaceNet 特征向量与 1:N 检索落地指南",
+        "inLanguage": "zh-CN",
+        "mainEntityOfPage": {
+            "@type": "WebPage",
+            "@id": "https:\/\/www.ithome.me\/post\/2026\/08\/13\/on-device-ai-face-recognition\/"
+        },"image": ["https:\/\/www.ithome.me\/cover.png"],"genre": "posts","keywords": "端侧AI, 人脸识别, 度量学习, ONNX Runtime, MobileFaceNet, 模型量化","wordcount":  1632 ,
+        "url": "https:\/\/www.ithome.me\/post\/2026\/08\/13\/on-device-ai-face-recognition\/","datePublished": "2026-08-13T08:00:00+08:00","dateModified": "2026-08-13T03:04:06+08:00","publisher": {
+            "@type": "Organization",
+            "name": "SimonChen","logo": "https:\/\/www.ithome.me\/logo.png"},"author": {
+                "@type": "Person",
+                "name": "Simon"
+            },"description": "从 SCRFD 检测到 MobileFaceNet 特征提取，再到 1:1 验证与 1:N 检索：端侧人脸识别全流程代码实战，附 INT8 量化方法与模型体积延迟数据"
+    }
+    </script><script async src="https://www.googletagmanager.com/gtag/js?id=G-H1Q5563VR8"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-H1Q5563VR8', { 'anonymize_ip': true });
+</script></head>
+    <body data-header-desktop="fixed" data-header-mobile="auto"><script type="text/javascript">(window.localStorage && localStorage.getItem('theme') ? localStorage.getItem('theme') === 'dark' : ('auto' === 'auto' ? window.matchMedia('(prefers-color-scheme: dark)').matches : 'auto' === 'dark')) && document.body.setAttribute('theme', 'dark');</script>
+
+        <div id="mask"></div><div class="wrapper"><header class="desktop" id="header-desktop">
+    <div class="header-wrapper">
+        <div class="header-title">
+            <a href="/" title="编程心语">编程心语</a>
+        </div>
+        <div class="menu">
+            <div class="menu-inner"><a class="menu-item" href="/posts/"> 文章 </a><a class="menu-item" href="/categories/"> 分类 </a><a class="menu-item" href="/tags/"> 标签 </a><a class="menu-item" href="/about-me/"> 关于 </a><span class="menu-item delimiter"></span><span class="menu-item search" id="search-desktop">
+                        <input type="text" placeholder="搜索文章..." id="search-input-desktop">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-desktop" title="搜索">
+                            <i class="fas fa-search fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-desktop" title="清空">
+                            <i class="fas fa-times-circle fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-desktop">
+                            <i class="fas fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+                        </span>
+                    </span><a href="javascript:void(0);" class="menu-item theme-switch" title="切换主题">
+                    <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</header><header class="mobile" id="header-mobile">
+    <div class="header-container">
+        <div class="header-wrapper">
+            <div class="header-title">
+                <a href="/" title="编程心语">编程心语</a>
+            </div>
+            <div class="menu-toggle" id="menu-toggle-mobile">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+        <div class="menu" id="menu-mobile"><div class="search-wrapper">
+                    <div class="search mobile" id="search-mobile">
+                        <input type="text" placeholder="搜索文章..." id="search-input-mobile">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-mobile" title="搜索">
+                            <i class="fas fa-search fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-mobile" title="清空">
+                            <i class="fas fa-times-circle fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-mobile">
+                            <i class="fas fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+                        </span>
+                    </div>
+                    <a href="javascript:void(0);" class="search-cancel" id="search-cancel-mobile">
+                        取消
+                    </a>
+                </div><a class="menu-item" href="/posts/" title="">文章</a><a class="menu-item" href="/categories/" title="">分类</a><a class="menu-item" href="/tags/" title="">标签</a><a class="menu-item" href="/about-me/" title="">关于</a><a href="javascript:void(0);" class="menu-item theme-switch" title="切换主题">
+                <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
+            </a></div>
+    </div>
+</header><div class="search-dropdown desktop">
+        <div id="search-dropdown-desktop"></div>
+    </div>
+    <div class="search-dropdown mobile">
+        <div id="search-dropdown-mobile"></div>
+    </div><main class="main">
+                <div class="container"><div class="toc" id="toc-auto">
+            <h2 class="toc-title">目录</h2>
+            <div class="toc-content" id="toc-content-auto"></div>
+        </div><article class="page single"><h1 class="single-title animate__animated animate__flipInX">端侧人脸识别实战：MobileFaceNet 特征向量与 1:N 检索落地指南</h1><div class="post-meta">
+            <div class="post-meta-line"><span class="post-author"><a href="https://www.ithome.me/" title="Author" target="_blank" rel="noopener noreferrer author" class="author"><i class="fas fa-user-circle fa-fw" aria-hidden="true"></i>Simon</a>
+</span>&nbsp;<span class="post-category">收录于 <a href="/categories/ai/"><i class="far fa-folder fa-fw" aria-hidden="true"></i>Ai</a></span></div>
+            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw" aria-hidden="true"></i>&nbsp;<time datetime="2026-08-13">2026-08-13</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden="true"></i>&nbsp;约 1632 字&nbsp;
+                <i class="far fa-clock fa-fw" aria-hidden="true"></i>&nbsp;预计阅读 4 分钟&nbsp;</div>
+        </div><div class="details toc" id="toc-static"  data-kept="true">
+                <div class="details-summary toc-title">
+                    <span>目录</span>
+                    <span><i class="details-icon fas fa-angle-right" aria-hidden="true"></i></span>
+                </div>
+                <div class="details-content toc-content" id="toc-content-static"><nav id="TableOfContents">
+  <ul>
+    <li><a href="#为什么人脸识别特别适合端侧">为什么人脸识别特别适合端侧</a></li>
+    <li><a href="#开源方案选型">开源方案选型</a></li>
+    <li><a href="#特征提取与-11-验证">特征提取与 1:1 验证</a></li>
+    <li><a href="#1n-检索特征库加最近邻">1:N 检索：特征库加最近邻</a></li>
+    <li><a href="#int8-量化体积减-34">INT8 量化：体积减 3/4</a></li>
+    <li><a href="#踩坑清单">踩坑清单</a></li>
+    <li><a href="#小结">小结</a></li>
+  </ul>
+</nav></div>
+            </div><div class="content" id="content"><h2 id="为什么人脸识别特别适合端侧">为什么人脸识别特别适合端侧</h2>
+<p>门禁考勤、相册聚类、刷脸支付，人脸识别是端侧视觉里商业价值最高的任务之一。相比云服务，端侧方案把照片留在设备里，离线可用，单次推理成本为零，隐私合规压力也小——这在 2026 年越来越重要。</p>
+<p>但和图像分类不同，人脸识别本质是<strong>度量学习</strong>：模型不输出&quot;这是谁&quot;，而是把一张脸编码成 512 维特征向量，用向量距离判断&quot;是不是同一个人&quot;。这个设计带来一个巨大优势：<strong>新增人员不需要重训模型</strong>，往特征库里加一条向量记录即可，非常适合人员变动的业务。</p>
+<p>一条完整的人脸识别链路分四步：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">检测(SCRFD) → 5点对齐 → 特征提取(MobileFaceNet) → 比对(余弦相似度)
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h2 id="开源方案选型">开源方案选型</h2>
+<table>
+	<thead>
+			<tr>
+					<th>环节</th>
+					<th>开源项目</th>
+					<th>适用说明</th>
+			</tr>
+	</thead>
+	<tbody>
+			<tr>
+					<td>检测+对齐+特征提取</td>
+					<td>insightface（deepinsight/insightface）</td>
+					<td>一站式，官方导出 ONNX；buffalo_l 包内含 SCRFD-10G 检测与 w600k_mbf 识别模型</td>
+			</tr>
+			<tr>
+					<td>端侧推理</td>
+					<td>onnxruntime-mobile / LiteRT</td>
+					<td>跨平台，支持 INT8 量化，手机 CPU 跑得动</td>
+			</tr>
+			<tr>
+					<td>1:N 特征检索</td>
+					<td>tinyfaiss / sqlite-vec</td>
+					<td>万级特征库用 FAISS 系；小库直接用 numpy 暴力搜索即可</td>
+			</tr>
+	</tbody>
+</table>
+<p>buffalo_l 里的识别模型 w600k_mbf 是 MobileFaceNet 的 512 维版本：参数量约 1.1M，FP32 ONNX 约 4.3MB，INT8 量化后约 1.2MB，112x112 输入在手机 CPU 上单次推理 10-30ms（官方典型值）。检测器 SCRFD-10G 约 5MB，单帧 20-50ms。整套链路在主流手机上能做到 30fps 实时。</p>
+<h2 id="特征提取与-11-验证">特征提取与 1:1 验证</h2>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">onnxruntime</span> <span class="k">as</span> <span class="nn">ort</span>
+</span></span><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># insightface 官方导出的 MobileFaceNet ONNX 模型</span>
+</span></span><span class="line"><span class="cl"><span class="n">sess</span> <span class="o">=</span> <span class="n">ort</span><span class="o">.</span><span class="n">InferenceSession</span><span class="p">(</span><span class="s2">&#34;w600k_mbf.onnx&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                            <span class="n">providers</span><span class="o">=</span><span class="p">[</span><span class="s2">&#34;CPUExecutionProvider&#34;</span><span class="p">])</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">embed</span><span class="p">(</span><span class="n">face_img</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">    <span class="c1"># face_img: 已按 5 点关键点对齐的 112x112 RGB 图，值域 [0,1]</span>
+</span></span><span class="line"><span class="cl">    <span class="n">inp</span> <span class="o">=</span> <span class="n">face_img</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="kc">None</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="n">feat</span> <span class="o">=</span> <span class="n">sess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="p">{</span><span class="s2">&#34;input.1&#34;</span><span class="p">:</span> <span class="n">inp</span><span class="p">})[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">feat</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">feat</span><span class="p">)</span>   <span class="c1"># L2 归一化</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 1:1 验证：向量已归一化，余弦相似度就是点积</span>
+</span></span><span class="line"><span class="cl"><span class="n">sim</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">embed</span><span class="p">(</span><span class="n">img_a</span><span class="p">),</span> <span class="n">embed</span><span class="p">(</span><span class="n">img_b</span><span class="p">)))</span>
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="s2">&#34;相似度:&#34;</span><span class="p">,</span> <span class="n">sim</span><span class="p">,</span> <span class="s2">&#34;-&gt; 同一人&#34;</span> <span class="k">if</span> <span class="n">sim</span> <span class="o">&gt;</span> <span class="mf">0.5</span> <span class="k">else</span> <span class="s2">&#34;-&gt; 不同人&#34;</span><span class="p">)</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>阈值 0.5 只是经验起点：门禁、支付等安全场景要往高调（0.6 以上，宁拒勿误）；相册聚类等体验场景往低调（0.4 左右，宁误勿拒）。上线前用自己数据集的真负样本对扫一遍 ROC 曲线再定阈值，别拍脑袋。</p>
+<h2 id="1n-检索特征库加最近邻">1:N 检索：特征库加最近邻</h2>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 注册：每人 3-5 张不同角度/光照的图，特征存库（可落盘 sqlite/faiss）</span>
+</span></span><span class="line"><span class="cl"><span class="n">gallery</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&#34;alice&#34;</span><span class="p">:</span> <span class="n">embed</span><span class="p">(</span><span class="n">alice_img</span><span class="p">),</span> <span class="s2">&#34;bob&#34;</span><span class="p">:</span> <span class="n">embed</span><span class="p">(</span><span class="n">bob_img</span><span class="p">)}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">search</span><span class="p">(</span><span class="n">query_img</span><span class="p">,</span> <span class="n">top_k</span><span class="o">=</span><span class="mi">3</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">    <span class="n">q</span> <span class="o">=</span> <span class="n">embed</span><span class="p">(</span><span class="n">query_img</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="n">scores</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(((</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">q</span><span class="p">,</span> <span class="n">v</span><span class="p">),</span> <span class="n">name</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">                     <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">gallery</span><span class="o">.</span><span class="n">items</span><span class="p">()),</span>
+</span></span><span class="line"><span class="cl">                    <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span><span class="p">)[:</span><span class="n">top_k</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="p">[(</span><span class="n">name</span><span class="p">,</span> <span class="nb">round</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="mi">4</span><span class="p">))</span> <span class="k">for</span> <span class="n">s</span><span class="p">,</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">scores</span><span class="p">]</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>特征库用向量数据库（sqlite-vec、tinyfaiss）持久化后，新员工入职只需一条 INSERT，这就是度量学习相对分类模型的核心优势。</p>
+<h2 id="int8-量化体积减-34">INT8 量化：体积减 3/4</h2>
+<p>量化前先准备代表数据集（几十到几百张对齐后的人脸图即可），用 onnxruntime 做静态量化：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">onnxruntime.quantization</span> <span class="kn">import</span> <span class="p">(</span><span class="n">quantize_static</span><span class="p">,</span> <span class="n">QuantType</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                                      <span class="n">CalibrationMethod</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                                      <span class="n">CalibrationDataReader</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">class</span> <span class="nc">CalibReader</span><span class="p">(</span><span class="n">CalibrationDataReader</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">images</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">        <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="p">[{</span><span class="s2">&#34;input.1&#34;</span><span class="p">:</span> <span class="n">img</span><span class="p">}</span> <span class="k">for</span> <span class="n">img</span> <span class="ow">in</span> <span class="n">images</span><span class="p">]</span>  <span class="c1"># 已归一化</span>
+</span></span><span class="line"><span class="cl">        <span class="bp">self</span><span class="o">.</span><span class="n">idx</span> <span class="o">=</span> <span class="mi">0</span>
+</span></span><span class="line"><span class="cl">    <span class="k">def</span> <span class="nf">get_next</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">idx</span> <span class="o">&gt;=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">            <span class="k">return</span> <span class="kc">None</span>
+</span></span><span class="line"><span class="cl">        <span class="n">d</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">idx</span><span class="p">];</span> <span class="bp">self</span><span class="o">.</span><span class="n">idx</span> <span class="o">+=</span> <span class="mi">1</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="n">d</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">quantize_static</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">    <span class="s2">&#34;w600k_mbf.onnx&#34;</span><span class="p">,</span> <span class="s2">&#34;w600k_mbf_int8.onnx&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="n">CalibReader</span><span class="p">(</span><span class="n">calib_images</span><span class="p">),</span>
+</span></span><span class="line"><span class="cl">    <span class="n">per_channel</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">weight_type</span><span class="o">=</span><span class="n">QuantType</span><span class="o">.</span><span class="n">QInt8</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="n">calibration_method</span><span class="o">=</span><span class="n">CalibrationMethod</span><span class="o">.</span><span class="n">MinMax</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl"><span class="p">)</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>INT8 后体积从 4.3MB 降到 1.2MB，精度损失通常在 1-2%。但量化会轻微改变特征空间分布，<strong>必须用量化后的模型重新生成特征库</strong>，否则相似度整体偏移，原来的阈值全部失效——这是最容易踩的坑。</p>
+<h2 id="踩坑清单">踩坑清单</h2>
+<ol>
+<li><strong>活体检测不能省</strong>：照片、视频攻击是端侧人脸最大风险。简单方案是随机动作指令（眨眼、摇头），或双目深度图，别让模型裸奔。</li>
+<li><strong>对齐质量决定上限</strong>：特征模型再准，5 点关键点对齐歪了也白搭。insightface 的检测模型会输出关键点，取 <code>face.embedding</code> 前确保走完整条 pipeline，不要自己随便裁图。</li>
+<li><strong>小样本注册</strong>：每人注册 3-5 张不同角度、光照的图，特征取平均或存多份，1:N 命中率明显提升。</li>
+<li><strong>NPU 算子兼容</strong>：INT8 模型里部分算子组合（Resize、Transpose 变体）可能不被 NPU 支持，先跑支持性检查，不行就回退 CPU 或混合精度。</li>
+<li><strong>特征库版本管理</strong>：换模型版本、换量化位宽后必须整库重建，新旧特征向量不能混用。</li>
+</ol>
+<h2 id="小结">小结</h2>
+<p>端侧人脸识别的技术栈已经非常成熟：insightface 负责检测与特征提取，ONNX Runtime/LiteRT 负责推理，INT8 量化把体积和延迟压到手机可接受范围。真正拉开差距的是工程细节——阈值调参、活体检测、特征库管理。把上面五步跑通，你就拥有了一套可完全离线运行的人脸识别底座，门禁、考勤、相册分类都可以直接往上搭。</p>
+</div><div class="post-footer" id="post-footer">
+    <div class="post-info">
+        <div class="post-info-line">
+            <div class="post-info-mod">
+                <span>更新于 2026-08-13&nbsp;<a class="git-hash" href="https://github.com/cikichen/hugo-sync/commit/905672684ad19d4d8724b1c7dd876070a4f78cf9" target="_blank" title="commit by Hermes Bot(hermes@ithome.me) 905672684ad19d4d8724b1c7dd876070a4f78cf9: Auto: 2026-08-13 端侧人脸识别实战">
+                                    <i class="fas fa-hashtag fa-fw" aria-hidden="true"></i>90567268</a></span>
+            </div></div>
+        <div class="post-info-line">
+            <div class="post-info-md"></div>
+            <div class="post-info-share">
+                <span><a href="javascript:void(0);" title="分享到 Twitter" data-sharer="twitter" data-url="https://www.ithome.me/post/2026/08/13/on-device-ai-face-recognition/" data-title="端侧人脸识别实战：MobileFaceNet 特征向量与 1:N 检索落地指南" data-via="ChenCiki" data-hashtags="端侧AI,人脸识别,度量学习,ONNX Runtime,MobileFaceNet,模型量化"><i class="fab fa-twitter fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="分享到 Linkedin" data-sharer="linkedin" data-url="https://www.ithome.me/post/2026/08/13/on-device-ai-face-recognition/"><i class="fab fa-linkedin fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="分享到 微博" data-sharer="weibo" data-url="https://www.ithome.me/post/2026/08/13/on-device-ai-face-recognition/" data-title="端侧人脸识别实战：MobileFaceNet 特征向量与 1:N 检索落地指南" data-ralateuid="xxx"><i class="fab fa-weibo fa-fw" aria-hidden="true"></i></a></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="post-info-more">
+        <section class="post-tags"><i class="fas fa-tags fa-fw" aria-hidden="true"></i>&nbsp;<a href="/tags/%E7%AB%AF%E4%BE%A7ai/">端侧AI</a>,&nbsp;<a href="/tags/%E4%BA%BA%E8%84%B8%E8%AF%86%E5%88%AB/">人脸识别</a>,&nbsp;<a href="/tags/%E5%BA%A6%E9%87%8F%E5%AD%A6%E4%B9%A0/">度量学习</a>,&nbsp;<a href="/tags/onnx-runtime/">ONNX Runtime</a>,&nbsp;<a href="/tags/mobilefacenet/">MobileFaceNet</a>,&nbsp;<a href="/tags/%E6%A8%A1%E5%9E%8B%E9%87%8F%E5%8C%96/">模型量化</a></section>
+        <section>
+            <span><a href="javascript:void(0);" onclick="window.history.back();">返回</a></span>&nbsp;|&nbsp;<span><a href="/">主页</a></span>
+        </section>
+    </div>
+
+    <div class="post-nav"><a href="/post/2026/08/12/edge-ai-knowledge-distillation/" class="prev" rel="prev" title="端侧模型知识蒸馏实战：把大模型的本事教给手机小模型"><i class="fas fa-angle-left fa-fw" aria-hidden="true"></i>端侧模型知识蒸馏实战：把大模型的本事教给手机小模型</a>
+            <a href="/post/2026/08/17/edge-vlm-vision-model-guide/" class="next" rel="next" title="端侧视觉语言模型实战：用 MiniCPM-V 4.6 给 App 装上看图能力">端侧视觉语言模型实战：用 MiniCPM-V 4.6 给 App 装上看图能力<i class="fas fa-angle-right fa-fw" aria-hidden="true"></i></a></div>
+</div>
+<div id="comments"><div id="gitalk" class="comment"></div><noscript>
+                Please enable JavaScript to view the comments powered by <a href="https://github.com/gitalk/gitalk"></a>Gitalk</a>.
+            </noscript></div></article></div>
+            </main><footer class="footer">
+        <div class="footer-container"><div class="footer-line" itemscope itemtype="http://schema.org/CreativeWork"><i class="far fa-copyright fa-fw" aria-hidden="true"></i><span itemprop="copyrightYear">2011 - 2026</span><span class="author" itemprop="copyrightHolder">&nbsp;<a href="https://www.ithome.me/" target="_blank">Simon Chen</a></span>&nbsp;|&nbsp;<span class="license"><a rel="license external nofollow noopener noreferrer" href="https://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank">CC BY-NC-ND 4.0</a></span></div>
+        </div>
+    </footer></div>
+
+        <div id="fixed-buttons"><a href="#" id="back-to-top" class="fixed-button" title="回到顶部">
+                <i class="fas fa-arrow-up fa-fw" aria-hidden="true"></i>
+            </a><a href="#" id="view-comments" class="fixed-button" title="查看评论">
+                <i class="fas fa-comment fa-fw" aria-hidden="true"></i>
+            </a>
+        </div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1.7.2/dist/gitalk.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/css/lightgallery-bundle.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/katex.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/copy-tex.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.css"><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/gitalk@1.7.2/dist/gitalk.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/autocomplete.js@0.38.1/dist/autocomplete.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lunr@2.3.9/lunr.min.js"></script><script type="text/javascript" src="/lib/lunr/lunr.stemmer.support.min.js"></script><script type="text/javascript" src="/lib/lunr/lunr.zh.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lazysizes@5.3.1/lazysizes.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/lightgallery.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/plugins/thumbnail/lg-thumbnail.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/plugins/zoom/lg-zoom.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/clipboard@2.0.11/dist/clipboard.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/sharer.js@0.5.1/sharer.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/katex.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/auto-render.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/copy-tex.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/mhchem.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.js"></script><script type="text/javascript">window.config={"code":{"copyTitle":"复制到剪贴板","maxShownLines":50},"comment":{"gitalk":{"admin":["cikichen"],"clientID":"be0f52370ed1285b6c7c","clientSecret":"734a7d8d0ded346ca7a3d565d57de3f8eeb2850b","id":"2026-08-13T00:00:00Z","owner":"cikichen","repo":"gitalk","title":"端侧人脸识别实战：MobileFaceNet 特征向量与 1:N 检索落地指南"}},"cookieconsent":{"content":{"dismiss":"我知道了","link":"了解更多","message":"本网站使用 Cookies 来改善您的浏览体验."},"enable":true,"palette":{"button":{"background":"#f0f0f0"},"popup":{"background":"#1aa3ff"}},"theme":"edgeless"},"lightgallery":true,"math":{"delimiters":[{"display":true,"left":"$$","right":"$$"},{"display":true,"left":"\\[","right":"\\]"},{"display":true,"left":"\\begin{equation}","right":"\\end{equation}"},{"display":true,"left":"\\begin{equation*}","right":"\\end{equation*}"},{"display":true,"left":"\\begin{align}","right":"\\end{align}"},{"display":true,"left":"\\begin{align*}","right":"\\end{align*}"},{"display":true,"left":"\\begin{alignat}","right":"\\end{alignat}"},{"display":true,"left":"\\begin{alignat*}","right":"\\end{alignat*}"},{"display":true,"left":"\\begin{gather}","right":"\\end{gather}"},{"display":true,"left":"\\begin{CD}","right":"\\end{CD}"},{"display":false,"left":"$","right":"$"},{"display":false,"left":"\\(","right":"\\)"}],"strict":false},"search":{"highlightTag":"em","lunrIndexURL":"/index.json","lunrLanguageCode":"zh","lunrSegmentitURL":"/lib/lunr/lunr.segmentit.js","maxResultLength":10,"noResultsFound":"没有找到结果","snippetLength":50,"type":"lunr"}};</script><script type="text/javascript" src="/js/theme.min.js"></script></body>
+</html>

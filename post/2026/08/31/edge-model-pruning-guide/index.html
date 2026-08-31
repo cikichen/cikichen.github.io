@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="robots" content="noodp" />
+        <title>端侧模型剪枝实战：剪掉不重要的参数，让模型更小更快 - 编程心语</title><meta name="Description" content="技术博客，Android，iOS，Html5, Java, Kotlin, 后端, Flutter, Python"><meta property="og:url" content="https://www.ithome.me/post/2026/08/31/edge-model-pruning-guide/">
+	<meta property="og:site_name" content="编程心语">
+	<meta property="og:title" content="端侧模型剪枝实战：剪掉不重要的参数，让模型更小更快">
+	<meta property="og:description" content="压缩三件套，还差最后一块拼图 前两周我们聊了端侧模型的量化（INT8/INT4 把权重从 4 字节压到 0.5 字节）和知识蒸馏（小模型学大模型的输出）。今天补上三件套的最后一块：剪枝（Pruning），把权重矩阵里不重要的参数直接置零。">
+	<meta property="og:locale" content="zh_CN">
+	<meta property="og:type" content="article">
+		<meta property="article:section" content="posts">
+		<meta property="article:published_time" content="2026-08-31T08:00:00+08:00">
+		<meta property="article:modified_time" content="2026-08-31T08:00:00+08:00">
+		<meta property="article:tag" content="端侧AI">
+		<meta property="article:tag" content="剪枝">
+		<meta property="article:tag" content="模型压缩">
+		<meta property="article:tag" content="Torchao">
+		<meta property="article:tag" content="Coremltools">
+
+	<meta name="twitter:card" content="summary">
+	<meta name="twitter:title" content="端侧模型剪枝实战：剪掉不重要的参数，让模型更小更快">
+	<meta name="twitter:description" content="压缩三件套，还差最后一块拼图 前两周我们聊了端侧模型的量化（INT8/INT4 把权重从 4 字节压到 0.5 字节）和知识蒸馏（小模型学大模型的输出）。今天补上三件套的最后一块：剪枝（Pruning），把权重矩阵里不重要的参数直接置零。">
+			<meta name="twitter:site" content="@ChenCiki">
+<meta name="application-name" content="编程心语">
+<meta name="apple-mobile-web-app-title" content="编程心语"><meta name="theme-color" content="#ffffff"><meta name="msapplication-TileColor" content="#da532c"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5"><link rel="manifest" href="/site.webmanifest"><link rel="canonical" href="https://www.ithome.me/post/2026/08/31/edge-model-pruning-guide/" /><link rel="prev" href="https://www.ithome.me/post/2026/08/24/github-trending-weekly/" /><link rel="next" href="https://www.ithome.me/post/2026/08/31/github-trending-weekly/" /><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/normalize.css@8.0.1/normalize.min.css"><link rel="stylesheet" href="/css/style.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css"><script type="application/ld+json">
+    {
+        "@context": "http://schema.org",
+        "@type": "BlogPosting",
+        "headline": "端侧模型剪枝实战：剪掉不重要的参数，让模型更小更快",
+        "inLanguage": "zh-CN",
+        "mainEntityOfPage": {
+            "@type": "WebPage",
+            "@id": "https:\/\/www.ithome.me\/post\/2026\/08\/31\/edge-model-pruning-guide\/"
+        },"image": ["https:\/\/www.ithome.me\/cover.png"],"genre": "posts","keywords": "端侧AI, 剪枝, 模型压缩, torchao, coremltools","wordcount":  1622 ,
+        "url": "https:\/\/www.ithome.me\/post\/2026\/08\/31\/edge-model-pruning-guide\/","datePublished": "2026-08-31T08:00:00+08:00","dateModified": "2026-08-31T08:00:00+08:00","publisher": {
+            "@type": "Organization",
+            "name": "SimonChen","logo": "https:\/\/www.ithome.me\/logo.png"},"author": {
+                "@type": "Person",
+                "name": "Simon"
+            },"description": ""
+    }
+    </script><script async src="https://www.googletagmanager.com/gtag/js?id=G-H1Q5563VR8"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-H1Q5563VR8', { 'anonymize_ip': true });
+</script></head>
+    <body data-header-desktop="fixed" data-header-mobile="auto"><script type="text/javascript">(window.localStorage && localStorage.getItem('theme') ? localStorage.getItem('theme') === 'dark' : ('auto' === 'auto' ? window.matchMedia('(prefers-color-scheme: dark)').matches : 'auto' === 'dark')) && document.body.setAttribute('theme', 'dark');</script>
+
+        <div id="mask"></div><div class="wrapper"><header class="desktop" id="header-desktop">
+    <div class="header-wrapper">
+        <div class="header-title">
+            <a href="/" title="编程心语">编程心语</a>
+        </div>
+        <div class="menu">
+            <div class="menu-inner"><a class="menu-item" href="/posts/"> 文章 </a><a class="menu-item" href="/categories/"> 分类 </a><a class="menu-item" href="/tags/"> 标签 </a><a class="menu-item" href="/about-me/"> 关于 </a><span class="menu-item delimiter"></span><span class="menu-item search" id="search-desktop">
+                        <input type="text" placeholder="搜索文章..." id="search-input-desktop">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-desktop" title="搜索">
+                            <i class="fas fa-search fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-desktop" title="清空">
+                            <i class="fas fa-times-circle fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-desktop">
+                            <i class="fas fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+                        </span>
+                    </span><a href="javascript:void(0);" class="menu-item theme-switch" title="切换主题">
+                    <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</header><header class="mobile" id="header-mobile">
+    <div class="header-container">
+        <div class="header-wrapper">
+            <div class="header-title">
+                <a href="/" title="编程心语">编程心语</a>
+            </div>
+            <div class="menu-toggle" id="menu-toggle-mobile">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+        <div class="menu" id="menu-mobile"><div class="search-wrapper">
+                    <div class="search mobile" id="search-mobile">
+                        <input type="text" placeholder="搜索文章..." id="search-input-mobile">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-mobile" title="搜索">
+                            <i class="fas fa-search fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-mobile" title="清空">
+                            <i class="fas fa-times-circle fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-mobile">
+                            <i class="fas fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+                        </span>
+                    </div>
+                    <a href="javascript:void(0);" class="search-cancel" id="search-cancel-mobile">
+                        取消
+                    </a>
+                </div><a class="menu-item" href="/posts/" title="">文章</a><a class="menu-item" href="/categories/" title="">分类</a><a class="menu-item" href="/tags/" title="">标签</a><a class="menu-item" href="/about-me/" title="">关于</a><a href="javascript:void(0);" class="menu-item theme-switch" title="切换主题">
+                <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
+            </a></div>
+    </div>
+</header><div class="search-dropdown desktop">
+        <div id="search-dropdown-desktop"></div>
+    </div>
+    <div class="search-dropdown mobile">
+        <div id="search-dropdown-mobile"></div>
+    </div><main class="main">
+                <div class="container"><div class="toc" id="toc-auto">
+            <h2 class="toc-title">目录</h2>
+            <div class="toc-content" id="toc-content-auto"></div>
+        </div><article class="page single"><h1 class="single-title animate__animated animate__flipInX">端侧模型剪枝实战：剪掉不重要的参数，让模型更小更快</h1><div class="post-meta">
+            <div class="post-meta-line"><span class="post-author"><a href="https://www.ithome.me/" title="Author" target="_blank" rel="noopener noreferrer author" class="author"><i class="fas fa-user-circle fa-fw" aria-hidden="true"></i>Simon</a>
+</span>&nbsp;<span class="post-category">收录于 <a href="/categories/ai/"><i class="far fa-folder fa-fw" aria-hidden="true"></i>Ai</a></span></div>
+            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw" aria-hidden="true"></i>&nbsp;<time datetime="2026-08-31">2026-08-31</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden="true"></i>&nbsp;约 1622 字&nbsp;
+                <i class="far fa-clock fa-fw" aria-hidden="true"></i>&nbsp;预计阅读 4 分钟&nbsp;</div>
+        </div><div class="details toc" id="toc-static"  data-kept="true">
+                <div class="details-summary toc-title">
+                    <span>目录</span>
+                    <span><i class="details-icon fas fa-angle-right" aria-hidden="true"></i></span>
+                </div>
+                <div class="details-content toc-content" id="toc-content-static"><nav id="TableOfContents">
+  <ul>
+    <li><a href="#压缩三件套还差最后一块拼图">压缩三件套，还差最后一块拼图</a></li>
+    <li><a href="#三种剪枝粒度先搞清楚再动手">三种剪枝粒度，先搞清楚再动手</a></li>
+    <li><a href="#工具怎么选截至-2026-08-31-验证">工具怎么选（截至 2026-08-31 验证）</a></li>
+    <li><a href="#三行代码起步pytorch-内置剪枝">三行代码起步：PyTorch 内置剪枝</a></li>
+    <li><a href="#进阶一torchao-做-24-半结构化稀疏">进阶一：torchao 做 2:4 半结构化稀疏</a></li>
+    <li><a href="#进阶二coremltools-训练时剪枝ios-首选">进阶二：coremltools 训练时剪枝（iOS 首选）</a></li>
+    <li><a href="#官方实测数据截至-2026-08-验证">官方实测数据（截至 2026-08 验证）</a></li>
+    <li><a href="#推荐工作流">推荐工作流</a></li>
+  </ul>
+</nav></div>
+            </div><div class="content" id="content"><h2 id="压缩三件套还差最后一块拼图">压缩三件套，还差最后一块拼图</h2>
+<p>前两周我们聊了端侧模型的<strong>量化</strong>（INT8/INT4 把权重从 4 字节压到 0.5 字节）和<strong>知识蒸馏</strong>（小模型学大模型的输出）。今天补上三件套的最后一块：<strong>剪枝（Pruning）</strong>，把权重矩阵里不重要的参数直接置零。</p>
+<p>类比：一棵树长满枝杈，剪掉枯枝弱枝，主干不受影响。剪枝就是给神经网络修枝，把绝对值小的权重置 0，然后用<strong>稀疏表示</strong>存储（只存非零值加一张 0/1 掩码），模型体积变小，部分硬件上推理还更快。</p>
+<h2 id="三种剪枝粒度先搞清楚再动手">三种剪枝粒度，先搞清楚再动手</h2>
+<table>
+	<thead>
+			<tr>
+					<th>粒度</th>
+					<th>做法</th>
+					<th>优点</th>
+					<th>注意</th>
+			</tr>
+	</thead>
+	<tbody>
+			<tr>
+					<td>非结构化</td>
+					<td>单个权重按绝对值排序置 0</td>
+					<td>稀疏率任意，最灵活</td>
+					<td>通用框架不一定加速，依赖稀疏表示支持</td>
+			</tr>
+			<tr>
+					<td>n:m 半结构化</td>
+					<td>每 m 个权重剪掉 n 个（如 2:4、3:4）</td>
+					<td>硬件友好，GPU 有专用内核</td>
+					<td>稀疏率被格式锁死</td>
+			</tr>
+			<tr>
+					<td>结构化</td>
+					<td>整条通道/滤波器删除</td>
+					<td>直接减 FLOPs，任何硬件都受益</td>
+					<td>精度损失通常更大</td>
+			</tr>
+	</tbody>
+</table>
+<p>注意：非结构化剪枝在通用框架里矩阵还是稠密计算、不会加速，但在 Core ML 上有效——iOS16/macOS13 起的 mlprogram 支持稀疏权重表示（位掩码加非零值），iOS18/macOS15 起还能和调色盘、量化叠加。</p>
+<h2 id="工具怎么选截至-2026-08-31-验证">工具怎么选（截至 2026-08-31 验证）</h2>
+<table>
+	<thead>
+			<tr>
+					<th>工具</th>
+					<th>版本</th>
+					<th>状态</th>
+					<th>适用场景</th>
+			</tr>
+	</thead>
+	<tbody>
+			<tr>
+					<td>torch.nn.utils.prune（PyTorch 内置）</td>
+					<td>torch 2.13</td>
+					<td>活跃</td>
+					<td>学习原理、快速实验</td>
+			</tr>
+			<tr>
+					<td>torchao（pytorch/ao）</td>
+					<td>0.18.0</td>
+					<td>活跃</td>
+					<td>2:4 半结构化稀疏、LLM 剪枝（Wanda）</td>
+			</tr>
+			<tr>
+					<td>coremltools.optimize.torch</td>
+					<td>9.0</td>
+					<td>活跃</td>
+					<td>iOS 端，训练时剪枝加导出 Core ML</td>
+			</tr>
+			<tr>
+					<td>NNCF（OpenVINO 工具链）</td>
+					<td>3.3.0</td>
+					<td>活跃</td>
+					<td>走 OpenVINO/ONNX 的端侧或服务端部署</td>
+			</tr>
+			<tr>
+					<td>Microsoft NNI / Neural Magic SparseML</td>
+					<td>-</td>
+					<td>已归档</td>
+					<td>别用了</td>
+			</tr>
+	</tbody>
+</table>
+<p>SparseML 2025 年 6 月归档、NNI 2024 年归档，新项目不要再引入。</p>
+<h2 id="三行代码起步pytorch-内置剪枝">三行代码起步：PyTorch 内置剪枝</h2>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">torch.nn.utils.prune</span> <span class="k">as</span> <span class="nn">prune</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 把 conv1 权重里 30% 绝对值最小的参数置零</span>
+</span></span><span class="line"><span class="cl"><span class="n">prune</span><span class="o">.</span><span class="n">l1_unstructured</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">conv1</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&#34;weight&#34;</span><span class="p">,</span> <span class="n">amount</span><span class="o">=</span><span class="mf">0.3</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 查看掩码（0/1 矩阵）</span>
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">conv1</span><span class="o">.</span><span class="n">weight_mask</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 固化掩码，真正把参数从模型里移除</span>
+</span></span><span class="line"><span class="cl"><span class="n">prune</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">conv1</span><span class="p">,</span> <span class="s2">&#34;weight&#34;</span><span class="p">)</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>注意：<code>l1_unstructured</code> 之后模块里同时存在原始权重和掩码，剪完要 <code>remove</code> 才会真正瘦身。</p>
+<h2 id="进阶一torchao-做-24-半结构化稀疏">进阶一：torchao 做 2:4 半结构化稀疏</h2>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span><span class="lnt">7
+</span><span class="lnt">8
+</span><span class="lnt">9
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">torchao.sparsity</span> <span class="kn">import</span> <span class="n">apply_fake_sparsity</span><span class="p">,</span> <span class="n">semi_sparse_weight</span><span class="p">,</span> <span class="n">sparsify_</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 第一步：假剪枝，先模拟 2:4 稀疏，评估精度损失</span>
+</span></span><span class="line"><span class="cl"><span class="n">apply_fake_sparsity</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="c1"># ... 在验证集上评估，损失可接受再继续 ...</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 第二步：真正把 Linear 权重转成 2:4 稀疏格式</span>
+</span></span><span class="line"><span class="cl"><span class="n">sparsify_</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">semi_sparse_weight</span><span class="p">(),</span>
+</span></span><span class="line"><span class="cl">          <span class="n">filter_fn</span><span class="o">=</span><span class="k">lambda</span> <span class="n">m</span><span class="p">,</span> <span class="n">fqn</span><span class="p">:</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">))</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>2:4 稀疏（每 4 个权重只留 2 个非零）是 NVIDIA GPU 的硬件友好格式，torchao 官方实测在 SAM/ViT 上约 1.1x 推理加速；LLM 剪枝可以试自带的 WandaSparsifier。</p>
+<h2 id="进阶二coremltools-训练时剪枝ios-首选">进阶二：coremltools 训练时剪枝（iOS 首选）</h2>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">coremltools.optimize.torch.pruning</span> <span class="kn">import</span> <span class="p">(</span>
+</span></span><span class="line"><span class="cl">    <span class="n">MagnitudePruner</span><span class="p">,</span> <span class="n">MagnitudePrunerConfig</span><span class="p">,</span> <span class="n">ModuleMagnitudePrunerConfig</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl"><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">config</span> <span class="o">=</span> <span class="n">MagnitudePrunerConfig</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">    <span class="n">global_config</span><span class="o">=</span><span class="n">ModuleMagnitudePrunerConfig</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">        <span class="n">target_sparsity</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>        <span class="c1"># 剪掉 50%</span>
+</span></span><span class="line"><span class="cl">        <span class="n">granularity</span><span class="o">=</span><span class="s2">&#34;per_channel&#34;</span><span class="p">,</span>  <span class="c1"># 结构化：整条输出通道剪掉</span>
+</span></span><span class="line"><span class="cl">    <span class="p">),</span>
+</span></span><span class="line"><span class="cl"><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">pruner</span> <span class="o">=</span> <span class="n">MagnitudePruner</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">config</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">pruner</span><span class="o">.</span><span class="n">prepare</span><span class="p">(</span><span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">for</span> <span class="n">epoch</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_epochs</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">    <span class="c1"># ...正常训练...</span>
+</span></span><span class="line"><span class="cl">    <span class="n">pruner</span><span class="o">.</span><span class="n">step</span><span class="p">()</span>                   <span class="c1"># 每轮更新稀疏掩码</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="n">pruner</span><span class="o">.</span><span class="n">report</span><span class="p">())</span>              <span class="c1"># 查看各层实际稀疏度</span>
+</span></span><span class="line"><span class="cl"><span class="n">pruner</span><span class="o">.</span><span class="n">finalize</span><span class="p">(</span><span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>       <span class="c1"># 固化掩码，之后正常转 Core ML</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p><code>MagnitudePruner</code> 基于经典论文 To prune, or not to prune（arXiv:1710.01878），支持非结构化、块稀疏、n:m、per_channel/per_kernel 四种模式。掩码参与梯度回传，剪枝过程中模型会自适应，适合高稀疏度场景。</p>
+<h2 id="官方实测数据截至-2026-08-验证">官方实测数据（截至 2026-08 验证）</h2>
+<p>Apple 在 ImageNet 上的官方基准（coremltools 文档）：</p>
+<ul>
+<li>ResNet50 非结构化 50% 稀疏：推理 1.77x 加速，精度 73.64（基线 76.14）</li>
+<li>ResNet50 非结构化 75% 稀疏：推理 3.17x 加速，精度 73.40</li>
+<li>MobileNetv2 非结构化 50%：1.37x 加速，精度几乎不掉（71.83 vs 71.86）</li>
+</ul>
+<p>稀疏度不是越高越好，75% 以上精度开始明显下降，加速效果也依赖目标硬件对稀疏的支持。</p>
+<h2 id="推荐工作流">推荐工作流</h2>
+<ol>
+<li>先用 data-free 剪枝快速试不同稀疏模式（coremltools 的 <code>prune_weights</code>，或 torchao 的 <code>apply_fake_sparsity</code>），看体积和延迟收益</li>
+<li>精度可接受就直接上；否则用训练时剪枝（MagnitudePruner / NNCF）渐进提高稀疏度并微调</li>
+<li>LLM 大模型可试 Apple 的 LayerwiseCompressor（SparseGPT 实现，约 128 个样本即可一次性剪枝）</li>
+<li>剪枝之后照常做量化，iOS18+ 上稀疏与量化可以叠加</li>
+<li>导出后必须在真机实测耗时，别只看模型体积</li>
+</ol>
+<p>三件套凑齐了：量化管体积、蒸馏管精度、剪枝管稀疏加速。端侧模型压缩，从这套组合拳开始。</p>
+</div><div class="post-footer" id="post-footer">
+    <div class="post-info">
+        <div class="post-info-line">
+            <div class="post-info-mod">
+                <span>更新于 2026-08-31</span>
+            </div></div>
+        <div class="post-info-line">
+            <div class="post-info-md"></div>
+            <div class="post-info-share">
+                <span><a href="javascript:void(0);" title="分享到 Twitter" data-sharer="twitter" data-url="https://www.ithome.me/post/2026/08/31/edge-model-pruning-guide/" data-title="端侧模型剪枝实战：剪掉不重要的参数，让模型更小更快" data-via="ChenCiki" data-hashtags="端侧AI,剪枝,模型压缩,torchao,coremltools"><i class="fab fa-twitter fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="分享到 Linkedin" data-sharer="linkedin" data-url="https://www.ithome.me/post/2026/08/31/edge-model-pruning-guide/"><i class="fab fa-linkedin fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="分享到 微博" data-sharer="weibo" data-url="https://www.ithome.me/post/2026/08/31/edge-model-pruning-guide/" data-title="端侧模型剪枝实战：剪掉不重要的参数，让模型更小更快" data-ralateuid="xxx"><i class="fab fa-weibo fa-fw" aria-hidden="true"></i></a></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="post-info-more">
+        <section class="post-tags"><i class="fas fa-tags fa-fw" aria-hidden="true"></i>&nbsp;<a href="/tags/%E7%AB%AF%E4%BE%A7ai/">端侧AI</a>,&nbsp;<a href="/tags/%E5%89%AA%E6%9E%9D/">剪枝</a>,&nbsp;<a href="/tags/%E6%A8%A1%E5%9E%8B%E5%8E%8B%E7%BC%A9/">模型压缩</a>,&nbsp;<a href="/tags/torchao/">Torchao</a>,&nbsp;<a href="/tags/coremltools/">Coremltools</a></section>
+        <section>
+            <span><a href="javascript:void(0);" onclick="window.history.back();">返回</a></span>&nbsp;|&nbsp;<span><a href="/">主页</a></span>
+        </section>
+    </div>
+
+    <div class="post-nav"><a href="/post/2026/08/24/github-trending-weekly/" class="prev" rel="prev" title="GitHub Trending 周报 - 2026-08-24"><i class="fas fa-angle-left fa-fw" aria-hidden="true"></i>GitHub Trending 周报 - 2026-08-24</a>
+            <a href="/post/2026/08/31/github-trending-weekly/" class="next" rel="next" title="GitHub Trending 周报 - 2026-08-31">GitHub Trending 周报 - 2026-08-31<i class="fas fa-angle-right fa-fw" aria-hidden="true"></i></a></div>
+</div>
+<div id="comments"><div id="gitalk" class="comment"></div><noscript>
+                Please enable JavaScript to view the comments powered by <a href="https://github.com/gitalk/gitalk"></a>Gitalk</a>.
+            </noscript></div></article></div>
+            </main><footer class="footer">
+        <div class="footer-container"><div class="footer-line" itemscope itemtype="http://schema.org/CreativeWork"><i class="far fa-copyright fa-fw" aria-hidden="true"></i><span itemprop="copyrightYear">2011 - 2026</span><span class="author" itemprop="copyrightHolder">&nbsp;<a href="https://www.ithome.me/" target="_blank">Simon Chen</a></span>&nbsp;|&nbsp;<span class="license"><a rel="license external nofollow noopener noreferrer" href="https://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank">CC BY-NC-ND 4.0</a></span></div>
+        </div>
+    </footer></div>
+
+        <div id="fixed-buttons"><a href="#" id="back-to-top" class="fixed-button" title="回到顶部">
+                <i class="fas fa-arrow-up fa-fw" aria-hidden="true"></i>
+            </a><a href="#" id="view-comments" class="fixed-button" title="查看评论">
+                <i class="fas fa-comment fa-fw" aria-hidden="true"></i>
+            </a>
+        </div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1.7.2/dist/gitalk.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/css/lightgallery-bundle.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/katex.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/copy-tex.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.css"><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/gitalk@1.7.2/dist/gitalk.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/autocomplete.js@0.38.1/dist/autocomplete.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lunr@2.3.9/lunr.min.js"></script><script type="text/javascript" src="/lib/lunr/lunr.stemmer.support.min.js"></script><script type="text/javascript" src="/lib/lunr/lunr.zh.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lazysizes@5.3.1/lazysizes.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/lightgallery.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/plugins/thumbnail/lg-thumbnail.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/plugins/zoom/lg-zoom.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/clipboard@2.0.11/dist/clipboard.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/sharer.js@0.5.1/sharer.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/katex.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/auto-render.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/copy-tex.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/mhchem.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.js"></script><script type="text/javascript">window.config={"code":{"copyTitle":"复制到剪贴板","maxShownLines":50},"comment":{"gitalk":{"admin":["cikichen"],"clientID":"be0f52370ed1285b6c7c","clientSecret":"734a7d8d0ded346ca7a3d565d57de3f8eeb2850b","id":"2026-08-31T00:00:00Z","owner":"cikichen","repo":"gitalk","title":"端侧模型剪枝实战：剪掉不重要的参数，让模型更小更快"}},"cookieconsent":{"content":{"dismiss":"我知道了","link":"了解更多","message":"本网站使用 Cookies 来改善您的浏览体验."},"enable":true,"palette":{"button":{"background":"#f0f0f0"},"popup":{"background":"#1aa3ff"}},"theme":"edgeless"},"lightgallery":true,"math":{"delimiters":[{"display":true,"left":"$$","right":"$$"},{"display":true,"left":"\\[","right":"\\]"},{"display":true,"left":"\\begin{equation}","right":"\\end{equation}"},{"display":true,"left":"\\begin{equation*}","right":"\\end{equation*}"},{"display":true,"left":"\\begin{align}","right":"\\end{align}"},{"display":true,"left":"\\begin{align*}","right":"\\end{align*}"},{"display":true,"left":"\\begin{alignat}","right":"\\end{alignat}"},{"display":true,"left":"\\begin{alignat*}","right":"\\end{alignat*}"},{"display":true,"left":"\\begin{gather}","right":"\\end{gather}"},{"display":true,"left":"\\begin{CD}","right":"\\end{CD}"},{"display":false,"left":"$","right":"$"},{"display":false,"left":"\\(","right":"\\)"}],"strict":false},"search":{"highlightTag":"em","lunrIndexURL":"/index.json","lunrLanguageCode":"zh","lunrSegmentitURL":"/lib/lunr/lunr.segmentit.js","maxResultLength":10,"noResultsFound":"没有找到结果","snippetLength":50,"type":"lunr"}};</script><script type="text/javascript" src="/js/theme.min.js"></script></body>
+</html>
