@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="robots" content="noodp" />
+        <title>ExecuTorch 端侧部署实战：从 torch.export 到 .pte 的完整工作流 - 编程心语</title><meta name="Description" content="ExecuTorch 是 PyTorch 官方端侧推理栈，直接从 torch.export 导出 .pte 部署到手机。本文跑通导出、XNNPACK 后端特化、export_llm 大模型量化导出与 iOS SwiftPM 集成的完整流程，含 v1.5.0 新特性。"><meta property="og:url" content="https://www.ithome.me/post/2026/09/17/executorch-llm-export-pte/">
+	<meta property="og:site_name" content="编程心语">
+	<meta property="og:title" content="ExecuTorch 端侧部署实战：从 torch.export 到 .pte 的完整工作流">
+	<meta property="og:description" content="ExecuTorch 是 PyTorch 官方端侧推理栈，直接从 torch.export 导出 .pte 部署到手机。本文跑通导出、XNNPACK 后端特化、export_llm 大模型量化导出与 iOS SwiftPM 集成的完整流程，含 v1.5.0 新特性。">
+	<meta property="og:locale" content="zh_CN">
+	<meta property="og:type" content="article">
+		<meta property="article:section" content="posts">
+		<meta property="article:published_time" content="2026-09-17T08:00:00+08:00">
+		<meta property="article:modified_time" content="2026-09-17T08:00:00+08:00">
+		<meta property="article:tag" content="Ai">
+		<meta property="article:tag" content="ExecuTorch">
+		<meta property="article:tag" content="PyTorch">
+		<meta property="article:tag" content="端侧AI">
+		<meta property="article:tag" content="模型部署">
+		<meta property="article:tag" content="Torch.export">
+
+	<meta name="twitter:card" content="summary">
+	<meta name="twitter:title" content="ExecuTorch 端侧部署实战：从 torch.export 到 .pte 的完整工作流">
+	<meta name="twitter:description" content="ExecuTorch 是 PyTorch 官方端侧推理栈，直接从 torch.export 导出 .pte 部署到手机。本文跑通导出、XNNPACK 后端特化、export_llm 大模型量化导出与 iOS SwiftPM 集成的完整流程，含 v1.5.0 新特性。">
+			<meta name="twitter:site" content="@ChenCiki">
+<meta name="application-name" content="编程心语">
+<meta name="apple-mobile-web-app-title" content="编程心语"><meta name="theme-color" content="#ffffff"><meta name="msapplication-TileColor" content="#da532c"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5"><link rel="manifest" href="/site.webmanifest"><link rel="canonical" href="https://www.ithome.me/post/2026/09/17/executorch-llm-export-pte/" /><link rel="prev" href="https://www.ithome.me/post/2026/09/14/github-trending-weekly/" /><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/normalize.css@8.0.1/normalize.min.css"><link rel="stylesheet" href="/css/style.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css"><script type="application/ld+json">
+    {
+        "@context": "http://schema.org",
+        "@type": "BlogPosting",
+        "headline": "ExecuTorch 端侧部署实战：从 torch.export 到 .pte 的完整工作流",
+        "inLanguage": "zh-CN",
+        "mainEntityOfPage": {
+            "@type": "WebPage",
+            "@id": "https:\/\/www.ithome.me\/post\/2026\/09\/17\/executorch-llm-export-pte\/"
+        },"image": ["https:\/\/www.ithome.me\/cover.png"],"genre": "posts","keywords": "AI, ExecuTorch, PyTorch, 端侧AI, 模型部署, torch.export, LLM","wordcount":  2522 ,
+        "url": "https:\/\/www.ithome.me\/post\/2026\/09\/17\/executorch-llm-export-pte\/","datePublished": "2026-09-17T08:00:00+08:00","dateModified": "2026-09-17T08:00:00+08:00","publisher": {
+            "@type": "Organization",
+            "name": "SimonChen","logo": "https:\/\/www.ithome.me\/logo.png"},"author": {
+                "@type": "Person",
+                "name": "Simon"
+            },"description": "ExecuTorch 是 PyTorch 官方端侧推理栈，直接从 torch.export 导出 .pte 部署到手机。本文跑通导出、XNNPACK 后端特化、export_llm 大模型量化导出与 iOS SwiftPM 集成的完整流程，含 v1.5.0 新特性。"
+    }
+    </script><script async src="https://www.googletagmanager.com/gtag/js?id=G-H1Q5563VR8"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-H1Q5563VR8', { 'anonymize_ip': true });
+</script></head>
+    <body data-header-desktop="fixed" data-header-mobile="auto"><script type="text/javascript">(window.localStorage && localStorage.getItem('theme') ? localStorage.getItem('theme') === 'dark' : ('auto' === 'auto' ? window.matchMedia('(prefers-color-scheme: dark)').matches : 'auto' === 'dark')) && document.body.setAttribute('theme', 'dark');</script>
+
+        <div id="mask"></div><div class="wrapper"><header class="desktop" id="header-desktop">
+    <div class="header-wrapper">
+        <div class="header-title">
+            <a href="/" title="编程心语">编程心语</a>
+        </div>
+        <div class="menu">
+            <div class="menu-inner"><a class="menu-item" href="/posts/"> 文章 </a><a class="menu-item" href="/categories/"> 分类 </a><a class="menu-item" href="/tags/"> 标签 </a><a class="menu-item" href="/about-me/"> 关于 </a><span class="menu-item delimiter"></span><span class="menu-item search" id="search-desktop">
+                        <input type="text" placeholder="搜索文章..." id="search-input-desktop">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-desktop" title="搜索">
+                            <i class="fas fa-search fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-desktop" title="清空">
+                            <i class="fas fa-times-circle fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-desktop">
+                            <i class="fas fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+                        </span>
+                    </span><a href="javascript:void(0);" class="menu-item theme-switch" title="切换主题">
+                    <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</header><header class="mobile" id="header-mobile">
+    <div class="header-container">
+        <div class="header-wrapper">
+            <div class="header-title">
+                <a href="/" title="编程心语">编程心语</a>
+            </div>
+            <div class="menu-toggle" id="menu-toggle-mobile">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+        <div class="menu" id="menu-mobile"><div class="search-wrapper">
+                    <div class="search mobile" id="search-mobile">
+                        <input type="text" placeholder="搜索文章..." id="search-input-mobile">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-mobile" title="搜索">
+                            <i class="fas fa-search fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-mobile" title="清空">
+                            <i class="fas fa-times-circle fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-mobile">
+                            <i class="fas fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+                        </span>
+                    </div>
+                    <a href="javascript:void(0);" class="search-cancel" id="search-cancel-mobile">
+                        取消
+                    </a>
+                </div><a class="menu-item" href="/posts/" title="">文章</a><a class="menu-item" href="/categories/" title="">分类</a><a class="menu-item" href="/tags/" title="">标签</a><a class="menu-item" href="/about-me/" title="">关于</a><a href="javascript:void(0);" class="menu-item theme-switch" title="切换主题">
+                <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
+            </a></div>
+    </div>
+</header><div class="search-dropdown desktop">
+        <div id="search-dropdown-desktop"></div>
+    </div>
+    <div class="search-dropdown mobile">
+        <div id="search-dropdown-mobile"></div>
+    </div><main class="main">
+                <div class="container"><div class="toc" id="toc-auto">
+            <h2 class="toc-title">目录</h2>
+            <div class="toc-content" id="toc-content-auto"></div>
+        </div><article class="page single"><h1 class="single-title animate__animated animate__flipInX">ExecuTorch 端侧部署实战：从 torch.export 到 .pte 的完整工作流</h1><div class="post-meta">
+            <div class="post-meta-line"><span class="post-author"><a href="https://www.ithome.me/" title="Author" target="_blank" rel="noopener noreferrer author" class="author"><i class="fas fa-user-circle fa-fw" aria-hidden="true"></i>Simon</a>
+</span></div>
+            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw" aria-hidden="true"></i>&nbsp;<time datetime="2026-09-17">2026-09-17</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden="true"></i>&nbsp;约 2522 字&nbsp;
+                <i class="far fa-clock fa-fw" aria-hidden="true"></i>&nbsp;预计阅读 6 分钟&nbsp;</div>
+        </div><div class="details toc" id="toc-static"  data-kept="true">
+                <div class="details-summary toc-title">
+                    <span>目录</span>
+                    <span><i class="details-icon fas fa-angle-right" aria-hidden="true"></i></span>
+                </div>
+                <div class="details-content toc-content" id="toc-content-static"><nav id="TableOfContents">
+  <ul>
+    <li><a href="#做端侧部署为什么多了一个-pytorch-原生选项">做端侧部署，为什么多了一个 PyTorch 原生选项</a></li>
+    <li><a href="#工作流四步">工作流四步</a></li>
+    <li><a href="#环境准备">环境准备</a></li>
+    <li><a href="#实战一导出视觉模型到-xnnpack">实战一：导出视觉模型到 XNNPACK</a></li>
+    <li><a href="#实战二用-export_llm-导出大模型">实战二：用 export_llm 导出大模型</a></li>
+    <li><a href="#后端怎么选">后端怎么选</a></li>
+    <li><a href="#ios-集成">iOS 集成</a></li>
+    <li><a href="#v150-值得关注的新东西">v1.5.0 值得关注的新东西</a></li>
+    <li><a href="#踩坑清单">踩坑清单</a></li>
+    <li><a href="#开源方案速查">开源方案速查</a></li>
+  </ul>
+</nav></div>
+            </div><div class="content" id="content"><h2 id="做端侧部署为什么多了一个-pytorch-原生选项">做端侧部署，为什么多了一个 PyTorch 原生选项</h2>
+<p>做端侧 AI，最痛的一环往往是模型转换：PyTorch 训练完，先导出 ONNX，再转 TFLite 或 Core ML，算子一缺就回头改模型；量化、Profile、调试也是每套工具配一遍。</p>
+<p>ExecuTorch 是 PyTorch 官方的端侧推理栈，思路不同：直接从 <code>torch.export</code> 出发，在同一套 PyTorch 工作流里完成后端特化（partitioner）与端侧运行，不需要中间格式，导出产物还能保留 PyTorch 的程序元数据和源码映射。它已经在 Instagram、WhatsApp、Facebook、Messenger 以及 Meta Quest、Ray-Ban Meta 设备上承载了数亿用户的功能，2026 年还发了 MLSys 论文（arXiv:2605.08195）。</p>
+<p>本文跑通它的核心链路：把 PyTorch 模型导出成 <code>.pte</code> 文件并部署到端侧。内容截至 2026-09-17 验证，对应最新稳定版 <strong>v1.5.0</strong>（2026-09-16 刚发布）。</p>
+<h2 id="工作流四步">工作流四步</h2>
+<p>ExecuTorch 的部署链路可以概括为四步：</p>
+<ol>
+<li><strong>捕获</strong>：用 <code>torch.export.export()</code> 把 <code>nn.Module</code> 导出为可序列化的计算图</li>
+<li><strong>降级</strong>：<code>to_edge_transform_and_lower()</code> 传入后端 partitioner，把支持的子图委托给 CPU / NPU / DSP 后端，其余保留可移植 CPU 算子兜底</li>
+<li><strong>序列化</strong>：<code>.to_executorch()</code> 生成后端专属的 <code>.pte</code> 文件</li>
+<li><strong>运行</strong>：C++ / Python / Swift / Kotlin / WebAssembly 运行时加载 <code>.pte</code> 执行</li>
+</ol>
+<p>注意第 3 步：<code>.pte</code> 是<strong>后端专属</strong>的。为 XNNPACK 导出的 <code>.pte</code> 不能直接拿到 Core ML 或 Qualcomm 后端跑，每个目标硬件需要单独导出。</p>
+<h2 id="环境准备">环境准备</h2>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl"><span class="c1"># 需 Python 3.10 至 3.14</span>
+</span></span><span class="line"><span class="cl">pip install executorch
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>预编译 wheel 覆盖 Linux x86-64 / AArch64、macOS arm64、Windows x86-64；Android 可从 Maven Central 拉 AAR，Apple 平台通过 Swift Package Manager 集成。</p>
+<h2 id="实战一导出视觉模型到-xnnpack">实战一：导出视觉模型到 XNNPACK</h2>
+<p>从官方快速入门的经典例子看最小链路（导出一个加法模型验证环境）：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">torch</span>
+</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">executorch.exir</span> <span class="kn">import</span> <span class="n">to_edge_transform_and_lower</span>
+</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">executorch.backends.xnnpack.partition.xnnpack_partitioner</span> <span class="kn">import</span> <span class="n">XnnpackPartitioner</span>
+</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">executorch.runtime</span> <span class="kn">import</span> <span class="n">Runtime</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">class</span> <span class="nc">Add</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="n">x</span> <span class="o">+</span> <span class="n">y</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">model</span> <span class="o">=</span> <span class="n">Add</span><span class="p">()</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl"><span class="n">sample_inputs</span> <span class="o">=</span> <span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span> <span class="n">torch</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">et_program</span> <span class="o">=</span> <span class="n">to_edge_transform_and_lower</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">    <span class="n">torch</span><span class="o">.</span><span class="n">export</span><span class="o">.</span><span class="n">export</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">sample_inputs</span><span class="p">),</span>
+</span></span><span class="line"><span class="cl">    <span class="n">partitioner</span><span class="o">=</span><span class="p">[</span><span class="n">XnnpackPartitioner</span><span class="p">()]</span>
+</span></span><span class="line"><span class="cl"><span class="p">)</span><span class="o">.</span><span class="n">to_executorch</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&#34;add.pte&#34;</span><span class="p">,</span> <span class="s2">&#34;wb&#34;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">et_program</span><span class="o">.</span><span class="n">buffer</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">runtime</span> <span class="o">=</span> <span class="n">Runtime</span><span class="o">.</span><span class="n">get</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl"><span class="n">method</span> <span class="o">=</span> <span class="n">runtime</span><span class="o">.</span><span class="n">load_program</span><span class="p">(</span><span class="s2">&#34;add.pte&#34;</span><span class="p">)</span><span class="o">.</span><span class="n">load_method</span><span class="p">(</span><span class="s2">&#34;forward&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">output</span> <span class="o">=</span> <span class="n">method</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">sample_inputs</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="s2">&#34;Output:&#34;</span><span class="p">,</span> <span class="n">output</span><span class="p">)</span>  <span class="c1"># tensor([2.])</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>换成真实视觉模型，只改模型和输入。以 MobileNetV2 为例：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">torch</span>
+</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">torchvision.models</span> <span class="kn">import</span> <span class="n">mobilenet_v2</span><span class="p">,</span> <span class="n">MobileNet_V2_Weights</span>
+</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">executorch.exir</span> <span class="kn">import</span> <span class="n">to_edge_transform_and_lower</span>
+</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">executorch.backends.xnnpack.partition.xnnpack_partitioner</span> <span class="kn">import</span> <span class="n">XnnpackPartitioner</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">model</span> <span class="o">=</span> <span class="n">mobilenet_v2</span><span class="p">(</span><span class="n">weights</span><span class="o">=</span><span class="n">MobileNet_V2_Weights</span><span class="o">.</span><span class="n">IMAGENET1K_V2</span><span class="p">)</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl"><span class="n">sample_inputs</span> <span class="o">=</span> <span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">224</span><span class="p">,</span> <span class="mi">224</span><span class="p">),)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">et_program</span> <span class="o">=</span> <span class="n">to_edge_transform_and_lower</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">    <span class="n">torch</span><span class="o">.</span><span class="n">export</span><span class="o">.</span><span class="n">export</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">sample_inputs</span><span class="p">),</span>
+</span></span><span class="line"><span class="cl">    <span class="n">partitioner</span><span class="o">=</span><span class="p">[</span><span class="n">XnnpackPartitioner</span><span class="p">()],</span>
+</span></span><span class="line"><span class="cl"><span class="p">)</span><span class="o">.</span><span class="n">to_executorch</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&#34;mobilenet_v2.pte&#34;</span><span class="p">,</span> <span class="s2">&#34;wb&#34;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">et_program</span><span class="o">.</span><span class="n">buffer</span><span class="p">)</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>跑完得到 <code>mobilenet_v2.pte</code>，这就是部署产物。官方没有给出各机型的统一耗时基准，内存与速度需在目标设备上用 ETDump 自行实测。</p>
+<h2 id="实战二用-export_llm-导出大模型">实战二：用 export_llm 导出大模型</h2>
+<p>端侧 LLM 场景，手写 <code>torch.export</code> 加量化太繁琐，官方提供了高层 API <code>export_llm</code>，一条命令完成导出、量化与后端特化。当前官方支持的模型族包括 Llama 2/3/3.1/3.2、Qwen 2.5/3、Phi 3.5/4-mini、SmolLM2。</p>
+<p>以 Llama 3.2 1B 为例，先准备配置文件：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-yaml" data-lang="yaml"><span class="line"><span class="cl"><span class="c"># config.yaml</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="nt">base</span><span class="p">:</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="nt">model_class</span><span class="p">:</span><span class="w"> </span><span class="l">llama3_2</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="nt">checkpoint</span><span class="p">:</span><span class="w"> </span><span class="l">path/to/consolidated.00.pth</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="nt">params</span><span class="p">:</span><span class="w"> </span><span class="l">path/to/params.json</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="nt">metadata</span><span class="p">:</span><span class="w"> </span><span class="s1">&#39;{&#34;get_bos_id&#34;:128000, &#34;get_eos_ids&#34;:[128009, 128001]}&#39;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="nt">model</span><span class="p">:</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="nt">use_kv_cache</span><span class="p">:</span><span class="w"> </span><span class="kc">True</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="nt">use_sdpa_with_kv_cache</span><span class="p">:</span><span class="w"> </span><span class="kc">True</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="nt">quantization</span><span class="p">:</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="nt">embedding_quantize</span><span class="p">:</span><span class="w"> </span><span class="m">4</span><span class="p">,</span><span class="m">32</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="nt">qmode</span><span class="p">:</span><span class="w"> </span><span class="l">8da4w</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="nt">backend</span><span class="p">:</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="nt">xnnpack</span><span class="p">:</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nt">enabled</span><span class="p">:</span><span class="w"> </span><span class="kc">True</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nt">extended_ops</span><span class="p">:</span><span class="w"> </span><span class="kc">True</span><span class="w">
+</span></span></span></code></pre></td></tr></table>
+</div>
+</div><p>其中 <code>use_kv_cache</code> 与 <code>use_sdpa_with_kv_cache</code> 是官方推荐任意 LLM 都打开的优化；<code>8da4w</code> 表示 int8 动态激活加 int4 权重量化，是 XNNPACK 后端的推荐量化档位。Llama 系列需要手动下载 <code>consolidated.00.pth</code> 与 <code>params.json</code>（Hugging Face 上 <code>meta-llama/Llama-3.2-1B</code> 的 original 目录有），其余模型族会自动从 Hugging Face 下载。</p>
+<p>执行导出：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">python -m executorch.extension.llm.export.export_llm --config config.yaml
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>想看哪些算子被委托给了 XNNPACK、哪些还留在 CPU，加两行配置：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-yaml" data-lang="yaml"><span class="line"><span class="cl"><span class="nt">debug</span><span class="p">:</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="nt">verbose</span><span class="p">:</span><span class="w"> </span><span class="kc">True</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="nt">generate_etrecord</span><span class="p">:</span><span class="w"> </span><span class="kc">True</span><span class="w">
+</span></span></span></code></pre></td></tr></table>
+</div>
+</div><p><code>verbose</code> 会在日志里打出完整的委托情况表（委托子图数、委托节点数、逐算子分布），<code>generate_etrecord</code> 生成 ETRecord，可以用 ExecuTorch 开发者工具把算子耗时_trace_回源码行。顺带一提，跑 LLM 导出如果报 <code>ModuleNotFoundError: No module named 'pytorch_tokenizers'</code>，补装 <code>pip install pytorch-tokenizers</code> 即可。</p>
+<p>量化路径要和后端匹配：<strong>XNNPACK 走 TorchAO 量化（<code>qmode</code>），QNN / Core ML / Vulkan 走 pt2e 图级量化</strong>，两者不能混用。</p>
+<h2 id="后端怎么选">后端怎么选</h2>
+<table>
+	<thead>
+			<tr>
+					<th>平台</th>
+					<th>可用后端</th>
+			</tr>
+	</thead>
+	<tbody>
+			<tr>
+					<td>iOS / iPadOS</td>
+					<td>XNNPACK（CPU）、Core ML、MLX（设备上，实验性）</td>
+			</tr>
+			<tr>
+					<td>Android</td>
+					<td>XNNPACK、Vulkan（GPU）、Qualcomm、MediaTek、Arm VGF、Samsung Exynos</td>
+			</tr>
+			<tr>
+					<td>macOS / 桌面</td>
+					<td>XNNPACK、Core ML、MLX（实验性）、Metal/AOTInductor、WebGPU（实验性）</td>
+			</tr>
+			<tr>
+					<td>嵌入式 / MCU</td>
+					<td>Arm Cortex-M + CMSIS-NN（beta）、Ethos-U、NXP eIQ Neutron、Cadence DSP、Zephyr、Arduino</td>
+			</tr>
+	</tbody>
+</table>
+<p>iOS 上除了 XNNPACK，可以指定 Core ML 或 MLX partitioner 单独导出，把算子卸载到 Apple Neural Engine 或统一内存架构上。</p>
+<h2 id="ios-集成">iOS 集成</h2>
+<p>Apple 平台通过 Swift Package Manager 引入，仓库根目录自带 <code>Package.swift</code>，在 Xcode 里加 <code>https://github.com/pytorch/executorch</code> 即可。v1.5.0 起把 Core ML 与 MLX 的可链接库直接打包进了 Apple 框架与 SwiftPM 产物，还支持 ETDump 性能采集，端侧调性能不用再切回 Python。</p>
+<h2 id="v150-值得关注的新东西">v1.5.0 值得关注的新东西</h2>
+<p>v1.5.0（2026-09-16）这版更新很实：</p>
+<ul>
+<li><strong>C++ SDK 打进 wheel</strong>：CUDA、Core ML、MLX、OpenVINO、Qualcomm 各 delegate 都有了可链接库，还打包了 TorchAO 量化算子库，C++ 侧集成不用再从源码编译</li>
+<li><strong>LLM 服务化能力</strong>：多方法导出（multi-method）、批量请求调度、可取消执行、离图 KV-cache 布局，新增 Qwen3.5 MoE、Muse Glimmer、Supertonic、Voxtral 等工作流</li>
+<li><strong>Core ML / MLX</strong>：MLX 离图 KV-cache 的 flat / ring / cell 布局与共享池，融合注意力算子支持；Core ML 改进了对 tied embedding 和因果注意力掩码的处理</li>
+<li><strong>可靠性</strong>：<code>.pte</code> / <code>.ptd</code> 加了 schema 版本校验，运行时兼容性政策保证稳定 API 导出的 <code>.pte</code> 至少能被下一个非 patch 版本加载执行</li>
+</ul>
+<h2 id="踩坑清单">踩坑清单</h2>
+<ul>
+<li><code>.pte</code> 不跨后端：换硬件 delegate 必须重新导出，不是改个加载参数就行</li>
+<li>算子覆盖率因后端而异：官方模型列表是起点不是兼容性清单，新架构可以走自定义 LLM 导出指南</li>
+<li>量化路径与后端绑定：TorchAO 给 XNNPACK，pt2e 给 QNN / Core ML / Vulkan</li>
+<li>端侧性能别只看 Python 侧数字：Python 运行时只用来验证正确性，性能必须在目标设备上重新测</li>
+<li>版本搭配：nightly wheel 不声明 <code>torch</code> 依赖，需要手动指定匹配的 PyTorch nightly</li>
+</ul>
+<h2 id="开源方案速查">开源方案速查</h2>
+<ul>
+<li><strong>ExecuTorch</strong>（pytorch/executorch）：PyTorch 原生端侧部署，适合已在 PyTorch 生态、要多硬件后端的项目</li>
+<li><strong>Optimum ExecuTorch</strong>：Hugging Face 的测试好的导出配方，想省配置直接用它</li>
+<li><strong>TorchAO</strong>：PyTorch 量化算法库，ExecuTorch 的量化能力底层就是它</li>
+</ul>
+<p>如果你之前一直在 PyTorch 和 ONNX / TFLite 之间来回转换，ExecuTorch 值得试一次：同一份模型代码、同一套导出工具链，覆盖从手机到 MCU 的部署目标。</p>
+</div><div class="post-footer" id="post-footer">
+    <div class="post-info">
+        <div class="post-info-line">
+            <div class="post-info-mod">
+                <span>更新于 2026-09-17</span>
+            </div></div>
+        <div class="post-info-line">
+            <div class="post-info-md"></div>
+            <div class="post-info-share">
+                <span><a href="javascript:void(0);" title="分享到 Twitter" data-sharer="twitter" data-url="https://www.ithome.me/post/2026/09/17/executorch-llm-export-pte/" data-title="ExecuTorch 端侧部署实战：从 torch.export 到 .pte 的完整工作流" data-via="ChenCiki" data-hashtags="AI,ExecuTorch,PyTorch,端侧AI,模型部署,torch.export,LLM"><i class="fab fa-twitter fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="分享到 Linkedin" data-sharer="linkedin" data-url="https://www.ithome.me/post/2026/09/17/executorch-llm-export-pte/"><i class="fab fa-linkedin fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="分享到 微博" data-sharer="weibo" data-url="https://www.ithome.me/post/2026/09/17/executorch-llm-export-pte/" data-title="ExecuTorch 端侧部署实战：从 torch.export 到 .pte 的完整工作流" data-ralateuid="xxx"><i class="fab fa-weibo fa-fw" aria-hidden="true"></i></a></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="post-info-more">
+        <section class="post-tags"><i class="fas fa-tags fa-fw" aria-hidden="true"></i>&nbsp;<a href="/tags/ai/">Ai</a>,&nbsp;<a href="/tags/executorch/">ExecuTorch</a>,&nbsp;<a href="/tags/pytorch/">PyTorch</a>,&nbsp;<a href="/tags/%E7%AB%AF%E4%BE%A7ai/">端侧AI</a>,&nbsp;<a href="/tags/%E6%A8%A1%E5%9E%8B%E9%83%A8%E7%BD%B2/">模型部署</a>,&nbsp;<a href="/tags/torch.export/">Torch.export</a>,&nbsp;<a href="/tags/llm/">LLM</a></section>
+        <section>
+            <span><a href="javascript:void(0);" onclick="window.history.back();">返回</a></span>&nbsp;|&nbsp;<span><a href="/">主页</a></span>
+        </section>
+    </div>
+
+    <div class="post-nav"><a href="/post/2026/09/14/github-trending-weekly/" class="prev" rel="prev" title="GitHub Trending 周报 - 2026-09-14"><i class="fas fa-angle-left fa-fw" aria-hidden="true"></i>GitHub Trending 周报 - 2026-09-14</a></div>
+</div>
+<div id="comments"><div id="gitalk" class="comment"></div><noscript>
+                Please enable JavaScript to view the comments powered by <a href="https://github.com/gitalk/gitalk"></a>Gitalk</a>.
+            </noscript></div></article></div>
+            </main><footer class="footer">
+        <div class="footer-container"><div class="footer-line" itemscope itemtype="http://schema.org/CreativeWork"><i class="far fa-copyright fa-fw" aria-hidden="true"></i><span itemprop="copyrightYear">2011 - 2026</span><span class="author" itemprop="copyrightHolder">&nbsp;<a href="https://www.ithome.me/" target="_blank">Simon Chen</a></span>&nbsp;|&nbsp;<span class="license"><a rel="license external nofollow noopener noreferrer" href="https://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank">CC BY-NC-ND 4.0</a></span></div>
+        </div>
+    </footer></div>
+
+        <div id="fixed-buttons"><a href="#" id="back-to-top" class="fixed-button" title="回到顶部">
+                <i class="fas fa-arrow-up fa-fw" aria-hidden="true"></i>
+            </a><a href="#" id="view-comments" class="fixed-button" title="查看评论">
+                <i class="fas fa-comment fa-fw" aria-hidden="true"></i>
+            </a>
+        </div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1.7.2/dist/gitalk.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/css/lightgallery-bundle.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/katex.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/copy-tex.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.css"><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/gitalk@1.7.2/dist/gitalk.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/autocomplete.js@0.38.1/dist/autocomplete.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lunr@2.3.9/lunr.min.js"></script><script type="text/javascript" src="/lib/lunr/lunr.stemmer.support.min.js"></script><script type="text/javascript" src="/lib/lunr/lunr.zh.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lazysizes@5.3.1/lazysizes.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/lightgallery.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/plugins/thumbnail/lg-thumbnail.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/plugins/zoom/lg-zoom.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/clipboard@2.0.11/dist/clipboard.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/sharer.js@0.5.1/sharer.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/katex.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/auto-render.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/copy-tex.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/mhchem.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.js"></script><script type="text/javascript">window.config={"code":{"copyTitle":"复制到剪贴板","maxShownLines":50},"comment":{"gitalk":{"admin":["cikichen"],"clientID":"be0f52370ed1285b6c7c","clientSecret":"734a7d8d0ded346ca7a3d565d57de3f8eeb2850b","id":"2026-09-17T00:00:00Z","owner":"cikichen","repo":"gitalk","title":"ExecuTorch 端侧部署实战：从 torch.export 到 .pte 的完整工作流"}},"cookieconsent":{"content":{"dismiss":"我知道了","link":"了解更多","message":"本网站使用 Cookies 来改善您的浏览体验."},"enable":true,"palette":{"button":{"background":"#f0f0f0"},"popup":{"background":"#1aa3ff"}},"theme":"edgeless"},"lightgallery":true,"math":{"delimiters":[{"display":true,"left":"$$","right":"$$"},{"display":true,"left":"\\[","right":"\\]"},{"display":true,"left":"\\begin{equation}","right":"\\end{equation}"},{"display":true,"left":"\\begin{equation*}","right":"\\end{equation*}"},{"display":true,"left":"\\begin{align}","right":"\\end{align}"},{"display":true,"left":"\\begin{align*}","right":"\\end{align*}"},{"display":true,"left":"\\begin{alignat}","right":"\\end{alignat}"},{"display":true,"left":"\\begin{alignat*}","right":"\\end{alignat*}"},{"display":true,"left":"\\begin{gather}","right":"\\end{gather}"},{"display":true,"left":"\\begin{CD}","right":"\\end{CD}"},{"display":false,"left":"$","right":"$"},{"display":false,"left":"\\(","right":"\\)"}],"strict":false},"search":{"highlightTag":"em","lunrIndexURL":"/index.json","lunrLanguageCode":"zh","lunrSegmentitURL":"/lib/lunr/lunr.segmentit.js","maxResultLength":10,"noResultsFound":"没有找到结果","snippetLength":50,"type":"lunr"}};</script><script type="text/javascript" src="/js/theme.min.js"></script></body>
+</html>
