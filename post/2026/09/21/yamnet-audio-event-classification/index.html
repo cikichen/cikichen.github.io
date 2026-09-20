@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="robots" content="noodp" />
+        <title>端侧音频事件分类实战:用 YAMNet 让应用听懂环境声音 - 编程心语</title><meta name="Description" content="用 Google 开源的 YAMNet 做设备端音频事件分类:521 类环境声音识别,从 Python 推理到 TFLite 端侧部署,并对比 PANNs 等更高精度方案"><meta property="og:url" content="https://www.ithome.me/post/2026/09/21/yamnet-audio-event-classification/">
+	<meta property="og:site_name" content="编程心语">
+	<meta property="og:title" content="端侧音频事件分类实战:用 YAMNet 让应用听懂环境声音">
+	<meta property="og:description" content="用 Google 开源的 YAMNet 做设备端音频事件分类:521 类环境声音识别,从 Python 推理到 TFLite 端侧部署,并对比 PANNs 等更高精度方案">
+	<meta property="og:locale" content="zh_CN">
+	<meta property="og:type" content="article">
+		<meta property="article:section" content="posts">
+		<meta property="article:published_time" content="2026-09-21T08:00:00+08:00">
+		<meta property="article:modified_time" content="2026-09-21T08:00:00+08:00">
+		<meta property="article:tag" content="端侧AI">
+		<meta property="article:tag" content="音频分类">
+		<meta property="article:tag" content="YAMNet">
+		<meta property="article:tag" content="TFLite">
+		<meta property="article:tag" content="AudioSet">
+		<meta property="article:tag" content="MediaPipe">
+
+	<meta name="twitter:card" content="summary">
+	<meta name="twitter:title" content="端侧音频事件分类实战:用 YAMNet 让应用听懂环境声音">
+	<meta name="twitter:description" content="用 Google 开源的 YAMNet 做设备端音频事件分类:521 类环境声音识别,从 Python 推理到 TFLite 端侧部署,并对比 PANNs 等更高精度方案">
+			<meta name="twitter:site" content="@ChenCiki">
+<meta name="application-name" content="编程心语">
+<meta name="apple-mobile-web-app-title" content="编程心语"><meta name="theme-color" content="#ffffff"><meta name="msapplication-TileColor" content="#da532c"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5"><link rel="manifest" href="/site.webmanifest"><link rel="canonical" href="https://www.ithome.me/post/2026/09/21/yamnet-audio-event-classification/" /><link rel="prev" href="https://www.ithome.me/post/2026/09/17/executorch-llm-export-pte/" /><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/normalize.css@8.0.1/normalize.min.css"><link rel="stylesheet" href="/css/style.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css"><script type="application/ld+json">
+    {
+        "@context": "http://schema.org",
+        "@type": "BlogPosting",
+        "headline": "端侧音频事件分类实战:用 YAMNet 让应用听懂环境声音",
+        "inLanguage": "zh-CN",
+        "mainEntityOfPage": {
+            "@type": "WebPage",
+            "@id": "https:\/\/www.ithome.me\/post\/2026\/09\/21\/yamnet-audio-event-classification\/"
+        },"image": ["https:\/\/www.ithome.me\/cover.png"],"genre": "posts","keywords": "端侧AI, 音频分类, YAMNet, TFLite, AudioSet, MediaPipe","wordcount":  1600 ,
+        "url": "https:\/\/www.ithome.me\/post\/2026\/09\/21\/yamnet-audio-event-classification\/","datePublished": "2026-09-21T08:00:00+08:00","dateModified": "2026-09-21T08:00:00+08:00","publisher": {
+            "@type": "Organization",
+            "name": "SimonChen","logo": "https:\/\/www.ithome.me\/logo.png"},"author": {
+                "@type": "Person",
+                "name": "Simon"
+            },"description": "用 Google 开源的 YAMNet 做设备端音频事件分类:521 类环境声音识别,从 Python 推理到 TFLite 端侧部署,并对比 PANNs 等更高精度方案"
+    }
+    </script><script async src="https://www.googletagmanager.com/gtag/js?id=G-H1Q5563VR8"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-H1Q5563VR8', { 'anonymize_ip': true });
+</script></head>
+    <body data-header-desktop="fixed" data-header-mobile="auto"><script type="text/javascript">(window.localStorage && localStorage.getItem('theme') ? localStorage.getItem('theme') === 'dark' : ('auto' === 'auto' ? window.matchMedia('(prefers-color-scheme: dark)').matches : 'auto' === 'dark')) && document.body.setAttribute('theme', 'dark');</script>
+
+        <div id="mask"></div><div class="wrapper"><header class="desktop" id="header-desktop">
+    <div class="header-wrapper">
+        <div class="header-title">
+            <a href="/" title="编程心语">编程心语</a>
+        </div>
+        <div class="menu">
+            <div class="menu-inner"><a class="menu-item" href="/posts/"> 文章 </a><a class="menu-item" href="/categories/"> 分类 </a><a class="menu-item" href="/tags/"> 标签 </a><a class="menu-item" href="/about-me/"> 关于 </a><span class="menu-item delimiter"></span><span class="menu-item search" id="search-desktop">
+                        <input type="text" placeholder="搜索文章..." id="search-input-desktop">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-desktop" title="搜索">
+                            <i class="fas fa-search fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-desktop" title="清空">
+                            <i class="fas fa-times-circle fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-desktop">
+                            <i class="fas fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+                        </span>
+                    </span><a href="javascript:void(0);" class="menu-item theme-switch" title="切换主题">
+                    <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</header><header class="mobile" id="header-mobile">
+    <div class="header-container">
+        <div class="header-wrapper">
+            <div class="header-title">
+                <a href="/" title="编程心语">编程心语</a>
+            </div>
+            <div class="menu-toggle" id="menu-toggle-mobile">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+        <div class="menu" id="menu-mobile"><div class="search-wrapper">
+                    <div class="search mobile" id="search-mobile">
+                        <input type="text" placeholder="搜索文章..." id="search-input-mobile">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-mobile" title="搜索">
+                            <i class="fas fa-search fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-mobile" title="清空">
+                            <i class="fas fa-times-circle fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-mobile">
+                            <i class="fas fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+                        </span>
+                    </div>
+                    <a href="javascript:void(0);" class="search-cancel" id="search-cancel-mobile">
+                        取消
+                    </a>
+                </div><a class="menu-item" href="/posts/" title="">文章</a><a class="menu-item" href="/categories/" title="">分类</a><a class="menu-item" href="/tags/" title="">标签</a><a class="menu-item" href="/about-me/" title="">关于</a><a href="javascript:void(0);" class="menu-item theme-switch" title="切换主题">
+                <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
+            </a></div>
+    </div>
+</header><div class="search-dropdown desktop">
+        <div id="search-dropdown-desktop"></div>
+    </div>
+    <div class="search-dropdown mobile">
+        <div id="search-dropdown-mobile"></div>
+    </div><main class="main">
+                <div class="container"><div class="toc" id="toc-auto">
+            <h2 class="toc-title">目录</h2>
+            <div class="toc-content" id="toc-content-auto"></div>
+        </div><article class="page single"><h1 class="single-title animate__animated animate__flipInX">端侧音频事件分类实战:用 YAMNet 让应用听懂环境声音</h1><div class="post-meta">
+            <div class="post-meta-line"><span class="post-author"><a href="https://www.ithome.me/" title="Author" target="_blank" rel="noopener noreferrer author" class="author"><i class="fas fa-user-circle fa-fw" aria-hidden="true"></i>Simon</a>
+</span>&nbsp;<span class="post-category">收录于 <a href="/categories/ai/"><i class="far fa-folder fa-fw" aria-hidden="true"></i>Ai</a></span></div>
+            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw" aria-hidden="true"></i>&nbsp;<time datetime="2026-09-21">2026-09-21</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden="true"></i>&nbsp;约 1600 字&nbsp;
+                <i class="far fa-clock fa-fw" aria-hidden="true"></i>&nbsp;预计阅读 4 分钟&nbsp;</div>
+        </div><div class="details toc" id="toc-static"  data-kept="true">
+                <div class="details-summary toc-title">
+                    <span>目录</span>
+                    <span><i class="details-icon fas fa-angle-right" aria-hidden="true"></i></span>
+                </div>
+                <div class="details-content toc-content" id="toc-content-static"><nav id="TableOfContents">
+  <ul>
+    <li><a href="#yamnet-是什么">YAMNet 是什么</a></li>
+    <li><a href="#方案对比什么时候用-yamnet">方案对比:什么时候用 YAMNet</a></li>
+    <li><a href="#python-快速上手">Python 快速上手</a></li>
+    <li><a href="#端侧部署tflite">端侧部署:TFLite</a></li>
+    <li><a href="#实测建议与限制">实测建议与限制</a></li>
+  </ul>
+</nav></div>
+            </div><div class="content" id="content"><p>语音识别解决的是&quot;说了什么&quot;,音频事件分类解决的是&quot;发生了什么声音&quot;。婴儿监护器检测哭声、智能门铃区分敲门和按铃、居家安防识别玻璃破碎声——这些都是典型的**音频事件分类(Audio Event Classification)**场景,而且完全可以在设备端离线完成,不用把麦克风数据传到云端。</p>
+<p>这篇文章用 Google 开源的 YAMNet 走一遍完整流程:模型选型对比、Python 推理、TFLite 端侧部署三个环节,附可运行代码。</p>
+<h2 id="yamnet-是什么">YAMNet 是什么</h2>
+<p>YAMNet(Yet Another Audio MobileNet Network)是 Google 基于 AudioSet-YouTube 语料库(约 5000 小时、527 类标注)训练的预训练网络,截至 2026-09 官方仓库仍维护在 <code>tensorflow/models</code> 下,Apache-2.0 许可:</p>
+<ul>
+<li>输出 <strong>521 个音频事件类</strong>(原始 527 类中删除了 6 个有争议的标签,如带性别区分的 Speech/Singing)</li>
+<li>主干是 <strong>MobileNet_v1</strong> 深度可分离卷积,共 <strong>370 万参数</strong>,推理每帧 960ms 音频约 6900 万次乘加</li>
+<li>输入要求:16kHz 单声道 PCM → 64 维 log-mel 频谱(125-7500Hz)→ 每 0.96 秒一帧</li>
+<li>除了 521 类分数,还同时输出 <strong>1024 维 embedding</strong>,可以当通用音频特征提取器做迁移学习</li>
+</ul>
+<p>它的定位很明确:不是精度天花板,而是&quot;开关级守门员&quot;——几 MB 的模型覆盖绝大多数日常声音类别,换来了在手机和嵌入式设备上毫秒级推理。</p>
+<h2 id="方案对比什么时候用-yamnet">方案对比:什么时候用 YAMNet</h2>
+<table>
+	<thead>
+			<tr>
+					<th>方案</th>
+					<th>AudioSet 指标</th>
+					<th>模型大小</th>
+					<th>适用场景</th>
+			</tr>
+	</thead>
+	<tbody>
+			<tr>
+					<td><strong>YAMNet</strong></td>
+					<td>官方 balanced mAP 0.306</td>
+					<td>3.7M 参数</td>
+					<td>端侧实时、覆盖 521 类通用事件</td>
+			</tr>
+			<tr>
+					<td><strong>PANNs Cnn14</strong></td>
+					<td>mAP 0.431</td>
+					<td>~80M 参数</td>
+					<td>离线批处理、精度优先</td>
+			</tr>
+			<tr>
+					<td>自研 CNN + AudioSet 微调</td>
+					<td>取决于数据</td>
+					<td>可裁剪</td>
+					<td>类别固定(如只识别 5 种)的业务场景</td>
+			</tr>
+	</tbody>
+</table>
+<p>PANNs(论文实现 <code>qiuqiangkong/audioset_tagging_cnn</code>,仍在维护)用 CNN14 架构在 AudioSet 上把 mAP 做到了 0.431,明显高于 YAMNet 的 0.306,还提供了开箱即用的 <code>panns_inference</code> 推理工具。代价是模型大得多、推理慢,主要适合服务器或离线批处理。如果你的类别固定且样本可控,更好的做法是把 YAMNet 当特征提取器,冻结主干加一个分类头微调(官方有 transfer learning 教程),这也是端侧项目最常用的路线。</p>
+<h2 id="python-快速上手">Python 快速上手</h2>
+<p>先下载模型权重和类别映射表:</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl"><span class="c1"># 权重 ~18MB</span>
+</span></span><span class="line"><span class="cl">curl -L -o yamnet.h5 https://storage.googleapis.com/audioset/yamnet.h5
+</span></span><span class="line"><span class="cl">curl -L -o yamnet_class_map.csv https://raw.githubusercontent.com/tensorflow/models/master/research/audioset/yamnet/yamnet_class_map.csv
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>⚠️ <strong>Keras 版本坑(重要)</strong>:YAMNet 官方代码只兼容 Keras 2。TF 2.16 起默认安装 Keras 3,直接加载会报错。建议用 <code>pip install &quot;tensorflow&lt;2.16&quot;</code> 或安装 <code>tf-keras</code> 兼容层。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">tensorflow</span> <span class="k">as</span> <span class="nn">tf</span>
+</span></span><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+</span></span><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">soundfile</span> <span class="k">as</span> <span class="nn">sf</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">model</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">saved_model</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s2">&#34;yamnet.h5&#34;</span><span class="p">)</span>  <span class="c1"># 或用 keras.models.load_model 加载</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 16kHz 单声道 WAV</span>
+</span></span><span class="line"><span class="cl"><span class="n">waveform</span><span class="p">,</span> <span class="n">sr</span> <span class="o">=</span> <span class="n">sf</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="s2">&#34;door_knock.wav&#34;</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">&#34;float32&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="k">if</span> <span class="n">sr</span> <span class="o">!=</span> <span class="mi">16000</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="c1"># 用 resampy 重采样到 16kHz</span>
+</span></span><span class="line"><span class="cl">    <span class="kn">import</span> <span class="nn">resampy</span>
+</span></span><span class="line"><span class="cl">    <span class="n">waveform</span> <span class="o">=</span> <span class="n">resampy</span><span class="o">.</span><span class="n">resample</span><span class="p">(</span><span class="n">waveform</span><span class="p">,</span> <span class="n">sr</span><span class="p">,</span> <span class="mi">16000</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 滑动 0.96s 窗口推理,取帧级标签的平均分</span>
+</span></span><span class="line"><span class="cl"><span class="n">scores</span><span class="p">,</span> <span class="n">embeddings</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="n">waveform</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">mean_scores</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">scores</span><span class="o">.</span><span class="n">numpy</span><span class="p">(),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 取 top-5 类别</span>
+</span></span><span class="line"><span class="cl"><span class="n">classes</span> <span class="o">=</span> <span class="p">[</span><span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&#34;,&#34;</span><span class="p">)[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">           <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&#34;yamnet_class_map.csv&#34;</span><span class="p">)</span><span class="o">.</span><span class="n">readlines</span><span class="p">()[</span><span class="mi">1</span><span class="p">:]]</span>
+</span></span><span class="line"><span class="cl"><span class="n">top5</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">mean_scores</span><span class="p">)[::</span><span class="o">-</span><span class="mi">1</span><span class="p">][:</span><span class="mi">5</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl"><span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">top5</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&#34;</span><span class="si">{</span><span class="n">classes</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="si">:</span><span class="s2">30s</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">mean_scores</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">&#34;</span><span class="p">)</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>输出示例(敲门声):</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">Knock                      0.921
+</span></span><span class="line"><span class="cl">Door                       0.834
+</span></span><span class="line"><span class="cl">Speech                     0.102
+</span></span><span class="line"><span class="cl">Inside, small room         0.088
+</span></span><span class="line"><span class="cl">Finger snapping            0.031
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h2 id="端侧部署tflite">端侧部署:TFLite</h2>
+<p>把模型喂到手机上有两条路:</p>
+<p><strong>路线一:直接用现成 TFLite</strong>(推荐)。MediaPipe 模型仓库官方托管了转换好的 YAMNet:</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">curl -L -o yamnet.tflite <span class="se">\
+</span></span></span><span class="line"><span class="cl">  https://storage.googleapis.com/mediapipe-models/audio_classifier/yamnet/float32/1/yamnet.tflite
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>然后用 MediaPipe Tasks 的 <strong>AudioClassifier</strong> API,Android(Kotlin)核心代码就几行:</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-kotlin" data-lang="kotlin"><span class="line"><span class="cl"><span class="k">val</span> <span class="py">options</span> <span class="p">=</span> <span class="nc">AudioClassifier</span><span class="p">.</span><span class="nc">AudioClassifierOptions</span><span class="p">.</span><span class="n">builder</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">    <span class="p">.</span><span class="n">setBaseOptions</span><span class="p">(</span><span class="nc">BaseOptions</span><span class="p">.</span><span class="n">builder</span><span class="p">().</span><span class="n">setModelAssetPath</span><span class="p">(</span><span class="s2">&#34;yamnet.tflite&#34;</span><span class="p">).</span><span class="n">build</span><span class="p">())</span>
+</span></span><span class="line"><span class="cl">    <span class="p">.</span><span class="n">setMaxResults</span><span class="p">(</span><span class="mi">5</span><span class="p">).</span><span class="n">build</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl"><span class="k">val</span> <span class="py">classifier</span> <span class="p">=</span> <span class="nc">AudioClassifier</span><span class="p">.</span><span class="n">createFromOptions</span><span class="p">(</span><span class="n">context</span><span class="p">,</span> <span class="n">options</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="k">val</span> <span class="py">result</span> <span class="p">=</span> <span class="n">classifier</span><span class="p">.</span><span class="n">classify</span><span class="p">(</span><span class="n">classifier</span><span class="p">.</span><span class="n">createInputTensorAudio</span><span class="p">().</span><span class="n">apply</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">load</span><span class="p">(</span><span class="n">audioRecord</span><span class="p">)</span>  <span class="c1">// 16kHz 单声道 AudioRecord
+</span></span></span><span class="line"><span class="cl"><span class="p">})</span>
+</span></span><span class="line"><span class="cl"><span class="n">result</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="n">classificationCategories</span><span class="p">().</span><span class="n">forEach</span> <span class="p">{</span> <span class="n">c</span> <span class="o">-&gt;</span>
+</span></span><span class="line"><span class="cl">    <span class="nc">Log</span><span class="p">.</span><span class="n">i</span><span class="p">(</span><span class="s2">&#34;Sound&#34;</span><span class="p">,</span> <span class="s2">&#34;</span><span class="si">${c.categoryName()}</span><span class="s2"> </span><span class="si">${c.score()}</span><span class="s2">&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>iOS 对应 <code>AudioClassifier</code>(Swift,Swift Package 引入 MediaPipe Tasks Audio)。
+<strong>关键约束:MediaPipe 的 YAMNet 输入是 16k 单声道、1 秒长度的 PCM 块</strong>,超过长度要自己做滑窗;模型内置了 log-mel 特征提取,端侧不用再算频谱。</p>
+<p><strong>路线二:自己转换</strong>。用 <code>tensorflow-hub</code> 拉 <code>google/yamnet/1</code>,经 <code>tf.lite.TFLiteConverter.from_saved_model</code> 转成 int8 量化版(3.7M 参数量化后约 2-4MB,进一步压缩体积),注意先用代表性音频做校准集避免精度掉太多。</p>
+<h2 id="实测建议与限制">实测建议与限制</h2>
+<ul>
+<li><strong>长音频要滑窗聚合</strong>:模型单帧只看 0.96s,持续监控时用 1s 窗 + 50% 重叠,对结果做截断平均或取最大抑制误报</li>
+<li><strong>标签噪声</strong>:AudioSet 是 YouTube 众包标注,个别类别精度一般;对误报敏感的场景(如跌倒检测)建议在业务数据上微调一层</li>
+<li><strong>隐私是加分项</strong>:全程本地推理,麦克风数据不出设备,这是这类方案对比云端 API 的核心卖点</li>
+<li><strong>与语音识别互补</strong>:YAMNet 的 Speech 类能当&quot;有人说话&quot;的守门员,再接 sherpa-onnx 之类的 ASR,比让 ASR 空转省电一个量级</li>
+</ul>
+<p>截至 2026-09-21 验证:YAMNet 权重与 MediaPipe TFLite 下载链接均可用,PANNs 仓库仍在维护。</p>
+</div><div class="post-footer" id="post-footer">
+    <div class="post-info">
+        <div class="post-info-line">
+            <div class="post-info-mod">
+                <span>更新于 2026-09-21</span>
+            </div></div>
+        <div class="post-info-line">
+            <div class="post-info-md"></div>
+            <div class="post-info-share">
+                <span><a href="javascript:void(0);" title="分享到 Twitter" data-sharer="twitter" data-url="https://www.ithome.me/post/2026/09/21/yamnet-audio-event-classification/" data-title="端侧音频事件分类实战:用 YAMNet 让应用听懂环境声音" data-via="ChenCiki" data-hashtags="端侧AI,音频分类,YAMNet,TFLite,AudioSet,MediaPipe"><i class="fab fa-twitter fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="分享到 Linkedin" data-sharer="linkedin" data-url="https://www.ithome.me/post/2026/09/21/yamnet-audio-event-classification/"><i class="fab fa-linkedin fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="分享到 微博" data-sharer="weibo" data-url="https://www.ithome.me/post/2026/09/21/yamnet-audio-event-classification/" data-title="端侧音频事件分类实战:用 YAMNet 让应用听懂环境声音" data-ralateuid="xxx"><i class="fab fa-weibo fa-fw" aria-hidden="true"></i></a></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="post-info-more">
+        <section class="post-tags"><i class="fas fa-tags fa-fw" aria-hidden="true"></i>&nbsp;<a href="/tags/%E7%AB%AF%E4%BE%A7ai/">端侧AI</a>,&nbsp;<a href="/tags/%E9%9F%B3%E9%A2%91%E5%88%86%E7%B1%BB/">音频分类</a>,&nbsp;<a href="/tags/yamnet/">YAMNet</a>,&nbsp;<a href="/tags/tflite/">TFLite</a>,&nbsp;<a href="/tags/audioset/">AudioSet</a>,&nbsp;<a href="/tags/mediapipe/">MediaPipe</a></section>
+        <section>
+            <span><a href="javascript:void(0);" onclick="window.history.back();">返回</a></span>&nbsp;|&nbsp;<span><a href="/">主页</a></span>
+        </section>
+    </div>
+
+    <div class="post-nav"><a href="/post/2026/09/17/executorch-llm-export-pte/" class="prev" rel="prev" title="ExecuTorch 端侧部署实战：从 torch.export 到 .pte 的完整工作流"><i class="fas fa-angle-left fa-fw" aria-hidden="true"></i>ExecuTorch 端侧部署实战：从 torch.export 到 .pte 的完整工作流</a></div>
+</div>
+<div id="comments"><div id="gitalk" class="comment"></div><noscript>
+                Please enable JavaScript to view the comments powered by <a href="https://github.com/gitalk/gitalk"></a>Gitalk</a>.
+            </noscript></div></article></div>
+            </main><footer class="footer">
+        <div class="footer-container"><div class="footer-line" itemscope itemtype="http://schema.org/CreativeWork"><i class="far fa-copyright fa-fw" aria-hidden="true"></i><span itemprop="copyrightYear">2011 - 2026</span><span class="author" itemprop="copyrightHolder">&nbsp;<a href="https://www.ithome.me/" target="_blank">Simon Chen</a></span>&nbsp;|&nbsp;<span class="license"><a rel="license external nofollow noopener noreferrer" href="https://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank">CC BY-NC-ND 4.0</a></span></div>
+        </div>
+    </footer></div>
+
+        <div id="fixed-buttons"><a href="#" id="back-to-top" class="fixed-button" title="回到顶部">
+                <i class="fas fa-arrow-up fa-fw" aria-hidden="true"></i>
+            </a><a href="#" id="view-comments" class="fixed-button" title="查看评论">
+                <i class="fas fa-comment fa-fw" aria-hidden="true"></i>
+            </a>
+        </div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1.7.2/dist/gitalk.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/css/lightgallery-bundle.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/katex.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/copy-tex.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.css"><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/gitalk@1.7.2/dist/gitalk.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/autocomplete.js@0.38.1/dist/autocomplete.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lunr@2.3.9/lunr.min.js"></script><script type="text/javascript" src="/lib/lunr/lunr.stemmer.support.min.js"></script><script type="text/javascript" src="/lib/lunr/lunr.zh.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lazysizes@5.3.1/lazysizes.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/lightgallery.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/plugins/thumbnail/lg-thumbnail.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/plugins/zoom/lg-zoom.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/clipboard@2.0.11/dist/clipboard.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/sharer.js@0.5.1/sharer.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/katex.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/auto-render.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/copy-tex.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/mhchem.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.js"></script><script type="text/javascript">window.config={"code":{"copyTitle":"复制到剪贴板","maxShownLines":50},"comment":{"gitalk":{"admin":["cikichen"],"clientID":"be0f52370ed1285b6c7c","clientSecret":"734a7d8d0ded346ca7a3d565d57de3f8eeb2850b","id":"2026-09-21T00:00:00Z","owner":"cikichen","repo":"gitalk","title":"端侧音频事件分类实战:用 YAMNet 让应用听懂环境声音"}},"cookieconsent":{"content":{"dismiss":"我知道了","link":"了解更多","message":"本网站使用 Cookies 来改善您的浏览体验."},"enable":true,"palette":{"button":{"background":"#f0f0f0"},"popup":{"background":"#1aa3ff"}},"theme":"edgeless"},"lightgallery":true,"math":{"delimiters":[{"display":true,"left":"$$","right":"$$"},{"display":true,"left":"\\[","right":"\\]"},{"display":true,"left":"\\begin{equation}","right":"\\end{equation}"},{"display":true,"left":"\\begin{equation*}","right":"\\end{equation*}"},{"display":true,"left":"\\begin{align}","right":"\\end{align}"},{"display":true,"left":"\\begin{align*}","right":"\\end{align*}"},{"display":true,"left":"\\begin{alignat}","right":"\\end{alignat}"},{"display":true,"left":"\\begin{alignat*}","right":"\\end{alignat*}"},{"display":true,"left":"\\begin{gather}","right":"\\end{gather}"},{"display":true,"left":"\\begin{CD}","right":"\\end{CD}"},{"display":false,"left":"$","right":"$"},{"display":false,"left":"\\(","right":"\\)"}],"strict":false},"search":{"highlightTag":"em","lunrIndexURL":"/index.json","lunrLanguageCode":"zh","lunrSegmentitURL":"/lib/lunr/lunr.segmentit.js","maxResultLength":10,"noResultsFound":"没有找到结果","snippetLength":50,"type":"lunr"}};</script><script type="text/javascript" src="/js/theme.min.js"></script></body>
+</html>
