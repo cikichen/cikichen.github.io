@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="robots" content="noodp" />
+        <title>端侧语音前处理实战：Silero VAD 断句 &#43; GTCRN 降噪，把嘈杂语音洗干净 - 编程心语</title><meta name="Description" content="端侧语音应用别只顾着上 ASR：先用 Silero VAD（2026-09 最新 v6.2.3）做语音活动检测断句，再用 ICASSP2024 的超轻量降噪模型 GTCRN（48.2K 参数）去噪。附可运行的 Python 流水线、端侧推理选型对比与实测数据。"><meta property="og:url" content="https://www.ithome.me/post/2026/10/05/on-device-speech-vad-gtcrn/">
+	<meta property="og:site_name" content="编程心语">
+	<meta property="og:title" content="端侧语音前处理实战：Silero VAD 断句 &#43; GTCRN 降噪，把嘈杂语音洗干净">
+	<meta property="og:description" content="端侧语音应用别只顾着上 ASR：先用 Silero VAD（2026-09 最新 v6.2.3）做语音活动检测断句，再用 ICASSP2024 的超轻量降噪模型 GTCRN（48.2K 参数）去噪。附可运行的 Python 流水线、端侧推理选型对比与实测数据。">
+	<meta property="og:locale" content="zh_CN">
+	<meta property="og:type" content="article">
+		<meta property="article:section" content="posts">
+		<meta property="article:published_time" content="2026-10-05T08:00:00+08:00">
+		<meta property="article:modified_time" content="2026-10-05T03:07:55+08:00">
+		<meta property="article:tag" content="端侧AI">
+		<meta property="article:tag" content="语音前处理">
+		<meta property="article:tag" content="VAD">
+		<meta property="article:tag" content="Silero VAD">
+		<meta property="article:tag" content="GTCRN">
+		<meta property="article:tag" content="语音降噪">
+
+	<meta name="twitter:card" content="summary">
+	<meta name="twitter:title" content="端侧语音前处理实战：Silero VAD 断句 &#43; GTCRN 降噪，把嘈杂语音洗干净">
+	<meta name="twitter:description" content="端侧语音应用别只顾着上 ASR：先用 Silero VAD（2026-09 最新 v6.2.3）做语音活动检测断句，再用 ICASSP2024 的超轻量降噪模型 GTCRN（48.2K 参数）去噪。附可运行的 Python 流水线、端侧推理选型对比与实测数据。">
+			<meta name="twitter:site" content="@ChenCiki">
+<meta name="application-name" content="编程心语">
+<meta name="apple-mobile-web-app-title" content="编程心语"><meta name="theme-color" content="#ffffff"><meta name="msapplication-TileColor" content="#da532c"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5"><link rel="manifest" href="/site.webmanifest"><link rel="canonical" href="https://www.ithome.me/post/2026/10/05/on-device-speech-vad-gtcrn/" /><link rel="prev" href="https://www.ithome.me/post/2026/09/28/github-trending-weekly/" /><link rel="next" href="https://www.ithome.me/post/2026/10/05/github-trending-weekly/" /><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/normalize.css@8.0.1/normalize.min.css"><link rel="stylesheet" href="/css/style.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css"><script type="application/ld+json">
+    {
+        "@context": "http://schema.org",
+        "@type": "BlogPosting",
+        "headline": "端侧语音前处理实战：Silero VAD 断句 + GTCRN 降噪，把嘈杂语音洗干净",
+        "inLanguage": "zh-CN",
+        "mainEntityOfPage": {
+            "@type": "WebPage",
+            "@id": "https:\/\/www.ithome.me\/post\/2026\/10\/05\/on-device-speech-vad-gtcrn\/"
+        },"image": ["https:\/\/www.ithome.me\/cover.png"],"genre": "posts","keywords": "端侧AI, 语音前处理, VAD, Silero VAD, GTCRN, 语音降噪, ONNX","wordcount":  2337 ,
+        "url": "https:\/\/www.ithome.me\/post\/2026\/10\/05\/on-device-speech-vad-gtcrn\/","datePublished": "2026-10-05T08:00:00+08:00","dateModified": "2026-10-05T03:07:55+08:00","publisher": {
+            "@type": "Organization",
+            "name": "SimonChen","logo": "https:\/\/www.ithome.me\/logo.png"},"author": {
+                "@type": "Person",
+                "name": "Simon"
+            },"description": "端侧语音应用别只顾着上 ASR：先用 Silero VAD（2026-09 最新 v6.2.3）做语音活动检测断句，再用 ICASSP2024 的超轻量降噪模型 GTCRN（48.2K 参数）去噪。附可运行的 Python 流水线、端侧推理选型对比与实测数据。"
+    }
+    </script><script async src="https://www.googletagmanager.com/gtag/js?id=G-H1Q5563VR8"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-H1Q5563VR8', { 'anonymize_ip': true });
+</script></head>
+    <body data-header-desktop="fixed" data-header-mobile="auto"><script type="text/javascript">(window.localStorage && localStorage.getItem('theme') ? localStorage.getItem('theme') === 'dark' : ('auto' === 'auto' ? window.matchMedia('(prefers-color-scheme: dark)').matches : 'auto' === 'dark')) && document.body.setAttribute('theme', 'dark');</script>
+
+        <div id="mask"></div><div class="wrapper"><header class="desktop" id="header-desktop">
+    <div class="header-wrapper">
+        <div class="header-title">
+            <a href="/" title="编程心语">编程心语</a>
+        </div>
+        <div class="menu">
+            <div class="menu-inner"><a class="menu-item" href="/posts/"> 文章 </a><a class="menu-item" href="/categories/"> 分类 </a><a class="menu-item" href="/tags/"> 标签 </a><a class="menu-item" href="/about-me/"> 关于 </a><span class="menu-item delimiter"></span><span class="menu-item search" id="search-desktop">
+                        <input type="text" placeholder="搜索文章..." id="search-input-desktop">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-desktop" title="搜索">
+                            <i class="fas fa-search fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-desktop" title="清空">
+                            <i class="fas fa-times-circle fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-desktop">
+                            <i class="fas fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+                        </span>
+                    </span><a href="javascript:void(0);" class="menu-item theme-switch" title="切换主题">
+                    <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</header><header class="mobile" id="header-mobile">
+    <div class="header-container">
+        <div class="header-wrapper">
+            <div class="header-title">
+                <a href="/" title="编程心语">编程心语</a>
+            </div>
+            <div class="menu-toggle" id="menu-toggle-mobile">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+        <div class="menu" id="menu-mobile"><div class="search-wrapper">
+                    <div class="search mobile" id="search-mobile">
+                        <input type="text" placeholder="搜索文章..." id="search-input-mobile">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-mobile" title="搜索">
+                            <i class="fas fa-search fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-mobile" title="清空">
+                            <i class="fas fa-times-circle fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-mobile">
+                            <i class="fas fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+                        </span>
+                    </div>
+                    <a href="javascript:void(0);" class="search-cancel" id="search-cancel-mobile">
+                        取消
+                    </a>
+                </div><a class="menu-item" href="/posts/" title="">文章</a><a class="menu-item" href="/categories/" title="">分类</a><a class="menu-item" href="/tags/" title="">标签</a><a class="menu-item" href="/about-me/" title="">关于</a><a href="javascript:void(0);" class="menu-item theme-switch" title="切换主题">
+                <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
+            </a></div>
+    </div>
+</header><div class="search-dropdown desktop">
+        <div id="search-dropdown-desktop"></div>
+    </div>
+    <div class="search-dropdown mobile">
+        <div id="search-dropdown-mobile"></div>
+    </div><main class="main">
+                <div class="container"><div class="toc" id="toc-auto">
+            <h2 class="toc-title">目录</h2>
+            <div class="toc-content" id="toc-content-auto"></div>
+        </div><article class="page single"><h1 class="single-title animate__animated animate__flipInX">端侧语音前处理实战：Silero VAD 断句 &#43; GTCRN 降噪，把嘈杂语音洗干净</h1><div class="post-meta">
+            <div class="post-meta-line"><span class="post-author"><a href="https://www.ithome.me/" title="Author" target="_blank" rel="noopener noreferrer author" class="author"><i class="fas fa-user-circle fa-fw" aria-hidden="true"></i>Simon</a>
+</span>&nbsp;<span class="post-category">收录于 <a href="/categories/ai/"><i class="far fa-folder fa-fw" aria-hidden="true"></i>Ai</a></span></div>
+            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw" aria-hidden="true"></i>&nbsp;<time datetime="2026-10-05">2026-10-05</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden="true"></i>&nbsp;约 2337 字&nbsp;
+                <i class="far fa-clock fa-fw" aria-hidden="true"></i>&nbsp;预计阅读 5 分钟&nbsp;</div>
+        </div><div class="details toc" id="toc-static"  data-kept="true">
+                <div class="details-summary toc-title">
+                    <span>目录</span>
+                    <span><i class="details-icon fas fa-angle-right" aria-hidden="true"></i></span>
+                </div>
+                <div class="details-content toc-content" id="toc-content-static"><nav id="TableOfContents">
+  <ul>
+    <li><a href="#silero-vad端侧断句的事实标准">Silero VAD：端侧断句的事实标准</a></li>
+    <li><a href="#gtcrn48k-参数的降噪模型">GTCRN：48K 参数的降噪模型</a></li>
+    <li><a href="#端侧推理框架怎么选">端侧推理框架怎么选</a></li>
+    <li><a href="#完整流水线先降噪再断句">完整流水线：先降噪，再断句</a></li>
+    <li><a href="#小结">小结</a></li>
+  </ul>
+</nav></div>
+            </div><div class="content" id="content"><p>做端侧语音应用，很多人的第一步就是上 ASR，结果识别率怎么调都上不去。问题往往不在识别模型，而在送进去的音频：地铁里的风噪、办公室的人声、麦克风底噪，都会让识别率断崖式下跌。更糟的是整段录音里大量是静音，直接喂给 ASR 既浪费算力，又容易触发幻觉，静音段被模型硬生生编出文字。</p>
+<p>一条靠谱的端侧语音流水线长这样：</p>
+<p>麦克风采集 → 回声消除（AEC，双向通话才需要）→ 语音增强降噪（SE）→ 语音活动检测（VAD）断句 → ASR → 后处理</p>
+<p>本文只攻两个最容易落地、收益最大的环节：<strong>降噪</strong>和 <strong>VAD 断句</strong>。选的两个模型都极小，合起来能塞进手机 App 里离线跑。</p>
+<h2 id="silero-vad端侧断句的事实标准">Silero VAD：端侧断句的事实标准</h2>
+<p>Silero VAD 是 Silero 团队开源的预训练语音活动检测器，MIT 许可。截至 2026-10-05，最新版本为 <strong>v6.2.3</strong>（2026-09-23 发布），PyPI 包名 <code>silero-vad</code>。</p>
+<p>它适合端侧的几个硬指标：</p>
+<ul>
+<li>JIT 模型文件约 <strong>2MB</strong>，单核 CPU 处理一个 30ms 音频块不到 <strong>1ms</strong>；换成 ONNX 推理还能再快 4-5 倍</li>
+<li>支持 8kHz 和 16kHz 两种采样率</li>
+<li>训练语料覆盖 6000+ 语言，带不同底噪的音频也能用</li>
+<li>官方提供了 C++、Go、Java、C#、Rust、ONNX Runtime Web（浏览器）以及 ExecuTorch 的现成示例，端侧不用自己造轮子</li>
+</ul>
+<p>安装（要用 ONNX 推理就带上 extra）：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">pip install <span class="s2">&#34;silero-vad[onnx-cpu]&#34;</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>离线整段检测，三行就够：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">silero_vad</span> <span class="kn">import</span> <span class="n">load_silero_vad</span><span class="p">,</span> <span class="n">read_audio</span><span class="p">,</span> <span class="n">get_speech_timestamps</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">vad</span> <span class="o">=</span> <span class="n">load_silero_vad</span><span class="p">()</span>                     <span class="c1"># 默认 JIT；load_silero_vad(onnx=True) 走 ONNX</span>
+</span></span><span class="line"><span class="cl"><span class="n">wav</span> <span class="o">=</span> <span class="n">read_audio</span><span class="p">(</span><span class="s2">&#34;input.wav&#34;</span><span class="p">)</span>               <span class="c1"># 自动重采样到 16k</span>
+</span></span><span class="line"><span class="cl"><span class="n">ts</span> <span class="o">=</span> <span class="n">get_speech_timestamps</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">    <span class="n">wav</span><span class="p">,</span> <span class="n">vad</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="n">return_seconds</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="n">min_speech_duration_ms</span><span class="o">=</span><span class="mi">250</span><span class="p">,</span>             <span class="c1"># 短于 250ms 的当噪声丢掉</span>
+</span></span><span class="line"><span class="cl">    <span class="n">min_silence_duration_ms</span><span class="o">=</span><span class="mi">300</span><span class="p">,</span>            <span class="c1"># 静音超过 300ms 才断句</span>
+</span></span><span class="line"><span class="cl">    <span class="n">speech_pad_ms</span><span class="o">=</span><span class="mi">60</span><span class="p">,</span>                       <span class="c1"># 每段前后各留 60ms，防削字头</span>
+</span></span><span class="line"><span class="cl"><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="n">ts</span><span class="p">)</span>   <span class="c1"># [{&#39;start&#39;: 0.6, &#39;end&#39;: 3.1}, {&#39;start&#39;: 4.0, &#39;end&#39;: 6.8}]</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>如果是实时麦克风流，就用 <code>VADIterator</code> 逐块喂数据，它只在状态翻转时回调：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span><span class="lnt">7
+</span><span class="lnt">8
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">silero_vad</span> <span class="kn">import</span> <span class="n">VADIterator</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">it</span> <span class="o">=</span> <span class="n">VADIterator</span><span class="p">(</span><span class="n">vad</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">sampling_rate</span><span class="o">=</span><span class="mi">16000</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                 <span class="n">min_silence_duration_ms</span><span class="o">=</span><span class="mi">300</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="k">for</span> <span class="n">chunk</span> <span class="ow">in</span> <span class="n">mic_stream</span><span class="p">(</span><span class="n">samples_per_chunk</span><span class="o">=</span><span class="mi">512</span><span class="p">):</span>   <span class="c1"># 512/16000 = 32ms</span>
+</span></span><span class="line"><span class="cl">    <span class="n">event</span> <span class="o">=</span> <span class="n">it</span><span class="p">(</span><span class="n">chunk</span><span class="p">)</span>       <span class="c1"># {&#39;start&#39;: 采样点} 或 {&#39;end&#39;: 采样点} 或 None</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="n">event</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="nb">print</span><span class="p">(</span><span class="n">event</span><span class="p">)</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p><code>threshold</code> 是判定语音的概率阈值，嘈杂环境调到 0.6 以上能少误触发；<code>min_silence_duration_ms</code> 决定断句灵敏度，值越小断得越碎。</p>
+<h2 id="gtcrn48k-参数的降噪模型">GTCRN：48K 参数的降噪模型</h2>
+<p>VAD 只能“切”，不能“洗”。要降噪，端侧首选 <strong>GTCRN</strong>（Grouped Temporal Convolutional Recurrent Network），它是 ICASSP 2024 论文《A Speech Enhancement Model Requiring Ultralow Computational Resources》的官方实现，MIT 许可，仓库到 2026 年仍在更新。</p>
+<p>核心卖点是又小又好：</p>
+<ul>
+<li><strong>48.2K 参数、33.0 MMACs/秒</strong>。注意论文里原写的是 23.7K/39.6，作者后来把不可学习的 ERB 滤波器组也计入参数量，并把低频段映射从矩阵乘法换成拼接，更新为 48.2K/33.0</li>
+<li>在 VCTK-DEMAND 上 PESQ 2.87、SI-SNR 18.83，不仅大幅超过同量级的 RNNoise（PESQ 2.29），甚至压过参数大 36 倍的 DeepFilterNet（1.8M 参数，PESQ 2.81）</li>
+<li>DNS3 盲测：DNSMOS-P.808 达 3.44，优于 RNNoise 的 3.15</li>
+</ul>
+<p>三个轻量模型横向对比（数据来自 GTCRN 官方 README，截至 2026-10 未变）：</p>
+<ul>
+<li>RNNoise（2018）：0.06M 参数，PESQ 2.29，够轻但糊</li>
+<li>DeepFilterNet（2022）：1.80M 参数，PESQ 2.81，质量好但重</li>
+<li>GTCRN（2024）：0.05M 参数，PESQ 2.87，又小又好</li>
+</ul>
+<p>官方预训练模型放在仓库 <code>checkpoints/</code>（DNS3 与 VCTK-DEMAND 各一个），推理就是一段 STFT 加网络加 ISTFT：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">torch</span><span class="o">,</span> <span class="nn">soundfile</span> <span class="k">as</span> <span class="nn">sf</span>
+</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">gtcrn</span> <span class="kn">import</span> <span class="n">GTCRN</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">model</span> <span class="o">=</span> <span class="n">GTCRN</span><span class="p">()</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl"><span class="n">ckpt</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s2">&#34;checkpoints/model_trained_on_dns3.tar&#34;</span><span class="p">,</span> <span class="n">map_location</span><span class="o">=</span><span class="s2">&#34;cpu&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">model</span><span class="o">.</span><span class="n">load_state_dict</span><span class="p">(</span><span class="n">ckpt</span><span class="p">[</span><span class="s2">&#34;model&#34;</span><span class="p">])</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">mix</span><span class="p">,</span> <span class="n">fs</span> <span class="o">=</span> <span class="n">sf</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="s2">&#34;noisy.wav&#34;</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">&#34;float32&#34;</span><span class="p">)</span>   <span class="c1"># 必须是 16kHz</span>
+</span></span><span class="line"><span class="cl"><span class="k">assert</span> <span class="n">fs</span> <span class="o">==</span> <span class="mi">16000</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">spec</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">stft</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">from_numpy</span><span class="p">(</span><span class="n">mix</span><span class="p">),</span> <span class="mi">512</span><span class="p">,</span> <span class="mi">256</span><span class="p">,</span> <span class="mi">512</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                  <span class="n">torch</span><span class="o">.</span><span class="n">hann_window</span><span class="p">(</span><span class="mi">512</span><span class="p">)</span><span class="o">.</span><span class="n">pow</span><span class="p">(</span><span class="mf">0.5</span><span class="p">),</span> <span class="n">return_complex</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="k">with</span> <span class="n">torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">():</span>
+</span></span><span class="line"><span class="cl">    <span class="n">out</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="n">spec</span><span class="p">[</span><span class="kc">None</span><span class="p">])[</span><span class="mi">0</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl"><span class="n">enh</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">istft</span><span class="p">(</span><span class="n">out</span><span class="p">,</span> <span class="mi">512</span><span class="p">,</span> <span class="mi">256</span><span class="p">,</span> <span class="mi">512</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                  <span class="n">torch</span><span class="o">.</span><span class="n">hann_window</span><span class="p">(</span><span class="mi">512</span><span class="p">)</span><span class="o">.</span><span class="n">pow</span><span class="p">(</span><span class="mf">0.5</span><span class="p">),</span> <span class="n">return_complex</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">sf</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&#34;enhanced.wav&#34;</span><span class="p">,</span> <span class="n">enh</span><span class="o">.</span><span class="n">numpy</span><span class="p">(),</span> <span class="n">fs</span><span class="p">)</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p><code>stream/</code> 目录里还提供了转好的流式 ONNX 模型（<code>gtcrn.onnx</code> 约 352KB），纯 CPU 推理。官方实测在 12 代 i5-12400 上实时因子（RTF）只有 <strong>0.07</strong>，即处理 1 秒音频只要 70ms。</p>
+<p>不想自己拼轮子的话，<strong>sherpa-onnx</strong> 从 2025-03 起已集成 GTCRN（PR #1977），它在 Android、iOS、桌面都有绑定，可以直接接进现有语音链路。作者后续还出了改进版 <strong>UL-UNAS</strong>（2025-03，arXiv:2503.00340）和面向低信噪比的双通道 <strong>H-GTCRN</strong>，想再压一层可以看看。</p>
+<h2 id="端侧推理框架怎么选">端侧推理框架怎么选</h2>
+<p>两个模型都能导出成 ONNX，选型就不必绑死某一家：</p>
+<ul>
+<li><strong>ONNX Runtime Mobile</strong>：跨 Android、iOS、桌面，算子兼容性最好，配合 NNAPI 或 CoreML 执行后端还能吃到部分加速，推荐作为默认</li>
+<li><strong>sherpa-onnx</strong>：语音全家桶（ASR 加 VAD 加 SE），GTCRN 已内置，不想自己拼流水线就选它</li>
+<li><strong>Core ML、ExecuTorch、TFLite</strong>：想榨干苹果神经引擎或 Android 端性能时用。Silero VAD 官方就有 ExecuTorch 示例，GTCRN 需要自己转换</li>
+</ul>
+<p>落到实际项目，一个稳妥组合是：Android 用 ONNX Runtime 加 NNAPI，VAD 和降噪共用同一套 ONNX；iOS 用 ONNX Runtime 加 CoreML 后端，或把 VAD 换成系统自带的 <code>AVAudioEngine</code> 语音处理。</p>
+<h2 id="完整流水线先降噪再断句">完整流水线：先降噪，再断句</h2>
+<p>把两个模型串起来时顺序很关键：<strong>先降噪再 VAD</strong>。因为 VAD 在干净信号上判得更准。底噪大的话，VAD 会把噪声段误判成语音，白切出一堆没用的段。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">torch</span><span class="o">,</span> <span class="nn">soundfile</span> <span class="k">as</span> <span class="nn">sf</span>
+</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">silero_vad</span> <span class="kn">import</span> <span class="n">load_silero_vad</span><span class="p">,</span> <span class="n">get_speech_timestamps</span>
+</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">gtcrn</span> <span class="kn">import</span> <span class="n">GTCRN</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">SR</span> <span class="o">=</span> <span class="mi">16000</span>
+</span></span><span class="line"><span class="cl"><span class="n">vad</span> <span class="o">=</span> <span class="n">load_silero_vad</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">se</span> <span class="o">=</span> <span class="n">GTCRN</span><span class="p">()</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl"><span class="n">se</span><span class="o">.</span><span class="n">load_state_dict</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s2">&#34;checkpoints/model_trained_on_dns3.tar&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                              <span class="n">map_location</span><span class="o">=</span><span class="s2">&#34;cpu&#34;</span><span class="p">)[</span><span class="s2">&#34;model&#34;</span><span class="p">])</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">mix</span><span class="p">,</span> <span class="n">fs</span> <span class="o">=</span> <span class="n">sf</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="s2">&#34;input.wav&#34;</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">&#34;float32&#34;</span><span class="p">);</span> <span class="k">assert</span> <span class="n">fs</span> <span class="o">==</span> <span class="n">SR</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 1) 整段降噪</span>
+</span></span><span class="line"><span class="cl"><span class="n">spec</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">stft</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">from_numpy</span><span class="p">(</span><span class="n">mix</span><span class="p">),</span> <span class="mi">512</span><span class="p">,</span> <span class="mi">256</span><span class="p">,</span> <span class="mi">512</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                  <span class="n">torch</span><span class="o">.</span><span class="n">hann_window</span><span class="p">(</span><span class="mi">512</span><span class="p">)</span><span class="o">.</span><span class="n">pow</span><span class="p">(</span><span class="mf">0.5</span><span class="p">),</span> <span class="n">return_complex</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="k">with</span> <span class="n">torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">():</span>
+</span></span><span class="line"><span class="cl">    <span class="n">enh</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">istft</span><span class="p">(</span><span class="n">se</span><span class="p">(</span><span class="n">spec</span><span class="p">[</span><span class="kc">None</span><span class="p">])[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">512</span><span class="p">,</span> <span class="mi">256</span><span class="p">,</span> <span class="mi">512</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                      <span class="n">torch</span><span class="o">.</span><span class="n">hann_window</span><span class="p">(</span><span class="mi">512</span><span class="p">)</span><span class="o">.</span><span class="n">pow</span><span class="p">(</span><span class="mf">0.5</span><span class="p">),</span> <span class="n">return_complex</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 2) 在干净信号上断句</span>
+</span></span><span class="line"><span class="cl"><span class="n">ts</span> <span class="o">=</span> <span class="n">get_speech_timestamps</span><span class="p">(</span><span class="n">enh</span><span class="p">,</span> <span class="n">vad</span><span class="p">,</span> <span class="n">sampling_rate</span><span class="o">=</span><span class="n">SR</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                           <span class="n">min_speech_duration_ms</span><span class="o">=</span><span class="mi">250</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                           <span class="n">min_silence_duration_ms</span><span class="o">=</span><span class="mi">300</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                           <span class="n">speech_pad_ms</span><span class="o">=</span><span class="mi">60</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">segs</span> <span class="o">=</span> <span class="p">[</span><span class="n">enh</span><span class="p">[</span><span class="n">t</span><span class="p">[</span><span class="s2">&#34;start&#34;</span><span class="p">]:</span><span class="n">t</span><span class="p">[</span><span class="s2">&#34;end&#34;</span><span class="p">]]</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">ts</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&#34;</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">segs</span><span class="p">)</span><span class="si">}</span><span class="s2"> 段语音，共 </span><span class="si">{</span><span class="nb">sum</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">segs</span><span class="p">)</span><span class="o">/</span><span class="n">SR</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2"> 秒&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 3) 一段一段喂 ASR，静音不再触发幻觉</span>
+</span></span><span class="line"><span class="cl"><span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">s</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">segs</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">    <span class="nb">print</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">asr</span><span class="o">.</span><span class="n">transcribe</span><span class="p">(</span><span class="n">s</span><span class="p">))</span>    <span class="c1"># 换成你的 ASR 引擎</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>收益是双份的：识别率因为降噪上去了，算力因为跳过静音段省下来了。</p>
+<h2 id="小结">小结</h2>
+<p>端侧语音想做好，前处理比换更大的 ASR 模型更划算。Silero VAD 负责“哪里有人说话”，2MB 模型单核 1ms 一块；GTCRN 负责“把噪声洗掉”，48.2K 参数就能拿到接近 1.8M 参数 DeepFilterNet 的效果。两者都是 MIT 许可、都有 ONNX 版本、都能离线跑，是当前端侧语音流水线里性价比很高的组合。</p>
+<p>文中版本与性能数据截至 <strong>2026-10-05</strong> 核实：Silero VAD v6.2.3、GTCRN ICASSP 2024 官方实现（48.2K 参数 / 33.0 MMACs）。</p>
+</div><div class="post-footer" id="post-footer">
+    <div class="post-info">
+        <div class="post-info-line">
+            <div class="post-info-mod">
+                <span>更新于 2026-10-05&nbsp;<a class="git-hash" href="https://github.com/cikichen/hugo-sync/commit/564be774f2077bbc9fcb1e68b58fc2c9b55ccc3b" target="_blank" title="commit by Hermes Bot(hermes@ithome.me) 564be774f2077bbc9fcb1e68b58fc2c9b55ccc3b: post: 端侧语音前处理实战 Silero VAD &#43; GTCRN 降噪">
+                                    <i class="fas fa-hashtag fa-fw" aria-hidden="true"></i>564be774</a></span>
+            </div></div>
+        <div class="post-info-line">
+            <div class="post-info-md"></div>
+            <div class="post-info-share">
+                <span><a href="javascript:void(0);" title="分享到 Twitter" data-sharer="twitter" data-url="https://www.ithome.me/post/2026/10/05/on-device-speech-vad-gtcrn/" data-title="端侧语音前处理实战：Silero VAD 断句 &#43; GTCRN 降噪，把嘈杂语音洗干净" data-via="ChenCiki" data-hashtags="端侧AI,语音前处理,VAD,Silero VAD,GTCRN,语音降噪,ONNX"><i class="fab fa-twitter fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="分享到 Linkedin" data-sharer="linkedin" data-url="https://www.ithome.me/post/2026/10/05/on-device-speech-vad-gtcrn/"><i class="fab fa-linkedin fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="分享到 微博" data-sharer="weibo" data-url="https://www.ithome.me/post/2026/10/05/on-device-speech-vad-gtcrn/" data-title="端侧语音前处理实战：Silero VAD 断句 &#43; GTCRN 降噪，把嘈杂语音洗干净" data-ralateuid="xxx"><i class="fab fa-weibo fa-fw" aria-hidden="true"></i></a></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="post-info-more">
+        <section class="post-tags"><i class="fas fa-tags fa-fw" aria-hidden="true"></i>&nbsp;<a href="/tags/%E7%AB%AF%E4%BE%A7ai/">端侧AI</a>,&nbsp;<a href="/tags/%E8%AF%AD%E9%9F%B3%E5%89%8D%E5%A4%84%E7%90%86/">语音前处理</a>,&nbsp;<a href="/tags/vad/">VAD</a>,&nbsp;<a href="/tags/silero-vad/">Silero VAD</a>,&nbsp;<a href="/tags/gtcrn/">GTCRN</a>,&nbsp;<a href="/tags/%E8%AF%AD%E9%9F%B3%E9%99%8D%E5%99%AA/">语音降噪</a>,&nbsp;<a href="/tags/onnx/">ONNX</a></section>
+        <section>
+            <span><a href="javascript:void(0);" onclick="window.history.back();">返回</a></span>&nbsp;|&nbsp;<span><a href="/">主页</a></span>
+        </section>
+    </div>
+
+    <div class="post-nav"><a href="/post/2026/09/28/github-trending-weekly/" class="prev" rel="prev" title="GitHub Trending 周报 - 2026-09-28"><i class="fas fa-angle-left fa-fw" aria-hidden="true"></i>GitHub Trending 周报 - 2026-09-28</a>
+            <a href="/post/2026/10/05/github-trending-weekly/" class="next" rel="next" title="GitHub Trending 周报 - 2026-10-05">GitHub Trending 周报 - 2026-10-05<i class="fas fa-angle-right fa-fw" aria-hidden="true"></i></a></div>
+</div>
+<div id="comments"><div id="gitalk" class="comment"></div><noscript>
+                Please enable JavaScript to view the comments powered by <a href="https://github.com/gitalk/gitalk"></a>Gitalk</a>.
+            </noscript></div></article></div>
+            </main><footer class="footer">
+        <div class="footer-container"><div class="footer-line" itemscope itemtype="http://schema.org/CreativeWork"><i class="far fa-copyright fa-fw" aria-hidden="true"></i><span itemprop="copyrightYear">2011 - 2026</span><span class="author" itemprop="copyrightHolder">&nbsp;<a href="https://www.ithome.me/" target="_blank">Simon Chen</a></span>&nbsp;|&nbsp;<span class="license"><a rel="license external nofollow noopener noreferrer" href="https://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank">CC BY-NC-ND 4.0</a></span></div>
+        </div>
+    </footer></div>
+
+        <div id="fixed-buttons"><a href="#" id="back-to-top" class="fixed-button" title="回到顶部">
+                <i class="fas fa-arrow-up fa-fw" aria-hidden="true"></i>
+            </a><a href="#" id="view-comments" class="fixed-button" title="查看评论">
+                <i class="fas fa-comment fa-fw" aria-hidden="true"></i>
+            </a>
+        </div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1.7.2/dist/gitalk.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/css/lightgallery-bundle.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/katex.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/copy-tex.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.css"><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/gitalk@1.7.2/dist/gitalk.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/autocomplete.js@0.38.1/dist/autocomplete.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lunr@2.3.9/lunr.min.js"></script><script type="text/javascript" src="/lib/lunr/lunr.stemmer.support.min.js"></script><script type="text/javascript" src="/lib/lunr/lunr.zh.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lazysizes@5.3.1/lazysizes.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/lightgallery.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/plugins/thumbnail/lg-thumbnail.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/plugins/zoom/lg-zoom.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/clipboard@2.0.11/dist/clipboard.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/sharer.js@0.5.1/sharer.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/katex.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/auto-render.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/copy-tex.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/mhchem.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.js"></script><script type="text/javascript">window.config={"code":{"copyTitle":"复制到剪贴板","maxShownLines":50},"comment":{"gitalk":{"admin":["cikichen"],"clientID":"be0f52370ed1285b6c7c","clientSecret":"734a7d8d0ded346ca7a3d565d57de3f8eeb2850b","id":"2026-10-05T00:00:00Z","owner":"cikichen","repo":"gitalk","title":"端侧语音前处理实战：Silero VAD 断句 + GTCRN 降噪，把嘈杂语音洗干净"}},"cookieconsent":{"content":{"dismiss":"我知道了","link":"了解更多","message":"本网站使用 Cookies 来改善您的浏览体验."},"enable":true,"palette":{"button":{"background":"#f0f0f0"},"popup":{"background":"#1aa3ff"}},"theme":"edgeless"},"lightgallery":true,"math":{"delimiters":[{"display":true,"left":"$$","right":"$$"},{"display":true,"left":"\\[","right":"\\]"},{"display":true,"left":"\\begin{equation}","right":"\\end{equation}"},{"display":true,"left":"\\begin{equation*}","right":"\\end{equation*}"},{"display":true,"left":"\\begin{align}","right":"\\end{align}"},{"display":true,"left":"\\begin{align*}","right":"\\end{align*}"},{"display":true,"left":"\\begin{alignat}","right":"\\end{alignat}"},{"display":true,"left":"\\begin{alignat*}","right":"\\end{alignat*}"},{"display":true,"left":"\\begin{gather}","right":"\\end{gather}"},{"display":true,"left":"\\begin{CD}","right":"\\end{CD}"},{"display":false,"left":"$","right":"$"},{"display":false,"left":"\\(","right":"\\)"}],"strict":false},"search":{"highlightTag":"em","lunrIndexURL":"/index.json","lunrLanguageCode":"zh","lunrSegmentitURL":"/lib/lunr/lunr.segmentit.js","maxResultLength":10,"noResultsFound":"没有找到结果","snippetLength":50,"type":"lunr"}};</script><script type="text/javascript" src="/js/theme.min.js"></script></body>
+</html>
