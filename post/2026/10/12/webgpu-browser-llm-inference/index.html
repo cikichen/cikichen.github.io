@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="robots" content="noodp" />
+        <title>在浏览器里跑大模型:WebGPU 端侧推理实践指南 - 编程心语</title><meta name="Description" content="技术博客，Android，iOS，Html5, Java, Kotlin, 后端, Flutter, Python"><meta property="og:url" content="https://www.ithome.me/post/2026/10/12/webgpu-browser-llm-inference/">
+	<meta property="og:site_name" content="编程心语">
+	<meta property="og:title" content="在浏览器里跑大模型:WebGPU 端侧推理实践指南">
+	<meta property="og:description" content="浏览器也能跑 LLM?是的,而且不慢 2025 年 11 月,Chrome、Edge、Safari 相继默认启用 WebGPU——浏览器原生跑大模型从实验阶段正式进入可部署阶段。截至 2026 年 10 月,WebGPU 全球浏览器覆盖率约 85%(caniuse 口径,截至 2026-10-12 验证),Firefox 的 Windows 版已在 141 版本支持,Linux 还在 Nightly。">
+	<meta property="og:locale" content="zh_CN">
+	<meta property="og:type" content="article">
+		<meta property="article:section" content="posts">
+		<meta property="article:published_time" content="2026-10-12T08:00:00+08:00">
+		<meta property="article:modified_time" content="2026-10-12T08:00:00+08:00">
+		<meta property="article:tag" content="端侧AI">
+		<meta property="article:tag" content="WebGPU">
+		<meta property="article:tag" content="WebLLM">
+		<meta property="article:tag" content="Transformers.js">
+		<meta property="article:tag" content="浏览器推理">
+
+	<meta name="twitter:card" content="summary">
+	<meta name="twitter:title" content="在浏览器里跑大模型:WebGPU 端侧推理实践指南">
+	<meta name="twitter:description" content="浏览器也能跑 LLM?是的,而且不慢 2025 年 11 月,Chrome、Edge、Safari 相继默认启用 WebGPU——浏览器原生跑大模型从实验阶段正式进入可部署阶段。截至 2026 年 10 月,WebGPU 全球浏览器覆盖率约 85%(caniuse 口径,截至 2026-10-12 验证),Firefox 的 Windows 版已在 141 版本支持,Linux 还在 Nightly。">
+			<meta name="twitter:site" content="@ChenCiki">
+<meta name="application-name" content="编程心语">
+<meta name="apple-mobile-web-app-title" content="编程心语"><meta name="theme-color" content="#ffffff"><meta name="msapplication-TileColor" content="#da532c"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5"><link rel="manifest" href="/site.webmanifest"><link rel="canonical" href="https://www.ithome.me/post/2026/10/12/webgpu-browser-llm-inference/" /><link rel="prev" href="https://www.ithome.me/post/2026/10/05/github-trending-weekly/" /><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/normalize.css@8.0.1/normalize.min.css"><link rel="stylesheet" href="/css/style.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css"><script type="application/ld+json">
+    {
+        "@context": "http://schema.org",
+        "@type": "BlogPosting",
+        "headline": "在浏览器里跑大模型:WebGPU 端侧推理实践指南",
+        "inLanguage": "zh-CN",
+        "mainEntityOfPage": {
+            "@type": "WebPage",
+            "@id": "https:\/\/www.ithome.me\/post\/2026\/10\/12\/webgpu-browser-llm-inference\/"
+        },"image": ["https:\/\/www.ithome.me\/cover.png"],"genre": "posts","keywords": "端侧AI, WebGPU, WebLLM, Transformers.js, 浏览器推理","wordcount":  1400 ,
+        "url": "https:\/\/www.ithome.me\/post\/2026\/10\/12\/webgpu-browser-llm-inference\/","datePublished": "2026-10-12T08:00:00+08:00","dateModified": "2026-10-12T08:00:00+08:00","publisher": {
+            "@type": "Organization",
+            "name": "SimonChen","logo": "https:\/\/www.ithome.me\/logo.png"},"author": {
+                "@type": "Person",
+                "name": "Simon"
+            },"description": ""
+    }
+    </script><script async src="https://www.googletagmanager.com/gtag/js?id=G-H1Q5563VR8"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-H1Q5563VR8', { 'anonymize_ip': true });
+</script></head>
+    <body data-header-desktop="fixed" data-header-mobile="auto"><script type="text/javascript">(window.localStorage && localStorage.getItem('theme') ? localStorage.getItem('theme') === 'dark' : ('auto' === 'auto' ? window.matchMedia('(prefers-color-scheme: dark)').matches : 'auto' === 'dark')) && document.body.setAttribute('theme', 'dark');</script>
+
+        <div id="mask"></div><div class="wrapper"><header class="desktop" id="header-desktop">
+    <div class="header-wrapper">
+        <div class="header-title">
+            <a href="/" title="编程心语">编程心语</a>
+        </div>
+        <div class="menu">
+            <div class="menu-inner"><a class="menu-item" href="/posts/"> 文章 </a><a class="menu-item" href="/categories/"> 分类 </a><a class="menu-item" href="/tags/"> 标签 </a><a class="menu-item" href="/about-me/"> 关于 </a><span class="menu-item delimiter"></span><span class="menu-item search" id="search-desktop">
+                        <input type="text" placeholder="搜索文章..." id="search-input-desktop">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-desktop" title="搜索">
+                            <i class="fas fa-search fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-desktop" title="清空">
+                            <i class="fas fa-times-circle fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-desktop">
+                            <i class="fas fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+                        </span>
+                    </span><a href="javascript:void(0);" class="menu-item theme-switch" title="切换主题">
+                    <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</header><header class="mobile" id="header-mobile">
+    <div class="header-container">
+        <div class="header-wrapper">
+            <div class="header-title">
+                <a href="/" title="编程心语">编程心语</a>
+            </div>
+            <div class="menu-toggle" id="menu-toggle-mobile">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+        <div class="menu" id="menu-mobile"><div class="search-wrapper">
+                    <div class="search mobile" id="search-mobile">
+                        <input type="text" placeholder="搜索文章..." id="search-input-mobile">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-mobile" title="搜索">
+                            <i class="fas fa-search fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-mobile" title="清空">
+                            <i class="fas fa-times-circle fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-mobile">
+                            <i class="fas fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+                        </span>
+                    </div>
+                    <a href="javascript:void(0);" class="search-cancel" id="search-cancel-mobile">
+                        取消
+                    </a>
+                </div><a class="menu-item" href="/posts/" title="">文章</a><a class="menu-item" href="/categories/" title="">分类</a><a class="menu-item" href="/tags/" title="">标签</a><a class="menu-item" href="/about-me/" title="">关于</a><a href="javascript:void(0);" class="menu-item theme-switch" title="切换主题">
+                <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
+            </a></div>
+    </div>
+</header><div class="search-dropdown desktop">
+        <div id="search-dropdown-desktop"></div>
+    </div>
+    <div class="search-dropdown mobile">
+        <div id="search-dropdown-mobile"></div>
+    </div><main class="main">
+                <div class="container"><div class="toc" id="toc-auto">
+            <h2 class="toc-title">目录</h2>
+            <div class="toc-content" id="toc-content-auto"></div>
+        </div><article class="page single"><h1 class="single-title animate__animated animate__flipInX">在浏览器里跑大模型:WebGPU 端侧推理实践指南</h1><div class="post-meta">
+            <div class="post-meta-line"><span class="post-author"><a href="https://www.ithome.me/" title="Author" target="_blank" rel="noopener noreferrer author" class="author"><i class="fas fa-user-circle fa-fw" aria-hidden="true"></i>Simon</a>
+</span>&nbsp;<span class="post-category">收录于 <a href="/categories/ai/"><i class="far fa-folder fa-fw" aria-hidden="true"></i>Ai</a></span></div>
+            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw" aria-hidden="true"></i>&nbsp;<time datetime="2026-10-12">2026-10-12</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden="true"></i>&nbsp;约 1400 字&nbsp;
+                <i class="far fa-clock fa-fw" aria-hidden="true"></i>&nbsp;预计阅读 3 分钟&nbsp;</div>
+        </div><div class="details toc" id="toc-static"  data-kept="true">
+                <div class="details-summary toc-title">
+                    <span>目录</span>
+                    <span><i class="details-icon fas fa-angle-right" aria-hidden="true"></i></span>
+                </div>
+                <div class="details-content toc-content" id="toc-content-static"><nav id="TableOfContents">
+  <ul>
+    <li><a href="#浏览器也能跑-llm是的而且不慢">浏览器也能跑 LLM?是的,而且不慢</a></li>
+    <li><a href="#原理三件套">原理:三件套</a></li>
+    <li><a href="#框架怎么选三个主流方案对比">框架怎么选:三个主流方案对比</a></li>
+    <li><a href="#实战一webllm-十行代码出对话">实战一:WebLLM 十行代码出对话</a></li>
+    <li><a href="#实战二transformersjs-一个-device-参数上-gpu">实战二:Transformers.js 一个 device 参数上 GPU</a></li>
+    <li><a href="#性能参考截至-2026-10-12-验证官方实测数据">性能参考(截至 2026-10-12 验证,官方/实测数据)</a></li>
+    <li><a href="#生产建议别-all-in-本地做混合路由">生产建议:别 All-in 本地,做混合路由</a></li>
+    <li><a href="#总结">总结</a></li>
+  </ul>
+</nav></div>
+            </div><div class="content" id="content"><h2 id="浏览器也能跑-llm是的而且不慢">浏览器也能跑 LLM?是的,而且不慢</h2>
+<p>2025 年 11 月,Chrome、Edge、Safari 相继默认启用 WebGPU——浏览器原生跑大模型从实验阶段正式进入可部署阶段。截至 2026 年 10 月,WebGPU 全球浏览器覆盖率约 85%(caniuse 口径,截至 2026-10-12 验证),Firefox 的 Windows 版已在 141 版本支持,Linux 还在 Nightly。</p>
+<p>这意味着:模型权重缓存在用户浏览器里,推理走用户自己的 GPU,<strong>没有服务器、没有 API 费用、不上传 prompt</strong>。对隐私敏感工具、离线应用、免后端 Demo 来说,这是端侧 AI 里最被低估的一条部署路径。</p>
+<h2 id="原理三件套">原理:三件套</h2>
+<p>浏览器 LLM 推理由三个组件协作:</p>
+<ol>
+<li><strong>WASM 推理内核</strong>(如 WebLLM 用 Apache TVM 编译的 WebGPU 着色器代码 WGSL,实现了 PagedAttention 和 FlashAttention)</li>
+<li><strong>量化模型权重</strong>(4-bit 量化后,1.5B 模型约 1GB,只需下载一次,之后走浏览器 Cache API 或 OPFS)</li>
+<li><strong>Web Worker</strong>(推理搬离主线程,UI 不卡顿)</li>
+</ol>
+<h2 id="框架怎么选三个主流方案对比">框架怎么选:三个主流方案对比</h2>
+<table>
+	<thead>
+			<tr>
+					<th>方案</th>
+					<th>引擎</th>
+					<th>定位</th>
+					<th>维护状态(截至 2026-10-12)</th>
+			</tr>
+	</thead>
+	<tbody>
+			<tr>
+					<td>WebLLM</td>
+					<td>MLC-LLM + TVM,WebGPU</td>
+					<td>聊天类 LLM 推理,OpenAI 兼容 API</td>
+					<td>活跃,v0.2.85,GitHub 17.9k star</td>
+			</tr>
+			<tr>
+					<td>Transformers.js</td>
+					<td>ONNX Runtime Web,WebGPU</td>
+					<td>全任务(嵌入/图像/语音/LLM),200+ 架构</td>
+					<td>活跃,v4.3.0,v4 起 C++ 重写 WebGPU 运行时</td>
+			</tr>
+			<tr>
+					<td>wllama</td>
+					<td>llama.cpp 编译为 WASM</td>
+					<td>直接复用 GGUF 模型,CPU 可跑 + WebGPU</td>
+					<td>活跃,含 WebGPU 后端</td>
+			</tr>
+	</tbody>
+</table>
+<p>选型口诀:要聊天对话 → WebLLM(API 跟 OpenAI 几乎一一对应);要嵌入、分类、OCR、ASR 等多任务 → Transformers.js(v4 在高端硬件上跑 GPT-OSS 20B q4 可达约 60 tok/s);已有 GGUF 生态、想 CPU/GPU 通吃 → wllama。</p>
+<h2 id="实战一webllm-十行代码出对话">实战一:WebLLM 十行代码出对话</h2>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">npm install @mlc-ai/web-llm
+</span></span></code></pre></td></tr></table>
+</div>
+</div><div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-javascript" data-lang="javascript"><span class="line"><span class="cl"><span class="kr">import</span> <span class="p">{</span> <span class="nx">CreateMLCEngine</span> <span class="p">}</span> <span class="nx">from</span> <span class="s2">&#34;@mlc-ai/web-llm&#34;</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">// 模型来自 HuggingFace 的 MLC 格式:Qwen2.5-1.5B,4-bit 量化,约 1GB
+</span></span></span><span class="line"><span class="cl"><span class="kr">const</span> <span class="nx">engine</span> <span class="o">=</span> <span class="kr">await</span> <span class="nx">CreateMLCEngine</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">  <span class="s2">&#34;mlc-ai/Qwen2.5-1.5B-Instruct-q4f16_1-MLC&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">  <span class="p">{</span> <span class="nx">initProgressCallback</span><span class="o">:</span> <span class="p">(</span><span class="nx">p</span><span class="p">)</span> <span class="p">=&gt;</span> <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="sb">`</span><span class="si">${</span><span class="nx">p</span><span class="p">.</span><span class="nx">progress</span><span class="si">}</span><span class="sb">%`</span><span class="p">)</span> <span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kr">const</span> <span class="nx">reply</span> <span class="o">=</span> <span class="kr">await</span> <span class="nx">engine</span><span class="p">.</span><span class="nx">chat</span><span class="p">.</span><span class="nx">completions</span><span class="p">.</span><span class="nx">create</span><span class="p">({</span>
+</span></span><span class="line"><span class="cl">  <span class="nx">messages</span><span class="o">:</span> <span class="p">[{</span> <span class="nx">role</span><span class="o">:</span> <span class="s2">&#34;user&#34;</span><span class="p">,</span> <span class="nx">content</span><span class="o">:</span> <span class="s2">&#34;用一句话介绍 WebGPU&#34;</span> <span class="p">}],</span>
+</span></span><span class="line"><span class="cl">  <span class="nx">stream</span><span class="o">:</span> <span class="kc">true</span><span class="p">,</span> <span class="c1">// 流式输出
+</span></span></span><span class="line"><span class="cl"><span class="p">});</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>注意三点:先 <code>navigator.gpu</code> 检测再创建引擎;模型第一次下载走浏览器缓存,二次加载是本地读取;官方文档明确 Function Calling 仍是进行中,别依赖。</p>
+<h2 id="实战二transformersjs-一个-device-参数上-gpu">实战二:Transformers.js 一个 device 参数上 GPU</h2>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">npm install @huggingface/transformers
+</span></span></code></pre></td></tr></table>
+</div>
+</div><div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-javascript" data-lang="javascript"><span class="line"><span class="cl"><span class="kr">import</span> <span class="p">{</span> <span class="nx">pipeline</span> <span class="p">}</span> <span class="nx">from</span> <span class="s2">&#34;@huggingface/transformers&#34;</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="kr">import</span> <span class="p">{</span> <span class="nx">env</span> <span class="p">}</span> <span class="nx">from</span> <span class="s2">&#34;@huggingface/transformers&#34;</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="nx">env</span><span class="p">.</span><span class="nx">useWasmCache</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span> <span class="c1">// 缓存 WASM 运行时,首次加载后可完全离线
+</span></span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">// 图片分类走 WebGPU
+</span></span></span><span class="line"><span class="cl"><span class="kr">const</span> <span class="nx">classifier</span> <span class="o">=</span> <span class="kr">await</span> <span class="nx">pipeline</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">  <span class="s2">&#34;image-classification&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">  <span class="s2">&#34;onnx-community/mobilenetv4_conv_small.e2400_r224_in1k&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">  <span class="p">{</span> <span class="nx">device</span><span class="o">:</span> <span class="s2">&#34;webgpu&#34;</span> <span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">// Whisper 语音识别同样一句话切换
+</span></span></span><span class="line"><span class="cl"><span class="kr">const</span> <span class="nx">transcriber</span> <span class="o">=</span> <span class="kr">await</span> <span class="nx">pipeline</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">  <span class="s2">&#34;automatic-speech-recognition&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">  <span class="s2">&#34;onnx-community/whisper-tiny.en&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">  <span class="p">{</span> <span class="nx">device</span><span class="o">:</span> <span class="s2">&#34;webgpu&#34;</span> <span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">);</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>v4 的 ModelRegistry API 可以在加载前查清单和总下载量:</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-javascript" data-lang="javascript"><span class="line"><span class="cl"><span class="kr">import</span> <span class="p">{</span> <span class="nx">ModelRegistry</span> <span class="p">}</span> <span class="nx">from</span> <span class="s2">&#34;@huggingface/transformers&#34;</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kr">const</span> <span class="nx">registry</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">ModelRegistry</span><span class="p">(</span><span class="s2">&#34;onnx-community/whisper-tiny.en&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="kr">await</span> <span class="nx">registry</span><span class="p">.</span><span class="nx">get_pipeline_files</span><span class="p">());</span> <span class="c1">// 文件清单
+</span></span></span><span class="line"><span class="cl"><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="kr">await</span> <span class="nx">registry</span><span class="p">.</span><span class="nx">is_pipeline_cached</span><span class="p">());</span> <span class="c1">// 是否已缓存
+</span></span></span></code></pre></td></tr></table>
+</div>
+</div><h2 id="性能参考截至-2026-10-12-验证官方实测数据">性能参考(截至 2026-10-12 验证,官方/实测数据)</h2>
+<ul>
+<li>WebLLM 在 Apple M3 Max 上跑 Llama 3.1 8B 4-bit:约 41 tok/s,约为原生 MLC-LLM 的 80%;Phi 3.5 Mini 约 71 tok/s</li>
+<li>WebGPU 首次运行要编译 WGSL 着色器,有 3-10 秒冷启动窗口,Chrome/Edge 实现最完整</li>
+<li>GPU 厂商驱动 bug 仍存在(NVIDIA 572.xx 系列在 RTX 30/40 上偶发崩溃),生产环境要捕获 Device Loss 并回退</li>
+</ul>
+<h2 id="生产建议别-all-in-本地做混合路由">生产建议:别 All-in 本地,做混合路由</h2>
+<p>2026 年业界主流做法不是纯浏览器推理,而是<strong>路由层</strong>:轻量门控模型(如 TinyLlama 级别,延迟低于 20ms)判断查询复杂度——短问答、单句改写、分类等延迟敏感任务走本地(毫秒级响应);复杂多步推理、长文分析走云端 API。可以再加置信度路由:本地模型输出置信度低时自动切云端重试,WebLLM 的 API 暴露了 token 对数概率,可用来做这个判断。</p>
+<p>边界要清楚:本地推理只缩小一条数据路径,不等于隐私合规;用户设备没 WebGPU、内存不足、模型超 2GB 时,该回退就回退,回退前要征得用户同意。</p>
+<h2 id="总结">总结</h2>
+<p>浏览器是端侧 LLM 最容易分发的地方——用户打开链接即用,零安装。选 WebLLM 做对话,选 Transformers.js 做全任务,用 wllama 复用 GGUF 模型;把推理接口与推理位置解耦,先本地后云端路由。这套组合在 2026 年已经足够支撑真实产品,而不再是 Demo。</p>
+</div><div class="post-footer" id="post-footer">
+    <div class="post-info">
+        <div class="post-info-line">
+            <div class="post-info-mod">
+                <span>更新于 2026-10-12</span>
+            </div></div>
+        <div class="post-info-line">
+            <div class="post-info-md"></div>
+            <div class="post-info-share">
+                <span><a href="javascript:void(0);" title="分享到 Twitter" data-sharer="twitter" data-url="https://www.ithome.me/post/2026/10/12/webgpu-browser-llm-inference/" data-title="在浏览器里跑大模型:WebGPU 端侧推理实践指南" data-via="ChenCiki" data-hashtags="端侧AI,WebGPU,WebLLM,Transformers.js,浏览器推理"><i class="fab fa-twitter fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="分享到 Linkedin" data-sharer="linkedin" data-url="https://www.ithome.me/post/2026/10/12/webgpu-browser-llm-inference/"><i class="fab fa-linkedin fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="分享到 微博" data-sharer="weibo" data-url="https://www.ithome.me/post/2026/10/12/webgpu-browser-llm-inference/" data-title="在浏览器里跑大模型:WebGPU 端侧推理实践指南" data-ralateuid="xxx"><i class="fab fa-weibo fa-fw" aria-hidden="true"></i></a></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="post-info-more">
+        <section class="post-tags"><i class="fas fa-tags fa-fw" aria-hidden="true"></i>&nbsp;<a href="/tags/%E7%AB%AF%E4%BE%A7ai/">端侧AI</a>,&nbsp;<a href="/tags/webgpu/">WebGPU</a>,&nbsp;<a href="/tags/webllm/">WebLLM</a>,&nbsp;<a href="/tags/transformers.js/">Transformers.js</a>,&nbsp;<a href="/tags/%E6%B5%8F%E8%A7%88%E5%99%A8%E6%8E%A8%E7%90%86/">浏览器推理</a></section>
+        <section>
+            <span><a href="javascript:void(0);" onclick="window.history.back();">返回</a></span>&nbsp;|&nbsp;<span><a href="/">主页</a></span>
+        </section>
+    </div>
+
+    <div class="post-nav"><a href="/post/2026/10/05/github-trending-weekly/" class="prev" rel="prev" title="GitHub Trending 周报 - 2026-10-05"><i class="fas fa-angle-left fa-fw" aria-hidden="true"></i>GitHub Trending 周报 - 2026-10-05</a></div>
+</div>
+<div id="comments"><div id="gitalk" class="comment"></div><noscript>
+                Please enable JavaScript to view the comments powered by <a href="https://github.com/gitalk/gitalk"></a>Gitalk</a>.
+            </noscript></div></article></div>
+            </main><footer class="footer">
+        <div class="footer-container"><div class="footer-line" itemscope itemtype="http://schema.org/CreativeWork"><i class="far fa-copyright fa-fw" aria-hidden="true"></i><span itemprop="copyrightYear">2011 - 2026</span><span class="author" itemprop="copyrightHolder">&nbsp;<a href="https://www.ithome.me/" target="_blank">Simon Chen</a></span>&nbsp;|&nbsp;<span class="license"><a rel="license external nofollow noopener noreferrer" href="https://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank">CC BY-NC-ND 4.0</a></span></div>
+        </div>
+    </footer></div>
+
+        <div id="fixed-buttons"><a href="#" id="back-to-top" class="fixed-button" title="回到顶部">
+                <i class="fas fa-arrow-up fa-fw" aria-hidden="true"></i>
+            </a><a href="#" id="view-comments" class="fixed-button" title="查看评论">
+                <i class="fas fa-comment fa-fw" aria-hidden="true"></i>
+            </a>
+        </div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1.7.2/dist/gitalk.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/css/lightgallery-bundle.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/katex.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/copy-tex.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.css"><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/gitalk@1.7.2/dist/gitalk.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/autocomplete.js@0.38.1/dist/autocomplete.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lunr@2.3.9/lunr.min.js"></script><script type="text/javascript" src="/lib/lunr/lunr.stemmer.support.min.js"></script><script type="text/javascript" src="/lib/lunr/lunr.zh.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lazysizes@5.3.1/lazysizes.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/lightgallery.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/plugins/thumbnail/lg-thumbnail.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/plugins/zoom/lg-zoom.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/clipboard@2.0.11/dist/clipboard.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/sharer.js@0.5.1/sharer.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/katex.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/auto-render.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/copy-tex.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/mhchem.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.js"></script><script type="text/javascript">window.config={"code":{"copyTitle":"复制到剪贴板","maxShownLines":50},"comment":{"gitalk":{"admin":["cikichen"],"clientID":"be0f52370ed1285b6c7c","clientSecret":"734a7d8d0ded346ca7a3d565d57de3f8eeb2850b","id":"2026-10-12T00:00:00Z","owner":"cikichen","repo":"gitalk","title":"在浏览器里跑大模型:WebGPU 端侧推理实践指南"}},"cookieconsent":{"content":{"dismiss":"我知道了","link":"了解更多","message":"本网站使用 Cookies 来改善您的浏览体验."},"enable":true,"palette":{"button":{"background":"#f0f0f0"},"popup":{"background":"#1aa3ff"}},"theme":"edgeless"},"lightgallery":true,"math":{"delimiters":[{"display":true,"left":"$$","right":"$$"},{"display":true,"left":"\\[","right":"\\]"},{"display":true,"left":"\\begin{equation}","right":"\\end{equation}"},{"display":true,"left":"\\begin{equation*}","right":"\\end{equation*}"},{"display":true,"left":"\\begin{align}","right":"\\end{align}"},{"display":true,"left":"\\begin{align*}","right":"\\end{align*}"},{"display":true,"left":"\\begin{alignat}","right":"\\end{alignat}"},{"display":true,"left":"\\begin{alignat*}","right":"\\end{alignat*}"},{"display":true,"left":"\\begin{gather}","right":"\\end{gather}"},{"display":true,"left":"\\begin{CD}","right":"\\end{CD}"},{"display":false,"left":"$","right":"$"},{"display":false,"left":"\\(","right":"\\)"}],"strict":false},"search":{"highlightTag":"em","lunrIndexURL":"/index.json","lunrLanguageCode":"zh","lunrSegmentitURL":"/lib/lunr/lunr.segmentit.js","maxResultLength":10,"noResultsFound":"没有找到结果","snippetLength":50,"type":"lunr"}};</script><script type="text/javascript" src="/js/theme.min.js"></script></body>
+</html>
