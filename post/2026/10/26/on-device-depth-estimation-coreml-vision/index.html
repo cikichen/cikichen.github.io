@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="robots" content="noodp" />
+        <title>端侧单目深度估计实战：Depth Anything 3 转 Core ML 跑在 iPhone 上 - 编程心语</title><meta name="Description" content="Depth Anything 3 只有 0.08B 参数、Apache-2.0 授权，转成 Core ML 就能在 iPhone 上跑单目深度估计。本文对比三条落地路线，给出完整转换脚本、Swift 集成代码和踩坑清单。"><meta property="og:url" content="https://www.ithome.me/post/2026/10/26/on-device-depth-estimation-coreml-vision/">
+	<meta property="og:site_name" content="编程心语">
+	<meta property="og:title" content="端侧单目深度估计实战：Depth Anything 3 转 Core ML 跑在 iPhone 上">
+	<meta property="og:description" content="Depth Anything 3 只有 0.08B 参数、Apache-2.0 授权，转成 Core ML 就能在 iPhone 上跑单目深度估计。本文对比三条落地路线，给出完整转换脚本、Swift 集成代码和踩坑清单。">
+	<meta property="og:locale" content="zh_CN">
+	<meta property="og:type" content="article">
+		<meta property="article:section" content="posts">
+		<meta property="article:published_time" content="2026-10-26T08:00:00+08:00">
+		<meta property="article:modified_time" content="2026-10-26T03:08:35+08:00">
+		<meta property="article:tag" content="端侧AI">
+		<meta property="article:tag" content="深度估计">
+		<meta property="article:tag" content="Core ML">
+		<meta property="article:tag" content="Depth Anything">
+		<meta property="article:tag" content="IOS">
+
+	<meta name="twitter:card" content="summary">
+	<meta name="twitter:title" content="端侧单目深度估计实战：Depth Anything 3 转 Core ML 跑在 iPhone 上">
+	<meta name="twitter:description" content="Depth Anything 3 只有 0.08B 参数、Apache-2.0 授权，转成 Core ML 就能在 iPhone 上跑单目深度估计。本文对比三条落地路线，给出完整转换脚本、Swift 集成代码和踩坑清单。">
+			<meta name="twitter:site" content="@ChenCiki">
+<meta name="application-name" content="编程心语">
+<meta name="apple-mobile-web-app-title" content="编程心语"><meta name="theme-color" content="#ffffff"><meta name="msapplication-TileColor" content="#da532c"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5"><link rel="manifest" href="/site.webmanifest"><link rel="canonical" href="https://www.ithome.me/post/2026/10/26/on-device-depth-estimation-coreml-vision/" /><link rel="prev" href="https://www.ithome.me/post/2026/10/19/github-trending-weekly/" /><link rel="next" href="https://www.ithome.me/post/2026/10/26/github-trending-weekly/" /><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/normalize.css@8.0.1/normalize.min.css"><link rel="stylesheet" href="/css/style.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css"><script type="application/ld+json">
+    {
+        "@context": "http://schema.org",
+        "@type": "BlogPosting",
+        "headline": "端侧单目深度估计实战：Depth Anything 3 转 Core ML 跑在 iPhone 上",
+        "inLanguage": "zh-CN",
+        "mainEntityOfPage": {
+            "@type": "WebPage",
+            "@id": "https:\/\/www.ithome.me\/post\/2026\/10\/26\/on-device-depth-estimation-coreml-vision\/"
+        },"image": ["https:\/\/www.ithome.me\/cover.png"],"genre": "posts","keywords": "端侧AI, 深度估计, Core ML, Depth Anything, iOS","wordcount":  3745 ,
+        "url": "https:\/\/www.ithome.me\/post\/2026\/10\/26\/on-device-depth-estimation-coreml-vision\/","datePublished": "2026-10-26T08:00:00+08:00","dateModified": "2026-10-26T03:08:35+08:00","publisher": {
+            "@type": "Organization",
+            "name": "SimonChen","logo": "https:\/\/www.ithome.me\/logo.png"},"author": {
+                "@type": "Person",
+                "name": "Simon"
+            },"description": "Depth Anything 3 只有 0.08B 参数、Apache-2.0 授权，转成 Core ML 就能在 iPhone 上跑单目深度估计。本文对比三条落地路线，给出完整转换脚本、Swift 集成代码和踩坑清单。"
+    }
+    </script><script async src="https://www.googletagmanager.com/gtag/js?id=G-H1Q5563VR8"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-H1Q5563VR8', { 'anonymize_ip': true });
+</script></head>
+    <body data-header-desktop="fixed" data-header-mobile="auto"><script type="text/javascript">(window.localStorage && localStorage.getItem('theme') ? localStorage.getItem('theme') === 'dark' : ('auto' === 'auto' ? window.matchMedia('(prefers-color-scheme: dark)').matches : 'auto' === 'dark')) && document.body.setAttribute('theme', 'dark');</script>
+
+        <div id="mask"></div><div class="wrapper"><header class="desktop" id="header-desktop">
+    <div class="header-wrapper">
+        <div class="header-title">
+            <a href="/" title="编程心语">编程心语</a>
+        </div>
+        <div class="menu">
+            <div class="menu-inner"><a class="menu-item" href="/posts/"> 文章 </a><a class="menu-item" href="/categories/"> 分类 </a><a class="menu-item" href="/tags/"> 标签 </a><a class="menu-item" href="/about-me/"> 关于 </a><span class="menu-item delimiter"></span><span class="menu-item search" id="search-desktop">
+                        <input type="text" placeholder="搜索文章..." id="search-input-desktop">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-desktop" title="搜索">
+                            <i class="fas fa-search fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-desktop" title="清空">
+                            <i class="fas fa-times-circle fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-desktop">
+                            <i class="fas fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+                        </span>
+                    </span><a href="javascript:void(0);" class="menu-item theme-switch" title="切换主题">
+                    <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</header><header class="mobile" id="header-mobile">
+    <div class="header-container">
+        <div class="header-wrapper">
+            <div class="header-title">
+                <a href="/" title="编程心语">编程心语</a>
+            </div>
+            <div class="menu-toggle" id="menu-toggle-mobile">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+        <div class="menu" id="menu-mobile"><div class="search-wrapper">
+                    <div class="search mobile" id="search-mobile">
+                        <input type="text" placeholder="搜索文章..." id="search-input-mobile">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-mobile" title="搜索">
+                            <i class="fas fa-search fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-mobile" title="清空">
+                            <i class="fas fa-times-circle fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-mobile">
+                            <i class="fas fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+                        </span>
+                    </div>
+                    <a href="javascript:void(0);" class="search-cancel" id="search-cancel-mobile">
+                        取消
+                    </a>
+                </div><a class="menu-item" href="/posts/" title="">文章</a><a class="menu-item" href="/categories/" title="">分类</a><a class="menu-item" href="/tags/" title="">标签</a><a class="menu-item" href="/about-me/" title="">关于</a><a href="javascript:void(0);" class="menu-item theme-switch" title="切换主题">
+                <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
+            </a></div>
+    </div>
+</header><div class="search-dropdown desktop">
+        <div id="search-dropdown-desktop"></div>
+    </div>
+    <div class="search-dropdown mobile">
+        <div id="search-dropdown-mobile"></div>
+    </div><main class="main">
+                <div class="container"><div class="toc" id="toc-auto">
+            <h2 class="toc-title">目录</h2>
+            <div class="toc-content" id="toc-content-auto"></div>
+        </div><article class="page single"><h1 class="single-title animate__animated animate__flipInX">端侧单目深度估计实战：Depth Anything 3 转 Core ML 跑在 iPhone 上</h1><div class="post-meta">
+            <div class="post-meta-line"><span class="post-author"><a href="https://www.ithome.me/" title="Author" target="_blank" rel="noopener noreferrer author" class="author"><i class="fas fa-user-circle fa-fw" aria-hidden="true"></i>Simon</a>
+</span>&nbsp;<span class="post-category">收录于 <a href="/categories/ai/"><i class="far fa-folder fa-fw" aria-hidden="true"></i>AI</a></span></div>
+            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw" aria-hidden="true"></i>&nbsp;<time datetime="2026-10-26">2026-10-26</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden="true"></i>&nbsp;约 3745 字&nbsp;
+                <i class="far fa-clock fa-fw" aria-hidden="true"></i>&nbsp;预计阅读 8 分钟&nbsp;</div>
+        </div><div class="details toc" id="toc-static"  data-kept="true">
+                <div class="details-summary toc-title">
+                    <span>目录</span>
+                    <span><i class="details-icon fas fa-angle-right" aria-hidden="true"></i></span>
+                </div>
+                <div class="details-content toc-content" id="toc-content-static"><nav id="TableOfContents">
+  <ul>
+    <li><a href="#为什么普通手机也需要单目深度">为什么普通手机也需要单目深度</a></li>
+    <li><a href="#三条落地路线先看清代价">三条落地路线，先看清代价</a>
+      <ul>
+        <li><a href="#授权上的硬约束">授权上的硬约束</a></li>
+      </ul>
+    </li>
+    <li><a href="#方案-a先跑通-apple-官方的-v2-包">方案 A：先跑通 Apple 官方的 V2 包</a></li>
+    <li><a href="#方案-b把-da3-转成-core-ml">方案 B：把 DA3 转成 Core ML</a>
+      <ul>
+        <li><a href="#四个必须知道的坑">四个必须知道的坑</a></li>
+      </ul>
+    </li>
+    <li><a href="#从深度图到能用的东西">从深度图到能用的东西</a></li>
+    <li><a href="#实测数据官方给了什么没给什么">实测数据：官方给了什么，没给什么</a></li>
+    <li><a href="#怎么选">怎么选</a></li>
+  </ul>
+</nav></div>
+            </div><div class="content" id="content"><h2 id="为什么普通手机也需要单目深度">为什么普通手机也需要单目深度</h2>
+<p>LiDAR 是 Pro 机型的专属。iPhone 12 Pro 之后只有 Pro 系列带激光雷达，标准版和 SE 一直没有。但逐像素深度这件事，需求远不止 Pro 用户：人像虚化要它、照片转 3D 要它、AR 虚拟物体被真实桌子遮挡要它、测距要它、视障辅助的空间描述也要它。</p>
+<p>单目深度估计（monocular depth estimation）就是让一颗普通 RGB 摄像头具备这种能力。2025 年 11 月，字节 Seed 团队发布 Depth Anything 3（下称 DA3），论文进了 ICLR 2026 Oral。它对端侧最重要的两个变化：</p>
+<ul>
+<li><strong>输出的是 depth 而不是 disparity</strong>。DA2 是视差模型，几何精度受限于视差到深度的换算；DA3 直接预测深度加光线（depth-ray 表示），单视图输入时退化为一个单目深度估计器。</li>
+<li><strong>模型足够小</strong>。DA3-SMALL 只有 0.08B 参数（DINOv2 ViT-S/14 骨干 + DualDPT 头），Apache-2.0 授权，可商用。</li>
+</ul>
+<p>官方论文口径：DA3 在单目深度上明显优于 DA2，多视图位姿精度比此前 SOTA 的 VGGT 高 35.7%、几何精度高 23.6%（ICLR 2026 版本数据，截至 2026-10-26 核对官方项目页与论文摘要）。</p>
+<p>对我们做端侧的人来说，问题只有一个：<strong>怎么把它塞进 App，并且跑得动。</strong></p>
+<h2 id="三条落地路线先看清代价">三条落地路线，先看清代价</h2>
+<table>
+	<thead>
+			<tr>
+					<th>路线</th>
+					<th>模型</th>
+					<th>体积</th>
+					<th>最低系统</th>
+					<th>获取方式</th>
+					<th>适合谁</th>
+			</tr>
+	</thead>
+	<tbody>
+			<tr>
+					<td>Apple 官方 Core ML 模型库</td>
+					<td>Depth Anything V2 Small F16</td>
+					<td>49.8 MB（P6 变体 19 MB）</td>
+					<td>iOS 17</td>
+					<td>直接下载 mlpackage 拖进 Xcode</td>
+					<td>想今天上线，精度够用</td>
+			</tr>
+			<tr>
+					<td>coremltools 自己转</td>
+					<td>DA3-SMALL 504×504</td>
+					<td>约 44-55 MB</td>
+					<td>iOS 17</td>
+					<td>自己写转换脚本</td>
+					<td>要最新精度、要控制量化</td>
+			</tr>
+			<tr>
+					<td>Core AI（.aimodel）</td>
+					<td>depth-anything-3-small</td>
+					<td>未公开</td>
+					<td>iOS 27</td>
+					<td>apple/coreai-models</td>
+					<td>新项目且能等 iOS 27</td>
+			</tr>
+	</tbody>
+</table>
+<p>第三个路线得说清楚：Core AI 是 WWDC26 新推的端侧推理框架，模型格式是 <code>.aimodel</code>，需要 Xcode 27 和 iOS 27/macOS 27。Apple 的 coreai-models 仓库 1.0.0 已经收录 Depth Anything v3，但<strong>模型注册表里 depth-anything-3-small 目前只标了 macOS 平台</strong>，iOS recipe 还没跟上。所以现阶段要让 iPhone 用上 DA3，仍然是 Core ML 这条路最稳。</p>
+<h3 id="授权上的硬约束">授权上的硬约束</h3>
+<p>选模型之前先看许可证，这是很多教程漏掉的：</p>
+<ul>
+<li>DA3-SMALL（0.08B）、DA3-BASE（0.12B）：Apache-2.0，商用没问题。</li>
+<li>DA3-LARGE（0.35B）、DA3-GIANT（1.15B）、Nested 系列：CC BY-NC 4.0，<strong>不能商用</strong>。</li>
+</ul>
+<p>也就是说 App Store 上架的产品，能用的只有 SMALL 和 BASE 两档。想用大模型提精度，只能自己微调小模型或换授权。</p>
+<h2 id="方案-a先跑通-apple-官方的-v2-包">方案 A：先跑通 Apple 官方的 V2 包</h2>
+<p>这是最快的验证路径，半小时能出效果。从 Apple 的 Core ML Models 页面下载 <code>DepthAnythingV2SmallF16.mlpackage</code>（49.8 MB，24.8M 参数，FP16 权重与激活），拖进 Xcode 目标，Xcode 会在构建时自动编译成 <code>.mlmodelc</code>。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-swift" data-lang="swift"><span class="line"><span class="cl"><span class="kd">import</span> <span class="nc">CoreML</span>
+</span></span><span class="line"><span class="cl"><span class="kd">import</span> <span class="nc">CoreVideo</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kr">final</span> <span class="kd">class</span> <span class="nc">DepthEstimator</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="kd">private</span> <span class="kd">let</span> <span class="nv">model</span><span class="p">:</span> <span class="n">MLModel</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="kd">init</span><span class="p">()</span> <span class="kr">throws</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="kd">let</span> <span class="nv">cfg</span> <span class="p">=</span> <span class="n">MLModelConfiguration</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">        <span class="n">cfg</span><span class="p">.</span><span class="n">computeUnits</span> <span class="p">=</span> <span class="p">.</span><span class="n">all</span>          <span class="c1">// 关键：让 ANE 优先，别锁 .cpuOnly</span>
+</span></span><span class="line"><span class="cl">        <span class="k">guard</span> <span class="kd">let</span> <span class="nv">url</span> <span class="p">=</span> <span class="n">Bundle</span><span class="p">.</span><span class="n">main</span><span class="p">.</span><span class="n">url</span><span class="p">(</span><span class="n">forResource</span><span class="p">:</span> <span class="s">&#34;DepthAnythingV2SmallF16&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                                        <span class="n">withExtension</span><span class="p">:</span> <span class="s">&#34;mlmodelc&#34;</span><span class="p">)</span> <span class="k">else</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">            <span class="k">throw</span> <span class="n">NSError</span><span class="p">(</span><span class="n">domain</span><span class="p">:</span> <span class="s">&#34;DepthEstimator&#34;</span><span class="p">,</span> <span class="n">code</span><span class="p">:</span> <span class="mi">1</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="p">}</span>
+</span></span><span class="line"><span class="cl">        <span class="n">model</span> <span class="p">=</span> <span class="k">try</span> <span class="n">MLModel</span><span class="p">(</span><span class="n">contentsOf</span><span class="p">:</span> <span class="n">url</span><span class="p">,</span> <span class="n">configuration</span><span class="p">:</span> <span class="n">cfg</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="kd">func</span> <span class="nf">predict</span><span class="p">(</span><span class="n">pixelBuffer</span><span class="p">:</span> <span class="n">CVPixelBuffer</span><span class="p">)</span> <span class="kr">throws</span> <span class="p">-&gt;</span> <span class="n">MLMultiArray</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="kd">let</span> <span class="nv">input</span> <span class="p">=</span> <span class="k">try</span> <span class="n">MLDictionaryFeatureProvider</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">            <span class="n">dictionary</span><span class="p">:</span> <span class="p">[</span><span class="s">&#34;image&#34;</span><span class="p">:</span> <span class="n">MLFeatureValue</span><span class="p">(</span><span class="n">pixelBuffer</span><span class="p">:</span> <span class="n">pixelBuffer</span><span class="p">)]</span>
+</span></span><span class="line"><span class="cl">        <span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="kd">let</span> <span class="nv">out</span> <span class="p">=</span> <span class="k">try</span> <span class="n">model</span><span class="p">.</span><span class="n">prediction</span><span class="p">(</span><span class="n">from</span><span class="p">:</span> <span class="n">input</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="k">guard</span> <span class="kd">let</span> <span class="nv">depth</span> <span class="p">=</span> <span class="n">out</span><span class="p">.</span><span class="n">featureValue</span><span class="p">(</span><span class="k">for</span><span class="p">:</span> <span class="s">&#34;depth&#34;</span><span class="p">)?.</span><span class="n">multiArrayValue</span> <span class="k">else</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">            <span class="k">throw</span> <span class="n">NSError</span><span class="p">(</span><span class="n">domain</span><span class="p">:</span> <span class="s">&#34;DepthEstimator&#34;</span><span class="p">,</span> <span class="n">code</span><span class="p">:</span> <span class="mi">2</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="p">}</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="n">depth</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>两个容易踩的点：</p>
+<ol>
+<li><strong>输入尺寸不用你自己缩放</strong>。图像类型输入（<code>ImageType</code>）由 Core ML 内部做缩放，你传相机原尺寸的 <code>CVPixelBuffer</code> 就行，别在 Swift 层再手动 resize 一遍——重复缩放反而会让边缘出现二次插值糊化。</li>
+<li><strong><code>computeUnits</code> 一定要显式设 <code>.all</code></strong>。默认值在部分机型上会退到 CPU+GPU，实测 ANE 与 GPU 的差距在深度模型上通常是 2-3 倍。</li>
+</ol>
+<h2 id="方案-b把-da3-转成-core-ml">方案 B：把 DA3 转成 Core ML</h2>
+<p>想用 DA3 就得自己转。核心难点是<strong>只导出单目深度分支</strong>：DA3 是个 any-view 模型，完整图里还有相机解码器、光线头、天空分割、3D Gaussian 分支，这些对单视图深度全是死代码，留着只会让模型体积翻几倍、ANE 编译失败。</p>
+<p>转换脚本骨架（coremltools 9.0，2025-11-10 发布，支持 Python 3.13 与 iOS 26 目标）：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span><span class="lnt">42
+</span><span class="lnt">43
+</span><span class="lnt">44
+</span><span class="lnt">45
+</span><span class="lnt">46
+</span><span class="lnt">47
+</span><span class="lnt">48
+</span><span class="lnt">49
+</span><span class="lnt">50
+</span><span class="lnt">51
+</span><span class="lnt">52
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="c1"># convert_da3_mono.py</span>
+</span></span><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">torch</span>
+</span></span><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">torch.nn</span> <span class="k">as</span> <span class="nn">nn</span>
+</span></span><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">coremltools</span> <span class="k">as</span> <span class="nn">ct</span>
+</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">depth_anything_3.api</span> <span class="kn">import</span> <span class="n">DepthAnything3</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">SIZE</span> <span class="o">=</span> <span class="mi">504</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">class</span> <span class="nc">MonoDepthWrapper</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">    <span class="s2">&#34;&#34;&#34;只暴露单目深度路径：输入 RGB [0,1]，输出 depth 与 confidence。&#34;&#34;&#34;</span>
+</span></span><span class="line"><span class="cl">    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">net</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">        <span class="bp">self</span><span class="o">.</span><span class="n">net</span> <span class="o">=</span> <span class="n">net</span>
+</span></span><span class="line"><span class="cl">        <span class="c1"># ImageNet 归一化烘进图里，Core ML 侧只需给 scale=1/255</span>
+</span></span><span class="line"><span class="cl">        <span class="bp">self</span><span class="o">.</span><span class="n">register_buffer</span><span class="p">(</span><span class="s2">&#34;mean&#34;</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">([</span><span class="mf">0.485</span><span class="p">,</span> <span class="mf">0.456</span><span class="p">,</span> <span class="mf">0.406</span><span class="p">])</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl">        <span class="bp">self</span><span class="o">.</span><span class="n">register_buffer</span><span class="p">(</span><span class="s2">&#34;std&#34;</span><span class="p">,</span>  <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">([</span><span class="mf">0.229</span><span class="p">,</span> <span class="mf">0.224</span><span class="p">,</span> <span class="mf">0.225</span><span class="p">])</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>                 <span class="c1"># x: (1, 3, H, W) in [0, 1]</span>
+</span></span><span class="line"><span class="cl">        <span class="n">x</span> <span class="o">=</span> <span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">mean</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">std</span>
+</span></span><span class="line"><span class="cl">        <span class="n">x</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>                <span class="c1"># (B, S, 3, H, W)，S=1 即单视图</span>
+</span></span><span class="line"><span class="cl">        <span class="n">out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">net</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="n">out</span><span class="p">[</span><span class="s2">&#34;depth&#34;</span><span class="p">]</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span> <span class="n">out</span><span class="p">[</span><span class="s2">&#34;depth_conf&#34;</span><span class="p">]</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 1) 载入官方权重</span>
+</span></span><span class="line"><span class="cl"><span class="n">api</span> <span class="o">=</span> <span class="n">DepthAnything3</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="s2">&#34;depth-anything/DA3-SMALL&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">net</span> <span class="o">=</span> <span class="n">api</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span><span class="o">.</span><span class="n">float</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 2) 先跑一次 eager，确认输出形状与数值范围</span>
+</span></span><span class="line"><span class="cl"><span class="n">wrapper</span> <span class="o">=</span> <span class="n">MonoDepthWrapper</span><span class="p">(</span><span class="n">net</span><span class="p">)</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl"><span class="n">example</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="n">SIZE</span><span class="p">,</span> <span class="n">SIZE</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="k">with</span> <span class="n">torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">():</span>
+</span></span><span class="line"><span class="cl">    <span class="n">ref_d</span><span class="p">,</span> <span class="n">ref_c</span> <span class="o">=</span> <span class="n">wrapper</span><span class="p">(</span><span class="n">example</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="s2">&#34;depth&#34;</span><span class="p">,</span> <span class="n">ref_d</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="nb">float</span><span class="p">(</span><span class="n">ref_d</span><span class="o">.</span><span class="n">min</span><span class="p">()),</span> <span class="nb">float</span><span class="p">(</span><span class="n">ref_d</span><span class="o">.</span><span class="n">max</span><span class="p">()))</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 3) trace（DA3 骨干里有 x[:, :, 0] = cam_token 的原地写，</span>
+</span></span><span class="line"><span class="cl"><span class="c1">#    必须先改成 torch.cat 等价写法，否则 trace 出的图会丢掉这个赋值）</span>
+</span></span><span class="line"><span class="cl"><span class="n">traced</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">jit</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="n">wrapper</span><span class="p">,</span> <span class="n">example</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">t_d</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">traced</span><span class="p">(</span><span class="n">example</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">err</span> <span class="o">=</span> <span class="p">(</span><span class="n">ref_d</span> <span class="o">-</span> <span class="n">t_d</span><span class="p">)</span><span class="o">.</span><span class="n">abs</span><span class="p">()</span><span class="o">.</span><span class="n">max</span><span class="p">()</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl"><span class="k">assert</span> <span class="n">err</span> <span class="o">&lt;</span> <span class="mf">1e-3</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&#34;trace 精度崩了: </span><span class="si">{</span><span class="n">err</span><span class="si">}</span><span class="s2">&#34;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 4) 转 Core ML</span>
+</span></span><span class="line"><span class="cl"><span class="n">mlmodel</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">    <span class="n">traced</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="n">inputs</span><span class="o">=</span><span class="p">[</span><span class="n">ct</span><span class="o">.</span><span class="n">ImageType</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&#34;image&#34;</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="n">SIZE</span><span class="p">,</span> <span class="n">SIZE</span><span class="p">),</span>
+</span></span><span class="line"><span class="cl">                         <span class="n">scale</span><span class="o">=</span><span class="mf">1.0</span> <span class="o">/</span> <span class="mf">255.0</span><span class="p">,</span> <span class="n">color_layout</span><span class="o">=</span><span class="n">ct</span><span class="o">.</span><span class="n">colorlayout</span><span class="o">.</span><span class="n">RGB</span><span class="p">)],</span>
+</span></span><span class="line"><span class="cl">    <span class="n">outputs</span><span class="o">=</span><span class="p">[</span><span class="n">ct</span><span class="o">.</span><span class="n">TensorType</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&#34;depth&#34;</span><span class="p">),</span> <span class="n">ct</span><span class="o">.</span><span class="n">TensorType</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&#34;confidence&#34;</span><span class="p">)],</span>
+</span></span><span class="line"><span class="cl">    <span class="n">compute_precision</span><span class="o">=</span><span class="n">ct</span><span class="o">.</span><span class="n">precision</span><span class="o">.</span><span class="n">FLOAT16</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="n">minimum_deployment_target</span><span class="o">=</span><span class="n">ct</span><span class="o">.</span><span class="n">target</span><span class="o">.</span><span class="n">iOS17</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="n">convert_to</span><span class="o">=</span><span class="s2">&#34;mlprogram&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl"><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">mlmodel</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s2">&#34;DepthAnythingV3_small_504.mlpackage&#34;</span><span class="p">)</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h3 id="四个必须知道的坑">四个必须知道的坑</h3>
+<ol>
+<li><strong>原地写会毁掉 trace</strong>。DA3 骨干里用 <code>x[:, :, 0] = cam_token</code> 把相机 token 写进序列首位。<code>torch.jit.trace</code> 对这类原地操作捕获不完整，转出来的模型要么形状对不上，要么直接丢赋值。改写成 <code>torch.cat([cam_token, x[:, :, 1:]], dim=2)</code> 后再 trace。</li>
+<li><strong>FP16 注意力会溢出</strong>。DINOv2 骨干的 SDPA 在 FP16 下偶发数值溢出，表现为输出深度图整体变成一片灰。判断方法：转换后拿同一张图分别跑 torch FP32 和 Core ML，算余弦相似度，正常应接近 1.000；如果掉到 0.9 以下，就把 <code>compute_precision</code> 换成 <code>ct.precision.FLOAT32</code>（体积翻倍但能出正确结果），或者只对注意力块保持 FP32。</li>
+<li><strong>RoPE 频率表长度是数据相关的</strong>。DA3 的位置编码表长度取自 <code>int(positions.max()) + 1</code>，这在你固定输入分辨率（504×504，token 网格固定）时其实是个常量。转换前把它烘成固定常数，否则 trace 会生成动态形状分支，ANE 编译直接拒绝。</li>
+<li><strong>别忘了一次性校验</strong>。转换后务必用 2-3 张真实照片跑一遍 torch 与 Core ML 的对比，只看 <code>depth</code> 的 scale-aligned 相对误差，别只看形状。公开的第三方转换记录里，FP16 版本的余弦相似度能保持 1.000000，单像素相对误差在 1% 量级——这个量级对人像虚化、点云可视化完全够用。</li>
+</ol>
+<h2 id="从深度图到能用的东西">从深度图到能用的东西</h2>
+<p>拿到 <code>depth</code> 和 <code>confidence</code> 只是中间产物。真正有用的是两件事：一张能看的深度伪彩图，和一份能投影到 3D 空间的点云。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-swift" data-lang="swift"><span class="line"><span class="cl"><span class="kd">import</span> <span class="nc">CoreML</span>
+</span></span><span class="line"><span class="cl"><span class="kd">import</span> <span class="nc">CoreGraphics</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">/// 相对深度 -&gt; jet 伪彩 CGImage，低置信度像素压成半透明</span>
+</span></span><span class="line"><span class="cl"><span class="kd">func</span> <span class="nf">colorize</span><span class="p">(</span><span class="n">depth</span><span class="p">:</span> <span class="n">MLMultiArray</span><span class="p">,</span> <span class="n">conf</span><span class="p">:</span> <span class="n">MLMultiArray</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">              <span class="n">confThreshold</span><span class="p">:</span> <span class="nb">Float</span> <span class="p">=</span> <span class="mf">0.3</span><span class="p">)</span> <span class="p">-&gt;</span> <span class="n">CGImage</span><span class="p">?</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="kd">let</span> <span class="nv">h</span> <span class="p">=</span> <span class="n">depth</span><span class="p">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">].</span><span class="n">intValue</span>
+</span></span><span class="line"><span class="cl">    <span class="kd">let</span> <span class="nv">w</span> <span class="p">=</span> <span class="n">depth</span><span class="p">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">].</span><span class="n">intValue</span>
+</span></span><span class="line"><span class="cl">    <span class="kd">let</span> <span class="nv">n</span> <span class="p">=</span> <span class="n">h</span> <span class="o">*</span> <span class="n">w</span>
+</span></span><span class="line"><span class="cl">    <span class="kd">let</span> <span class="nv">d</span> <span class="p">=</span> <span class="n">depth</span><span class="p">.</span><span class="n">dataPointer</span><span class="p">.</span><span class="n">bindMemory</span><span class="p">(</span><span class="n">to</span><span class="p">:</span> <span class="nb">Float</span><span class="p">.</span><span class="kc">self</span><span class="p">,</span> <span class="n">capacity</span><span class="p">:</span> <span class="n">n</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="kd">let</span> <span class="nv">c</span> <span class="p">=</span> <span class="n">conf</span><span class="p">.</span><span class="n">dataPointer</span><span class="p">.</span><span class="n">bindMemory</span><span class="p">(</span><span class="n">to</span><span class="p">:</span> <span class="nb">Float</span><span class="p">.</span><span class="kc">self</span><span class="p">,</span> <span class="n">capacity</span><span class="p">:</span> <span class="n">n</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="c1">// 只用高置信度像素统计动态范围，避免天空/远景拉偏对比度</span>
+</span></span><span class="line"><span class="cl">    <span class="kd">var</span> <span class="nv">lo</span> <span class="p">=</span> <span class="nb">Float</span><span class="p">.</span><span class="n">greatestFiniteMagnitude</span><span class="p">,</span> <span class="n">hi</span> <span class="p">=</span> <span class="o">-</span><span class="nb">Float</span><span class="p">.</span><span class="n">greatestFiniteMagnitude</span>
+</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="n">i</span> <span class="k">in</span> <span class="mf">0.</span><span class="p">.&lt;</span><span class="n">n</span> <span class="k">where</span> <span class="n">c</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">confThreshold</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="n">lo</span> <span class="p">=</span> <span class="bp">min</span><span class="p">(</span><span class="n">lo</span><span class="p">,</span> <span class="n">d</span><span class="p">[</span><span class="n">i</span><span class="p">]);</span> <span class="n">hi</span> <span class="p">=</span> <span class="bp">max</span><span class="p">(</span><span class="n">hi</span><span class="p">,</span> <span class="n">d</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="k">guard</span> <span class="n">hi</span> <span class="o">&gt;</span> <span class="n">lo</span> <span class="k">else</span> <span class="p">{</span> <span class="k">return</span> <span class="kc">nil</span> <span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="kd">var</span> <span class="nv">bgra</span> <span class="p">=</span> <span class="p">[</span><span class="nb">UInt8</span><span class="p">](</span><span class="n">repeating</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="bp">count</span><span class="p">:</span> <span class="n">n</span> <span class="o">*</span> <span class="mi">4</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="n">i</span> <span class="k">in</span> <span class="mf">0.</span><span class="p">.&lt;</span><span class="n">n</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="kd">let</span> <span class="nv">t</span> <span class="p">=</span> <span class="bp">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="bp">min</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="p">(</span><span class="n">d</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">-</span> <span class="n">lo</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">hi</span> <span class="o">-</span> <span class="n">lo</span><span class="p">)))</span>       <span class="c1">// 归一化到 0-1</span>
+</span></span><span class="line"><span class="cl">        <span class="n">bgra</span><span class="p">[</span><span class="n">i</span> <span class="o">*</span> <span class="mi">4</span> <span class="o">+</span> <span class="mi">0</span><span class="p">]</span> <span class="p">=</span> <span class="nb">UInt8</span><span class="p">(</span><span class="mi">255</span> <span class="o">*</span> <span class="bp">min</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">t</span><span class="p">)</span> <span class="o">*</span> <span class="mi">2</span><span class="p">))</span>    <span class="c1">// B：近处亮</span>
+</span></span><span class="line"><span class="cl">        <span class="n">bgra</span><span class="p">[</span><span class="n">i</span> <span class="o">*</span> <span class="mi">4</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="p">=</span> <span class="nb">UInt8</span><span class="p">(</span><span class="mi">255</span> <span class="o">*</span> <span class="bp">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span> <span class="o">-</span> <span class="bp">abs</span><span class="p">(</span><span class="n">t</span> <span class="o">-</span> <span class="mf">0.5</span><span class="p">)</span> <span class="o">*</span> <span class="mi">2</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl">        <span class="n">bgra</span><span class="p">[</span><span class="n">i</span> <span class="o">*</span> <span class="mi">4</span> <span class="o">+</span> <span class="mi">2</span><span class="p">]</span> <span class="p">=</span> <span class="nb">UInt8</span><span class="p">(</span><span class="mi">255</span> <span class="o">*</span> <span class="bp">min</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">t</span> <span class="o">*</span> <span class="mi">2</span><span class="p">))</span>          <span class="c1">// R：远处亮</span>
+</span></span><span class="line"><span class="cl">        <span class="n">bgra</span><span class="p">[</span><span class="n">i</span> <span class="o">*</span> <span class="mi">4</span> <span class="o">+</span> <span class="mi">3</span><span class="p">]</span> <span class="p">=</span> <span class="n">c</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">confThreshold</span> <span class="p">?</span> <span class="mi">255</span> <span class="p">:</span> <span class="mi">60</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="kd">let</span> <span class="nv">space</span> <span class="p">=</span> <span class="n">CGColorSpaceCreateDeviceRGB</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">    <span class="kd">let</span> <span class="nv">info</span> <span class="p">=</span> <span class="n">CGBitmapInfo</span><span class="p">(</span><span class="n">rawValue</span><span class="p">:</span> <span class="n">CGImageAlphaInfo</span><span class="p">.</span><span class="n">premultipliedFirst</span><span class="p">.</span><span class="n">rawValue</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">bgra</span><span class="p">.</span><span class="n">withUnsafeMutableBytes</span> <span class="p">{</span> <span class="n">buf</span> <span class="k">in</span>
+</span></span><span class="line"><span class="cl">        <span class="k">guard</span> <span class="kd">let</span> <span class="nv">ctx</span> <span class="p">=</span> <span class="n">CGContext</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="n">buf</span><span class="p">.</span><span class="n">baseAddress</span><span class="p">,</span> <span class="n">width</span><span class="p">:</span> <span class="n">w</span><span class="p">,</span> <span class="n">height</span><span class="p">:</span> <span class="n">h</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                                  <span class="n">bitsPerComponent</span><span class="p">:</span> <span class="mi">8</span><span class="p">,</span> <span class="n">bytesPerRow</span><span class="p">:</span> <span class="n">w</span> <span class="o">*</span> <span class="mi">4</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                                  <span class="n">space</span><span class="p">:</span> <span class="n">space</span><span class="p">,</span> <span class="n">bitmapInfo</span><span class="p">:</span> <span class="n">info</span><span class="p">.</span><span class="n">rawValue</span><span class="p">)</span> <span class="k">else</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">            <span class="k">return</span> <span class="kc">nil</span>
+</span></span><span class="line"><span class="cl">        <span class="p">}</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="n">ctx</span><span class="p">.</span><span class="n">makeImage</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>点云反投影则需要相机内参。注意 DA3 输出的深度是<strong>相对深度</strong>（不是米），想得到真实尺度只有两条路：用 <code>DA3METRIC-LARGE</code>（0.35B，Apache-2.0）按 <code>metric_depth = focal * net_output / 300</code> 换算，或者用 ARKit 的 LiDAR 场景深度做一次对齐。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-swift" data-lang="swift"><span class="line"><span class="cl"><span class="kd">import</span> <span class="nc">simd</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">/// 相对深度 -&gt; 点云（尺度未知，仅用于可视化与遮挡判断）</span>
+</span></span><span class="line"><span class="cl"><span class="kd">func</span> <span class="nf">unproject</span><span class="p">(</span><span class="n">depth</span><span class="p">:</span> <span class="p">[</span><span class="nb">Float</span><span class="p">],</span> <span class="n">w</span><span class="p">:</span> <span class="nb">Int</span><span class="p">,</span> <span class="n">h</span><span class="p">:</span> <span class="nb">Int</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">               <span class="n">fx</span><span class="p">:</span> <span class="nb">Float</span><span class="p">,</span> <span class="n">fy</span><span class="p">:</span> <span class="nb">Float</span><span class="p">,</span> <span class="n">cx</span><span class="p">:</span> <span class="nb">Float</span><span class="p">,</span> <span class="n">cy</span><span class="p">:</span> <span class="nb">Float</span><span class="p">)</span> <span class="p">-&gt;</span> <span class="p">[</span><span class="n">simd_float3</span><span class="p">]</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="kd">var</span> <span class="nv">pts</span><span class="p">:</span> <span class="p">[</span><span class="n">simd_float3</span><span class="p">]</span> <span class="p">=</span> <span class="p">[]</span>
+</span></span><span class="line"><span class="cl">    <span class="n">pts</span><span class="p">.</span><span class="n">reserveCapacity</span><span class="p">(</span><span class="n">w</span> <span class="o">*</span> <span class="n">h</span> <span class="o">/</span> <span class="mi">4</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="n">y</span> <span class="k">in</span> <span class="bp">stride</span><span class="p">(</span><span class="n">from</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="n">to</span><span class="p">:</span> <span class="n">h</span><span class="p">,</span> <span class="n">by</span><span class="p">:</span> <span class="mi">2</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="k">for</span> <span class="n">x</span> <span class="k">in</span> <span class="bp">stride</span><span class="p">(</span><span class="n">from</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="n">to</span><span class="p">:</span> <span class="n">w</span><span class="p">,</span> <span class="n">by</span><span class="p">:</span> <span class="mi">2</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">            <span class="kd">let</span> <span class="nv">z</span> <span class="p">=</span> <span class="n">depth</span><span class="p">[</span><span class="n">y</span> <span class="o">*</span> <span class="n">w</span> <span class="o">+</span> <span class="n">x</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl">            <span class="k">guard</span> <span class="n">z</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="p">{</span> <span class="k">continue</span> <span class="p">}</span>
+</span></span><span class="line"><span class="cl">            <span class="kd">let</span> <span class="nv">X</span> <span class="p">=</span> <span class="p">(</span><span class="nb">Float</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">-</span> <span class="n">cx</span><span class="p">)</span> <span class="o">*</span> <span class="n">z</span> <span class="o">/</span> <span class="n">fx</span>
+</span></span><span class="line"><span class="cl">            <span class="kd">let</span> <span class="nv">Y</span> <span class="p">=</span> <span class="p">(</span><span class="nb">Float</span><span class="p">(</span><span class="n">y</span><span class="p">)</span> <span class="o">-</span> <span class="n">cy</span><span class="p">)</span> <span class="o">*</span> <span class="n">z</span> <span class="o">/</span> <span class="n">fy</span>
+</span></span><span class="line"><span class="cl">            <span class="n">pts</span><span class="p">.</span><span class="n">append</span><span class="p">(</span><span class="n">simd_float3</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">z</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl">        <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">pts</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h2 id="实测数据官方给了什么没给什么">实测数据：官方给了什么，没给什么</h2>
+<table>
+	<thead>
+			<tr>
+					<th>模型 / 后端</th>
+					<th>设备</th>
+					<th>精度</th>
+					<th>耗时</th>
+					<th>内存峰值</th>
+					<th>来源</th>
+			</tr>
+	</thead>
+	<tbody>
+			<tr>
+					<td>DA2-Small F16</td>
+					<td>iPhone 16 Pro (iOS 18.3)</td>
+					<td>FP16</td>
+					<td>26.2 ms</td>
+					<td>未公布</td>
+					<td>Apple Core ML Models</td>
+			</tr>
+			<tr>
+					<td>DA2-Small F16</td>
+					<td>iPhone 15 Pro Max (iOS 17.4)</td>
+					<td>FP16</td>
+					<td>33.9 ms</td>
+					<td>未公布</td>
+					<td>Apple Core ML Models</td>
+			</tr>
+			<tr>
+					<td>DA2-Small 518</td>
+					<td>Snapdragon 8 Gen 3 / ONNX</td>
+					<td>FP16</td>
+					<td>108 ms</td>
+					<td>667 MB</td>
+					<td>Qualcomm AI Hub</td>
+			</tr>
+			<tr>
+					<td>DA2-Small 518</td>
+					<td>Snapdragon 8 Elite Gen 5 / ONNX</td>
+					<td>w8a16</td>
+					<td>11.9 ms</td>
+					<td>421 MB</td>
+					<td>Qualcomm AI Hub</td>
+			</tr>
+			<tr>
+					<td>DA3-Small 504</td>
+					<td>iPhone（第三方转换）</td>
+					<td>FP16</td>
+					<td>未公布</td>
+					<td>约 300 MB</td>
+					<td>HF 模型卡</td>
+			</tr>
+			<tr>
+					<td>DA3-Small 504</td>
+					<td>M4 Max GPU</td>
+					<td>FP16</td>
+					<td>15.2 ms</td>
+					<td>未公布</td>
+					<td>coreai-model-zoo</td>
+			</tr>
+	</tbody>
+</table>
+<p>这里有个必须诚实说明的地方：<strong>DA3 在 iPhone 上的公开实测延迟目前还是空白</strong>。第三方转换的模型卡只给了 44 MB 下载体积和约 300 MB 峰值内存，没给 iPhone 上的毫秒数。按参数量的比例粗估，DA3-SMALL（0.08B）比 DA2-SMALL（0.0248B）大 3 倍多，实际延迟大概率落在 60-100 ms 区间——这个数字是我的推算，不是实测，上线前请务必用 Instruments 的 Core ML 模板在你的目标机型上量。</p>
+<h2 id="怎么选">怎么选</h2>
+<ul>
+<li><strong>今天就要上线、只做背景虚化或 AR 遮挡</strong>：用 Apple 官方的 DA2 Small Core ML 包。26-34 ms 的官方实测数据最可信，包也最小（P6 变体只有 19 MB）。</li>
+<li><strong>要更准的深度、能接受自己做转换和验证</strong>：转 DA3-SMALL。精度提升是实打实的，代价是多一套转换脚本和一轮数值校验。</li>
+<li><strong>面向 iOS 27 的新项目、不急着发版</strong>：跟 Core AI。<code>.aimodel</code> 有 AOT 预编译和模型特化缓存，首次加载比 Core ML 快得多，但 iOS recipe 目前还没覆盖深度模型。</li>
+<li><strong>Android 或跨端</strong>：别绕 Core ML 了，走 Qualcomm AI Hub 的 ONNX/QNN 预导出模型，DA2 在 Snapdragon 8 Elite Gen 5 上的 w8a16 版本只要 11.9 ms，是三个平台里最快的。</li>
+</ul>
+<p>最后提醒一句：深度估计的延迟不是唯一指标，<strong>后处理往往更贵</strong>。伪彩图渲染和点云反投影如果放在主线程做，帧率会立刻掉到个位数。所有逐像素循环都挪到 <code>DispatchQueue</code> 的并发队列，或者干脆用 Metal compute shader 做——这一步不做，模型再快也是白搭。</p>
+<hr>
+<p><em>文中所有模型版本、体积、延迟与授权信息均于 2026-10-26 核对官方来源（Apple Core ML Models 页面、ByteDance-Seed/Depth-Anything-3 仓库、Qualcomm AI Hub、apple/coreai-models 1.0.0 发布说明、coremltools 9.0 发布说明）。延迟数据随系统版本与芯片差异较大，请以目标设备实测为准。</em></p>
+</div><div class="post-footer" id="post-footer">
+    <div class="post-info">
+        <div class="post-info-line">
+            <div class="post-info-mod">
+                <span>更新于 2026-10-26&nbsp;<a class="git-hash" href="https://github.com/cikichen/hugo-sync/commit/165b8f1da29738fef88e12ed1fe290f221cae8b7" target="_blank" title="commit by Simon Chen(cikichen@gmail.com) 165b8f1da29738fef88e12ed1fe290f221cae8b7: Auto: 2026-10-26">
+                                    <i class="fas fa-hashtag fa-fw" aria-hidden="true"></i>165b8f1d</a></span>
+            </div></div>
+        <div class="post-info-line">
+            <div class="post-info-md"></div>
+            <div class="post-info-share">
+                <span><a href="javascript:void(0);" title="分享到 Twitter" data-sharer="twitter" data-url="https://www.ithome.me/post/2026/10/26/on-device-depth-estimation-coreml-vision/" data-title="端侧单目深度估计实战：Depth Anything 3 转 Core ML 跑在 iPhone 上" data-via="ChenCiki" data-hashtags="端侧AI,深度估计,Core ML,Depth Anything,iOS"><i class="fab fa-twitter fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="分享到 Linkedin" data-sharer="linkedin" data-url="https://www.ithome.me/post/2026/10/26/on-device-depth-estimation-coreml-vision/"><i class="fab fa-linkedin fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="分享到 微博" data-sharer="weibo" data-url="https://www.ithome.me/post/2026/10/26/on-device-depth-estimation-coreml-vision/" data-title="端侧单目深度估计实战：Depth Anything 3 转 Core ML 跑在 iPhone 上" data-ralateuid="xxx"><i class="fab fa-weibo fa-fw" aria-hidden="true"></i></a></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="post-info-more">
+        <section class="post-tags"><i class="fas fa-tags fa-fw" aria-hidden="true"></i>&nbsp;<a href="/tags/%E7%AB%AF%E4%BE%A7ai/">端侧AI</a>,&nbsp;<a href="/tags/%E6%B7%B1%E5%BA%A6%E4%BC%B0%E8%AE%A1/">深度估计</a>,&nbsp;<a href="/tags/core-ml/">Core ML</a>,&nbsp;<a href="/tags/depth-anything/">Depth Anything</a>,&nbsp;<a href="/tags/ios/">IOS</a></section>
+        <section>
+            <span><a href="javascript:void(0);" onclick="window.history.back();">返回</a></span>&nbsp;|&nbsp;<span><a href="/">主页</a></span>
+        </section>
+    </div>
+
+    <div class="post-nav"><a href="/post/2026/10/19/github-trending-weekly/" class="prev" rel="prev" title="GitHub Trending 周报 - 2026-10-19"><i class="fas fa-angle-left fa-fw" aria-hidden="true"></i>GitHub Trending 周报 - 2026-10-19</a>
+            <a href="/post/2026/10/26/github-trending-weekly/" class="next" rel="next" title="GitHub Trending 周报 - 2026-10-26">GitHub Trending 周报 - 2026-10-26<i class="fas fa-angle-right fa-fw" aria-hidden="true"></i></a></div>
+</div>
+<div id="comments"><div id="gitalk" class="comment"></div><noscript>
+                Please enable JavaScript to view the comments powered by <a href="https://github.com/gitalk/gitalk"></a>Gitalk</a>.
+            </noscript></div></article></div>
+            </main><footer class="footer">
+        <div class="footer-container"><div class="footer-line" itemscope itemtype="http://schema.org/CreativeWork"><i class="far fa-copyright fa-fw" aria-hidden="true"></i><span itemprop="copyrightYear">2011 - 2026</span><span class="author" itemprop="copyrightHolder">&nbsp;<a href="https://www.ithome.me/" target="_blank">Simon Chen</a></span>&nbsp;|&nbsp;<span class="license"><a rel="license external nofollow noopener noreferrer" href="https://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank">CC BY-NC-ND 4.0</a></span></div>
+        </div>
+    </footer></div>
+
+        <div id="fixed-buttons"><a href="#" id="back-to-top" class="fixed-button" title="回到顶部">
+                <i class="fas fa-arrow-up fa-fw" aria-hidden="true"></i>
+            </a><a href="#" id="view-comments" class="fixed-button" title="查看评论">
+                <i class="fas fa-comment fa-fw" aria-hidden="true"></i>
+            </a>
+        </div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1.7.2/dist/gitalk.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/css/lightgallery-bundle.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/katex.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/copy-tex.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.css"><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/gitalk@1.7.2/dist/gitalk.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/autocomplete.js@0.38.1/dist/autocomplete.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lunr@2.3.9/lunr.min.js"></script><script type="text/javascript" src="/lib/lunr/lunr.stemmer.support.min.js"></script><script type="text/javascript" src="/lib/lunr/lunr.zh.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lazysizes@5.3.1/lazysizes.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/lightgallery.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/plugins/thumbnail/lg-thumbnail.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lightgallery@2.4.0/plugins/zoom/lg-zoom.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/clipboard@2.0.11/dist/clipboard.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/sharer.js@0.5.1/sharer.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/katex.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/auto-render.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/copy-tex.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/katex@0.15.3/dist/contrib/mhchem.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.js"></script><script type="text/javascript">window.config={"code":{"copyTitle":"复制到剪贴板","maxShownLines":50},"comment":{"gitalk":{"admin":["cikichen"],"clientID":"be0f52370ed1285b6c7c","clientSecret":"734a7d8d0ded346ca7a3d565d57de3f8eeb2850b","id":"2026-10-26T00:00:00Z","owner":"cikichen","repo":"gitalk","title":"端侧单目深度估计实战：Depth Anything 3 转 Core ML 跑在 iPhone 上"}},"cookieconsent":{"content":{"dismiss":"我知道了","link":"了解更多","message":"本网站使用 Cookies 来改善您的浏览体验."},"enable":true,"palette":{"button":{"background":"#f0f0f0"},"popup":{"background":"#1aa3ff"}},"theme":"edgeless"},"lightgallery":true,"math":{"delimiters":[{"display":true,"left":"$$","right":"$$"},{"display":true,"left":"\\[","right":"\\]"},{"display":true,"left":"\\begin{equation}","right":"\\end{equation}"},{"display":true,"left":"\\begin{equation*}","right":"\\end{equation*}"},{"display":true,"left":"\\begin{align}","right":"\\end{align}"},{"display":true,"left":"\\begin{align*}","right":"\\end{align*}"},{"display":true,"left":"\\begin{alignat}","right":"\\end{alignat}"},{"display":true,"left":"\\begin{alignat*}","right":"\\end{alignat*}"},{"display":true,"left":"\\begin{gather}","right":"\\end{gather}"},{"display":true,"left":"\\begin{CD}","right":"\\end{CD}"},{"display":false,"left":"$","right":"$"},{"display":false,"left":"\\(","right":"\\)"}],"strict":false},"search":{"highlightTag":"em","lunrIndexURL":"/index.json","lunrLanguageCode":"zh","lunrSegmentitURL":"/lib/lunr/lunr.segmentit.js","maxResultLength":10,"noResultsFound":"没有找到结果","snippetLength":50,"type":"lunr"}};</script><script type="text/javascript" src="/js/theme.min.js"></script></body>
+</html>
